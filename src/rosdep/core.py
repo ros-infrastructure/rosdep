@@ -1,59 +1,9 @@
-#!/usr/bin/env python
-# Copyright (c) 2009, Willow Garage, Inc.
-# All rights reserved.
-# 
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are met:
-# 
-#     * Redistributions of source code must retain the above copyright
-#       notice, this list of conditions and the following disclaimer.
-#     * Redistributions in binary form must reproduce the above copyright
-#       notice, this list of conditions and the following disclaimer in the
-#       documentation and/or other materials provided with the distribution.
-#     * Neither the name of the Willow Garage, Inc. nor the names of its
-#       contributors may be used to endorse or promote products derived from
-#       this software without specific prior written permission.
-# 
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
-# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-# POSSIBILITY OF SUCH DAMAGE.
 
-# Author Tully Foote/tfoote@willowgarage.com
-
-#"""
-#Library and command-line tool for calculating rosdeps.
-#"""
-
-import roslib.rospack
-import roslib.stacks
-import roslib.manifest
 import roslib.os_detect
 import os
 import sys
-import subprocess
-import types
 import yaml
 import time
-
-  
-import rosdep.base_rosdep
-import rosdep.debian as debian
-import rosdep.opensuse as opensuse
-import rosdep.redhat as redhat
-import rosdep.gentoo as gentoo
-import rosdep.osx as osx
-import rosdep.arch as arch
-import rosdep.cygwin as cygwin
-import rosdep.freebsd as freebsd
-
 
 yaml.add_constructor(
     u'tag:yaml.org,2002:float',
@@ -80,12 +30,10 @@ class YamlCache:
         
         #print "parsing path", path
         if os.path.exists(path):
-            try:
-                f = open(path)
+            with f = open(path) as f:
                 yaml_text = f.read()
-                f.close()
-                self._yaml_cache[path] = yaml.load(yaml_text)
-                return self._yaml_cache[path]
+            self._yaml_cache[path] = yaml.load(yaml_text)
+            return self._yaml_cache[path]
 
             except yaml.YAMLError, exc:
                 print >> sys.stderr, "Failed parsing yaml while processing %s\n"%path, exc
@@ -189,71 +137,9 @@ class RosdepLookupPackage:
         self.yaml_cache = yaml_cache
         ## Find all rosdep.yamls here and load them into a map
 
-
         if not package:
             raise RosdepException("RosdepLookupPackage requires a package argument")
         self._load_for_package(package, yaml_cache.cached_ros_package_list)
-        
-        
-
-    def _load_for_package(self, package, ros_package_proxy):
-        """ Load into local structures the information for this
-        specific package 
-
-        Called in constructor. """
-
-        try:
-            rosdep_dependent_packages = ros_package_proxy.depends([package])[package]
-            #print "package", package, "needs", rosdep_dependent_packages
-        except KeyError, ex:
-            print "Depends Failed on package", ex
-            print " The errors was in ",  ros_package_proxy.depends([package])
-            rosdep_dependent_packages = []
-        #print "Dependents of", package, rosdep_dependent_packages
-        rosdep_dependent_packages.append(package)
-
-
-        paths = set()
-        for p in rosdep_dependent_packages:
-            stack = None
-            try:
-                stack = roslib.stacks.stack_of(p)
-            except roslib.packages.InvalidROSPkgException, ex:
-                print >> sys.stderr, "Failed to find stack for package [%s]"%p
-                pass
-            if stack:
-                try:
-                    paths.add( os.path.join(roslib.stacks.get_stack_dir(stack), "rosdep.yaml"))
-                    if "ROSDEP_DEBUG" in os.environ:
-                        print "loading rosdeps from", os.path.join(roslib.stacks.get_stack_dir(stack), "rosdep.yaml")
-                except AttributeError, ex:
-                    print "Stack [%s] could not be found"%(stack)
-                for s in self.yaml_cache.get_rosstack_depends(stack):
-                    try:
-                        paths.add( os.path.join(roslib.stacks.get_stack_dir(s), "rosdep.yaml"))
-                    except AttributeError, ex:
-                        print "Stack [%s] dependency of [%s] could not be found"%(s, stack)
-                        
-            else:
-                try:
-                    paths.add( os.path.join(roslib.packages.get_pkg_dir(p), "rosdep.yaml"))
-                    if "ROSDEP_DEBUG" in os.environ:
-                        print "Package fallback, no parent stack found for package %s: loading rosdeps from"%p, os.path.join(roslib.packages.get_pkg_dir(p), "rosdep.yaml")
-                except roslib.packages.InvalidROSPkgException, ex:
-                    print >> sys.stderr, "Failed to load rosdep.yaml for package [%s]:%s"%(p, ex)
-                    pass
-        for path in paths:
-            yaml_in = self.parse_yaml(path)
-            self._insert_map(yaml_in, path)
-            if "ROSDEP_DEBUG" in os.environ:
-                print "rosdep loading from file: %s got"%path, yaml_in
-        #print "built map", self.rosdep_map
-
-        # Override with ros_home/rosdep.yaml if present
-        ros_home = roslib.rosenv.get_ros_home()
-        path = os.path.join(ros_home, "rosdep.yaml")
-        self._insert_map(self.parse_yaml(path), path, override=True)
-
 
     def _insert_map(self, yaml_dict, source_path, override=False):
         """ Insert the current map into the full dictionary"""
@@ -292,7 +178,6 @@ Rules for %s do not match:
         return self.yaml_cache.get_specific_rosdeps(path)
         
 
-
     def lookup_rosdep(self, rosdep):
         """ Lookup the OS specific packages or script from the
         prebuilt maps."""
@@ -302,20 +187,12 @@ Rules for %s do not match:
         else:
             print >> sys.stderr, "Failed to find rosdep %s for package %s on OS:%s version:%s"%(rosdep, self.package, self.os_name, self.os_version)
             return False
-                
-
-    def get_sources(self, rosdep):
-        if rosdep in self.rosdep_source:
-            return self.rosdep_source[rosdep]
-        else:
-            return []
-
 
 from collections import defaultdict 
 
-class Rosdep:
+class RosdepInstaller:
     def __init__(self, packages, command = "rosdep", robust = False):
-        os_list = [debian.RosdepTestOS(), debian.Debian(), debian.Ubuntu(), debian.Mint(), opensuse.OpenSuse(), redhat.Fedora(), redhat.Rhel(), arch.Arch(), osx.Osx(), gentoo.Gentoo(), cygwin.Cygwin(), freebsd.FreeBSD()]
+        os_list = TODO
         # Make sure that these classes are all well formed.  
         for o in os_list:
             if not isinstance(o, rosdep.base_rosdep.RosdepBaseOS):
@@ -328,22 +205,6 @@ class Rosdep:
         self.rosdeps = rp.rosdeps(packages)
         self.robust = robust
         
-
-    def get_rosdep0(self, package):
-        m = roslib.manifest.load_manifest(package)
-        return [d.name for d in m.rosdeps]
-            
-
-    def get_rosdeps(self, packages):
-        """
-        @return: dictionary mapping rosdep names to list of packages
-        that require that rosdep.
-        """
-        rosdeps = defaultdict(list)
-        for p in packages:
-            for r in self.rosdeps[p]:
-                rosdeps[r].append(p)
-        return rosdeps
     
     def get_packages_and_scripts(self, rdlp_cache=None):
         """
@@ -434,16 +295,6 @@ class Rosdep:
                 failed_rosdeps.append(r)
 
         return failed_rosdeps
-
-    def what_needs(self, rosdep_args):
-        packages = []
-        for p in roslib.packages.list_pkgs():
-            rosdeps_needed = self.get_rosdep0(p)
-            matches = [r for r in rosdep_args if r in rosdeps_needed]
-            for r in matches:
-                packages.append(p)
-                
-        return packages
 
     def install(self, include_duplicates, default_yes, execute=True):
         failure = False

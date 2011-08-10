@@ -1,4 +1,4 @@
-# Copyright (c) 2009, Willow Garage, Inc.
+# Copyright (c) 2011, Willow Garage, Inc.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -25,50 +25,35 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-# Author Tully Foote/tfoote@willowgarage.com, Ken Conley/kwc@willowgarage.com
+# Author Ken Conley/kwc@willowgarage.com
 
 """
-rosdep library and command-line tool
+Base API for loading rosdep information by package or stack name.
+This API is decoupled from the ROS packaging system to enable multiple
+implementations of rosdep, including ones that don't rely on the ROS
+packaging system.  This is necessary, for example, to implement a
+version of rosdep that works against tarballs of released stacks.
 """
 
+class InvalidRosdepData(Exception): pass
 
-ENABLE_CYGWIN = False
-ENABLE_DEBIAN = True
-ENABLE_OSX    = True
-ENABLE_PIPE   = True
+class RosdepLoader:
+    """
+    Base API for loading rosdep information by package or stack name.  
+    """
+    
+    def load_stack(self, stack_name, rosdep_db):
+        """
+        Load stack data into rosdep_db. If the stack has already been
+        loaded into rosdep_db, this method does nothing.
 
-def default_init():
-    if ENABLE_CYGWIN:
-        import .platforms.cygwin
-    if ENABLE_DEBIAN:
-        import .platforms.debian
-    if ENABLE_OSX:
-        import .platforms.osx
-    if ENABLE_PIP:
-        import .platforms.pip    
+        @raise InvalidRosdepData
+        """
+        raise NotImplemented
 
-    context = RosdepContext()
+    def load_package(self, package_name, rosdep_db):
+        raise NotImplemented        
 
-    # setup installers
-    if ENABLE_CYGWIN:
-        .platforms.cygwin.register_installers(context)
-    if ENABLE_DEBIAN:
-        .platforms.debian.register_installers(context)
-    if ENABLE_OSX:
-        .platforms.osx.register_installers(context)
-    if ENABLE_PIP:        
-        .platforms.pip.register_installers(context)
-
-    # setup platforms
-    if ENABLE_DEBIAN:
-        .platforms.debian.register_debian(context)
-        .platforms.debian.register_ubuntu(context)
-        .platforms.debian.register_mint(context)
-    if ENABLE_CYGWIN:
-        .platforms.cygwin.register_cygwin(context)
-    if ENABLE_OSX:
-        .platforms.osx.register_osx(context)
-        #TODO: register brew
-        
-    return context
+    def load_package_manifest(self, package_name):
+        raise NotImplemented
 
