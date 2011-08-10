@@ -1,0 +1,9 @@
+<stack>
+  <description brief="empty">empty</description>
+  <author>Maintained by Ken Conley</author>
+  <license></license>  
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/empty</url>
+  <depend stack="ros" />
+
+</stack>

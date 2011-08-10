@@ -25,40 +25,21 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-# Author Ken Conley/kwc@willowgarage.com
+from mock import Mock
 
-"""
-Base API for loading rosdep information by package or stack name.
-This API is decoupled from the ROS packaging system to enable multiple
-implementations of rosdep, including ones that don't rely on the ROS
-packaging system.  This is necessary, for example, to implement a
-version of rosdep that works against tarballs of released stacks.
-"""
-
-from .model import RosdepDatabase, InvalidRosdepData
-
-class RosdepLoader:
-    """
-    Base API for loading rosdep information by package or stack name.  
-    """
-    
-    def load_stack(self, stack_name, rosdep_db):
-        """
-        Load stack data into rosdep_db. If the stack has already been
-        loaded into rosdep_db, this method does nothing.
-
-        @param stack_name: name of ROS stack to load
-        @type stack_name: str
-        @param rosdep_db: database to load stack data into
-        @type rosdep_db: RosdepDatabase
-
-        @raise InvalidRosdepData
-        """
-        raise NotImplementedError()
-
-    def load_package(self, package_name, rosdep_db):
-        raise NotImplementedError()
-
-    def load_package_manifest(self, package_name):
-        raise NotImplementedError()
-
+def test_RosdepLoader():
+    #tripwire tests
+    from rosdep.loader import RosdepLoader
+    loader = RosdepLoader()
+    try:
+        loader.load_stack('foo', Mock())
+        assert False, "should have raised NotImplemented"
+    except NotImplementedError: pass
+    try:
+        loader.load_package('foo', Mock())
+        assert False, "should have raised NotImplementedError"
+    except NotImplementedError: pass
+    try:
+        loader.load_package_manifest('foo')
+        assert False, "should have raised NotImplementedError"
+    except NotImplementedError: pass

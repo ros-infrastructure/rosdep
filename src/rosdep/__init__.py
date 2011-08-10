@@ -39,35 +39,35 @@ ENABLE_PIPE   = True
 
 def default_init():
     if ENABLE_CYGWIN:
-        import .platforms.cygwin
+        from .platforms import cygwin
     if ENABLE_DEBIAN:
-        import .platforms.debian
+        from .platforms import debian
     if ENABLE_OSX:
-        import .platforms.osx
+        from .platforms import osx
     if ENABLE_PIP:
-        import .platforms.pip    
+        from .platforms import pip    
 
     context = RosdepContext()
 
     # setup installers
     if ENABLE_CYGWIN:
-        .platforms.cygwin.register_installers(context)
+        cygwin.register_installers(context)
     if ENABLE_DEBIAN:
-        .platforms.debian.register_installers(context)
+        debian.register_installers(context)
     if ENABLE_OSX:
-        .platforms.osx.register_installers(context)
+        osx.register_installers(context)
     if ENABLE_PIP:        
-        .platforms.pip.register_installers(context)
+        pip.register_installers(context)
 
     # setup platforms
     if ENABLE_DEBIAN:
-        .platforms.debian.register_debian(context)
-        .platforms.debian.register_ubuntu(context)
-        .platforms.debian.register_mint(context)
+        debian.register_debian(context)
+        debian.register_ubuntu(context)
+        debian.register_mint(context)
     if ENABLE_CYGWIN:
-        .platforms.cygwin.register_cygwin(context)
+        cygwin.register_cygwin(context)
     if ENABLE_OSX:
-        .platforms.osx.register_osx(context)
+        osx.register_osx(context)
         #TODO: register brew
         
     return context

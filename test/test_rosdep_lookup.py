@@ -25,12 +25,7 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-# Author Tully Foote/tfoote@willowgarage.com, Ken Conley/kwc@willowgarage.com
-
-from rospkg.os_detect import OsDetect
-
-from .model import RosdepDatabase
-from .rospkg_loader import RosPkgLoader
+from __future__ import print_function
 
 class RosdepDefinition:
     """
@@ -47,6 +42,13 @@ class RosdepDefinition:
         """
         self.data = data
         self.origin = origin
+    
+def test_RosdepConflict():
+    ex = RosdepConflict('foo', def1, def2)
+    str_ex = str(ex)
+    print(str_ex)
+    assert def1.origin in str_ex
+    assert def2.origin in str_ex
     
 class RosdepConflict(Exception):
 

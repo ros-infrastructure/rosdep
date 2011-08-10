@@ -38,22 +38,8 @@ combine these rosdep dependency maps and stack dependencies together
 into a combined view on which queries can be made.
 """
 
-class RosdepDefinition:
-    """
-    Single rosdep dependency definition.  This data is stored as the
-    raw dictionary definition for the dependency.
+class InvalidRosdepData(Exception): pass
 
-    See REP 111, 'Multiple Package Manager Support for Rosdep' for a
-    discussion of this raw format.
-    """
-    
-    def __init__(self, data, origin="<dynamic>"):
-        """
-        @param origin: string that indicates where data originates from (e.g. filename)
-        """
-        self.data = data
-        self.origin = origin
-    
 class RosdepDatabaseEntry:
     """
     Stores rosdep data and metadata for a single stack.
@@ -82,9 +68,14 @@ class RosdepDatabase:
     
     def set_stack_data(self, stack_name, rosdep_data, stack_dependencies, origin):
         """
+        Set data associated with stack.  This will create a new RosdepDatabaseEntry.
+
+        @param rosdep_data: rosdep data map to associated with stack.
+        This will be copied.
+        
         @param origin: origin of stack data, e.g. filepath of rosdep.yaml
         """
-        self._rosdep_db[stack_name] = RosdepDatabaseEntry(rosdep_data, stack_dependencies, origin)
+        self._rosdep_db[stack_name] = RosdepDatabaseEntry(rosdep_data.copy(), stack_dependencies, origin)
 
     def get_stack_data(self, stack_name):
         """

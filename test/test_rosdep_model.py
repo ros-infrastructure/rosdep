@@ -25,40 +25,53 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-# Author Ken Conley/kwc@willowgarage.com
+def test_InvalidRosdepData():
+    from rosdep.model import InvalidRosdepData
+    try:
+        raise InvalidRosdepData('hi')
+    except InvalidRosdepData as ex:
+        assert 'hi' in str(ex)
 
-"""
-Base API for loading rosdep information by package or stack name.
-This API is decoupled from the ROS packaging system to enable multiple
-implementations of rosdep, including ones that don't rely on the ROS
-packaging system.  This is necessary, for example, to implement a
-version of rosdep that works against tarballs of released stacks.
-"""
+def test_RosdepDatabaseEntry():
+    # not muich to test with container
+    from rosdep.model import RosdepDatabaseEntry
+    d = RosdepDatabaseEntry({'a': 1}, [], 'foo')
+    assert d.rosdep_data == {'a': 1}
+    assert d.stack_dependencies == []
+    assert d.origin == 'foo'
 
-from .model import RosdepDatabase, InvalidRosdepData
+def test_RosdepDatabase():
+    from rosdep.model import RosdepDatabase
 
-class RosdepLoader:
-    """
-    Base API for loading rosdep information by package or stack name.  
-    """
+    db = RosdepDatabase()
+    assert not db.is_loaded('foo')
+
+    data = {'a': 1}
+    db.set_stack_data('foo', data, [], 'origin1')
+    assert db.is_loaded('foo')    
+    entry = db.get_stack_data('foo')
+    assert entry.rosdep_data == data
+    assert entry.origin == 'origin1'
+    assert entry.stack_dependencies == []
+    # make sure data is copy
+    data['a'] = 2
+    assert entry.rosdep_data != data
     
-    def load_stack(self, stack_name, rosdep_db):
-        """
-        Load stack data into rosdep_db. If the stack has already been
-        loaded into rosdep_db, this method does nothing.
+    data = {'b': 2}
+    db.set_stack_data('bar', data, ['foo'], 'origin2')
+    assert db.is_loaded('bar')    
+    entry = db.get_stack_data('bar')
+    assert entry.rosdep_data == data
+    assert entry.origin == 'origin2'
+    assert entry.stack_dependencies == ['foo']
 
-        @param stack_name: name of ROS stack to load
-        @type stack_name: str
-        @param rosdep_db: database to load stack data into
-        @type rosdep_db: RosdepDatabase
-
-        @raise InvalidRosdepData
-        """
-        raise NotImplementedError()
-
-    def load_package(self, package_name, rosdep_db):
-        raise NotImplementedError()
-
-    def load_package_manifest(self, package_name):
-        raise NotImplementedError()
-
+    # override entry for bar
+    data = {'b': 3}
+    assert db.is_loaded('bar')    
+    db.set_stack_data('bar', data, ['baz', 'blah'], 'origin3')
+    assert db.is_loaded('bar')    
+    entry = db.get_stack_data('bar')
+    assert entry.rosdep_data == data
+    assert entry.origin == 'origin3'
+    assert set(entry.stack_dependencies) == set(['baz', 'blah'])
+    

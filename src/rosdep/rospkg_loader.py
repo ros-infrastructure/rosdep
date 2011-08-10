@@ -32,6 +32,8 @@ Library for loading rosdep files from the ROS package/stack
 filesystem.
 """
 
+import os
+
 import rospkg
 import yaml
 
@@ -54,8 +56,9 @@ class RosPkgLoader(RosdepLoader):
     def _load_rosdep_yaml(self, stack_name):
         """
         @raise yaml.YAMLError
+        @raise rospkg.ResourceNotFound
         """
-        stack_dir = self._rosstack.find(stack_name)
+        stack_dir = self._rosstack.get_path(stack_name)
         filename = os.path.join(stack_dir, ROSDEP_YAML)
         if os.path.isfile(filename):
             with open(filename) as f:
@@ -64,15 +67,16 @@ class RosPkgLoader(RosdepLoader):
     def load_stack(self, stack_name, rosdep_db):
         """
         Load stack data into rosdep_db. If the stack has already been
-        loaded into rosdep_db, this method does nothing.
+        loaded into rosdep_db, this method does nothing.  If stack has
+        no rosdep data, it will be initialized with an empty data map.
 
         @raise InvalidRosdepData
+        @raise rospkg.ResourceNotFound
         """
         if rosdep_db.is_loaded(stack_name):
             return
-
         try:
-            rosdep_data = self._load_rosdep_yaml(stack_name)
+            rosdep_data = self._load_rosdep_yaml(stack_name) or {}
         except yaml.YAMLError as e:
             raise InvalidRosdepData("Invalid YAML for stack [%s]: %s"%(e, stack_name))
         stack_dependencies = self._rosstack.get_direct_depends(stack_name)
