@@ -32,22 +32,23 @@
 import os
 import subprocess
 
+from ..installers import Installer, SOURCE_INSTALLER
+from ..shell_utils import read_stdout
+
 FREEBSD_OS_NAME = 'freebsd'
-PKG_ADD = 'pkg_add'
+PKG_ADD_INSTALLER = 'pkg_add'
 
 def register_installers(context):
-    context.register_installer(PKG_ADD, PkgAddInstaller)
+    context.register_installer(PKG_ADD_INSTALLER, PkgAddInstaller)
     
 def register_cygwin(context):
-    context.register_os_installer(FREEBSD_OS_NAME, 'source')
-    context.register_os_installer(FREEBSD_OS_NAME, PKG_ADD)
-    context.set_default_os_installer(FREEBSD_OS_NAME, PKG_ADD)
+    context.register_os_installer(FREEBSD_OS_NAME, SOURCE_INSTALLER)
+    context.register_os_installer(FREEBSD_OS_NAME, PKG_ADD_INSTALLER)
+    context.set_default_os_installer(FREEBSD_OS_NAME, PKG_ADD_INSTALLER)
 
 def cygcheck_detect(p):
-    cmd = ['cygcheck', '-c', p]
-    pop = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    (std_out, std_err) = pop.communicate()
-    return (std_out.count("OK") > 0)
+    std_out = read_stdout(['cygcheck', '-c', p])
+    return std_out.count("OK") > 0
 
 def pkg_info_detect(p):
     if p == "builtin":

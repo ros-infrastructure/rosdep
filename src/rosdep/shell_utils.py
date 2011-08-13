@@ -31,10 +31,24 @@
 from __future__ import print_function
 
 import os
+import sys
 import subprocess
 import tempfile
 import urllib2
 import hashlib
+
+if sys.hexversion > 0x03000000: #Python3
+    python3 = True
+else:
+    python3 = False
+    
+def read_stdout(cmd):
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    std_out, std_err = p.communicate()
+    if python3:
+        return std_out.decode()
+    else:
+        return std_out    
 
 def create_tempfile_from_string_and_execute(string_script, path=None):
     """

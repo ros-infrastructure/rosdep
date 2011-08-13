@@ -26,33 +26,37 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-# Author Tully Foote/tfoote@willowgarage.com
+# Author Tully Foote/tfoote@willowgarage.com, Ken Conley
 
 import os
 
-import rosdep.base_rosdep
-from rosdep.linux_helpers import *
+from .pip import PIP_INSTALLER
+from ..installers import Installer, SOURCE_INSTALLER
+from ..shell_utils import create_tempfile_from_string_and_execute, read_stdout
+
+OSX_OS_NAME = 'osx'
+OSXBREW_OS_NAME = 'osxbrew'
+
+BREW_INSTALLER = 'brew'
+MACPORTS_INSTALLER = 'macports'
 
 def port_detect(p):
-    cmd = ['port', 'installed', p]
-    pop = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    (std_out, std_err) = pop.communicate()
-    
-    return (std_out.count("(active)") > 0)
+    std_out = read_stdout(['port', 'installed', p])
+    return std_out.count("(active)") > 0
 
 def register_installers(context):
-    context.register_installer('macports', MacPortsInstaller)
+    context.register_installer(MACPORTS_INSTALLER, MacPortsInstaller)
 
 def register_osx(context):
-    context.register_os_installer('osx', 'macports')
-    context.register_os_installer('osx', 'pip')
-    context.register_os_installer('osx', 'source')
-    context.set_default_os_installer('osx', 'macports')
+    context.register_os_installer(OSX_OS_NAME, MACPORTS_INSTALLER)
+    context.register_os_installer(OSX_OS_NAME, PIP_INSTALLER)
+    context.register_os_installer(OSX_OS_NAME, SOURCE_INSTALLER)
+    context.set_default_os_installer(OSX_OS_NAME, MACPORTS_INSTALLER)
 
 def register_osxbrew(context):
-    context.register_os_installer('osxbrew', 'pip')
-    context.register_os_installer('osxbrew', 'source')
-    context.set_default_os_installer('osxbrew', 'brew')
+    context.register_os_installer(OSXBREW_OS_NAME, PIP_INSTALLER)
+    context.register_os_installer(OSXBREW_OS_NAME, SOURCE_INSTALLER)
+    context.set_default_os_installer(OSXBREW_OS_NAME, BREW_INSTALLER)
     raise NotImplemented
 
 class MacportsInstaller(Installer):

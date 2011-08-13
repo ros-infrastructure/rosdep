@@ -26,49 +26,75 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-# Author Ken Conley/kwc@willowgarage.com
+# Author Tully Foote, Ken Conley
 
 import os
 
 from rospkg.os_detect import OsDetect, OsDetector
 
-from .pip import PIP
-from ..installers import AptInstaller, SourceInstaller, PipInstaller
-from ..shell_utils import create_tempfile_from_string_and_execute
+from .pip import PIP_INSTALLER
+from ..installers import PackageManagerInstaller, SOURCE_INSTALLER
+from ..shell_utils import create_tempfile_from_string_and_execute, read_stdout
 
 DEBIAN_OS_NAME='debian'
 UBUNTU_OS_NAME='ubuntu'
 MINT_OS_NAME='mint'
 
 # apt package manager key
-APT='apt'
+APT_INSTALLER='apt'
 
 def register_installers(context):
-    context.register_installer(APT, AptInstaller)
+    context.register_installer(APT_INSTALLER, AptInstaller)
 
 def register_debian(context):
-    context.register_os_installer(DEBIAN_OS_NAME, APT)
-    context.register_os_installer(DEBIAN_OS_NAME, PIP)
-    context.register_os_installer(DEBIAN_OS_NAME, 'source')
-    context.set_default_os_installer(DEBIAN_OS_NAME, APT)
+    context.register_os_installer(DEBIAN_OS_NAME, APT_INSTALLER)
+    context.register_os_installer(DEBIAN_OS_NAME, PIP_INSTALLER)
+    context.register_os_installer(DEBIAN_OS_NAME, SOURCE_INSTALLER)
+    context.set_default_os_installer(DEBIAN_OS_NAME, APT_INSTALLER)
     
 def register_ubuntu(context):
-    context.register_os_installer(UBUNTU_OS_NAME, APT)
-    context.register_os_installer(UBUNTU_OS_NAME, PIP)
-    context.register_os_installer(UBUNTU_OS_NAME, 'source')
-    context.set_default_os_installer(UBUNTU_OS_NAME, APT)
+    context.register_os_installer(UBUNTU_OS_NAME, APT_INSTALLER)
+    context.register_os_installer(UBUNTU_OS_NAME, PIP_INSTALLER)
+    context.register_os_installer(UBUNTU_OS_NAME, SOURCE_INSTALLER)
+    context.set_default_os_installer(UBUNTU_OS_NAME, APT_INSTALLER)
 
 def register_mint(context):
     # override mint detector with different version info
     detector = OsDetect().get_detector(MINT_OS_NAME)
     context.set_os_detector(MINT_OS_NAME, MintOsDetect(detector))
     
-    context.register_os_installer(MINT_OS_NAME, APT)
-    context.register_os_installer(MINT_OS_NAME, PIP)
-    context.register_os_installer(MINT_OS_NAME, 'source')
-    context.set_default_os_installer(MINT_OS_NAME, APT)
+    context.register_os_installer(MINT_OS_NAME, APT_INSTALLER)
+    context.register_os_installer(MINT_OS_NAME, PIP_INSTALLER)
+    context.register_os_installer(MINT_OS_NAME, SOURCE_INSTALLER)
+    context.set_default_os_installer(MINT_OS_NAME, APT_INSTALLER)
     
-class AptInstaller(Installer):
+def dpkg_detect(pkgs):
+    """ 
+    Given a list of package, return the list of installed packages.
+    """
+    ret_list = []
+    # this is mainly a hack to support version locking for eigen.
+    # we strip version-locking syntax, e.g. libeigen3-dev=3.0.1-*.
+    # our query does not do the validation on the version itself.
+    version_lock_map = {}
+    for p in pkgs:
+        if '=' in p:
+            version_lock_map[p.split('=')[0]] = p
+        else:
+            version_lock_map[p] = p
+    cmd = ['dpkg-query', '-W', '-f=\'${Package} ${Status}\n\'']
+    cmd.extend(version_lock_map.keys())
+
+    std_out = read_stdout(cmd)
+    std_out = std_out.replace('\'','')
+    pkg_list = std_out.split('\n')
+    for pkg in pkg_list:
+        pkg_row = pkg.split()
+        if len(pkg_row) == 4 and (pkg_row[3] =='installed'):
+            ret_list.append( pkg_row[0])
+    return [version_lock_map[r] for r in ret_list]        
+
+class AptInstaller(PackageManagerInstaller):
     """ 
     An implementation of the Installer for use on debian style
     systems.
@@ -77,15 +103,9 @@ class AptInstaller(Installer):
         packages = rosdep_rule_arg_dict.get("packages", "")
         if type(packages) == type("string"):
             packages = packages.split()
-        self.packages = packages
+        super(AptInstaller, self).__init__(packages, dpkg_detect)
 
-    def get_packages_to_install(self):
-        return list(set(self.packages) - set(self.dpkg_detect(self.packages)))
-
-    def check_presence(self):
-        return len(self.get_packages_to_install()) == 0
-
-    def generate_package_install_command(self, default_yes = False, execute = True, display = True):
+    def generate_package_install_command(self, default_yes=False, execute=True, display=True):
         script = '!#/bin/bash\n#no script'
         packages_to_install = self.get_packages_to_install()
         if not packages_to_install:
@@ -100,34 +120,6 @@ class AptInstaller(Installer):
         elif display:
             print "To install packages: %s would have executed script\n{{{\n%s\n}}}"%(packages_to_install, script)
         return False
-
-    def dpkg_detect(self, pkgs):
-        """ 
-        Given a list of package, return the list of installed packages.
-        """
-        ret_list = []
-        # this is mainly a hack to support version locking for eigen.
-        # we strip version-locking syntax, e.g. libeigen3-dev=3.0.1-*.
-        # our query does not do the validation on the version itself.
-        version_lock_map = {}
-        for p in pkgs:
-            if '=' in p:
-                version_lock_map[p.split('=')[0]] = p
-            else:
-                version_lock_map[p] = p
-        cmd = ['dpkg-query', '-W', '-f=\'${Package} ${Status}\n\'']
-        cmd.extend(version_lock_map.keys())
-
-        pop = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        (std_out, std_err) = pop.communicate()
-        std_out = std_out.replace('\'','')
-        pkg_list = std_out.split('\n')
-        for pkg in pkg_list:
-            pkg_row = pkg.split()
-            if len(pkg_row) == 4 and (pkg_row[3] =='installed'):
-                ret_list.append( pkg_row[0])
-        return [version_lock_map[r] for r in ret_list]
-        
 
 class MintOsDetect(OsDetect):
     """

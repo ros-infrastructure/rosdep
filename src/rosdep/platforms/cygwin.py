@@ -28,25 +28,28 @@
 
 # Tingfan Wu tingfan@gmail.com
 
+from __future__ import print_function
+
 import os
 import subprocess
 
-OS_NAME = 'cygwin'
-APT_CYG = 'apt-cyg'
+from ..installers import Installer, SOURCE_INSTALLER
+from ..shell_utils import read_stdout
+
+CYGWIN_OS_NAME = 'cygwin'
+APT_CYG_INSTALLER = 'apt-cyg'
 
 def register_installers(context):
-    context.register_installer(APT_CYG, AptCygInstaller)
+    context.register_installer(APT_CYG_INSTALLER, AptCygInstaller)
     
 def register_cygwin(context):
-    context.register_os_installer(OS_NAME, 'source')
-    context.register_os_installer(OS_NAME, APT_CYG)
-    context.set_default_os_installer(OS_NAME, APT_CYG)
+    context.register_os_installer(CYGWIN_OS_NAME, SOURCE_INSTALLER)
+    context.register_os_installer(CYGWIN_OS_NAME, APT_CYG_INSTALLER)
+    context.set_default_os_installer(CYGWIN_OS_NAME, APT_CYG_INSTALLER)
 
 def cygcheck_detect(p):
-    cmd = ['cygcheck', '-c', p]
-    pop = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    (std_out, std_err) = pop.communicate()
-    return (std_out.count("OK") > 0)
+    std_out = read_stdout(['cygcheck', '-c', p])
+    return std_out.count("OK") > 0
 
 class AptCygInstaller(Installer):
     """
@@ -61,7 +64,7 @@ class AptCygInstaller(Installer):
         self.packages = packages
 
     def get_packages_to_install(self):
-        return list(set(self.packages) - set(self.cygcheck_detect(self.packages)))
+        return list(set(self.packages) - set(cygcheck_detect(self.packages)))
 
     def check_presence(self):
         return len(self.get_packages_to_install()) == 0
@@ -70,4 +73,4 @@ class AptCygInstaller(Installer):
         return "#Packages\napt-cyg -m ftp://sourceware.org/pub/cygwinports install " + ' '.join(packages)        
 
 if __name__ == '__main__':
-    print "test cygcheck_detect(true)", cygcheck_detect('cygwin');
+    print("test cygcheck_detect(true)", cygcheck_detect('cygwin'))

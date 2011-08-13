@@ -28,16 +28,14 @@
 
 # Author Tully Foote/tfoote@willowgarage.com
 
-import roslib.os_detect
 import subprocess
 
-from ..rosdep_os import RosdepOs
+from ..installers import Installer, SOURCE_INSTALLER
+from ..shell_utils import read_stdout
 
-class ZypperInstall:
+class ZypperInstall(Installer):
     """
-    This class provides the functions for installing using zypper
-    it's methods partially implement the Rosdep OS api to complement 
-    the roslib.OSDetect API.
+    This class provides the functions for installing using zypper.
     """
     def rpm_detect(self, p):
         return subprocess.call(['rpm', '-q', p], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    
@@ -53,12 +51,3 @@ class ZypperInstall:
             return "#Packages\nsudo zypper install -yl " + ' '.join(packages)
         else:
             return "#Packages\nsudo zypper install " + ' '.join(packages)
-
-
-class OpenSuse(roslib.os_detect.OpenSuse, ZypperInstall, RosdepOs): 
-    """
-    This class provides the Rosdep OS API for by combining the OpenSuse
-    OSDetect API and the YumInstall API
-    """
-    pass
-                 

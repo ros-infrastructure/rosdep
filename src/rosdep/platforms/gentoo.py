@@ -26,47 +26,48 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from __future__ import with_statement
-import os.path
-import roslib.os_detect
-import subprocess
+import os
 
-import rosdep.base_rosdep
+from ..installers import PackageManagerInstaller, SOURCE_INSTALLER
+from ..shell_utils import create_tempfile_from_string_and_execute, read_stdout
+
+GENTOO_OS_NAME='gentoo'
+EQUERY_INSTALLER = 'equery'
+
+def register_installers(context):
+    context.register_installer(EQUERY_INSTALLER, EqueryInstaller)
+
+def register_gentoo(context):
+    context.register_os_installer(GENTOO_OS_NAME, EQUERY_INSTALLER)
+    context.register_os_installer(GENTOO_OS_NAME, SOURCE_INSTALLER)
+    context.set_default_os_installer(GENTOO_OS_NAME, EQUERY_INSTALLER)
 
 # Determine whether package p needs to be installed
-def equery_detect(p):
-    cmd = ['equery', '-q', 'l', p]
-    pop = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    (std_out, std_err) = pop.communicate()
-    
-    return (std_out.count("") == 1)
+def equery_detect_single(p):
+    std_out = read_stdout(['equery', '-q', 'l', p])
+    return std_out.count("") == 1
+
+def equery_detect(packages):
+    return [p for p in packages if equery_detect_single(p)]
 
 # Check equery for existence and compatibility (gentoolkit 0.3)
 def equery_available():
     if not os.path.exists("/usr/bin/equery"):
         return False
-
-    cmd = ['equery', '-V']
-    pop = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    (stdout, stderr) = pop.communicate()
-
+    std_out = read_stdout(['equery', '-V'])
     return "0.3." == stdout[8:12]
 
+class EqueryInstaller(PackageManagerInstaller):
 
-###### Gentoo SPECIALIZATION #########################
-class Gentoo(roslib.os_detect.Gentoo, rosdep.base_rosdep.RosdepBaseOS):
-    def strip_detected_packages(self, packages):
-        if equery_available():
-            return [p for p in packages if equery_detect(p)]
-        else:
-            return packages
-
-    def generate_package_install_command(self, packages, default_yes):
+    def __init__(self):
+        #TODO: packages
+        super(Gentoo, self).__init__(package, equery_detect)
+        
+    def generate_package_install_command(self, default_yes=False, execute=True, display=True):
+        packages = self.get_packages_to_install()
         if len(packages) == 0:
             return "# Package prerequisites satisfied - nothing to do"
         elif equery_available():
             return "#Packages\nsudo emerge " + ' '.join(packages)
         else:
-	    return "#Packages\nsudo emerge -u " + ' '.join(packages)
-
-###### END Gentoo SPECIALIZATION ########################
+            return "#Packages\nsudo emerge -u " + ' '.join(packages)

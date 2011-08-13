@@ -31,6 +31,8 @@
 import os
 import sys
 
+SOURCE_INSTALLER='source'
+
 class RosdepContext:
     """
     RosdepContext manages the context of executation for rosdep as it
@@ -124,3 +126,24 @@ class Installer:
         doesn't handle the dependencies.
         """
         return [] # Default return empty list
+
+
+class PackageManagerInstaller(Installer):
+    """
+    General form of a package manager installer implementation that assumes:
+
+     - installer spec is a list of package names
+     - a function exists that can return a list of packages that are installed
+    """
+    def __init__(self, packages, detect_fn):
+        self.packages = packages
+        self.detect_fn = detect_fn
+
+    def get_packages_to_install(self):
+        return list(set(self.packages) - set(self.detect_fn(self.packages)))
+
+    def check_presence(self):
+        return len(self.get_packages_to_install()) == 0
+
+    def generate_package_install_command(self, default_yes = False, execute = True, display = True):
+        raise NotImplementedError('subclasses must implement')

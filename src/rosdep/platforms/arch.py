@@ -28,51 +28,31 @@
 
 # Author Tully Foote/tfoote@willowgarage.com
 
-from __future__ import with_statement
-from linux_helpers import *
 import os
+import subprocess
 
-import rosdep.base_rosdep
+from ..installers import PackageManagerInstaller, SOURCE_INSTALLER
 
-###### Arch SPECIALIZATION #########################
+ARCH_OS_NAME = 'arch'
+PACMAN_INSTALLER = 'pacman'
+
+def register_installers(context):
+    context.register_installer(PACMAN_INSTALLER, PacmanInstaller)
+    
+def register_cygwin(context):
+    context.register_os_installer(ARCH_OS_NAME, SOURCE_INSTALLER)
+    context.register_os_installer(ARCH_OS_NAME, PACMAN_INSTALLER)
+    context.set_default_os_installer(ARCH_OS_NAME, PACMAN_INSTALLER)
 
 def pacman_detect(p):
     return subprocess.call(['pacman', '-Q', p], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    
 
-class Arch(rosdep.base_rosdep.RosdepBaseOS):
+class Pacman(PackageManagerInstaller):
 
-    def check_presence(self):
-        filename = "/etc/arch-release"
-        if os.path.exists(filename):
-            return True
-        return False
+    def __init__(self):
+        #TODO: need to pull out package list from rule
+        super(Pacman, self).__init__(packages, pacman_detect)
 
-    def get_version(self):
-        return ""
-        # arch didn't have a version parsing in cpp version
-        try:
-            filename = "/etc/issue"
-            if os.path.exists(filename):
-                with open(filename, 'r') as fh:
-                    os_list = fh.read().split()
-                if os_list[0] == "Linux" and os_list[1] == "Arch":
-                    return os_list[2]
-        except:
-            print "Arch failed to get version"
-            return False
-
-        return False
-
-    def get_name(self):
-        return "arch"
-
-
-    def strip_detected_packages(self, packages):
-        return [p for p in packages if pacman_detect(p)]
-
-    def generate_package_install_command(self, packages, default_yes):        
-        return "#Packages\nsudo pacman -Sy --needed " + ' '.join(packages)
-
-###### END Arch SPECIALIZATION ########################
-
-
+    def generate_package_install_command(self, default_yes=False, execute=True, display=True):
+        packages_to_install = self.get_packages_to_install()
+        return "#Packages\nsudo pacman -Sy --needed " + ' '.join(packages_to_install)
