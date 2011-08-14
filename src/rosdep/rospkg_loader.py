@@ -59,6 +59,7 @@ class RosPkgLoader(RosdepLoader):
         
     def _load_rosdep_yaml(self, stack_name):
         """
+        @return: parsed YAML data and filename it was loaded from
         @raise yaml.YAMLError
         @raise rospkg.ResourceNotFound
         """
@@ -66,7 +67,7 @@ class RosPkgLoader(RosdepLoader):
         filename = os.path.join(stack_dir, ROSDEP_YAML)
         if os.path.isfile(filename):
             with open(filename) as f:
-                return yaml.load(f.read())
+                return yaml.load(f.read()), filename
         
     def load_stack(self, stack_name, rosdep_db):
         """
@@ -80,11 +81,11 @@ class RosPkgLoader(RosdepLoader):
         if rosdep_db.is_loaded(stack_name):
             return
         try:
-            rosdep_data = self._load_rosdep_yaml(stack_name) or {}
+            rosdep_data, filename = self._load_rosdep_yaml(stack_name) or {}
         except yaml.YAMLError as e:
             raise InvalidRosdepData("Invalid YAML for stack [%s]: %s"%(e, stack_name))
         stack_dependencies = self._rosstack.get_direct_depends(stack_name)
-        rosdep_db.set_stack_data(stack_name, rosdep_data, stack_dependencies)
+        rosdep_db.set_stack_data(stack_name, rosdep_data, stack_dependencies, filename)
 
     def load_package(self, package_name, rosdep_db):
         stack_name = self._rospack.stack_of(package_name)

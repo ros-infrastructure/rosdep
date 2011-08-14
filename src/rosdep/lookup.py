@@ -49,6 +49,9 @@ class RosdepDefinition:
         self.origin = origin
     
 class RosdepConflict(Exception):
+    """
+    Error that indicates that two RosdepDefinitions are not compatible.
+    """
 
     def __init__(self, definition_name, definition1, definition2):
         self.definition_name = definition_name
@@ -61,6 +64,13 @@ class RosdepConflict(Exception):
 \t%s [%s]"""%(self.definition_name, self.definition1.data, self.definition1.origin, self.definition2.data, self.definition2.origin)
     
 class RosdepView:
+    """
+    View of RosdepDatabase.  Whereas a RosdepDatabase stores all of
+    the RosdepDatabaseEntry information for multiple stacks, a
+    RosdepView merges multiple entries into a single view.  This view
+    can then been queried to lookup and resolve individual rosdep
+    dependencies.
+    """
     
     def __init__(self, name, rosdep_data):
         self.name = name
@@ -72,23 +82,26 @@ class RosdepView:
         """
         return self.rosdeb_data[rosdep_name]
 
-    def merge(self, update, override=False):
+    def merge(self, entry, override=False):
         """
-        Merge rosdep database update into main database
+        Merge RosdepDatabaseEntry into this view.
 
         @raise RosdepConflict
         """
         db = self.rosdep_data
-        for rosdep_name, update_definition in db_update.items():
-            rosdep_entry = db_update[key]
-            if override or not key in db:
-                db[key] = update_definition
+        entry_origin = entry.origin
+
+        for dep_name, dep_data in entry.rosdep_data.items():
+            # convert data into definition model
+            update_definition = RosdepDefinition(dep_data, entry_origin)
+            if override or not rosdep_name in db:
+                db[dep_name] = update_definition
             else:
                 definition = db[key]
                 # original rosdep implementation had ability
                 # to record multiple sources; this does not.
-                if definition.data != update_definition.data:
-                    raise RosdepConflict(rosdep_name, definition, update_definition)        
+                if definition.data != dep_data:
+                    raise RosdepConflict(dep_name, definition, update_definition) 
 
 class RosdepLookup:
     
@@ -105,6 +118,11 @@ class RosdepLookup:
         self._view_cache = {} # {str: {rosdep_data}}
 
     def get_rosdep_view(self, stack_name, os_name=None, os_version=None):
+        """
+        @param stack_name: name of stack to get view for
+        @param os_name: name of os to create view for.  Defaults to default_os_name.
+        @param os_verion: version of os to create view for.  Defaults to default_os_version.
+        """
         if os_name is None:
             os_name = self.default_os_name
         if os_version is None:
