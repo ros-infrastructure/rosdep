@@ -1,0 +1,14 @@
+<package>
+  <description brief="stack1_p3">
+
+     stack1_p3
+
+  </description>
+  <author>Kenneth Conley</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/stack1_p3</url>
+
+</package>
+
+

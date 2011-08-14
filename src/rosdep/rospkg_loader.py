@@ -41,6 +41,10 @@ from .loader import RosdepLoader, InvalidRosdepData
 
 ROSDEP_YAML = 'rosdep.yaml'
 
+yaml.add_constructor(
+    u'tag:yaml.org,2002:float',
+    yaml.constructor.Constructor.construct_yaml_str)
+
 class RosPkgLoader(RosdepLoader):
     
     def __init__(self, rospack=None, rosstack=None):
@@ -89,4 +93,10 @@ class RosPkgLoader(RosdepLoader):
 
     def load_package_manifest(self, package_name):
         return self._rospack.get_manifest(package_name)
+
+    def get_loadable_packages(self):
+        return self._rospack.list()
+
+    def get_loadable_stacks(self):
+        return self._rosstack.list()
 

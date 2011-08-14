@@ -1,0 +1,9 @@
+<stack>
+  <description brief="stack1">stack1</description>
+  <author>Maintained by Kenneth Conley</author>
+  <license>BSD</license>  
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/stack1</url>
+  <depend stack="ros" />
+
+</stack>

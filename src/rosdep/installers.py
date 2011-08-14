@@ -35,7 +35,7 @@ SOURCE_INSTALLER='source'
 
 class RosdepContext:
     """
-    RosdepContext manages the context of executation for rosdep as it
+    RosdepContext manages the context of execution for rosdep as it
     relates to the installers, OS detectors, and other extensible
     APIs.
     """
@@ -77,7 +77,7 @@ class RosdepContext:
 
 class OsInstallers:
     """
-    Base class API for 
+    Stores list of installers associated with OSes.
     """
 
     def __init__(self):

@@ -66,7 +66,7 @@ class RosdepView:
         self.name = name
         self.rosdep_data = rosdep_data
 
-    def lookup_rosdep(self, rosdep_name):
+    def lookup(self, rosdep_name):
         """
         @raise KeyError
         """
@@ -105,11 +105,16 @@ class RosdepLookup:
         self._view_cache = {} # {str: {rosdep_data}}
 
     def get_rosdep_view(self, stack_name, os_name=None, os_version=None):
+        if os_name is None:
+            os_name = self.default_os_name
+        if os_version is None:
+            os_version = self.default_os_version
+            
         if not self.rosdeb_db.is_loaded(stack_name):
             self.loader.load_stack(stack_name)
 
         # load combined view for stack
-        rosdep_data = self.rosdeb_db.get_stack_view(stack_name)
+        rosdep_data = self.rosdeb_db.get_stack_data(stack_name)
 
         # return API based on this view
         return RosdepView(stack_name, rosdep_data, os_name, os_version)
@@ -172,3 +177,48 @@ class RosdepLookup:
         self._view_cache[stack_name] = d
         return d
 
+    def depdb(self, packages):
+        raise NotImplementedError('porting')
+        output = "Rosdep dependencies for operating system %s version %s "%(self.osi.get_name(), self.osi.get_version())
+        for p in packages:
+            output += "\nPACKAGE: %s\n"%p
+            rdlp = RosdepLookupPackage(self.osi.get_name(), self.osi.get_version(), p, self.yc)
+            rosdep_map = rdlp.rosdep_map
+            for k,v in rosdep_map.iteritems():
+                output = output + "<<<< %s -> %s >>>>\n"%(k, v)
+        return output
+
+    def where_defined(self, rosdeps):
+        raise NotImplementedError('porting')
+        output = ""
+        locations = {}
+
+        for r in rosdeps:
+            locations[r] = set()
+
+        path = os.path.join(roslib.rosenv.get_ros_home(), "rosdep.yaml")
+        rosdep_dict = self.yc.get_specific_rosdeps(path)
+        for r in rosdeps:
+            if r in rosdep_dict:
+                locations[r].add("Override:"+path)
+
+        for p in roslib.packages.list_pkgs():
+            path = os.path.join(roslib.packages.get_pkg_dir(p), "rosdep.yaml")
+            rosdep_dict = self.yc.get_specific_rosdeps(path)
+            for r in rosdeps:
+                if r in rosdep_dict:
+                    addendum = ""
+                    if roslib.stacks.stack_of(p):
+                        addendum = "<<Unused due to package '%s' being in a stack.]]"%p
+                    locations[r].add(">>" + path + addendum)
+            
+        for s in roslib.stacks.list_stacks():
+            path = os.path.join(roslib.stacks.get_stack_dir(s), "rosdep.yaml")
+            rosdep_dict = self.yc.get_specific_rosdeps(path)
+            for r in rosdeps:
+                if r in rosdep_dict:
+                    locations[r].add(path)
+            
+        for rd in locations:
+            output += "%s defined in %s"%(rd, locations[rd])
+        return output

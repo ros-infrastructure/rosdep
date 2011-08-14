@@ -27,52 +27,32 @@
 
 from __future__ import print_function
 
-class RosdepDefinition:
-    """
-    Single rosdep dependency definition.  This data is stored as the
-    raw dictionary definition for the dependency.
-
-    See REP 111, 'Multiple Package Manager Support for Rosdep' for a
-    discussion of this raw format.
-    """
-    
-    def __init__(self, data, origin="<dynamic>"):
-        """
-        @param origin: string that indicates where data originates from (e.g. filename)
-        """
-        self.data = data
-        self.origin = origin
+def test_RosdepDefinition():
+    from rosdep.lookup import RosdepDefinition
+    d = dict(a=1, b=2, c=3)
+    def1 = RosdepDefinition(d)
+    assert def1.data == d
+    def2 = RosdepDefinition(d, 'file1.txt')
+    assert def2.data == d
+    assert def2.origin == 'file1.txt'
     
 def test_RosdepConflict():
+    from rosdep.lookup import RosdepConflict
+    
     ex = RosdepConflict('foo', def1, def2)
     str_ex = str(ex)
     print(str_ex)
     assert def1.origin in str_ex
     assert def2.origin in str_ex
     
-class RosdepConflict(Exception):
-
-    def __init__(self, definition_name, definition1, definition2):
-        self.definition_name = definition_name
-        self.definition1 = definition1
-        self.definition2 = definition2
-        
-    def __str__(self):
-        return """Rules for %s do not match:
-\t%s [%s]
-\t%s [%s]"""%(self.definition_name, self.definition1.data, self.definition1.origin, self.definition2.data, self.definition2.origin)
+def test_RosdepView():
+    from rosdep.lookup import RosdepView
+    d = dict(a=1, b=2, c=3)
+    view = RosdepView('common', d)
+    try:
+        view.lookup_rosdep(
+    assert view.lookup_rosdep('a') == 1
     
-class RosdepView:
-    
-    def __init__(self, name, rosdep_data):
-        self.name = name
-        self.rosdep_data = rosdep_data
-
-    def lookup_rosdep(self, rosdep_name):
-        """
-        @raise KeyError
-        """
-        return self.rosdeb_data[rosdep_name]
 
     def merge(self, update, override=False):
         """

@@ -62,3 +62,8 @@ class RosdepLoader:
     def load_package_manifest(self, package_name):
         raise NotImplementedError()
 
+    def get_loadable_packages(self):
+        raise NotImplementedError()
+
+    def get_loadable_stacks(self):
+        raise NotImplementedError()     

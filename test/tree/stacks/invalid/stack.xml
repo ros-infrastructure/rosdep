@@ -1,0 +1,9 @@
+<stack>
+  <description brief="invalid">invalid</description>
+  <author>Maintained by Kenneth Conley</author>
+  <license></license>  
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/invalid</url>
+  <depend stack="ros" />
+
+</stack>

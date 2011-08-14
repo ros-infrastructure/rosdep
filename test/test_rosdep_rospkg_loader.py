@@ -69,14 +69,24 @@ def test_RosPkgLoader():
     rosdep_db.is_loaded.assert_called_with('ros')
     rosdep_db.set_stack_data.assert_called_with('ros', ros_stack_data, [])
 
-    rosdep_db.reset_mock()
-    loader.load_package(package_name, rosdep_db)
-    assert False
+    #TODO
+    if 0:
+        rosdep_db.reset_mock()
+        loader.load_package(package_name, rosdep_db)
+        assert False
+
+    packages = loader.get_loadable_packages()
+    for p in ['stack1_p1', 'stack1_p2', 'stack1_p3']:
+        assert p in packages
+    stacks = loader.get_loadable_stacks()
+    for s in ['ros', 'empty', 'invalid', 'stack1']:
+        assert s in stacks, stacks
 
     # TODO: test package not part of stack
     if 0:
         loader.load_package_manifest(package_name)
     # TODO: test invalid stack
+    from rosdep.loader import InvalidRosdepData
     try:
         loader.load_stack('invalid', rosdep_db)
         assert False, "should have raised"

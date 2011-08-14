@@ -37,11 +37,16 @@ import tempfile
 import urllib2
 import hashlib
 
+from .core import rd_debug
+
 if sys.hexversion > 0x03000000: #Python3
     python3 = True
 else:
     python3 = False
     
+class DownloadFailed(Exception): pass
+class Md5Mismatch(Exception): pass
+
 def read_stdout(cmd):
     p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     std_out, std_err = p.communicate()
@@ -72,30 +77,25 @@ def create_tempfile_from_string_and_execute(string_script, path=None):
         if os.path.exists(fh.name):
             os.remove(fh.name)
     
-    if "ROSDEP_DEBUG" in os.environ:
-        print("Return code was:", result)
+    rd_debug("Return code was:", result)
     return result == 0
 
 def fetch_file(url, md5sum=None):
+    """
+    @raise Md5Mismatch
+    @raise DownloadFailed
+    """
     contents = ''
     try:
         fh = urllib2.urlopen(url)
         contents = fh.read()
         filehash =  hashlib.md5(contents).hexdigest()
         if md5sum and filehash != md5sum:
-            raise rosdep.core.RosdepException( "md5sum didn't match for %s.  Expected %s got %s"%(url, md5sum, filehash))
+            raise Md5Mismatch( "md5sum didn't match for %s.  Expected %s got %s"%(url, md5sum, filehash))
     except urllib2.URLError as ex:
-        raise rosdep.core.RosdepException(str(ex))
+        raise DownloadFailed(str(ex))
 
     return contents    
-
-def assert_file_hash(filename, md5sum):
-    md5 = hashlib.md5()
-    with open(filename,'rb') as f: 
-        for chunk in iter(lambda: f.read(8192), ''): 
-            md5.update(chunk)
-    if md5sum != md5.hexdigest():
-        raise rosdep.core.RosdepException("md5sum check on %s failed.  Expected %s got %s"%(filename, md5sum, md5.hexdigest()))
 
 def get_file_hash(filename):
     md5 = hashlib.md5()
