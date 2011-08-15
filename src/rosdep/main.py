@@ -124,9 +124,22 @@ def main():
         print("ERROR: %s"%e, file=sys.stderr)
         return 1
 
+def _compute_depdb_output():
+    lookup = RosdepLookup('TODO')
+    os_name = os_version = "TODO"
+    output = "Rosdep dependencies for operating system %s version %s "%(os_name, os_version)
+    for stack_name in stacks:
+        output += "\nSTACK: %s\n"%(stack_name)
+        view = lookup.get_rosdep_view(stack_name)
+        for rosdep in view.keys():
+            definition = view.lookup(rosdep)
+            resolved = resolve_definition(definition, os_name, os_version)
+            output = output + "<<<< %s -> %s >>>>\n"%(rosdep, resolved)
+    return output
+    
 def command_depdb(r, rdargs, options):
     #TODO: get verified_packages from r
-    print(r.depdb(verified_packages))
+    print(_compute_depdb_output())
     return 0
 
 def command_what_needs(r, rdargs, options):

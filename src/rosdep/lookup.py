@@ -72,6 +72,12 @@ class RosdepView:
         """
         return self.rosdep_data[rosdep_name]
 
+    def keys(self):
+        """
+        Return list of rosdep names in this view
+        """
+        return self.rosdep_data.keys()
+        
     def merge(self, update, override=False):
         """
         Merge rosdep database update into main database
@@ -108,32 +114,6 @@ class RosdepLookup:
 
         self._view_cache = {} # {str: {rosdep_data}}
 
-    def get_rosdep_view(self, stack_name, os_name=None, os_version=None):
-        """
-        Get a L{RosdepView} for a specific stack and OS combination.
-        A view enables queries for a particular stack or package in
-        that stack.
-
-        @param os_name: (optional) OS name to use for view.  Defaults
-        to default_os_name.
-
-        @param os_version: (optional) OS version to use for view.
-        Defaults to default_os_version.
-        """
-        if os_name is None:
-            os_name = self.default_os_name
-        if os_version is None:
-            os_version = self.default_os_version
-            
-        if not self.rosdeb_db.is_loaded(stack_name):
-            self.loader.load_stack(stack_name)
-
-        # load combined view for stack
-        rosdep_data = self.rosdeb_db.get_stack_data(stack_name)
-
-        # return API based on this view
-        return RosdepView(stack_name, rosdep_data, os_name, os_version)
-
     def get_rosdeps(self, package):
         """
         Get list of rosdep names that this package directly requires.
@@ -143,6 +123,7 @@ class RosdepLookup:
 
     def what_needs(self, rosdep_args):
         raise NotImplemented
+        self._load_all_stacks()
         packages = []
         for p in roslib.packages.list_pkgs():
             rosdeps_needed = self.get_rosdep0(p)
@@ -173,66 +154,75 @@ class RosdepLookup:
 
         return RosdepLookup(rosdep_db, loader, os_name, os_version)
 
-    def get_stack_view(self, stack_name):
+    def resolve_definition(self, os_name=None, os_version=None):
         """
-        @return: computed rosdep database for given stack
+        Resolve a L{RosdepDefinition} for a particular os/version spec.
         
-        @raise KeyError: if stack_name is not in database
+        @param os_name: (optional) OS name to use for view.  Defaults
+        to default_os_name.
+
+        @param os_version: (optional) OS version to use for view.
+        Defaults to default_os_version.
+        """
+        raise NotImplementedError("TODO")
+        
+    def _load_all_stacks(self):
+        """
+        Load all available stacks.  In general, this is equivalent to
+        loading all stacks on the package path.
+        """
+        for stack_name in self.loader.get_loadable_stacks():
+            _load_stack_dependencies(stack_name)
+        
+    def _load_stack_dependencies(self, stack_name):
+        """
+        Initialize internal RosdepDatabase on demand.
+        """
+        db = self.rosdep_db
+        if db.is_loaded(stack_name):
+            return
+        entry = db.get_stack_data(stack_name)
+        for d in entry.stack_dependencies:
+            self._load_stack_dependencies(stack_name)
+        self.loader.load_stack(stack_name, db)
+    
+    def get_rosdep_view(self, stack_name):
+        """
+        Get a L{RosdepView} for a specific stack and OS combination.
+        A view enables queries for a particular stack or package in
+        that stack.
+
+        @raise RosdepConflict: if view cannot be created due to
+        conflict rosdep definitions.
+
+        @raise KeyError: if stack or stack dependencies do not exist.
         """
         if stack_name in self._view_cache:
             return self._view_cache
 
-        db_entry = self.get_stack_data(stack_name)
-        rosdep_data = db_entry.rosdep_data.copy()
+        # lazy-init
+        self._load_stack_dependencies(stack_name)
 
-        view = RosdepView(stack_name, rosdep_data)
+        # Create view and initialize with dbs from all of the
+        # dependencies. 
+        view = RosdepView(stack_name)
 
-        for d in db_entry.stack_dependencies:
-            view.merge(self.get_stack_db(d))
-        self._view_cache[stack_name] = d
-        return d
+        dependencies = self.rosdep_db.get_stack_dependencies(stack_name)
+        for s in [stack_name] + dependencies:
+            db_entry = self.get_stack_data(stack_name)
+            view.merge(db_entry.rosdep_data)
 
-    def depdb(self, packages):
-        raise NotImplementedError('porting')
-        output = "Rosdep dependencies for operating system %s version %s "%(self.osi.get_name(), self.osi.get_version())
-        for p in packages:
-            output += "\nPACKAGE: %s\n"%p
-            rdlp = RosdepLookupPackage(self.osi.get_name(), self.osi.get_version(), p, self.yc)
-            rosdep_map = rdlp.rosdep_map
-            for k,v in rosdep_map.iteritems():
-                output = output + "<<<< %s -> %s >>>>\n"%(k, v)
-        return output
+        self._view_cache[stack_name] = view
+        return view
 
     def where_defined(self, rosdeps):
         raise NotImplementedError('porting')
         output = ""
         locations = {}
+        self._load_all_stacks()
 
         for r in rosdeps:
             locations[r] = set()
-
-        path = os.path.join(roslib.rosenv.get_ros_home(), "rosdep.yaml")
-        rosdep_dict = self.yc.get_specific_rosdeps(path)
-        for r in rosdeps:
-            if r in rosdep_dict:
-                locations[r].add("Override:"+path)
-
-        for p in roslib.packages.list_pkgs():
-            path = os.path.join(roslib.packages.get_pkg_dir(p), "rosdep.yaml")
-            rosdep_dict = self.yc.get_specific_rosdeps(path)
-            for r in rosdeps:
-                if r in rosdep_dict:
-                    addendum = ""
-                    if roslib.stacks.stack_of(p):
-                        addendum = "<<Unused due to package '%s' being in a stack.]]"%p
-                    locations[r].add(">>" + path + addendum)
-            
-        for s in roslib.stacks.list_stacks():
-            path = os.path.join(roslib.stacks.get_stack_dir(s), "rosdep.yaml")
-            rosdep_dict = self.yc.get_specific_rosdeps(path)
-            for r in rosdeps:
-                if r in rosdep_dict:
-                    locations[r].add(path)
             
         for rd in locations:
             output += "%s defined in %s"%(rd, locations[rd])
