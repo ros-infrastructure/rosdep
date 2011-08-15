@@ -45,7 +45,7 @@ def test_RosdepConflict():
     assert def1.origin in str_ex
     assert def2.origin in str_ex
     
-def test_RosdepView():
+def test_RosdepView_lookup():
     from rosdep.lookup import RosdepView
     d = dict(a=1, b=2, c=3)
     view = RosdepView('common', d)
@@ -53,7 +53,15 @@ def test_RosdepView():
         view.lookup_rosdep(
     assert view.lookup_rosdep('a') == 1
     
+def test_RosdepView_merge():
+    from rosdep.lookup import RosdepView
+    d = dict(a=1, b=2, c=3)
+    view = RosdepView('common', d)
 
+    override = True
+
+    override = False
+    
     def merge(self, update, override=False):
         """
         Merge rosdep database update into main database

@@ -82,4 +82,14 @@ class RosdepDatabase:
         @return: RosdepDatabaseEntry of given stack.  
         """
         return self._rosdep_db[stack_name]
-        
+    
+    def get_stack_dependencies(self, stack_name):
+        """
+        @raise KeyError: if stack_name is not an entry, or if all of
+        stack's dependencies have not been properly loaded.
+        """
+        entry = self.get_stack_data(stack_name)
+        dependencies = set(entry.stack_dependencies)
+        for s in entry.stack_dependencies:
+            dependencies.update(self.get_stack_dependencies(s))
+        return list(set(dependencies))

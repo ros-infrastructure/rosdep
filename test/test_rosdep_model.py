@@ -75,3 +75,24 @@ def test_RosdepDatabase():
     assert entry.origin == 'origin3'
     assert set(entry.stack_dependencies) == set(['baz', 'blah'])
     
+
+def test_RosdepDatabase_get_stack_dependencies():
+    from rosdep.model import RosdepDatabase
+
+    data = {'a': 1}
+    db = RosdepDatabase()
+    
+    db.set_stack_data('foo', data, [], 'origin')
+    assert [] == db.get_stack_dependencies('foo')
+
+    db.set_stack_data('bar', data, ['foo'], 'origin')
+    assert ['foo'] == db.get_stack_dependencies('bar')
+
+    db.set_stack_data('baz', data, ['bar'], 'origin')
+    assert ['foo', 'bar'] ==  db.get_stack_dependencies('baz')
+
+    db.set_stack_data('rad', data, [], 'origin')
+    db.set_stack_data('fad', data, ['baz', 'rad'], 'origin')
+    retval = db.get_stack_dependencies('fad')
+    assert set(['baz', 'rad', 'foo', 'bar']) == set(retval), retval
+    assert len(retval) == 4

@@ -49,9 +49,6 @@ class RosdepDefinition:
         self.origin = origin
     
 class RosdepConflict(Exception):
-    """
-    Error that indicates that two RosdepDefinitions are not compatible.
-    """
 
     def __init__(self, definition_name, definition1, definition2):
         self.definition_name = definition_name
@@ -64,46 +61,40 @@ class RosdepConflict(Exception):
 \t%s [%s]"""%(self.definition_name, self.definition1.data, self.definition1.origin, self.definition2.data, self.definition2.origin)
     
 class RosdepView:
-    """
-    View of RosdepDatabase.  Whereas a RosdepDatabase stores all of
-    the RosdepDatabaseEntry information for multiple stacks, a
-    RosdepView merges multiple entries into a single view.  This view
-    can then been queried to lookup and resolve individual rosdep
-    dependencies.
-    """
     
-    def __init__(self, name, rosdep_data):
+    def __init__(self, name):
         self.name = name
-        self.rosdep_data = rosdep_data
 
     def lookup(self, rosdep_name):
         """
+        @return L{RosdepDefinition}
         @raise KeyError
         """
-        return self.rosdeb_data[rosdep_name]
+        return self.rosdep_data[rosdep_name]
 
-    def merge(self, entry, override=False):
+    def merge(self, update, override=False):
         """
-        Merge RosdepDatabaseEntry into this view.
+        Merge rosdep database update into main database
 
         @raise RosdepConflict
         """
         db = self.rosdep_data
-        entry_origin = entry.origin
-
-        for dep_name, dep_data in entry.rosdep_data.items():
-            # convert data into definition model
-            update_definition = RosdepDefinition(dep_data, entry_origin)
-            if override or not rosdep_name in db:
-                db[dep_name] = update_definition
+        for rosdep_name, update_definition in db_update.items():
+            rosdep_entry = db_update[key]
+            if override or not key in db:
+                db[key] = update_definition
             else:
                 definition = db[key]
                 # original rosdep implementation had ability
                 # to record multiple sources; this does not.
-                if definition.data != dep_data:
-                    raise RosdepConflict(dep_name, definition, update_definition) 
+                if definition.data != update_definition.data:
+                    raise RosdepConflict(rosdep_name, definition, update_definition)        
 
 class RosdepLookup:
+    """
+    Lookup rosdep definitions.  Provides API for most
+    non-install-related commands for rosdep.
+    """
     
     def __init__(self, rosdep_db, loader, default_os_name, default_os_version):
         """
@@ -119,9 +110,15 @@ class RosdepLookup:
 
     def get_rosdep_view(self, stack_name, os_name=None, os_version=None):
         """
-        @param stack_name: name of stack to get view for
-        @param os_name: name of os to create view for.  Defaults to default_os_name.
-        @param os_verion: version of os to create view for.  Defaults to default_os_version.
+        Get a L{RosdepView} for a specific stack and OS combination.
+        A view enables queries for a particular stack or package in
+        that stack.
+
+        @param os_name: (optional) OS name to use for view.  Defaults
+        to default_os_name.
+
+        @param os_version: (optional) OS version to use for view.
+        Defaults to default_os_version.
         """
         if os_name is None:
             os_name = self.default_os_name
