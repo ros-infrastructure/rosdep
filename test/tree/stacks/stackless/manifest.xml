@@ -1,0 +1,14 @@
+<package>
+  <description brief="stackless">
+
+     stackless
+
+  </description>
+  <author>Ken Conley</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/stackless</url>
+
+</package>
+
+

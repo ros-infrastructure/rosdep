@@ -76,6 +76,8 @@ class RosPkgLoader(RosdepLoader):
 
         @raise InvalidRosdepData: if stack rosdep.yaml is invalid
         @raise rospkg.ResourceNotFound: if stack cannot be located
+
+        @return: True if stack was loaded.  False if stack was already loaded.
         """
         if rosdep_db.is_loaded(stack_name):
             return
@@ -86,11 +88,24 @@ class RosPkgLoader(RosdepLoader):
         rosdep_db.set_stack_data(stack_name, rosdep_data, stack_dependencies, filename)
 
     def load_package(self, package_name, rosdep_db):
+        """
+        Load data for stack that contains package into rosdep_db. If
+        the package or containing stack has already been loaded into
+        rosdep_db, this method does nothing.  If package has no
+        associated rosdep data, it will be initialized with an empty
+        data map.
+
+        @raise InvalidRosdepData: if stack rosdep.yaml is invalid
+        @raise rospkg.ResourceNotFound: if stack cannot be located
+
+        @return: True if package was loaded, False if package was already loaded or is not part of stack.
+        """
+
         stack_name = self._rospack.stack_of(package_name)
         if stack_name:
-            self.load_stack(stack_name, rosdeb_db)
+            return self.load_stack(stack_name, rosdep_db)
 
-    def load_package_manifest(self, package_name):
+    def get_package_manifest(self, package_name):
         return self._rospack.get_manifest(package_name)
 
     def get_loadable_packages(self):

@@ -139,7 +139,7 @@ class RosdepLookup:
 
         @return: list of rosdep names, [str]
         """
-        m = self.loader.load_package_manifest(package)
+        m = self.loader.get_package_manifest(package)
         return [d.name for d in m.rosdeps]
 
     def what_needs(self, rosdep_name):

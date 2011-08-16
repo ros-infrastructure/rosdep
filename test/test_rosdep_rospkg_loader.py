@@ -41,19 +41,37 @@ from rospkg import RosPack, RosStack
 def get_test_dir():
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'tree'))
     
-def test_RosPkgLoader():
-    from rosdep.model import RosdepDatabase
-    from rosdep.rospkg_loader import RosPkgLoader
-    
+def get_rospkg():
+    # configure inside of the test tree
     test_dir = get_test_dir()
     ros_root = os.path.join(test_dir, 'ros')
     ros_package_path = os.path.join(test_dir, 'stacks')
     rospack = RosPack(ros_root, ros_package_path)
     rosstack = RosStack(ros_root, ros_package_path)
+    return rospack, rosstack
+
+def test_RosPkgLoader():
+    from rosdep.model import RosdepDatabase
+    from rosdep.rospkg_loader import RosPkgLoader
+    from rosdep.loader import InvalidRosdepData
+    
+    # tripwire
+    loader = RosPkgLoader()
+    assert loader._rospack is not None
+    assert loader._rosstack is not None
+
+    # configure inside of the test tree
+    rospack, rosstack = get_rospkg()
+    ros_root = rosstack.get_path('ros')
     loader = RosPkgLoader(rospack, rosstack)
     assert loader._rospack == rospack
     assert loader._rosstack == rosstack    
 
+    # test load_package_manifest
+    assert loader.get_package_manifest('stackless').brief == 'stackless'
+    assert loader.get_package_manifest('stack1_p1').brief == 'stack1_p1'
+    
+    # test with mock db
     rosdep_db = Mock(spec=RosdepDatabase)
     rosdep_db.is_loaded.return_value = False
 
@@ -62,7 +80,14 @@ def test_RosPkgLoader():
     rosdep_db.is_loaded.assert_called_with('empty')
     rosdep_db.set_stack_data.assert_called_with('empty', {}, ['ros'], None)
 
-    # test with complicated ros stack
+    # test invalid stack
+    try:
+        loader.load_stack('invalid', rosdep_db)
+        assert False, "should have raised"
+    except InvalidRosdepData as e:
+        pass
+
+    # test with complicated ros stack.  
     path = os.path.join(ros_root, 'rosdep.yaml')
     with open(path) as f:
         ros_stack_data = yaml.load(f.read())
@@ -70,11 +95,38 @@ def test_RosPkgLoader():
     rosdep_db.is_loaded.assert_called_with('ros')
     rosdep_db.set_stack_data.assert_called_with('ros', ros_stack_data, [], path)
 
-    #TODO
-    if 0:
-        rosdep_db.reset_mock()
-        loader.load_package(package_name, rosdep_db)
-        assert False
+    # test with package
+    path = os.path.join(rosstack.get_path('stack1'), 'rosdep.yaml')
+    with open(path) as f:
+        stack1_data = yaml.load(f.read())
+
+    loader.load_package('stack1_p1', rosdep_db)
+    rosdep_db.is_loaded.assert_called_with('stack1')
+    rosdep_db.set_stack_data.assert_called_with('stack1', stack1_data, ['ros'], path)
+
+    # test with package that is not part of stack
+    rosdep_db.reset_mock()
+    loader.load_package('stackless', rosdep_db)
+    assert rosdep_db.is_loaded.call_args_list == []
+    assert rosdep_db.set_stack_data.call_args_list == []
+    
+    # test call on db that is already loaded
+    rosdep_db.reset_mock()
+    rosdep_db.is_loaded.return_value = True
+    path = os.path.join(ros_root, 'rosdep.yaml')
+    with open(path) as f:
+        ros_stack_data = yaml.load(f.read())
+    loader.load_stack('ros', rosdep_db)
+    rosdep_db.is_loaded.assert_called_with('ros')
+    assert rosdep_db.set_stack_data.call_args_list == []
+
+def test_RosPkgLoader_get_loadable():
+    from rosdep.rospkg_loader import RosPkgLoader
+    
+    rospack, rosstack = get_rospkg()
+    loader = RosPkgLoader(rospack, rosstack)
+    assert loader._rospack == rospack
+    assert loader._rosstack == rosstack    
 
     packages = loader.get_loadable_packages()
     for p in ['stack1_p1', 'stack1_p2', 'stack1_p3']:
@@ -82,15 +134,4 @@ def test_RosPkgLoader():
     stacks = loader.get_loadable_stacks()
     for s in ['ros', 'empty', 'invalid', 'stack1']:
         assert s in stacks, stacks
-
-    # TODO: test package not part of stack
-    if 0:
-        loader.load_package_manifest(package_name)
-    # TODO: test invalid stack
-    from rosdep.loader import InvalidRosdepData
-    try:
-        loader.load_stack('invalid', rosdep_db)
-        assert False, "should have raised"
-    except InvalidRosdepData as e:
-        pass
 
