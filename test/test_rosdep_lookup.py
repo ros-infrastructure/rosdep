@@ -27,6 +27,23 @@
 
 from __future__ import print_function
 
+import os
+import sys
+import yaml
+
+from rospkg import RosPack, RosStack
+
+def get_test_dir():
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), 'tree'))
+
+def get_test_rospkgs():
+    test_dir = get_test_dir()
+    ros_root = os.path.join(test_dir, 'ros')
+    ros_package_path = os.path.join(test_dir, 'stacks')
+    rospack = RosPack(ros_root, ros_package_path)
+    rosstack = RosStack(ros_root, ros_package_path)
+    return rospack, rosstack
+
 def test_RosdepDefinition():
     from rosdep.lookup import RosdepDefinition
     d = dict(a=1, b=2, c=3)
@@ -108,3 +125,84 @@ def test_RosdepView_merge():
 
 def test_RosdepLookup():
     from rosdep.lookup import RosdepLookup
+
+def test_RosdepLookup_get_rosdeps():
+    from rosdep.lookup import RosdepLookup
+    rospack, rosstack = get_test_rospkgs()
+    ros_home = os.path.join(get_test_dir(), 'fake')
+    
+    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rospack, ros_home=ros_home)
+    print(lookup.get_rosdeps('empty_package'))
+    assert lookup.get_rosdeps('empty_package') == []
+
+    print(lookup.get_rosdeps('stack1_p1'))
+    assert set(lookup.get_rosdeps('stack1_p1')) == set(['stack1_dep1', 'stack1_p1_dep1', 'stack1_p1_dep2'])
+
+    print(lookup.get_rosdeps('stack1_p2'))
+    assert set(lookup.get_rosdeps('stack1_p2')) == set(['stack1_dep1', 'stack1_dep2', 'stack1_p2_dep1'])
+    
+def test_RosdepLookup_get_rosdeps():
+    from rosdep.lookup import RosdepLookup
+    rospack, rosstack = get_test_rospkgs()
+    ros_home = os.path.join(get_test_dir(), 'fake')
+    
+    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rospack, ros_home=ros_home)
+    print(lookup.get_rosdeps('empty_package'))
+    assert lookup.get_rosdeps('empty_package') == []
+
+    print(lookup.get_rosdeps('stack1_p1'))
+    assert set(lookup.get_rosdeps('stack1_p1')) == set(['stack1_dep1', 'stack1_p1_dep1', 'stack1_p1_dep2'])
+
+    print(lookup.get_rosdeps('stack1_p2'))
+    assert set(lookup.get_rosdeps('stack1_p2')) == set(['stack1_dep1', 'stack1_dep2', 'stack1_p2_dep1'])
+
+def test_RosdepLookup_what_needs():
+    from rosdep.lookup import RosdepLookup
+    rospack, rosstack = get_test_rospkgs()
+    ros_home = os.path.join(get_test_dir(), 'fake')
+    
+    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rospack, ros_home=ros_home)
+
+    assert lookup.what_needs('fake') ==  []
+    assert set(lookup.what_needs('stack1_dep1')) ==  set(['stack1_p1', 'stack1_p2'])
+    assert lookup.what_needs('stack1_dep2') ==  ['stack1_p2']
+    assert lookup.what_needs('stack1_p1_dep1') ==  ['stack1_p1']
+    
+def test_RosdepLookup_get_rosdep_view():
+    from rosdep.lookup import RosdepLookup
+    rospack, rosstack = get_test_rospkgs()
+    ros_home = os.path.join(get_test_dir(), 'fake')
+    
+    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack, ros_home=ros_home)
+
+    # depends on nothing
+    ros_view = lookup.get_rosdep_view('ros')
+    ros_rosdep_path = os.path.join(rosstack.get_path('ros'), 'rosdep.yaml')
+    with open(ros_rosdep_path) as f:
+        ros_raw = yaml.load(f.read())
+    libtool = ros_view.lookup('libtool')
+    assert ros_rosdep_path == libtool.origin
+    assert ros_raw['libtool'] == libtool.data
+    python = ros_view.lookup('python')
+    assert ros_rosdep_path == python.origin
+    assert ros_raw['python'] == python.data
+    
+    # depends on ros
+    stack1_view = lookup.get_rosdep_view('stack1')
+    stack1_rosdep_path = os.path.join(rosstack.get_path('stack1'), 'rosdep.yaml')
+    
+    # - make sure a couple of deps made it
+    s1d1 = stack1_view.lookup('stack1_dep1')
+    assert s1d1.origin == stack1_rosdep_path
+    assert s1d1.data == dict(ubuntu='dep1-ubuntu', debian='dep1-debian')
+    s1p2d1 = stack1_view.lookup('stack1_p2_dep1')
+    assert s1p2d1.origin == stack1_rosdep_path
+    assert s1p2d1.data == dict(ubuntu='p2dep1-ubuntu', debian='p2dep1-debian'), s1p2d1.data
+
+    # - make sure ros data is available 
+    libtool = stack1_view.lookup('libtool')
+    assert ros_rosdep_path == libtool.origin
+    assert ros_raw['libtool'] == libtool.data
+    python = stack1_view.lookup('python')
+    assert ros_rosdep_path == python.origin
+    assert ros_raw['python'] == python.data

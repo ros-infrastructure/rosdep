@@ -1,6 +1,15 @@
-libjpeg:
-  ubuntu: libjpeg62-dev
-  debian: libjpeg62-dev
-  fedora: libjpeg-devel
-  macports: jpeg
-  arch: libjpeg
+stack1_dep1:
+  ubuntu: dep1-ubuntu
+  debian: dep1-debian
+stack1_dep2:
+  ubuntu: dep1-ubuntu
+  debian: dep1-debian
+stack1_p1_dep1:
+  ubuntu: p1dep1-ubuntu
+  debian: p1dep1-debian
+stack1_p1_dep2:
+  ubuntu: p1dep2-ubuntu
+  debian: p1dep2-debian
+stack1_p2_dep1:
+  ubuntu: p2dep1-ubuntu
+  debian: p2dep1-debian

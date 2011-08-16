@@ -27,6 +27,8 @@
 
 # Author Tully Foote/tfoote@willowgarage.com, Ken Conley/kwc@willowgarage.com
 
+import os
+
 from rospkg import RosPack, RosStack, get_ros_home
 from rospkg.os_detect import OsDetect
 
@@ -133,27 +135,38 @@ class RosdepLookup:
 
     def get_rosdeps(self, package):
         """
-        Get list of rosdep names that this package directly requires.
+        Get rosdeps that this package directly requires.
+
+        @return: list of rosdep names, [str]
         """
         m = self.loader.load_package_manifest(package)
         return [d.name for d in m.rosdeps]
 
-    def what_needs(self, rosdep_args):
-        raise NotImplemented
-        self._load_all_stacks()
-        packages = []
-        for p in roslib.packages.list_pkgs():
-            rosdeps_needed = self.get_rosdep0(p)
-            matches = [r for r in rosdep_args if r in rosdeps_needed]
-            for r in matches:
-                packages.append(p)
-                
-        return packages
+    def what_needs(self, rosdep_name):
+        """
+        @param rosdep_name: name of rosdep dependency
+        
+        @return: list of package names that require rosdep, [str]
+        """
+        return [p for p in self.loader.get_loadable_packages() if rosdep_name in self.get_rosdeps(p)]
 
     @staticmethod
-    def create_from_rospkg(self, rospack=None, rosstack=None, ros_home=None):
+    def create_from_rospkg(rospack=None, rosstack=None, ros_home=None,
+                           os_name=None, os_version=None):
         """
         Create RosdepLookup based on current ROS package environment.
+
+        @param rospack: (optional) Override L{RosPack} instance used
+        to crawl ROS packages.
+        
+        @param rosstack: (optional) Override L{RosStack} instance used
+        to crawl ROS stacks.
+        
+        @param os_name: (optional) OS name to use for view.  Defaults
+        to default_os_name.
+
+        @param os_version: (optional) OS version to use for view.
+        Defaults to default_os_version.
         """
         # initialize the loader
         if rospack is None:
@@ -166,9 +179,12 @@ class RosdepLookup:
         loader = RosPkgLoader(rospack=rospack, rosstack=rosstack)
 
         # detect the operating system
-        os_detect = OsDetect()
-        os_name = os_detect.get_name()
-        os_version = os_detect.get_version()
+        if os_name is None or os_version is None:
+            os_detect = OsDetect()
+            if os_name is None:
+                os_name = os_detect.get_name()
+            if os_version is None:
+                os_version = os_detect.get_version()
 
         rosdep_db = RosdepDatabase()
         
@@ -209,15 +225,16 @@ class RosdepLookup:
         
     def _load_stack_dependencies(self, stack_name):
         """
-        Initialize internal RosdepDatabase on demand.
+        Initialize internal RosdepDatabase on demand.  Not
+        thread-safe.
         """
         db = self.rosdep_db
         if db.is_loaded(stack_name):
             return
+        self.loader.load_stack(stack_name, db)
         entry = db.get_stack_data(stack_name)
         for d in entry.stack_dependencies:
             self._load_stack_dependencies(stack_name)
-        self.loader.load_stack(stack_name, db)
     
     def get_rosdep_view(self, stack_name):
         """
@@ -240,9 +257,10 @@ class RosdepLookup:
         # dependencies. 
         view = RosdepView(stack_name)
 
-        dependencies = self.rosdep_db.get_stack_dependencies(stack_name)
+        db = self.rosdep_db
+        dependencies = db.get_stack_dependencies(stack_name)
         for s in [stack_name] + dependencies:
-            db_entry = self.get_stack_data(stack_name)
+            db_entry = db.get_stack_data(s)
             view.merge(db_entry)
 
         # ~/.ros/rosdep.yaml has precedence
@@ -254,7 +272,6 @@ class RosdepLookup:
 
     def where_defined(self, rosdeps):
         raise NotImplementedError('porting')
-        output = ""
         locations = {}
         self._load_all_stacks()
 
@@ -263,4 +280,4 @@ class RosdepLookup:
             
         for rd in locations:
             output += "%s defined in %s"%(rd, locations[rd])
-        return output
+        return locations
