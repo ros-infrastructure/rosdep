@@ -168,6 +168,29 @@ def test_RosdepLookup_what_needs():
     assert lookup.what_needs('stack1_dep2') ==  ['stack1_p2']
     assert lookup.what_needs('stack1_p1_dep1') ==  ['stack1_p1']
     
+def test_RosdepLookup_create_from_rospkg():
+    from rosdep.lookup import RosdepLookup
+    rospack, rosstack = get_test_rospkgs()
+    ros_home = os.path.join(get_test_dir(), 'fake')
+
+    # these are just tripwire, can't actually test as it depends on external env
+    lookup = RosdepLookup.create_from_rospkg()
+    
+    lookup = RosdepLookup.create_from_rospkg(rospack=rospack)
+    assert rospack == lookup.loader._rospack
+    
+    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack)
+    assert rospack == lookup.loader._rospack
+    assert rosstack == lookup.loader._rosstack
+    
+    lookup = RosdepLookup.create_from_rospkg(ros_home=ros_home)
+    
+    lookup = RosdepLookup.create_from_rospkg(os_name='foo')
+    assert 'foo' == lookup.default_os_name
+    
+    lookup = RosdepLookup.create_from_rospkg(os_version='foo-version')
+    assert 'foo-version' == lookup.default_os_version
+    
 def test_RosdepLookup_get_rosdep_view():
     from rosdep.lookup import RosdepLookup
     rospack, rosstack = get_test_rospkgs()
