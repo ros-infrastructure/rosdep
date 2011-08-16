@@ -37,7 +37,9 @@ def test_RosdepDefinition():
     assert def2.origin == 'file1.txt'
     
 def test_RosdepConflict():
-    from rosdep.lookup import RosdepConflict
+    from rosdep.lookup import RosdepConflict, RosdepDefinition
+    def1 = RosdepDefinition(dict(a=1), 'origin1')
+    def2 = RosdepDefinition(dict(b=2), 'origin2')
     
     ex = RosdepConflict('foo', def1, def2)
     str_ex = str(ex)
@@ -45,120 +47,61 @@ def test_RosdepConflict():
     assert def1.origin in str_ex
     assert def2.origin in str_ex
     
-def test_RosdepView_lookup():
-    from rosdep.lookup import RosdepView
-    d = dict(a=1, b=2, c=3)
-    view = RosdepView('common', d)
-    try:
-        view.lookup_rosdep(
-    assert view.lookup_rosdep('a') == 1
-    
 def test_RosdepView_merge():
-    from rosdep.lookup import RosdepView
-    d = dict(a=1, b=2, c=3)
-    view = RosdepView('common', d)
-
-    override = True
-
-    override = False
+    from rosdep.model import RosdepDatabaseEntry
+    from rosdep.lookup import RosdepView, RosdepConflict
     
-    def merge(self, update, override=False):
-        """
-        Merge rosdep database update into main database
-
-        @raise RosdepConflict
-        """
-        db = self.rosdep_data
-        for rosdep_name, update_definition in db_update.items():
-            rosdep_entry = db_update[key]
-            if override or not key in db:
-                db[key] = update_definition
-            else:
-                definition = db[key]
-                # original rosdep implementation had ability
-                # to record multiple sources; this does not.
-                if definition.data != update_definition.data:
-                    raise RosdepConflict(rosdep_name, definition, update_definition)        
-
-class RosdepLookup:
+    data = dict(a=1, b=2, c=3)
     
-    def __init__(self, rosdep_db, loader, default_os_name, default_os_version):
-        """
-        @type loader: RosdepLoader
-        @type rosdep_db: RosdepDatabase
-        """
-        self.rosdep_db = rosdep_db
-        self.loader = loader
-        self.default_os_name = default_os_name
-        self.default_os_version = default_os_version
+    # create empty view and test
+    view = RosdepView('common')
+    assert view.keys() == []
 
-        self._view_cache = {} # {str: {rosdep_data}}
+    # make sure lookups fail if not found
+    try:
+        view.lookup('notfound')
+        assert False, "should have raised KeyError"
+    except KeyError as e:
+        assert 'notfound' in str(e)
+    
+    # merge into empty view
+    d = RosdepDatabaseEntry(data, [], 'origin')
+    view.merge(d)
+    assert set(view.keys()) == set(data.keys())
+    for k, v in data.items():
+        assert view.lookup(k).data == v, "%s vs. %s"%(view.lookup(k), v)
+    
+    # merge exact same data
+    d2 = RosdepDatabaseEntry(data, [], 'origin2')
+    view.merge(d2)
+    assert set(view.keys()) == set(data.keys())
+    for k, v in data.items():
+        assert view.lookup(k).data == v
 
-    def get_rosdep_view(self, stack_name, os_name=None, os_version=None):
-        if not self.rosdeb_db.is_loaded(stack_name):
-            self.loader.load_stack(stack_name)
+    # merge new for 'd', 'e'
+    d3 = RosdepDatabaseEntry(dict(d=4, e=5), [], 'origin3')
+    view.merge(d3)
+    assert set(view.keys()) == set(data.keys() + ['d', 'e'])
+    for k, v in data.items():
+        assert view.lookup(k).data == v
+    assert view.lookup('d').data == 4
+    assert view.lookup('e').data == 5
 
-        # load combined view for stack
-        rosdep_data = self.rosdeb_db.get_stack_view(stack_name)
-
-        # return API based on this view
-        return RosdepView(stack_name, rosdep_data, os_name, os_version)
-
-    def get_rosdeps(self, package):
-        """
-        Get list of rosdep names that this package directly requires.
-        """
-        m = self.loader.load_package_manifest(package)
-        return [d.name for d in m.rosdeps]
-
-    def what_needs(self, rosdep_args):
-        raise NotImplemented
-        packages = []
-        for p in roslib.packages.list_pkgs():
-            rosdeps_needed = self.get_rosdep0(p)
-            matches = [r for r in rosdep_args if r in rosdeps_needed]
-            for r in matches:
-                packages.append(p)
-                
-        return packages
-
-    @staticmethod
-    def create_from_rospkg(self):
-        """
-        Create RosdepLookup based on current ROS package environment.
-        """
-        rosdep_db = RosdepDatabase()
-        loader = RosPkgLoader()
-        
-        os_detect = OsDetect()
-        os_name = os_detect.get_name()
-        os_version = os_detect.get_version()
-
-        # TODO: implement
-        if 0:
-            # Override with ros_home/rosdep.yaml if present
-            ros_home = roslib.rosenv.get_ros_home()
-            path = os.path.join(ros_home, "rosdep.yaml")
-            self._insert_map(self.parse_yaml(path), path, override=True)
-
-        return RosdepLookup(rosdep_db, loader, os_name, os_version)
-
-    def get_stack_view(self, stack_name):
-        """
-        @return: computed rosdep database for given stack
-        
-        @raise KeyError: if stack_name is not in database
-        """
-        if stack_name in self._view_cache:
-            return self._view_cache
-
-        db_entry = self.get_stack_data(stack_name)
-        rosdep_data = db_entry.rosdep_data.copy()
-
-        view = RosdepView(stack_name, rosdep_data)
-
-        for d in db_entry.stack_dependencies:
-            view.merge(self.get_stack_db(d))
-        self._view_cache[stack_name] = d
-        return d
+    # merge different data for 'a'
+    d4 = RosdepDatabaseEntry(dict(a=2), [], 'origin4')
+    # - first w/o override, should raise conflict
+    try:
+        view.merge(d4, override=False)
+        assert False, "should have raised RosdepConflict"
+    except RosdepConflict as ex:
+        assert ex.definition1.origin == 'origin'
+        assert ex.definition2.origin == 'origin4' 
+    
+    # - now w/ override
+    view.merge(d4, override=True)
+    assert view.lookup('a').data == 2
+    assert view.lookup('b').data == 2
+    assert view.lookup('c').data == 3
+    assert view.lookup('d').data == 4
+    assert view.lookup('e').data == 5
 

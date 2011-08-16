@@ -61,45 +61,58 @@ class RosdepConflict(Exception):
 \t%s [%s]"""%(self.definition_name, self.definition1.data, self.definition1.origin, self.definition2.data, self.definition2.origin)
     
 class RosdepView:
+    """
+    View of L{RosdepDatabase}.  Unlike L{RosdepDatabase}, which stores
+    L{RosdepDatabaseEntry} data for all stacks, a view merges entries
+    for a particular stack.  This view can then be queries to lookup
+    and resolve individual rosdep dependencies.
+    """
     
     def __init__(self, name):
         self.name = name
+        self.rosdep_defs = {} # {str: RosdepDefinition}
 
     def lookup(self, rosdep_name):
         """
         @return L{RosdepDefinition}
         @raise KeyError
         """
-        return self.rosdep_data[rosdep_name]
+        return self.rosdep_defs[rosdep_name]
 
     def keys(self):
         """
         Return list of rosdep names in this view
         """
-        return self.rosdep_data.keys()
+        return self.rosdep_defs.keys()
         
-    def merge(self, update, override=False):
+    def merge(self, update_entry, override=False):
         """
         Merge rosdep database update into main database
 
         @raise RosdepConflict
         """
-        db = self.rosdep_data
-        for rosdep_name, update_definition in db_update.items():
-            rosdep_entry = db_update[key]
-            if override or not key in db:
-                db[key] = update_definition
+        db = self.rosdep_defs
+
+        for dep_name, dep_data in update_entry.rosdep_data.items():
+            # convert data into RosdepDefinition model
+            update_definition = RosdepDefinition(dep_data, update_entry.origin)
+            if override or not dep_name in db:
+                db[dep_name] = update_definition
             else:
-                definition = db[key]
+                definition = db[dep_name]
                 # original rosdep implementation had ability
                 # to record multiple sources; this does not.
-                if definition.data != update_definition.data:
-                    raise RosdepConflict(rosdep_name, definition, update_definition)        
+                if definition.data != dep_data:
+                    raise RosdepConflict(dep_name, definition, update_definition) 
 
 class RosdepLookup:
     """
     Lookup rosdep definitions.  Provides API for most
     non-install-related commands for rosdep.
+
+    RosdepLookup caches data as it is loaded, so changes made on the
+    filesystem will not be reflected if the rosdep information has
+    already been loaded.
     """
     
     def __init__(self, rosdep_db, loader, default_os_name, default_os_version):
@@ -112,7 +125,7 @@ class RosdepLookup:
         self.default_os_name = default_os_name
         self.default_os_version = default_os_version
 
-        self._view_cache = {} # {str: {rosdep_data}}
+        self._view_cache = {} # {str: {RosdepView}}
 
     def get_rosdeps(self, package):
         """
@@ -210,7 +223,7 @@ class RosdepLookup:
         dependencies = self.rosdep_db.get_stack_dependencies(stack_name)
         for s in [stack_name] + dependencies:
             db_entry = self.get_stack_data(stack_name)
-            view.merge(db_entry.rosdep_data)
+            view.merge(db_entry)
 
         self._view_cache[stack_name] = view
         return view
