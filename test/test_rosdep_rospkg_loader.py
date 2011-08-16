@@ -60,14 +60,15 @@ def test_RosPkgLoader():
     # test with no rosdep.yaml stack
     loader.load_stack('empty', rosdep_db)
     rosdep_db.is_loaded.assert_called_with('empty')
-    rosdep_db.set_stack_data.assert_called_with('empty', {}, ['ros'])
+    rosdep_db.set_stack_data.assert_called_with('empty', {}, ['ros'], None)
 
     # test with complicated ros stack
-    with open(os.path.join(ros_root, 'rosdep.yaml')) as f:
+    path = os.path.join(ros_root, 'rosdep.yaml')
+    with open(path) as f:
         ros_stack_data = yaml.load(f.read())
     loader.load_stack('ros', rosdep_db)
     rosdep_db.is_loaded.assert_called_with('ros')
-    rosdep_db.set_stack_data.assert_called_with('ros', ros_stack_data, [])
+    rosdep_db.set_stack_data.assert_called_with('ros', ros_stack_data, [], path)
 
     #TODO
     if 0:

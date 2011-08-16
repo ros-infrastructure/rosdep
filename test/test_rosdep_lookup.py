@@ -105,3 +105,6 @@ def test_RosdepView_merge():
     assert view.lookup('d').data == 4
     assert view.lookup('e').data == 5
 
+
+def test_RosdepLookup():
+    from rosdep.lookup import RosdepLookup

@@ -27,6 +27,7 @@
 
 # Author Tully Foote/tfoote@willowgarage.com, Ken Conley/kwc@willowgarage.com
 
+from rospkg import RosPack, RosStack, get_ros_home
 from rospkg.os_detect import OsDetect
 
 from .model import RosdepDatabase
@@ -127,6 +128,9 @@ class RosdepLookup:
 
         self._view_cache = {} # {str: {RosdepView}}
 
+        # ROS_HOME/rosdep.yaml can override 
+        self.ros_home_entry  = None #RosdepDatabaseEntry
+
     def get_rosdeps(self, package):
         """
         Get list of rosdep names that this package directly requires.
@@ -147,23 +151,34 @@ class RosdepLookup:
         return packages
 
     @staticmethod
-    def create_from_rospkg(self):
+    def create_from_rospkg(self, rospack=None, rosstack=None, ros_home=None):
         """
         Create RosdepLookup based on current ROS package environment.
         """
-        rosdep_db = RosdepDatabase()
-        loader = RosPkgLoader()
-        
+        # initialize the loader
+        if rospack is None:
+            rospack = RosPack()
+        if rosstack is None:
+            rosstack = RosStack()
+        if ros_home is None:
+            ros_home = get_ros_home()
+
+        loader = RosPkgLoader(rospack=rospack, rosstack=rosstack)
+
+        # detect the operating system
         os_detect = OsDetect()
         os_name = os_detect.get_name()
         os_version = os_detect.get_version()
 
-        # TODO: implement
-        if 0:
-            # Override with ros_home/rosdep.yaml if present
-            ros_home = roslib.rosenv.get_ros_home()
-            path = os.path.join(ros_home, "rosdep.yaml")
-            self._insert_map(self.parse_yaml(path), path, override=True)
+        rosdep_db = RosdepDatabase()
+        
+        # Load ros_home/rosdep.yaml, if present.  It will be used to
+        # override individual stack views.
+        path = os.path.join(ros_home, "rosdep.yaml")
+        if os.path.exists(path):
+            with open(path, 'r') as f:
+                data = loader.load_rosdep_yaml(f.read(), path)
+            self.ros_home_entry = RosdepDatabaseEntry(data, [], path)
 
         return RosdepLookup(rosdep_db, loader, os_name, os_version)
 
@@ -177,6 +192,11 @@ class RosdepLookup:
         @param os_version: (optional) OS version to use for view.
         Defaults to default_os_version.
         """
+        if os_name is None:
+            os_name = self.default_os_name
+        if os_version is None:
+            os_version = self.default_os_version
+        
         raise NotImplementedError("TODO")
         
     def _load_all_stacks(self):
@@ -224,6 +244,10 @@ class RosdepLookup:
         for s in [stack_name] + dependencies:
             db_entry = self.get_stack_data(stack_name)
             view.merge(db_entry)
+
+        # ~/.ros/rosdep.yaml has precedence
+        if self.ros_home_entry is not None:
+            view.merge(self.ros_home_entry, override=True)
 
         self._view_cache[stack_name] = view
         return view

@@ -33,17 +33,11 @@ filesystem.
 """
 
 import os
-
-import rospkg
 import yaml
 
-from .loader import RosdepLoader, InvalidRosdepData
+import rospkg
 
-ROSDEP_YAML = 'rosdep.yaml'
-
-yaml.add_constructor(
-    u'tag:yaml.org,2002:float',
-    yaml.constructor.Constructor.construct_yaml_str)
+from .loader import RosdepLoader, InvalidRosdepData, ROSDEP_YAML
 
 class RosPkgLoader(RosdepLoader):
     
@@ -57,17 +51,22 @@ class RosPkgLoader(RosdepLoader):
         self._rosstack = rosstack
         self._rosdep_yaml_cache = {}
         
-    def _load_rosdep_yaml(self, stack_name):
+    def _load_stack_rosdep_yaml(self, stack_name):
         """
-        @return: parsed YAML data and filename it was loaded from
-        @raise yaml.YAMLError
-        @raise rospkg.ResourceNotFound
+        @return: parsed YAML data and filename it was loaded from,
+        (dict, str).  Returns None, None if stack does not have a
+        rosdep YAML.
+        
+        @raise InvalidRosdepData
+        @raise rospkg.ResourceNotFound: If stack cannot be located
         """
         stack_dir = self._rosstack.get_path(stack_name)
         filename = os.path.join(stack_dir, ROSDEP_YAML)
         if os.path.isfile(filename):
             with open(filename) as f:
-                return yaml.load(f.read()), filename
+                return self.load_rosdep_yaml(f.read(), filename), filename
+        else:
+            return None, None
         
     def load_stack(self, stack_name, rosdep_db):
         """
@@ -75,15 +74,14 @@ class RosPkgLoader(RosdepLoader):
         loaded into rosdep_db, this method does nothing.  If stack has
         no rosdep data, it will be initialized with an empty data map.
 
-        @raise InvalidRosdepData
-        @raise rospkg.ResourceNotFound
+        @raise InvalidRosdepData: if stack rosdep.yaml is invalid
+        @raise rospkg.ResourceNotFound: if stack cannot be located
         """
         if rosdep_db.is_loaded(stack_name):
             return
-        try:
-            rosdep_data, filename = self._load_rosdep_yaml(stack_name) or {}
-        except yaml.YAMLError as e:
-            raise InvalidRosdepData("Invalid YAML for stack [%s]: %s"%(e, stack_name))
+        rosdep_data, filename = self._load_stack_rosdep_yaml(stack_name)
+        if rosdep_data is None:
+            rosdep_data = {}
         stack_dependencies = self._rosstack.get_direct_depends(stack_name)
         rosdep_db.set_stack_data(stack_name, rosdep_data, stack_dependencies, filename)
 

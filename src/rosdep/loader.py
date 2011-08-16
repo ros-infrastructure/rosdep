@@ -35,13 +35,33 @@ packaging system.  This is necessary, for example, to implement a
 version of rosdep that works against tarballs of released stacks.
 """
 
+import yaml
+
 from .model import RosdepDatabase, InvalidRosdepData
+
+ROSDEP_YAML = 'rosdep.yaml'
+
+yaml.add_constructor(
+    u'tag:yaml.org,2002:float',
+    yaml.constructor.Constructor.construct_yaml_str)
 
 class RosdepLoader:
     """
     Base API for loading rosdep information by package or stack name.  
     """
     
+    def load_rosdep_yaml(self, yaml_contents, origin):
+        """
+        Utility routine for unmarshalling rosdep data encoded as YAML.
+
+        @param origin: origin of yaml contents (for error messages)
+        @raise yaml.YAMLError
+        """
+        try:
+            return yaml.load(yaml_contents)
+        except yaml.YAMLError as e:
+            raise InvalidRosdepData("Invalid YAML in [%s]: %s"%(origin, e))
+
     def load_stack(self, stack_name, rosdep_db):
         """
         Load stack data into rosdep_db. If the stack has already been
