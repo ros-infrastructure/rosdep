@@ -84,7 +84,7 @@ class RosPkgLoader(RosdepLoader):
         rosdep_data, filename = self._load_stack_rosdep_yaml(stack_name)
         if rosdep_data is None:
             rosdep_data = {}
-        stack_dependencies = self._rosstack.get_direct_depends(stack_name)
+        stack_dependencies = self._rosstack.get_depends(stack_name, implicit=False)
         rosdep_db.set_stack_data(stack_name, rosdep_data, stack_dependencies, filename)
 
     def load_package(self, package_name, rosdep_db):
