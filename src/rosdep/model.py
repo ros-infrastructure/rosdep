@@ -38,7 +38,14 @@ combine these rosdep dependency maps and stack dependencies together
 into a combined view on which queries can be made.
 """
 
-class InvalidRosdepData(Exception): pass
+class InvalidRosdepData(Exception):
+    """
+    Data is not in valid rosdep format.
+    """
+
+    def __init__(self, message, origin=None):
+        super(InvalidRosdepData, self).__init__(message)
+        self.origin = origin
 
 class RosdepDatabaseEntry:
     """
@@ -47,9 +54,9 @@ class RosdepDatabaseEntry:
     
     def __init__(self, rosdep_data, stack_dependencies, origin):
         """
-        @param rosdep_data: raw rosdep dictionary map for stack
-        @param stack_dependencies: list of stack dependency names
-        @param origin: name of where data originated, e.g. filename
+        :param rosdep_data: raw rosdep dictionary map for stack
+        :param stack_dependencies: list of stack dependency names
+        :param origin: name of where data originated, e.g. filename
         """
         self.rosdep_data = rosdep_data
         self.stack_dependencies = stack_dependencies
@@ -64,29 +71,48 @@ class RosdepDatabase:
         self._rosdep_db = {} # {stack_name: RosdepDatabaseEntry}
 
     def is_loaded(self, stack_name):
+        """
+        :param stack_name: name of stack to check
+        :returns: ``True`` if *stack_name* has been loaded into this
+          database.
+        """
         return stack_name in self._rosdep_db
-    
+
+    def mark_loaded(self, stack_name):
+        """
+        If stack is not already loaded, this will mark it as such.  This in effect sets the data for the stack to be empty.
+
+        :param stack_name: name of stack to mark as loaded
+        """
+        self.set_stack_data(stack_name, {}, [], None)
+        
     def set_stack_data(self, stack_name, rosdep_data, stack_dependencies, origin):
         """
-        Set data associated with stack.  This will create a new RosdepDatabaseEntry.
+        Set data associated with stack.  This will create a new
+        :class:`RosdepDatabaseEntry`.
 
-        @param rosdep_data: rosdep data map to associated with stack.
-        This will be copied.
-        
-        @param origin: origin of stack data, e.g. filepath of rosdep.yaml
+        :param rosdep_data: rosdep data map to associated with stack.
+          This will be copied.
+        :param origin: origin of stack data, e.g. filepath of ``rosdep.yaml``
         """
         self._rosdep_db[stack_name] = RosdepDatabaseEntry(rosdep_data.copy(), stack_dependencies, origin)
 
+    def get_stack_names(self):
+        """
+        :returns: list of stack names that are loaded into this database.
+        """
+        return self._rosdep_db.keys()
+    
     def get_stack_data(self, stack_name):
         """
-        @return: RosdepDatabaseEntry of given stack.  
+        @return: :class:`RosdepDatabaseEntry` of given stack.  
         """
         return self._rosdep_db[stack_name]
     
     def get_stack_dependencies(self, stack_name):
         """
-        @raise KeyError: if stack_name is not an entry, or if all of
-        stack's dependencies have not been properly loaded.
+        :raises: exc:`KeyError` if *stack_name* is not an entry, or if
+          all of stack's dependencies have not been properly loaded.
         """
         entry = self.get_stack_data(stack_name)
         dependencies = set(entry.stack_dependencies)

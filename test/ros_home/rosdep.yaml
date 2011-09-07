@@ -1,0 +1,155 @@
+assimp:
+  ubuntu:
+    apt:
+      packages: [assimp-dev]
+  debian:
+    source:
+      uri: 'https://kforge.ros.org/rosrelease/viewvc/sourcedeps/assimp/assimp-2.0.86-1.rdmanifest'
+      md5sum: d5137302d8f00241ee10e623b97f9d22
+  osx:
+    source:
+      uri: 'https://kforge.ros.org/rosrelease/viewvc/sourcedeps/assimp/assimp-2.0.86-1.rdmanifest'
+      md5sum: d5137302d8f00241ee10e623b97f9d22
+eigen:
+  ubuntu:
+    lucid:
+      apt:
+        packages: [libeigen3-dev=3.0.1-1+ros4~lucid]
+    maverick:
+      apt:
+        packages: [libeigen3-dev=3.0.1-1+ros4~maverick]
+    natty:
+      apt:
+        packages: [libeigen3-dev=3.0.1-1+ros4~natty]
+  debian:
+    source:
+      uri: 'https://kforge.ros.org/rosrelease/viewvc/sourcedeps/eigen/eigen-3.0.1-1.rdmanifest'
+      md5sum: 941db2fbb09d80c28426d335022fad95
+  osx:
+    source:
+      uri: 'https://kforge.ros.org/rosrelease/viewvc/sourcedeps/eigen/eigen-3.0.1-1.rdmanifest'
+      md5sum: 941db2fbb09d80c28426d335022fad95
+yaml-cpp:
+  ubuntu: 
+    apt: 
+      packages: [ yaml-cpp0.2.6-dev ]
+  debian:
+    source:
+      uri: 'https://kforge.ros.org/rosrelease/viewvc/sourcedeps/yaml-cpp/yaml-cpp-0.2.5.rdmanifest'
+      md5sum: f7fb81fd4a2fbd5022daa7686e816359
+  osx:
+    source:
+      uri: 'https://kforge.ros.org/rosrelease/viewvc/sourcedeps/yaml-cpp/yaml-cpp-cmake-0.2.5.rdmanifest'
+      md5sum: 863fb3b7e5b5f1e22ff1365de6e66b34
+checkinstall:
+  ubuntu: 
+    apt: 
+      packages: [checkinstall]
+  debian:
+    apt: 
+      packages: [checkinstall]
+curl:
+  ubuntu: libcurl4-openssl-dev
+  debian: libcurl4-openssl-dev
+  opensuse: libcurl-devel
+  fedora: libcurl-devel
+  arch: curl
+  macports: curl
+  gentoo: net-misc/curl
+  freebsd: curl
+libxml2:
+  ubuntu: libxml2-dev
+  debian: libxml2-dev
+  arch: libxml2
+  opensuse: libxml2-devel
+  fedora: libxml2-devel
+  macports: libxml2
+  gentoo: dev-libs/libxml2
+  freebsd: libxml2
+  fedora: libxml2-devel
+cppunit:
+  ubuntu: libcppunit-dev
+  debian: libcppunit-dev
+  opensuse: libcppunit-devel
+  fedora: cppunit-devel
+  rhel: cppunit-devel
+  arch: cppunit
+  macports: cppunit
+  gentoo: dev-util/cppunit
+  freebsd: cppunit
+scons:
+  ubuntu: scons
+  debian: scons
+  arch: scons
+  opensuse: scons
+  fedora: scons
+  macports: scons
+  gentoo: dev-util/scons
+  freebsd: scons
+libxext:
+  ubuntu: libxext-dev
+  debian: libxext-dev
+  opensuse: xorg-x11-libXext-devel
+  fedora: libXext-devel
+  rhel: libXext-devel
+  macports: xorg-libXext
+  arch: libxext
+  gentoo: x11-libs/libXext
+  freebsd: libXext
+zziplib:
+  ubuntu: libzzip-0-13 libzzip-dev
+  debian: libzzip-0-13 libzzip-dev
+  opensuse: zziplib-devel
+  fedora: zziplib-devel
+  rhel: zziplib-devel
+  macports: libzzip
+  arch: zziplib
+  gentoo: dev-libs/zziplib
+  freebsd: zziplib
+libxaw:
+  ubuntu: libxaw7-dev
+  debian: libxaw7-dev
+  opensuse: xorg-x11-devel
+  fedora: libXaw-devel
+  rhel: libXaw-devel
+  macports: xorg-libXaw
+  arch: libxaw
+  gentoo: x11-libs/libXaw
+  freebsd: libXaw
+opengl:
+  ubuntu: libgl1-mesa-dev libglu1-mesa-dev
+  debian: libgl1-mesa-dev libglu1-mesa-dev
+  opensuse: Mesa-devel
+  fedora: mesa-libGL-devel mesa-libGLU-devel
+  rhel: mesa-libGL-devel mesa-libGLU-devel
+  macports: mesa
+  arch: mesa
+  gentoo: media-libs/mesa
+  freebsd: mesagl-mangled
+libxxf86vm:
+  ubuntu: libxxf86vm-dev
+  debian: libxxf86vm-dev
+  opensuse: xorg-x11-devel
+  fedora: libXxf86vm-devel
+  rhel: libXxf86vm-devel
+  macports: xorg-libXxf86vm
+  arch: libxxf86vm
+  gentoo: x11-libs/libXxf86vm
+  freebsd: libXxf86vm
+atlas:
+  ubuntu: libatlas-base-dev
+  debian: libatlas-base-dev
+  fedora: atlas-devel
+  arch: |
+  macports: atlas
+  gentoo: atlas
+python-sip4:
+  ubuntu: python-sip4-dev sip4
+  debian: python-sip4-dev sip4
+  macports: py25-sip
+  gentoo: dev-python/sip
+  arch: sip
+festival:
+  ubuntu: festival festvox-kallpc16k
+  debian: festival festvox-kallpc16k
+  arch: festival festival-kallpc16k

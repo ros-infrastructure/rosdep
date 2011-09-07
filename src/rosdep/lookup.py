@@ -32,8 +32,11 @@ import os
 from rospkg import RosPack, RosStack, get_ros_home
 from rospkg.os_detect import OsDetect
 
-from .model import RosdepDatabase
+from .model import RosdepDatabase, RosdepDatabaseEntry, InvalidRosdepData
 from .rospkg_loader import RosPkgLoader
+
+# key for representing .ros/rosdep.yaml override entry
+OVERRIDE_ENTRY = '.ros'
 
 class RosdepDefinition:
     """
@@ -46,7 +49,7 @@ class RosdepDefinition:
     
     def __init__(self, data, origin="<dynamic>"):
         """
-        @param origin: string that indicates where data originates from (e.g. filename)
+        :param origin: string that indicates where data originates from (e.g. filename)
         """
         self.data = data
         self.origin = origin
@@ -65,10 +68,10 @@ class RosdepConflict(Exception):
     
 class RosdepView:
     """
-    View of L{RosdepDatabase}.  Unlike L{RosdepDatabase}, which stores
-    L{RosdepDatabaseEntry} data for all stacks, a view merges entries
-    for a particular stack.  This view can then be queries to lookup
-    and resolve individual rosdep dependencies.
+    View of :class:`RosdepDatabase`.  Unlike :class:`RosdepDatabase`,
+    which stores :class:`RosdepDatabaseEntry` data for all stacks, a
+    view merges entries for a particular stack.  This view can then be
+    queries to lookup and resolve individual rosdep dependencies.
     """
     
     def __init__(self, name):
@@ -77,14 +80,14 @@ class RosdepView:
 
     def lookup(self, rosdep_name):
         """
-        @return L{RosdepDefinition}
-        @raise KeyError
+        :returns: :class:`RosdepDefinition`
+        :raises: :exc:`KeyError`
         """
         return self.rosdep_defs[rosdep_name]
 
     def keys(self):
         """
-        Return list of rosdep names in this view
+        :returns: list of rosdep names in this view
         """
         return self.rosdep_defs.keys()
         
@@ -92,7 +95,7 @@ class RosdepView:
         """
         Merge rosdep database update into main database
 
-        @raise RosdepConflict
+        :raises: :exc:`RosdepConflict`
         """
         db = self.rosdep_defs
 
@@ -113,15 +116,20 @@ class RosdepLookup:
     Lookup rosdep definitions.  Provides API for most
     non-install-related commands for rosdep.
 
-    RosdepLookup caches data as it is loaded, so changes made on the
-    filesystem will not be reflected if the rosdep information has
-    already been loaded.
+    :class:`RosdepLookup` caches data as it is loaded, so changes made
+    on the filesystem will not be reflected if the rosdep information
+    has already been loaded.
     """
     
-    def __init__(self, rosdep_db, loader, default_os_name, default_os_version):
+    def __init__(self, rosdep_db, loader,
+                 default_os_name, default_os_version,
+                 override_entry=None):
         """
-        @type loader: RosdepLoader
-        @type rosdep_db: RosdepDatabase
+        :param loader: Loader to use for loading rosdep data by stack
+          name, ``RosdepLoader``
+        :param rosdep_db: Database to load definitions into, :class:`RosdepDatabase`
+        :param override_entry: (optional) provide a database entry
+          that overrides all other entries, :class:`RosdepDatabaseEntry`
         """
         self.rosdep_db = rosdep_db
         self.loader = loader
@@ -131,22 +139,38 @@ class RosdepLookup:
         self._view_cache = {} # {str: {RosdepView}}
 
         # ROS_HOME/rosdep.yaml can override 
-        self.ros_home_entry  = None #RosdepDatabaseEntry
+        self.override_entry  = override_entry
 
+        # some APIs that deal with the entire environment save errors
+        # in to self.errors instead of raising them in order to be
+        # robust to single-stack faults.
+        self.errors = []
+
+    def get_errors(self):
+        """
+        Retrieve error state for API calls that do not directly report
+        error state.  This is the case for APIs like
+        :meth:`RosdepLookup.where_defined` that are meant to be
+        fault-tolerant to single-stack failures.
+
+        :returns: ``[Exception]``
+        """
+        return self.errors[:]
+    
     def get_rosdeps(self, package):
         """
         Get rosdeps that this package directly requires.
 
-        @return: list of rosdep names, [str]
+        :returns: list of rosdep names, ``[str]``
         """
         m = self.loader.get_package_manifest(package)
         return [d.name for d in m.rosdeps]
 
     def what_needs(self, rosdep_name):
         """
-        @param rosdep_name: name of rosdep dependency
+        :param rosdep_name: name of rosdep dependency
         
-        @return: list of package names that require rosdep, [str]
+        :returns: list of package names that require rosdep, ``[str]``
         """
         return [p for p in self.loader.get_loadable_packages() if rosdep_name in self.get_rosdeps(p)]
 
@@ -154,19 +178,17 @@ class RosdepLookup:
     def create_from_rospkg(rospack=None, rosstack=None, ros_home=None,
                            os_name=None, os_version=None):
         """
-        Create RosdepLookup based on current ROS package environment.
+        Create :class:`RosdepLookup` based on current ROS package
+        environment.
 
-        @param rospack: (optional) Override L{RosPack} instance used
-        to crawl ROS packages.
-        
-        @param rosstack: (optional) Override L{RosStack} instance used
-        to crawl ROS stacks.
-        
-        @param os_name: (optional) OS name to use for view.  Defaults
-        to default_os_name.
-
-        @param os_version: (optional) OS version to use for view.
-        Defaults to default_os_version.
+        :param rospack: (optional) Override :class:`rospkg.RosPack`
+          instance used to crawl ROS packages.
+        :param rosstack: (optional) Override :class:`rospkg.RosStack`
+          instance used to crawl ROS stacks.
+        :param os_name: (optional) OS name to use for view.  Defaults
+          to default_os_name.
+        :param os_version: (optional) OS version to use for view.
+          Defaults to default_os_version.
         """
         # initialize the loader
         if rospack is None:
@@ -190,65 +212,81 @@ class RosdepLookup:
         
         # Load ros_home/rosdep.yaml, if present.  It will be used to
         # override individual stack views.
+        override_entry = None
         path = os.path.join(ros_home, "rosdep.yaml")
         if os.path.exists(path):
             with open(path, 'r') as f:
                 data = loader.load_rosdep_yaml(f.read(), path)
-            self.ros_home_entry = RosdepDatabaseEntry(data, [], path)
+            override_entry = RosdepDatabaseEntry(data, [], path)
 
-        return RosdepLookup(rosdep_db, loader, os_name, os_version)
+        return RosdepLookup(rosdep_db, loader, os_name, os_version, override_entry=override_entry)
 
     def resolve_definition(self, os_name=None, os_version=None):
         """
-        Resolve a L{RosdepDefinition} for a particular os/version spec.
+        Resolve a :class:`RosdepDefinition` for a particular
+        os/version spec.
         
-        @param os_name: (optional) OS name to use for view.  Defaults
-        to default_os_name.
+        :param os_name: (optional) OS name to use for view.  Defaults
+          to default_os_name.
 
-        @param os_version: (optional) OS version to use for view.
-        Defaults to default_os_version.
+        :param os_version: (optional) OS version to use for view.
+          Defaults to default_os_version.
         """
         if os_name is None:
             os_name = self.default_os_name
         if os_version is None:
             os_version = self.default_os_version
-        
+
+        #TODO: self.override_entry
         raise NotImplementedError("TODO")
         
     def _load_all_stacks(self):
         """
         Load all available stacks.  In general, this is equivalent to
-        loading all stacks on the package path.
+        loading all stacks on the package path.  If errors occur while
+        loading a stack, they will be saved in the errors field.
         """
         for stack_name in self.loader.get_loadable_stacks():
-            _load_stack_dependencies(stack_name)
+            try:
+                self._load_stack_dependencies(stack_name)
+            except InvalidRosdepData as e:
+                self.errors.append(e)
         
     def _load_stack_dependencies(self, stack_name):
         """
-        Initialize internal RosdepDatabase on demand.  Not
+        Initialize internal :exc:`RosdepDatabase` on demand.  Not
         thread-safe.
         """
         db = self.rosdep_db
         if db.is_loaded(stack_name):
             return
-        self.loader.load_stack(stack_name, db)
-        entry = db.get_stack_data(stack_name)
-        for d in entry.stack_dependencies:
-            self._load_stack_dependencies(stack_name)
+        try:
+            self.loader.load_stack(stack_name, db)
+            entry = db.get_stack_data(stack_name)
+            for d in entry.stack_dependencies:
+                self._load_stack_dependencies(stack_name)
+        except InvalidRosdepData:
+            # mark stack as loaded: as we are caching, the valid
+            # behavior is to not attempt loading this stack ever
+            # again.
+            db.mark_loaded(stack_name)
+            # re-raise
+            raise
     
     def get_rosdep_view(self, stack_name):
         """
-        Get a L{RosdepView} for a specific stack and OS combination.
-        A view enables queries for a particular stack or package in
-        that stack.
+        Get a :class:`RosdepView` for a specific stack and OS
+        combination.  A view enables queries for a particular stack or
+        package in that stack.
 
-        @raise RosdepConflict: if view cannot be created due to
-        conflict rosdep definitions.
+        :raises: :exc:`RosdepConflict` if view cannot be created due
+          to conflict rosdep definitions.
 
-        @raise KeyError: if stack or stack dependencies do not exist.
+        :raises: :exc:`KeyError` if stack or stack dependencies do not
+         exist.
         """
         if stack_name in self._view_cache:
-            return self._view_cache
+            return self._view_cache[stack_name]
 
         # lazy-init
         self._load_stack_dependencies(stack_name)
@@ -264,20 +302,40 @@ class RosdepLookup:
             view.merge(db_entry)
 
         # ~/.ros/rosdep.yaml has precedence
-        if self.ros_home_entry is not None:
-            view.merge(self.ros_home_entry, override=True)
+        if self.override_entry is not None:
+            view.merge(self.override_entry, override=True)
 
         self._view_cache[stack_name] = view
         return view
 
-    def where_defined(self, rosdeps):
-        raise NotImplementedError('porting')
-        locations = {}
-        self._load_all_stacks()
+    def where_defined(self, rosdep_name):
+        """
+        Locate all stacks that define *rosdep_name*.  A side-effect of
+        this method is that all available rosdep files in the
+        configuration will be loaded into memory.
 
-        for r in rosdeps:
-            locations[r] = set()
+        Error state from single-stack failures
+        (e.g. :exc:`InvalidRosdepData`) are not propogated.  Caller
+        must check `RosdepLookup.get_errors` to check for single-stack
+        error state.  Error state does not reset -- it accumulates.
+
+        :param rosdep_name: name of rosdep to lookup
+        :returns: list of (stack_name, origin) where rosdep is defined.
+        """
+        self._load_all_stacks()
+        db = self.rosdep_db
+        retval = []
+        for stack_name in db.get_stack_names():
+            entry = db.get_stack_data(stack_name)
+            # not much abstraction in the entry object
+            if rosdep_name in entry.rosdep_data:
+                retval.append((stack_name, entry.origin))
+
+        if self.override_entry is not None and \
+               rosdep_name in self.override_entry.rosdep_data:
+            retval.append((OVERRIDE_ENTRY, self.override_entry.origin))
+        else:
+            # for branch coverage verification
+            pass
             
-        for rd in locations:
-            output += "%s defined in %s"%(rd, locations[rd])
-        return locations
+        return retval

@@ -34,10 +34,13 @@ import yaml
 from rospkg import RosPack, RosStack
 
 def get_test_dir():
+    return os.path.abspath(os.path.dirname(__file__))
+
+def get_test_tree_dir():
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'tree'))
 
 def get_test_rospkgs():
-    test_dir = get_test_dir()
+    test_dir = get_test_tree_dir()
     ros_root = os.path.join(test_dir, 'ros')
     ros_package_path = os.path.join(test_dir, 'stacks')
     rospack = RosPack(ros_root, ros_package_path)
@@ -129,7 +132,7 @@ def test_RosdepLookup():
 def test_RosdepLookup_get_rosdeps():
     from rosdep.lookup import RosdepLookup
     rospack, rosstack = get_test_rospkgs()
-    ros_home = os.path.join(get_test_dir(), 'fake')
+    ros_home = os.path.join(get_test_tree_dir(), 'fake')
     
     lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rospack, ros_home=ros_home)
     print(lookup.get_rosdeps('empty_package'))
@@ -144,7 +147,7 @@ def test_RosdepLookup_get_rosdeps():
 def test_RosdepLookup_get_rosdeps():
     from rosdep.lookup import RosdepLookup
     rospack, rosstack = get_test_rospkgs()
-    ros_home = os.path.join(get_test_dir(), 'fake')
+    ros_home = os.path.join(get_test_tree_dir(), 'fake')
     
     lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rospack, ros_home=ros_home)
     print(lookup.get_rosdeps('empty_package'))
@@ -159,7 +162,7 @@ def test_RosdepLookup_get_rosdeps():
 def test_RosdepLookup_what_needs():
     from rosdep.lookup import RosdepLookup
     rospack, rosstack = get_test_rospkgs()
-    ros_home = os.path.join(get_test_dir(), 'fake')
+    ros_home = os.path.join(get_test_tree_dir(), 'fake')
     
     lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rospack, ros_home=ros_home)
 
@@ -171,7 +174,7 @@ def test_RosdepLookup_what_needs():
 def test_RosdepLookup_create_from_rospkg():
     from rosdep.lookup import RosdepLookup
     rospack, rosstack = get_test_rospkgs()
-    ros_home = os.path.join(get_test_dir(), 'fake')
+    ros_home = os.path.join(get_test_tree_dir(), 'fake')
 
     # these are just tripwire, can't actually test as it depends on external env
     lookup = RosdepLookup.create_from_rospkg()
@@ -194,21 +197,28 @@ def test_RosdepLookup_create_from_rospkg():
 def test_RosdepLookup_get_rosdep_view():
     from rosdep.lookup import RosdepLookup
     rospack, rosstack = get_test_rospkgs()
-    ros_home = os.path.join(get_test_dir(), 'fake')
+    ros_home = os.path.join(get_test_tree_dir(), 'fake')
     
     lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack, ros_home=ros_home)
 
     # depends on nothing
-    ros_view = lookup.get_rosdep_view('ros')
     ros_rosdep_path = os.path.join(rosstack.get_path('ros'), 'rosdep.yaml')
     with open(ros_rosdep_path) as f:
         ros_raw = yaml.load(f.read())
+    # - first pass: no cache
+    ros_view = lookup.get_rosdep_view('ros')
     libtool = ros_view.lookup('libtool')
     assert ros_rosdep_path == libtool.origin
     assert ros_raw['libtool'] == libtool.data
     python = ros_view.lookup('python')
     assert ros_rosdep_path == python.origin
     assert ros_raw['python'] == python.data
+
+    # - second pass: with cache
+    ros_view = lookup.get_rosdep_view('ros')
+    libtool = ros_view.lookup('libtool')
+    assert ros_rosdep_path == libtool.origin
+    assert ros_raw['libtool'] == libtool.data
     
     # depends on ros
     stack1_view = lookup.get_rosdep_view('stack1')
@@ -229,3 +239,76 @@ def test_RosdepLookup_get_rosdep_view():
     python = stack1_view.lookup('python')
     assert ros_rosdep_path == python.origin
     assert ros_raw['python'] == python.data
+
+def test_RosdepLookup_ros_home_override():
+    from rosdep.lookup import RosdepLookup, OVERRIDE_ENTRY
+    rospack, rosstack = get_test_rospkgs()
+    ros_home = os.path.join(get_test_dir(), 'ros_home')
+    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack, ros_home=ros_home)
+
+    ros_home_path = os.path.join(ros_home, 'rosdep.yaml')
+    with open(ros_home_path) as f:
+        ros_raw = yaml.load(f.read())
+
+    # low-level test: make sure entry was initialized
+    assert lookup.override_entry is not None
+    assert lookup.override_entry.origin == ros_home_path
+    assert 'atlas' in lookup.override_entry.rosdep_data
+
+    # make sure it surfaces in relevant APIs
+    # - where_defined
+    val = lookup.where_defined('atlas')
+    assert len(val) == 1, val
+    assert val[0] == (OVERRIDE_ENTRY, ros_home_path)
+
+    # - get_rosdep_view
+    ros_view = lookup.get_rosdep_view('ros')
+    atlas = ros_view.lookup('atlas')
+    assert ros_home_path == atlas.origin
+    assert ros_raw['atlas'] == atlas.data
+
+    #TODO: resolve_definition
+
+    
+def test_RosdepLookup_get_errors():
+    from rosdep.lookup import RosdepLookup
+    rospack, rosstack = get_test_rospkgs()
+    tree_dir = get_test_tree_dir()
+    ros_home = os.path.join(tree_dir, 'fake')
+    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack, ros_home=ros_home)
+
+    # shouldn't be any errors (yet)
+    assert lookup.get_errors() == []
+
+    # force errors
+    lookup._load_all_stacks()
+    
+    # invalid should be present
+    errors = lookup.get_errors()
+    errors = [e for e in errors if 'invalid/rosdep.yaml' in e.origin]
+    assert errors
+    
+def test_RosdepLookup_where_defined():
+    from rosdep.lookup import RosdepLookup
+    rospack, rosstack = get_test_rospkgs()
+    tree_dir = get_test_tree_dir()
+    ros_home = os.path.join(tree_dir, 'fake')
+    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack, ros_home=ros_home)
+
+    val = lookup.where_defined('python')
+    assert len(val) == 1
+    entry = val[0]
+    assert entry == ('ros', os.path.join(rospack.get_ros_root(), 'rosdep.yaml')), entry
+
+    # look for multiply defined
+    vals = lookup.where_defined('twin')
+    assert len(vals) == 2
+
+    stack_names = [entry[0] for entry in vals]
+    assert set(stack_names) == set(['twin1', 'twin2'])
+
+    origins = [entry[1] for entry in vals]
+    origins_actual = [os.path.join(tree_dir, 'stacks', 'twin1', 'rosdep.yaml'), os.path.join(tree_dir, 'stacks', 'twin2', 'rosdep.yaml')]
+    assert set(origins) == set(origins_actual)
+    
+
