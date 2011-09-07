@@ -32,19 +32,20 @@
 import os
 import subprocess
 
+from rospkg.os_detect import OS_FREEBSD
+
 from ..installers import Installer, SOURCE_INSTALLER
 from ..shell_utils import read_stdout
 
-FREEBSD_OS_NAME = 'freebsd'
 PKG_ADD_INSTALLER = 'pkg_add'
 
 def register_installers(context):
     context.register_installer(PKG_ADD_INSTALLER, PkgAddInstaller)
     
 def register_cygwin(context):
-    context.register_os_installer(FREEBSD_OS_NAME, SOURCE_INSTALLER)
-    context.register_os_installer(FREEBSD_OS_NAME, PKG_ADD_INSTALLER)
-    context.set_default_os_installer(FREEBSD_OS_NAME, PKG_ADD_INSTALLER)
+    context.register_os_installer(OS_FREEBSD, SOURCE_INSTALLER)
+    context.register_os_installer(OS_FREEBSD, PKG_ADD_INSTALLER)
+    context.set_default_os_installer(OS_FREEBSD, PKG_ADD_INSTALLER)
 
 def cygcheck_detect(p):
     std_out = read_stdout(['cygcheck', '-c', p])

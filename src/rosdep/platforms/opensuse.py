@@ -30,6 +30,7 @@
 
 import subprocess
 
+from rospkg.os_detect import OS_OPENSUSE
 from ..installers import Installer, SOURCE_INSTALLER
 from ..shell_utils import read_stdout
 

@@ -33,19 +33,21 @@ from __future__ import print_function
 import os
 import subprocess
 
+from rospkg.os_detect import OS_CYGWIN
+
 from ..installers import Installer, SOURCE_INSTALLER
 from ..shell_utils import read_stdout
 
-CYGWIN_OS_NAME = 'cygwin'
+OS_CYGWIN = 'cygwin'
 APT_CYG_INSTALLER = 'apt-cyg'
 
 def register_installers(context):
     context.register_installer(APT_CYG_INSTALLER, AptCygInstaller)
     
 def register_cygwin(context):
-    context.register_os_installer(CYGWIN_OS_NAME, SOURCE_INSTALLER)
-    context.register_os_installer(CYGWIN_OS_NAME, APT_CYG_INSTALLER)
-    context.set_default_os_installer(CYGWIN_OS_NAME, APT_CYG_INSTALLER)
+    context.register_os_installer(OS_CYGWIN, SOURCE_INSTALLER)
+    context.register_os_installer(OS_CYGWIN, APT_CYG_INSTALLER)
+    context.set_default_os_installer(OS_CYGWIN, APT_CYG_INSTALLER)
 
 def cygcheck_detect(p):
     std_out = read_stdout(['cygcheck', '-c', p])

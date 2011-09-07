@@ -30,11 +30,13 @@
 
 import os
 
+from rospkg.os_detect import OS_OSX
+
 from .pip import PIP_INSTALLER
 from ..installers import Installer, SOURCE_INSTALLER
 from ..shell_utils import create_tempfile_from_string_and_execute, read_stdout
 
-OSX_OS_NAME = 'osx'
+# add additional os names for brew, macports (TODO)
 OSXBREW_OS_NAME = 'osxbrew'
 
 BREW_INSTALLER = 'brew'
@@ -48,10 +50,10 @@ def register_installers(context):
     context.register_installer(MACPORTS_INSTALLER, MacPortsInstaller)
 
 def register_osx(context):
-    context.register_os_installer(OSX_OS_NAME, MACPORTS_INSTALLER)
-    context.register_os_installer(OSX_OS_NAME, PIP_INSTALLER)
-    context.register_os_installer(OSX_OS_NAME, SOURCE_INSTALLER)
-    context.set_default_os_installer(OSX_OS_NAME, MACPORTS_INSTALLER)
+    context.register_os_installer(OS_OSX, MACPORTS_INSTALLER)
+    context.register_os_installer(OS_OSX, PIP_INSTALLER)
+    context.register_os_installer(OS_OSX, SOURCE_INSTALLER)
+    context.set_default_os_installer(OS_OSX, MACPORTS_INSTALLER)
 
 def register_osxbrew(context):
     context.register_os_installer(OSXBREW_OS_NAME, PIP_INSTALLER)

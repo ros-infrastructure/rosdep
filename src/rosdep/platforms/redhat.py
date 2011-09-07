@@ -28,16 +28,35 @@
 
 # Author Tully Foote/tfoote@willowgarage.com
 
-import os.path
-import roslib.os_detect
+import os
 import subprocess
 
-import rosdep.base_rosdep
+from rospkg.os_detect import OS_RHEL, OS_FEDORA
 
-class YumInstall:
-    """This class provides the functions for installing using yum
+from ..installers import PackageManagerInstaller, SOURCE_INSTALLER
+
+# yum package manager key
+YUM_INSTALLER='yum'
+
+def register_installers(context):
+    context.register_installer(YUM_INSTALLER, YumInstaller)
+
+def register_fedora(context):
+    context.register_os_installer(OS_FEDORA, YUM_INSTALLER)
+    context.register_os_installer(OS_FEDORA, SOURCE_INSTALLER)
+    context.set_default_os_installer(OS_FEDORA, YUM_INSTALLER)
+
+def register_rhel(context):
+    context.register_os_installer(OS_RHEL, YUM_INSTALLER)
+    context.register_os_installer(OS_RHEL, SOURCE_INSTALLER)
+    context.set_default_os_installer(OS_RHEL, YUM_INSTALLER)
+
+class YumInstall(PackageManagerInstaller):
+    """
+    This class provides the functions for installing using yum
     it's methods partially implement the Rosdep OS api to complement 
-    the roslib.OSDetect API. """
+    the roslib.OSDetect API.
+    """
     def rpm_detect(self, p):
         return subprocess.call(['rpm', '-q', p], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    
 
@@ -52,22 +71,4 @@ class YumInstall:
             return "#Packages\nsudo yum -y install " + ' '.join(packages)
         else:
             return "#Packages\nsudo yum install " + ' '.join(packages)
-
-
-###### Fedora SPECIALIZATION #########################
-class Fedora(roslib.os_detect.Fedora, YumInstall, rosdep.base_rosdep.RosdepBaseOS): 
-    """This class provides the Rosdep OS API for by combining the Fedora
-    OSDetect API and the YumInstall API
-    """
-    pass
-                 
-###### END Fedora SPECIALIZATION ########################
-
-###### Rhel SPECIALIZATION #########################
-class Rhel(roslib.os_detect.Rhel, YumInstall, rosdep.base_rosdep.RosdepBaseOS): 
-    """This class provides the Red Hat Enterprise Linux Rosdep OS API
-    for by combining the RHEL OSDetect API and the YumInstall API
-    """
-    pass
-###### END Rhel SPECIALIZATION ########################
 
