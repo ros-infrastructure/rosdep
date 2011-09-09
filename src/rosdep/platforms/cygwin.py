@@ -42,11 +42,11 @@ OS_CYGWIN = 'cygwin'
 APT_CYG_INSTALLER = 'apt-cyg'
 
 def register_installers(context):
-    context.register_installer(APT_CYG_INSTALLER, AptCygInstaller)
+    context.set_installer(APT_CYG_INSTALLER, AptCygInstaller)
     
 def register_cygwin(context):
-    context.register_os_installer(OS_CYGWIN, SOURCE_INSTALLER)
-    context.register_os_installer(OS_CYGWIN, APT_CYG_INSTALLER)
+    context.add_os_installer(OS_CYGWIN, SOURCE_INSTALLER)
+    context.add_os_installer(OS_CYGWIN, APT_CYG_INSTALLER)
     context.set_default_os_installer(OS_CYGWIN, APT_CYG_INSTALLER)
 
 def cygcheck_detect(p):

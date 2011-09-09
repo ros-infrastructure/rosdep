@@ -33,7 +33,8 @@ import os
 from rospkg.os_detect import OS_OSX
 
 from .pip import PIP_INSTALLER
-from ..installers import Installer, SOURCE_INSTALLER
+from .source import SOURCE_INSTALLER
+from ..installers import Installer
 from ..shell_utils import create_tempfile_from_string_and_execute, read_stdout
 
 # add additional os names for brew, macports (TODO)
@@ -47,17 +48,17 @@ def port_detect(p):
     return std_out.count("(active)") > 0
 
 def register_installers(context):
-    context.register_installer(MACPORTS_INSTALLER, MacPortsInstaller)
+    context.set_installer(MACPORTS_INSTALLER, MacPortsInstaller)
 
 def register_osx(context):
-    context.register_os_installer(OS_OSX, MACPORTS_INSTALLER)
-    context.register_os_installer(OS_OSX, PIP_INSTALLER)
-    context.register_os_installer(OS_OSX, SOURCE_INSTALLER)
+    context.add_os_installer(OS_OSX, MACPORTS_INSTALLER)
+    context.add_os_installer(OS_OSX, PIP_INSTALLER)
+    context.add_os_installer(OS_OSX, SOURCE_INSTALLER)
     context.set_default_os_installer(OS_OSX, MACPORTS_INSTALLER)
 
 def register_osxbrew(context):
-    context.register_os_installer(OSXBREW_OS_NAME, PIP_INSTALLER)
-    context.register_os_installer(OSXBREW_OS_NAME, SOURCE_INSTALLER)
+    context.add_os_installer(OSXBREW_OS_NAME, PIP_INSTALLER)
+    context.add_os_installer(OSXBREW_OS_NAME, SOURCE_INSTALLER)
     context.set_default_os_installer(OSXBREW_OS_NAME, BREW_INSTALLER)
     raise NotImplemented
 

@@ -33,25 +33,26 @@ import os
 from rospkg.os_detect import OsDetect, OsDetector, OS_DEBIAN, OS_UBUNTU, OS_MINT
 
 from .pip import PIP_INSTALLER
-from ..installers import PackageManagerInstaller, SOURCE_INSTALLER
+from .source import SOURCE_INSTALLER
+from ..installers import PackageManagerInstaller
 from ..shell_utils import create_tempfile_from_string_and_execute, read_stdout
 
 # apt package manager key
 APT_INSTALLER='apt'
 
 def register_installers(context):
-    context.register_installer(APT_INSTALLER, AptInstaller)
+    context.set_installer(APT_INSTALLER, AptInstaller)
 
 def register_debian(context):
-    context.register_os_installer(OS_DEBIAN, APT_INSTALLER)
-    context.register_os_installer(OS_DEBIAN, PIP_INSTALLER)
-    context.register_os_installer(OS_DEBIAN, SOURCE_INSTALLER)
+    context.(OS_DEBIAN, APT_INSTALLER)
+    context.add_os_installer(OS_DEBIAN, PIP_INSTALLER)
+    context.add_os_installer(OS_DEBIAN, SOURCE_INSTALLER)
     context.set_default_os_installer(OS_DEBIAN, APT_INSTALLER)
     
 def register_ubuntu(context):
-    context.register_os_installer(OS_UBUNTU, APT_INSTALLER)
-    context.register_os_installer(OS_UBUNTU, PIP_INSTALLER)
-    context.register_os_installer(OS_UBUNTU, SOURCE_INSTALLER)
+    context.add_os_installer(OS_UBUNTU, APT_INSTALLER)
+    context.add_os_installer(OS_UBUNTU, PIP_INSTALLER)
+    context.add_os_installer(OS_UBUNTU, SOURCE_INSTALLER)
     context.set_default_os_installer(OS_UBUNTU, APT_INSTALLER)
 
 def register_mint(context):
@@ -59,9 +60,9 @@ def register_mint(context):
     detector = OsDetect().get_detector(OS_MINT)
     context.set_os_detector(OS_MINT, MintOsDetect(detector))
     
-    context.register_os_installer(OS_MINT, APT_INSTALLER)
-    context.register_os_installer(OS_MINT, PIP_INSTALLER)
-    context.register_os_installer(OS_MINT, SOURCE_INSTALLER)
+    context.add_os_installer(OS_MINT, APT_INSTALLER)
+    context.add_os_installer(OS_MINT, PIP_INSTALLER)
+    context.add_os_installer(OS_MINT, SOURCE_INSTALLER)
     context.set_default_os_installer(OS_MINT, APT_INSTALLER)
     
 def dpkg_detect(pkgs):

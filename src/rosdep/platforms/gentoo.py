@@ -29,17 +29,19 @@
 import os
 
 from rospkg.os_detect import OS_GENTOO
-from ..installers import PackageManagerInstaller, SOURCE_INSTALLER
+
+from .source import SOURCE_INSTALLER
+from ..installers import PackageManagerInstaller
 from ..shell_utils import create_tempfile_from_string_and_execute, read_stdout
 
 EQUERY_INSTALLER = 'equery'
 
 def register_installers(context):
-    context.register_installer(EQUERY_INSTALLER, EqueryInstaller)
+    context.set_installer(EQUERY_INSTALLER, EqueryInstaller)
 
 def register_gentoo(context):
-    context.register_os_installer(OS_GENTOO, EQUERY_INSTALLER)
-    context.register_os_installer(OS_GENTOO, SOURCE_INSTALLER)
+    context.add_os_installer(OS_GENTOO, EQUERY_INSTALLER)
+    context.add_os_installer(OS_GENTOO, SOURCE_INSTALLER)
     context.set_default_os_installer(OS_GENTOO, EQUERY_INSTALLER)
 
 # Determine whether package p needs to be installed

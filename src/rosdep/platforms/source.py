@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# Copyright (c) 2009, Willow Garage, Inc.
+# Copyright (c) 2011, Willow Garage, Inc.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -40,7 +39,16 @@ import yaml
 from ..core import RosdepException, rd_debug
 from ..shell_utils import create_tempfile_from_string_and_execute, fetch_file, Md5Mismatch, DownloadFailed
 
-class InvalidRdmanifest(Exception): pass
+SOURCE_INSTALLER='source'
+
+def register_installers(context):
+    context.set_installer(SOURCE_INSTALLER, SourceInstaller)
+
+class InvalidRdmanifest(Exception):
+    """
+    rdmanifest format is invalid.
+    """
+    pass
 
 def _fetch_file(url, md5sum):
     error = contents = ''
@@ -56,8 +64,8 @@ def _fetch_file(url, md5sum):
 
 def load_rdmanifest(url, md5sum, alt_url=None):
     """
-    @return: contents of rdmanifest
-    @raise DownloadFailed
+    :returns: contents of rdmanifest
+    :raises: :exc:`DownloadFailed`
     """
     contents, error = _fetch_file(url, md5sum)
     # fetch the manifest
@@ -74,6 +82,7 @@ def load_rdmanifest(url, md5sum, alt_url=None):
     return manifest
 
 class SourceInstaller(Installer):
+
     def __init__(self, arg_dict):
         self.url = arg_dict.get("uri")
         if not self.url:

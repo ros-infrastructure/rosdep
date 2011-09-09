@@ -31,71 +31,107 @@
 import os
 import sys
 
-SOURCE_INSTALLER='source'
+from collections import defaultdict
+from rospkg.os_detect import OsDetect
+
+# This class is basically just a bunch of dictionaries with defined lookup methods
 
 class InstallerContext:
     """
-    InstallerContext manages the context of execution for rosdep as it
+    :class:`InstallerContext` manages the context of execution for rosdep as it
     relates to the installers, OS detectors, and other extensible
     APIs.
     """
     
-    def __init__(self, os_detect):
+    def __init__(self, os_detect=None):
+        """
+        :param os_detect: (optional)
+        :class:`rospkg.os_detect.OsDetect` instance to use for
+        detecting platforms.  If `None`, default instance will be
+        used.
+        """
+        if os_detect is None:
+            os_detect = OsDetect()
         self.os_detect = os_detect
-        self.installers = {}
+        self.installers = defaultdict(list)
+        self.default_os_installer = {}
         
-    def register_installer(self, installer_key, installer):
-        assert installer_key not in self.installers, "cannot register same installer multiple times"
+    def get_os_detect(self):
+        """
+        :returns os_detect: :class:`OsDetect` instance to use for detecting platforms.
+        """
+        return self.os_detect
+
+    def set_installer(self, installer_key, installer):
+        assert installer_key not in self.installers, "cannot set same installer multiple times"
         self.installers[installer_key] = installer
         
     def get_installer(self, installer_key):
         """
-        @raise: KeyError
+        :raises: :exc:`KeyError`
         """
         return self.installers[installer_key]
 
-    def set_default_os_installer(self, os_key, installer_mode_key, installer_class=None):
+    def get_installer_keys(self):
+        """
+        :returns: list of registered installer keys
+        """
+        return self.installers.keys()
+
+    def add_os_installer(self, os_key, installer_mode_key):
+        """
+        Register an installer for the specified OS.  This will fail
+        with a :exc:`KeyError` if no :class:`Installer` can be found
+        with the associated *installer_mode_key*.
+        
+        :param os_key: Key for OS
+        :param installer_mode_key: Key for installer to add to OS
+        :raises: :exc`KeyError`: if installer for *installer_mode_key*
+        is not set.
+        """
+        # validate, will throw KeyError
+        installer_class = self.get_installer(installer_mode_key)
+        self.os_installers[os_key].append(installer_mode_key)
+
+    def get_os_installer_keys(self, os_key):
+        """
+        Get list of installer keys registered for the specified OS.
+        These keys can be resolved by calling
+        :meth:`InstallerContext.get_installer`.
+        
+        :param os_key: Key for OS
+        :raises: :exc`KeyError`: if no information for OS *os_key* is registered.
+        """
+        return self.os_installers[os_key][:]
+
+    def set_default_os_installer(self, os_key, installer_mode_key):
         """
         Set the default OS installer to use for OS.
-        """
-        if installer_class is None:
-            installer_class = get_installer(installer_mode_key)
-        self.register_os_installer(os_key, 'default', installer_class)
 
-    def register_os_installer(self, os_key, installer_mode_key, installer_class=None):
+        :param os_key: Key for OS
+        :param installer_mode_key: Key for installer to add to OS
+        :raises: :exc`KeyError`: if installer for *installer_mode_key*
+        is not set.
         """
-        :param installer_class: (optional) specify installer class to
-        use.  If None specified, will use the default installer class
-        associated with installer_mode_key.
+        # validate, will throw KeyError
+        installer_class = self.get_installer(installer_mode_key)
+        self.default_os_installer[os_key] = installer_mode_key
 
-        @raise KeyError: if installer for installer_mode_key cannot be
-        found.
+    def get_default_os_installer_key(self, os_key):
         """
-        if installer_class is None:
-            installer_class = get_installer(installer_mode_key)
-        raise NotImplemented
+        Get the default OS installer key to use for OS, or `None` if
+        there is no default.
 
-class OsInstallers:
-    """
-    Stores list of installers associated with OSes.
-    """
-
-    def __init__(self):
-        self._installers = {}
-
-    def add_installer(self, key, installer):
-        self._installers[key] = installer
-        
-    def get_installer(self, mode='default'):
+        :param os_key: Key for OS
+        :returns: :class:`Installer`
+        :raises: :exc`KeyError`: if no information for OS *os_key* is registered.
         """
-        :param mode: installer key. e.g. 'default', 'apt', 'pip'.  The
-        correct set of values is platform-dependent.
-        @type  mode: str
-        @return the correct installer for a given OS. from the
-        self.installer dict.
-        @raise KeyError: if requested installer not available
-        """
-        return self._installers[mode]
+        if not os_key in self.os_installers:
+            raise KeyError("unknown OS: %s"%(os_key))
+        try:
+            return self.default_os_installer[os_key]
+        except KeyError:
+            return None
 
 class Installer:
 

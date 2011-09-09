@@ -34,22 +34,19 @@ import subprocess
 
 from rospkg.os_detect import OS_FREEBSD
 
-from ..installers import Installer, SOURCE_INSTALLER
+from .source import SOURCE_INSTALLER
+from ..installers import Installer
 from ..shell_utils import read_stdout
 
 PKG_ADD_INSTALLER = 'pkg_add'
 
 def register_installers(context):
-    context.register_installer(PKG_ADD_INSTALLER, PkgAddInstaller)
+    context.set_installer(PKG_ADD_INSTALLER, PkgAddInstaller)
     
-def register_cygwin(context):
-    context.register_os_installer(OS_FREEBSD, SOURCE_INSTALLER)
-    context.register_os_installer(OS_FREEBSD, PKG_ADD_INSTALLER)
+def register_freebsd(context):
+    context.add_os_installer(OS_FREEBSD, SOURCE_INSTALLER)
+    context.add_os_installer(OS_FREEBSD, PKG_ADD_INSTALLER)
     context.set_default_os_installer(OS_FREEBSD, PKG_ADD_INSTALLER)
-
-def cygcheck_detect(p):
-    std_out = read_stdout(['cygcheck', '-c', p])
-    return std_out.count("OK") > 0
 
 def pkg_info_detect(p):
     if p == "builtin":

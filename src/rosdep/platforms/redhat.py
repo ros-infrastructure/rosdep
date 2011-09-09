@@ -33,22 +33,23 @@ import subprocess
 
 from rospkg.os_detect import OS_RHEL, OS_FEDORA
 
-from ..installers import PackageManagerInstaller, SOURCE_INSTALLER
+from .source import SOURCE_INSTALLER
+from ..installers import PackageManagerInstaller
 
 # yum package manager key
 YUM_INSTALLER='yum'
 
 def register_installers(context):
-    context.register_installer(YUM_INSTALLER, YumInstaller)
+    context.set_installer(YUM_INSTALLER, YumInstaller)
 
 def register_fedora(context):
-    context.register_os_installer(OS_FEDORA, YUM_INSTALLER)
-    context.register_os_installer(OS_FEDORA, SOURCE_INSTALLER)
+    context.set_os_installer(OS_FEDORA, YUM_INSTALLER)
+    context.set_os_installer(OS_FEDORA, SOURCE_INSTALLER)
     context.set_default_os_installer(OS_FEDORA, YUM_INSTALLER)
 
 def register_rhel(context):
-    context.register_os_installer(OS_RHEL, YUM_INSTALLER)
-    context.register_os_installer(OS_RHEL, SOURCE_INSTALLER)
+    context.set_os_installer(OS_RHEL, YUM_INSTALLER)
+    context.set_os_installer(OS_RHEL, SOURCE_INSTALLER)
     context.set_default_os_installer(OS_RHEL, YUM_INSTALLER)
 
 class YumInstall(PackageManagerInstaller):
