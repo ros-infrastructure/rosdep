@@ -33,9 +33,9 @@ import sys
 
 SOURCE_INSTALLER='source'
 
-class RosdepContext:
+class InstallerContext:
     """
-    RosdepContext manages the context of execution for rosdep as it
+    InstallerContext manages the context of execution for rosdep as it
     relates to the installers, OS detectors, and other extensible
     APIs.
     """
@@ -64,7 +64,7 @@ class RosdepContext:
 
     def register_os_installer(self, os_key, installer_mode_key, installer_class=None):
         """
-        @param installer_class: (optional) specify installer class to
+        :param installer_class: (optional) specify installer class to
         use.  If None specified, will use the default installer class
         associated with installer_mode_key.
 
@@ -88,7 +88,7 @@ class OsInstallers:
         
     def get_installer(self, mode='default'):
         """
-        @param mode: installer key. e.g. 'default', 'apt', 'pip'.  The
+        :param mode: installer key. e.g. 'default', 'apt', 'pip'.  The
         correct set of values is platform-dependent.
         @type  mode: str
         @return the correct installer for a given OS. from the
@@ -116,7 +116,8 @@ class Installer:
         """
         If execute is True, install the rosdep, else if display = True
         print the script it would have run to install.
-        @param default_yes  Pass through -y or equivilant to package manager
+
+        :param default_yes:  Pass through ``-y`` or equivalant to package manager
         """
         raise NotImplementedError("Base class generate_package_install_command")
 

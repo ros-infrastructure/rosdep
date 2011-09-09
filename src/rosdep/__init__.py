@@ -31,39 +31,37 @@
 rosdep library and command-line tool
 """
 
-
 ENABLE_CYGWIN = False
-ENABLE_DEBIAN = True
-ENABLE_OSX    = True
-ENABLE_PIPE   = True
+ENABLE_OSX    = False
+ENABLE_PIP    = False
 
-def default_init():
+from .installers import InstallerContext
+
+def create_default_installer_context():
     if ENABLE_CYGWIN:
         from .platforms import cygwin
-    if ENABLE_DEBIAN:
-        from .platforms import debian
+    from .platforms import debian
     if ENABLE_OSX:
         from .platforms import osx
     if ENABLE_PIP:
         from .platforms import pip    
 
-    context = RosdepContext()
+    context = InstallerContext()
 
     # setup installers
     if ENABLE_CYGWIN:
         cygwin.register_installers(context)
-    if ENABLE_DEBIAN:
-        debian.register_installers(context)
+    debian.register_installers(context)
     if ENABLE_OSX:
         osx.register_installers(context)
     if ENABLE_PIP:        
         pip.register_installers(context)
 
     # setup platforms
-    if ENABLE_DEBIAN:
-        debian.register_debian(context)
-        debian.register_ubuntu(context)
-        debian.register_mint(context)
+    debian.register_debian(context)
+    debian.register_ubuntu(context)
+    debian.register_mint(context)
+
     if ENABLE_CYGWIN:
         cygwin.register_cygwin(context)
     if ENABLE_OSX:
