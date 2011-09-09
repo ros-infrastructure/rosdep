@@ -52,23 +52,24 @@ def register_rhel(context):
     context.set_os_installer(OS_RHEL, SOURCE_INSTALLER)
     context.set_default_os_installer(OS_RHEL, YUM_INSTALLER)
 
+def rpm_detect(packages):
+    return subprocess.call(['rpm', '-q', packages], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    
+
 class YumInstall(PackageManagerInstaller):
     """
     This class provides the functions for installing using yum
     it's methods partially implement the Rosdep OS api to complement 
     the roslib.OSDetect API.
     """
-    def rpm_detect(self, p):
-        return subprocess.call(['rpm', '-q', p], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    
 
-    def strip_detected_packages(self, packages):
-        return [p for p in packages if self.rpm_detect(p)]
+    def __init__(self):
+        super(YumInstaller, self).__init__(rpm_detect)
 
-    def generate_package_install_command(self, packages, default_yes):
+    def get_install_command(self, resolved, interactive=True):
+        packages = self.get_packages_to_install(resolved)
         if not packages:
             return "#No Packages to install"
-
-        if default_yes:
+        elif not interactive:
             return "#Packages\nsudo yum -y install " + ' '.join(packages)
         else:
             return "#Packages\nsudo yum install " + ' '.join(packages)

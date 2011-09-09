@@ -62,14 +62,14 @@ def equery_available():
 class EqueryInstaller(PackageManagerInstaller):
 
     def __init__(self):
-        #TODO: packages
-        super(Gentoo, self).__init__(package, equery_detect)
+        super(Gentoo, self).__init__(equery_detect)
         
-    def generate_package_install_command(self, default_yes=False, execute=True, display=True):
-        packages = self.get_packages_to_install()
+    def get_install_command(self, resolved, interactive=True):
+        packages = self.get_packages_to_install(resolved)                
+        #TODO: interactive
         if len(packages) == 0:
             return "# Package prerequisites satisfied - nothing to do"
         elif equery_available():
-            return "#Packages\nsudo emerge " + ' '.join(packages)
+            return "#Packages\nsudo emerge %s"%(' '.join(packages))
         else:
-            return "#Packages\nsudo emerge -u " + ' '.join(packages)
+            return "#Packages\nsudo emerge -u %s"%(' '.join(packages))

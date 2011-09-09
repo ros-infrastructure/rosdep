@@ -135,52 +135,88 @@ class InstallerContext:
 
 class Installer:
 
-    def __init__(self, arg_dict):
+    def is_installed(self, resolved):
         """
-        Set all required fields here 
+        :param resolved: resolved installation items
+        :returns: True if all of the *resolved* items are installed on
+          the local system
         """
-        raise NotImplementedError("Base class __init__")
-    
-    def check_presence(self):
+        raise NotImplementedError("is_installed")        
+        
+    def get_install_command(self, interactive=True):
         """
-        This script will return true if the rosdep is found on the
-        system, otherwise false.
+        :param interactive: If `False`, disable interactive prompts,
+          e.g. Pass through ``-y`` or equivalant to package manager.
         """
-        raise NotImplementedError("Base class check_presence")
+        raise NotImplementedError("get_package_install_command")
 
-    def generate_package_install_command(self, default_yes, execute = True, display = True):
-        """
-        If execute is True, install the rosdep, else if display = True
-        print the script it would have run to install.
-
-        :param default_yes:  Pass through ``-y`` or equivalant to package manager
-        """
-        raise NotImplementedError("Base class generate_package_install_command")
-
-    def get_depends(self): 
+    def get_depends(self, rosdep_args_dict): 
         """ 
-        Return the dependencies, only necessary if the package manager
-        doesn't handle the dependencies.
+        :returns: list of dependencies on other rosdep keys.  Only
+          necessary if the package manager doesn't handle
+          dependencies.
         """
         return [] # Default return empty list
 
+    def resolve(self, rosdep_args_dict):
+        """
+        :param rosdep_args_dict: argument dictionary to the rosdep rule for this package manager
+        """
+        raise NotImplementedError("Base class resolve")
 
+    def unique(self, resolved_rules):
+        """
+        Combine the list of resolved rules into a unique list.  This
+        is meant to combine the results of multiple calls to
+        :meth:`PackageManagerInstaller.resolve`.
+
+        Example::
+
+            resolved1 = installer.resolve(args1)
+            resolved2 = installer.resolve(args2)
+            resolved = installer.unique([resolved1, resolved2])
+
+        :param resolved_rules: list of resolved arguments.  Resolved
+          arguments must all be from this :class:`Installer` instance.
+        """
+        raise NotImplementedError("Base class unique")
+    
 class PackageManagerInstaller(Installer):
     """
-    General form of a package manager installer implementation that assumes:
+    General form of a package manager :class:`Installer`
+    implementation that assumes:
 
-     - installer spec is a list of package names
+     - installer rosdep args spec is a list of package names stored with the key "packages"
      - a function exists that can return a list of packages that are installed
     """
-    def __init__(self, packages, detect_fn):
-        self.packages = packages
+
+    def __init__(self, detect_fn):
         self.detect_fn = detect_fn
 
-    def get_packages_to_install(self):
-        return list(set(self.packages) - set(self.detect_fn(self.packages)))
+    def resolve(self, rosdep_args_dict):
+        """
+        See :meth:`Installer.resolve()`
+        """
+        packages = rosdep_args_dict.get("packages", [])
+        if type(packages) == type("string"):
+            packages = packages.split()
+        #TODOXXX: return type needs to be wrapped so it can be recombined/printed, etc...
+        return packages
 
-    def check_presence(self):
-        return len(self.get_packages_to_install()) == 0
+    def unique(self, resolved_rules):
+        """
+        See :meth:`Installer.unique()`
+        """
+        s = set()
+        for resolved in resolved_rules:
+            s.update(resolved)
+        return sorted(list(s))
+        
+    def get_packages_to_install(self, resolved):
+        return list(set(resolved) - set(self.detect_fn(resolved)))
 
-    def generate_package_install_command(self, default_yes = False, execute = True, display = True):
+    def is_installed(self, resolved):
+        return not self.get_packages_to_install(resolved)
+
+    def get_install_command(self, resolved, interactive=True):
         raise NotImplementedError('subclasses must implement')

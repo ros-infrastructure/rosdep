@@ -96,27 +96,17 @@ class AptInstaller(PackageManagerInstaller):
     An implementation of the Installer for use on debian style
     systems.
     """
-    def __init__(self, rosdep_rule_arg_dict):
-        packages = rosdep_rule_arg_dict.get("packages", "")
-        if type(packages) == type("string"):
-            packages = packages.split()
-        super(AptInstaller, self).__init__(packages, dpkg_detect)
+    def __init__(self):
+        super(AptInstaller, self).__init__(dpkg_detect)
 
-    def generate_package_install_command(self, default_yes=False, execute=True, display=True):
-        script = '!#/bin/bash\n#no script'
-        packages_to_install = self.get_packages_to_install()
-        if not packages_to_install:
-            script =  "#!/bin/bash\n#No Packages to install"
-        if default_yes:
-            script = "#!/bin/bash\n#Packages %s\nsudo apt-get install -y "%packages_to_install + ' '.join(packages_to_install)        
+    def get_install_command(self, resolved, interactive=True):
+        packages = self.get_packages_to_install(resolved)        
+        if not packages:
+            return "#!/bin/bash\n#No Packages to install"
+        if not interactive:
+            return "#!/bin/bash\n#Packages %s\nsudo apt-get install -y %s"%(packages, ' '.join(packages))
         else:
-            script =  "#!/bin/bash\n#Packages %s\nsudo apt-get install "%packages_to_install + ' '.join(packages_to_install)
-
-        if execute:
-            return create_tempfile_from_string_and_execute(script)
-        elif display:
-            print "To install packages: %s would have executed script\n{{{\n%s\n}}}"%(packages_to_install, script)
-        return False
+            return "#!/bin/bash\n#Packages %s\nsudo apt-get install %s"%(packages, ' '.join(packages))
 
 class MintOsDetect(OsDetect):
     """

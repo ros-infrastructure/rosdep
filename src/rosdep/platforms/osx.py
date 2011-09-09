@@ -62,39 +62,18 @@ def register_osxbrew(context):
     context.set_default_os_installer(OSXBREW_OS_NAME, BREW_INSTALLER)
     raise NotImplemented
 
-class MacportsInstaller(Installer):
+class MacportsInstaller(PackageManagerInstaller):
     """ 
-    An implementation of the InstallerAPI for use on macports systems.
+    An implementation of the :class:`Installer` API for use on
+    macports systems.
     """
-    def __init__(self, arg_dict):
-        packages = arg_dict.get("packages", "")
-        if type(packages) == type("string"):
-            packages = packages.split()
+    def __init__(self):
+        super(MacPortsInstaller, self).__init__(port_detect)
 
-        self.packages = packages
-
-    def get_packages_to_install(self):
-         return list(set(self.packages) - set(self.port_detect(self.packages)))
-
-    def check_presence(self):
-        return len(self.get_packages_to_install()) == 0
-
-    def generate_package_install_command(self, default_yes = False, execute = True, display = True):
-        script = '!#/bin/bash\n#no script'
-        packages_to_install = self.get_packages_to_install()
-        if not packages_to_install:
-            script =  "#!/bin/bash\n#No Packages to install"
-        script = "#!/bin/bash\n#Packages %s\nsudo port install "%packages_to_install + ' '.join(packages_to_install)        
-
-        if execute:
-            return rosdep.core.create_tempfile_from_string_and_execute(script)
-        elif display:
-            print "To install packages: %s would have executed script\n{{{\n%s\n}}}"%(packages_to_install, script)
-        return False
-
-
-class Osx(roslib.os_detect.Osx, rosdep.base_rosdep.RosdepBaseOS):
-
-    def strip_detected_packages(self, packages):
-        return [p for p in packages if not port_detect(p)] 
-
+    def get_install_command(self, resolved, interactive=True):
+        packages = self.get_packages_to_install(resolved)
+        if not packages:
+            return "#!/bin/bash\n#No Packages to install"
+        else:
+            #TODO: interactive
+            return "#!/bin/bash\n#Packages %s\nsudo port install %s"%(packages, ' '.join(packages))

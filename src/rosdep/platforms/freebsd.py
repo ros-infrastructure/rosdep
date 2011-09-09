@@ -30,6 +30,7 @@
 # Modified for FreeBSD by Rene Ladan rene@freebsd.org
 
 import os
+import sys
 import subprocess
 
 from rospkg.os_detect import OS_FREEBSD
@@ -69,26 +70,18 @@ def pkg_info_detect(p):
 
 class PkgAddInstaller(Installer):
     """
-    An implementation of the Installer for use on freebsd-style
+    An implementation of the Installer for use on FreeBSD-style
     systems.
     """
 
-    def __init__(self, rosdep_rule_arg_dict):
-        packages = rosdep_rule_arg_dict.get("packages", "")
-        if type(packages) == type("string"):
-            packages = packages.split()
-        self.packages = packages
+    def __init__(self):
+        super(PkgAddInstaller, self).__init__(pkg_info_detect)
 
-    def get_packages_to_install(self):
-        return list(set(self.packages) - set(self.pkg_info_detect(self.packages)))
-
-    def check_presence(self):
-        return len(self.get_packages_to_install()) == 0
-
-    def generate_package_install_command(self, default_yes = False, execute = True, display = True):
+    def get_install_command(self, resolved, interactive=True):
+        packages = self.get_packages_to_install(resolved)                
         if not packages:
             return "#No Packages to install"
-        if default_yes:
-            import sys
-            print >> sys.stderr, "pkg_add does not have a default_yes option, continuing without"
-        return "#Packages\nsudo /usr/sbin/pkg_add -r " + ' '.join(packages)
+        else:
+            #TODO: warn
+            #print >> sys.stderr, "pkg_add does not have a default_yes option, continuing without"
+            return "#Packages\nsudo /usr/sbin/pkg_add -r %s"%(' '.join(packages))

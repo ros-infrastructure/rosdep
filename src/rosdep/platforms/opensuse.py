@@ -30,18 +30,30 @@
 import subprocess
 
 from rospkg.os_detect import OS_OPENSUSE
-from ..installers import Installer, SOURCE_INSTALLER
+
+from .source import SOURCE_INSTALLER
+from ..installers import Installer, PackageManagerInstaller
 from ..shell_utils import read_stdout
 
-class ZypperInstall(Installer):
+# zypper package manager key
+ZYPPER_INSTALLER='zypper'
+
+def register_installers(context):
+    context.set_installer(ZYPPER_INSTALLER, ZypperInstaller)
+
+def rpm_detect(packages):
+    return subprocess.call(['rpm', '-q', packages], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    
+
+class ZypperInstall(PackageManagerInstaller):
     """
     This class provides the functions for installing using zypper.
     """
-    def rpm_detect(self, p):
-        return subprocess.call(['rpm', '-q', p], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    
 
-    def strip_detected_packages(self, packages):
-        return [p for p in packages if self.rpm_detect(p)]
+    def __init__(self, rosdep_rule_arg_dict):
+        packages = rosdep_rule_arg_dict.get("packages", "")
+        if type(packages) == type("string"):
+            packages = packages.split()
+        super(ZypperInstaller, self).__init__(packages, rpm_detect)
 
     def generate_package_install_command(self, packages, default_yes):
         if not packages:
