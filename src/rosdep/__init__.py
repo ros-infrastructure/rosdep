@@ -31,10 +31,6 @@
 rosdep library and command-line tool
 """
 
-ENABLE_CYGWIN = False
-ENABLE_OSX    = False
-ENABLE_PIP    = False
-
 from .installers import InstallerContext
 
 from .model import InvalidRosdepData, RosdepDatabase, RosdepDatabaseEntry
@@ -43,35 +39,28 @@ from .loader import RosdepLoader
 from .rospkg_loader import RosPkgLoader
 
 def create_default_installer_context():
-    if ENABLE_CYGWIN:
-        from .platforms import cygwin
+    from .platforms import arch
+    from .platforms import cygwin
     from .platforms import debian
-    if ENABLE_OSX:
-        from .platforms import osx
-    if ENABLE_PIP:
-        from .platforms import pip    
+    from .platforms import gentoo
+    from .platforms import opensuse
+    from .platforms import osx
+    from .platforms import pip
+    from .platforms import redhat
+    from .platforms import source
+    
+    platform_mods = [arch, cygwin, debian, gentoo, opensuse, osx]
+    installer_mods = [source, pip] + platform_mods
 
     context = InstallerContext()
 
     # setup installers
-    if ENABLE_CYGWIN:
-        cygwin.register_installers(context)
-    debian.register_installers(context)
-    if ENABLE_OSX:
-        osx.register_installers(context)
-    if ENABLE_PIP:        
-        pip.register_installers(context)
+    for m in installer_mods:
+        m.register_installers(context)
 
     # setup platforms
-    debian.register_debian(context)
-    debian.register_ubuntu(context)
-    debian.register_mint(context)
+    for m in platform_mods:
+        m.register_platforms(context)
 
-    if ENABLE_CYGWIN:
-        cygwin.register_cygwin(context)
-    if ENABLE_OSX:
-        osx.register_osx(context)
-        #TODO: register brew
-        
     return context
 

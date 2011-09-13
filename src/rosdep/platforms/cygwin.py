@@ -35,7 +35,9 @@ import subprocess
 
 from rospkg.os_detect import OS_CYGWIN
 
-from ..installers import Installer, SOURCE_INSTALLER
+from .source import SOURCE_INSTALLER
+
+from ..installers import Installer, PackageManagerInstaller
 from ..shell_utils import read_stdout
 
 OS_CYGWIN = 'cygwin'
@@ -44,34 +46,27 @@ APT_CYG_INSTALLER = 'apt-cyg'
 def register_installers(context):
     context.set_installer(APT_CYG_INSTALLER, AptCygInstaller)
     
-def register_cygwin(context):
-    context.add_os_installer(OS_CYGWIN, SOURCE_INSTALLER)
-    context.add_os_installer(OS_CYGWIN, APT_CYG_INSTALLER)
-    context.set_default_os_installer(OS_CYGWIN, APT_CYG_INSTALLER)
+def register_platforms(context):
+    context.add_os_installer_key(OS_CYGWIN, SOURCE_INSTALLER)
+    context.add_os_installer_key(OS_CYGWIN, APT_CYG_INSTALLER)
+    context.set_default_os_installer_key(OS_CYGWIN, APT_CYG_INSTALLER)
 
 def cygcheck_detect(p):
     std_out = read_stdout(['cygcheck', '-c', p])
     return std_out.count("OK") > 0
 
-class AptCygInstaller(Installer):
+class AptCygInstaller(PackageManagerInstaller):
     """
-    An implementation of the Installer for use on cygwin-style
-    systems.
+    An implementation of the :class:`Installer` for use on
+    cygwin-style systems.
     """
 
-    def __init__(self, rosdep_rule_arg_dict):
-        packages = rosdep_rule_arg_dict.get("packages", "")
-        if type(packages) == type("string"):
-            packages = packages.split()
-        self.packages = packages
+    def __init__(self):
+        super(AptCygInstaller, self).__init__(cygcheck_detect)
 
-    def get_packages_to_install(self):
-        return list(set(self.packages) - set(cygcheck_detect(self.packages)))
-
-    def check_presence(self):
-        return len(self.get_packages_to_install()) == 0
-
-    def generate_package_install_command(self, default_yes = False, execute = True, display = True):
+    def get_install_command(self, resolved, interactive=True):
+        packages = self.get_packages_to_install(resolved)        
+        #TODO: interactive
         return "#Packages\napt-cyg -m ftp://sourceware.org/pub/cygwinports install " + ' '.join(packages)        
 
 if __name__ == '__main__':

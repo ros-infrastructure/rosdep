@@ -37,6 +37,7 @@ import urllib
 import yaml
 
 from ..core import RosdepException, rd_debug
+from ..installers import Installer
 from ..shell_utils import create_tempfile_from_string_and_execute, fetch_file, Md5Mismatch, DownloadFailed
 
 SOURCE_INSTALLER='source'

@@ -39,10 +39,10 @@ EQUERY_INSTALLER = 'equery'
 def register_installers(context):
     context.set_installer(EQUERY_INSTALLER, EqueryInstaller)
 
-def register_gentoo(context):
-    context.add_os_installer(OS_GENTOO, EQUERY_INSTALLER)
-    context.add_os_installer(OS_GENTOO, SOURCE_INSTALLER)
-    context.set_default_os_installer(OS_GENTOO, EQUERY_INSTALLER)
+def register_platforms(context):
+    context.add_os_installer_key(OS_GENTOO, EQUERY_INSTALLER)
+    context.add_os_installer_key(OS_GENTOO, SOURCE_INSTALLER)
+    context.set_default_os_installer_key(OS_GENTOO, EQUERY_INSTALLER)
 
 # Determine whether package p needs to be installed
 def equery_detect_single(p):

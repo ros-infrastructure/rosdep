@@ -34,13 +34,13 @@ import os
 import sys
 import subprocess
 
-from ..installers import Installer
+from ..installers import PackageManagerInstaller, Installer
 
 # pip package manager key
-PIP = 'pip'
+PIP_INSTALLER = 'pip'
 
 def register_installers(context):
-    context.register_installer(PIP, PipInstaller)
+    context.set_installer(PIP_INSTALLER, PipInstaller)
 
 def pip_detect(self, pkgs):
     """ 
@@ -59,42 +59,18 @@ def pip_detect(self, pkgs):
             ret_list.append( pkg_row[0])
     return ret_list
 
-class PipInstaller(Installer):
+class PipInstaller(PackageManagerInstaller):
     """ 
-    An implementation of the Installer for use on debian style
-    systems.
+    :class:`Installer` support for pip.
     """
 
     def __init__(self, rosdep_rule_arg_dict):
-        packages = rosdep_rule_arg_dict.get("packages", "")
-        if type(packages) == type("string"):
-            packages = packages.split()
-        self.depends = rosdep_rule_arg_dict.get("depends", [])
-        self.packages = packages
+        super(PipInstaller, self).__init__(pip_detect)
 
-    def get_packages_to_install(self):
-        return list(set(self.packages) - set(pip_detect(self.packages)))
-
-    def check_presence(self):
-        return len(self.get_packages_to_install()) == 0
-
-    def get_depends(self):
-        #todo verify type before returning
-        return self.depends
-
-    def generate_package_install_command(self, default_yes = False, execute = True, display = True):
-        packages_to_install = self.get_packages_to_install()
-        script = '!#/bin/bash\n#no script'
-        if not packages_to_install:
-            script =  "#!/bin/bash\n#No PIP Packages to install"
-        #if default_yes:
-        #    script = "#!/bin/bash\n#Packages %s\nsudo apt-get install -U "%packages_to_install + ' '.join(packages_to_install)        
-        #else:
-        script =  "#!/bin/bash\n#Packages %s\nsudo pip install -U "%packages_to_install + ' '.join(packages_to_install)
-
-        if execute:
-            return create_tempfile_from_string_and_execute(script)
-        elif display:
-            print("To install packages: %s would have executed script\n{{{\n%s\n}}}"%(packages_to_install, script))
-        return False
+    def get_install_command(self, resolved, interactive=True):
+        packages = self.get_packages(resolved)
+        if not packages:
+            return  "#!/bin/bash\n#No PIP Packages to install"
+        else:
+            return  "#!/bin/bash\n#Packages %s\nsudo pip install -U %s"%(packages, ' '.join(packages))
 

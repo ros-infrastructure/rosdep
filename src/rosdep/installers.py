@@ -47,13 +47,14 @@ class InstallerContext:
         """
         :param os_detect: (optional)
         :class:`rospkg.os_detect.OsDetect` instance to use for
-        detecting platforms.  If `None`, default instance will be
-        used.
+          detecting platforms.  If `None`, default instance will be
+          used.
         """
         if os_detect is None:
             os_detect = OsDetect()
         self.os_detect = os_detect
-        self.installers = defaultdict(list)
+        self.installers = {}
+        self.os_installers = defaultdict(list)
         self.default_os_installer = {}
         
     def get_os_detect(self):
@@ -63,11 +64,24 @@ class InstallerContext:
         return self.os_detect
 
     def set_installer(self, installer_key, installer):
-        assert installer_key not in self.installers, "cannot set same installer multiple times"
+        """
+        Set the installer to use for *installer_key*.  This will
+        replace any existing installer associated with the key.
+        *installer_key* should be the same key used for the
+        ``rosdep.yaml`` package manager key.
+
+        :param installer_key: key/name to associate with installer, ``str``
+        :param installer: :class:`Installer` implementation, ``class``.
+        :raises: :exc:`TypeError` if *installer* is not a subclass of
+          :class:`Installer`
+        """
+        if not issubclass(installer, Installer):
+            raise TypeError("installer must be a subclass of Installer")
         self.installers[installer_key] = installer
         
     def get_installer(self, installer_key):
         """
+        :returns: :class:`Installer` class associated with *installer_key*.
         :raises: :exc:`KeyError`
         """
         return self.installers[installer_key]
@@ -78,7 +92,7 @@ class InstallerContext:
         """
         return self.installers.keys()
 
-    def add_os_installer(self, os_key, installer_mode_key):
+    def add_os_installer_key(self, os_key, installer_mode_key):
         """
         Register an installer for the specified OS.  This will fail
         with a :exc:`KeyError` if no :class:`Installer` can be found
@@ -104,7 +118,7 @@ class InstallerContext:
         """
         return self.os_installers[os_key][:]
 
-    def set_default_os_installer(self, os_key, installer_mode_key):
+    def set_default_os_installer_key(self, os_key, installer_mode_key):
         """
         Set the default OS installer to use for OS.
 
@@ -190,7 +204,7 @@ class PackageManagerInstaller(Installer):
      - a function exists that can return a list of packages that are installed
     """
 
-    def __init__(self, detect_fn):
+    def __init__(self, detect_fn, supports_depends=False):
         self.detect_fn = detect_fn
 
     def resolve(self, rosdep_args_dict):
@@ -220,3 +234,13 @@ class PackageManagerInstaller(Installer):
 
     def get_install_command(self, resolved, interactive=True):
         raise NotImplementedError('subclasses must implement')
+
+    def get_depends(self, rosdep_args_dict): 
+        """ 
+        :returns: list of dependencies on other rosdep keys.  Only
+          necessary if the package manager doesn't handle
+          dependencies.
+        """
+        if self.supports_depends:
+            return rosdep_args_dict.get('depends', [])
+        return [] # Default return empty list

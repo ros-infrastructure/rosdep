@@ -41,25 +41,28 @@ ZYPPER_INSTALLER='zypper'
 def register_installers(context):
     context.set_installer(ZYPPER_INSTALLER, ZypperInstaller)
 
+def register_platforms(context):
+    context.add_os_installer_key(OS_OPENSUSE, SOURCE_INSTALLER)
+    context.add_os_installer_key(OS_OPENSUSE, ZYPPER_INSTALLER)
+    context.set_default_os_installer_key(OS_OPENSUSE, ZYPPER_INSTALLER)
+    
 def rpm_detect(packages):
     return subprocess.call(['rpm', '-q', packages], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    
 
-class ZypperInstall(PackageManagerInstaller):
+class ZypperInstaller(PackageManagerInstaller):
     """
     This class provides the functions for installing using zypper.
     """
 
-    def __init__(self, rosdep_rule_arg_dict):
-        packages = rosdep_rule_arg_dict.get("packages", "")
-        if type(packages) == type("string"):
-            packages = packages.split()
-        super(ZypperInstaller, self).__init__(packages, rpm_detect)
+    def __init__(self):
+        super(ZypperInstaller, self).__init__(rpm_detect)
 
-    def generate_package_install_command(self, packages, default_yes):
+    def get_install_command(self, resolved, interactive=True):
+        packages = self.get_packages_to_install(resolved)        
         if not packages:
             return "#No Packages to install"
 
-        if default_yes:
+        if not interactive:
             return "#Packages\nsudo zypper install -yl " + ' '.join(packages)
         else:
             return "#Packages\nsudo zypper install " + ' '.join(packages)

@@ -41,37 +41,77 @@ def test_InstallerContext_ctor():
     detect = OsDetect()
     context = InstallerContext(detect)
     assert context.get_os_detect() == detect
-    assert {} == context.get_installer_keys()
-    assert {} == context.get_os_installer_keys()
+    assert [] == context.get_installer_keys()
+    assert [] == context.get_os_installer_keys('foo')
 
 def test_InstallerContext_installers():
-    from rosdep.installers import InstallerContext
+    from rosdep.installers import InstallerContext, Installer
+    from rospkg.os_detect import OsDetect
     detect = OsDetect()
     context = InstallerContext(detect)
-    
-    
-def register_installers(context):
-    context.register_installer(APT_INSTALLER, AptInstaller)
 
-def register_debian(context):
-    context.register_os_installer(OS_DEBIAN, APT_INSTALLER)
-    context.register_os_installer(OS_DEBIAN, PIP_INSTALLER)
-    context.register_os_installer(OS_DEBIAN, SOURCE_INSTALLER)
-    context.set_default_os_installer(OS_DEBIAN, APT_INSTALLER)
-    
-def register_ubuntu(context):
-    context.register_os_installer(OS_UBUNTU, APT_INSTALLER)
-    context.register_os_installer(OS_UBUNTU, PIP_INSTALLER)
-    context.register_os_installer(OS_UBUNTU, SOURCE_INSTALLER)
-    context.set_default_os_installer(OS_UBUNTU, APT_INSTALLER)
+    key = 'fake-apt'
+    try:
+        installer = context.get_installer(key)
+        assert False, "should have raised: %s"%(installer)
+    except KeyError: pass
 
-def register_mint(context):
-    # override mint detector with different version info
-    detector = OsDetect().get_detector(OS_MINT)
-    context.set_os_detector(OS_MINT, MintOsDetect(detector))
+    class Foo: pass
+    # test TypeError on set_installer
+    try:
+        context.set_installer(key, 1)
+        assert False, "should have raised"
+    except TypeError: pass
+    try:
+        context.set_installer(key, Foo)
+        assert False, "should have raised"
+    except TypeError: pass
+
+    class FakeInstaller(Installer):
+        pass
+    class FakeInstaller2(Installer):
+        pass
+
+    context.set_installer(key, FakeInstaller)
+    assert context.get_installer(key) == FakeInstaller
+    assert context.get_installer_keys() == [key]
+
+    # repeat with same args
+    context.set_installer(key, FakeInstaller)
+    assert context.get_installer(key) == FakeInstaller
+    assert context.get_installer_keys() == [key]
+
+    # repeat with new installer
+    context.set_installer(key, FakeInstaller2)
+    assert context.get_installer(key) == FakeInstaller2
+    assert context.get_installer_keys() == [key]
     
-    context.register_os_installer(OS_MINT, APT_INSTALLER)
-    context.register_os_installer(OS_MINT, PIP_INSTALLER)
-    context.register_os_installer(OS_MINT, SOURCE_INSTALLER)
-    context.set_default_os_installer(OS_MINT, APT_INSTALLER)
+    # repeat with new key
+    key2 = 'fake-port'
+    context.set_installer(key2, FakeInstaller2)
+    assert context.get_installer(key2) == FakeInstaller2
+    assert set(context.get_installer_keys()) == set([key, key2])
+
+
+def test_InstallerContext_os_installers():
+    from rosdep.installers import InstallerContext, Installer
+    from rospkg.os_detect import OsDetect
+    detect = OsDetect()
+    context = InstallerContext(detect)
+
+    os_key = 'ubuntu'
+    assert [] == context.get_os_installer_keys(os_key)
+    assert None == context.get_default_os_installer_key(os_key)
+    try:
+        context.add_os_installer_key(os_key, 'fake-key')
+        assert False, "should have raised"
+    except KeyError: pass
     
+    installer_key1 = 'fake1'
+    installer_key2 = 'fake2'
+    class FakeInstaller(Installer):
+        pass
+    class FakeInstaller2(Installer):
+        pass
+    context.set_installer(installer_key1, FakeInstaller)
+    context.set_installer(installer_key2, FakeInstaller2)

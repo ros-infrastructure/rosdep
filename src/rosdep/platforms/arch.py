@@ -31,28 +31,29 @@
 import os
 import subprocess
 
-from ..installers import PackageManagerInstaller, SOURCE_INSTALLER
+from ..installers import PackageManagerInstaller
+from .source import SOURCE_INSTALLER
 
 ARCH_OS_NAME = 'arch'
 PACMAN_INSTALLER = 'pacman'
 
 def register_installers(context):
-    context.register_installer(PACMAN_INSTALLER, PacmanInstaller)
+    context.set_installer(PACMAN_INSTALLER, PacmanInstaller)
     
-def register_cygwin(context):
-    context.register_os_installer(ARCH_OS_NAME, SOURCE_INSTALLER)
-    context.register_os_installer(ARCH_OS_NAME, PACMAN_INSTALLER)
-    context.set_default_os_installer(ARCH_OS_NAME, PACMAN_INSTALLER)
+def register_platforms(context):
+    context.add_os_installer_key(ARCH_OS_NAME, SOURCE_INSTALLER)
+    context.add_os_installer_key(ARCH_OS_NAME, PACMAN_INSTALLER)
+    context.set_default_os_installer_key(ARCH_OS_NAME, PACMAN_INSTALLER)
 
 def pacman_detect(p):
     return subprocess.call(['pacman', '-Q', p], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    
 
-class Pacman(PackageManagerInstaller):
+class PacmanInstaller(PackageManagerInstaller):
 
     def __init__(self):
-        #TODO: need to pull out package list from rule
-        super(Pacman, self).__init__(packages, pacman_detect)
+        super(PacmanInstaller, self).__init__(pacman_detect)
 
-    def generate_package_install_command(self, default_yes=False, execute=True, display=True):
-        packages_to_install = self.get_packages_to_install()
-        return "#Packages\nsudo pacman -Sy --needed " + ' '.join(packages_to_install)
+    def get_install_command(self, resolved, interactive=True):
+        #TODO: interactive switch
+        packages = self.get_packages_to_install(resolved)        
+        return "#Packages\nsudo pacman -Sy --needed " + ' '.join(packages)

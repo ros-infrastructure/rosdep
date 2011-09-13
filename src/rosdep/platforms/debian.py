@@ -43,27 +43,33 @@ APT_INSTALLER='apt'
 def register_installers(context):
     context.set_installer(APT_INSTALLER, AptInstaller)
 
+def register_platforms(context):
+    register_debian(context)
+    register_ubuntu(context)
+    register_mint(context)
+    
 def register_debian(context):
-    context.(OS_DEBIAN, APT_INSTALLER)
-    context.add_os_installer(OS_DEBIAN, PIP_INSTALLER)
-    context.add_os_installer(OS_DEBIAN, SOURCE_INSTALLER)
-    context.set_default_os_installer(OS_DEBIAN, APT_INSTALLER)
+    context.add_os_installer_key(OS_DEBIAN, APT_INSTALLER)
+    context.add_os_installer_key(OS_DEBIAN, PIP_INSTALLER)
+    context.add_os_installer_key(OS_DEBIAN, SOURCE_INSTALLER)
+    context.set_default_os_installer_key(OS_DEBIAN, APT_INSTALLER)
     
 def register_ubuntu(context):
-    context.add_os_installer(OS_UBUNTU, APT_INSTALLER)
-    context.add_os_installer(OS_UBUNTU, PIP_INSTALLER)
-    context.add_os_installer(OS_UBUNTU, SOURCE_INSTALLER)
-    context.set_default_os_installer(OS_UBUNTU, APT_INSTALLER)
+    context.add_os_installer_key(OS_UBUNTU, APT_INSTALLER)
+    context.add_os_installer_key(OS_UBUNTU, PIP_INSTALLER)
+    context.add_os_installer_key(OS_UBUNTU, SOURCE_INSTALLER)
+    context.set_default_os_installer_key(OS_UBUNTU, APT_INSTALLER)
 
 def register_mint(context):
     # override mint detector with different version info
-    detector = OsDetect().get_detector(OS_MINT)
-    context.set_os_detector(OS_MINT, MintOsDetect(detector))
+    os_detect = context.get_os_detect()
+    old_detector = os_detect.get_detector(OS_MINT)
+    os_detect.add_detector(OS_MINT, MintOsDetect(old_detector))
     
-    context.add_os_installer(OS_MINT, APT_INSTALLER)
-    context.add_os_installer(OS_MINT, PIP_INSTALLER)
-    context.add_os_installer(OS_MINT, SOURCE_INSTALLER)
-    context.set_default_os_installer(OS_MINT, APT_INSTALLER)
+    context.add_os_installer_key(OS_MINT, APT_INSTALLER)
+    context.add_os_installer_key(OS_MINT, PIP_INSTALLER)
+    context.add_os_installer_key(OS_MINT, SOURCE_INSTALLER)
+    context.set_default_os_installer_key(OS_MINT, APT_INSTALLER)
     
 def dpkg_detect(pkgs):
     """ 
@@ -122,11 +128,14 @@ class MintOsDetect(OsDetect):
                    '5':'8.04'}
 
     def __init__(self, base_detector):
-        self._detector = detector
+        self._detector = base_detector
     
     def is_os(self):
         return self._detector.is_os()
         
+    def get_codename(self):
+        return self._detector.get_codename()
+    
     def get_version(self):
         # remap version
         return self.version_map[self._detector.get_version()]

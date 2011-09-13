@@ -44,10 +44,10 @@ PKG_ADD_INSTALLER = 'pkg_add'
 def register_installers(context):
     context.set_installer(PKG_ADD_INSTALLER, PkgAddInstaller)
     
-def register_freebsd(context):
-    context.add_os_installer(OS_FREEBSD, SOURCE_INSTALLER)
-    context.add_os_installer(OS_FREEBSD, PKG_ADD_INSTALLER)
-    context.set_default_os_installer(OS_FREEBSD, PKG_ADD_INSTALLER)
+def register_platforms(context):
+    context.add_os_installer_key(OS_FREEBSD, SOURCE_INSTALLER)
+    context.add_os_installer_key(OS_FREEBSD, PKG_ADD_INSTALLER)
+    context.set_default_os_installer_key(OS_FREEBSD, PKG_ADD_INSTALLER)
 
 def pkg_info_detect(p):
     if p == "builtin":

@@ -42,15 +42,19 @@ YUM_INSTALLER='yum'
 def register_installers(context):
     context.set_installer(YUM_INSTALLER, YumInstaller)
 
+def register_platforms(context):
+    register_fedora(context)
+    register_rhel(context)
+    
 def register_fedora(context):
-    context.set_os_installer(OS_FEDORA, YUM_INSTALLER)
-    context.set_os_installer(OS_FEDORA, SOURCE_INSTALLER)
-    context.set_default_os_installer(OS_FEDORA, YUM_INSTALLER)
+    context.add_os_installer_key(OS_FEDORA, YUM_INSTALLER)
+    context.add_os_installer_key(OS_FEDORA, SOURCE_INSTALLER)
+    context.set_default_os_installer_key(OS_FEDORA, YUM_INSTALLER)
 
 def register_rhel(context):
-    context.set_os_installer(OS_RHEL, YUM_INSTALLER)
-    context.set_os_installer(OS_RHEL, SOURCE_INSTALLER)
-    context.set_default_os_installer(OS_RHEL, YUM_INSTALLER)
+    context.add_os_installer_key(OS_RHEL, YUM_INSTALLER)
+    context.add_os_installer_key(OS_RHEL, SOURCE_INSTALLER)
+    context.set_default_os_installer_key(OS_RHEL, YUM_INSTALLER)
 
 def rpm_detect(packages):
     return subprocess.call(['rpm', '-q', packages], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    
