@@ -153,7 +153,7 @@ class RosdepLookup:
         :meth:`RosdepLookup.where_defined` that are meant to be
         fault-tolerant to single-stack failures.
 
-        :returns: ``[Exception]``
+        :returns: List of exceptions, ``[Exception]``
         """
         return self.errors[:]
     
@@ -316,7 +316,7 @@ class RosdepLookup:
 
         Error state from single-stack failures
         (e.g. :exc:`InvalidRosdepData`) are not propogated.  Caller
-        must check `RosdepLookup.get_errors` to check for single-stack
+        must check :meth:`RosdepLookup.get_errors` to check for single-stack
         error state.  Error state does not reset -- it accumulates.
 
         :param rosdep_name: name of rosdep to lookup

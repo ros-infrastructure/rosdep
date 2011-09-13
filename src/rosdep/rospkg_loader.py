@@ -53,12 +53,12 @@ class RosPkgLoader(RosdepLoader):
         
     def _load_stack_rosdep_yaml(self, stack_name):
         """
-        @return: parsed YAML data and filename it was loaded from,
-        (dict, str).  Returns None, None if stack does not have a
-        rosdep YAML.
+        :returns: parsed YAML data and filename it was loaded from,
+          ``(dict, str)``.  Returns ``(None, None)`` if stack does not
+          have a rosdep YAML.
         
-        @raise InvalidRosdepData
-        @raise rospkg.ResourceNotFound: If stack cannot be located
+        :raises: :exc:`InvalidRosdepData`
+        :raises: :exc:`rospkg.ResourceNotFound` If stack cannot be located
         """
         stack_dir = self._rosstack.get_path(stack_name)
         filename = os.path.join(stack_dir, ROSDEP_YAML)
@@ -70,14 +70,16 @@ class RosPkgLoader(RosdepLoader):
         
     def load_stack(self, stack_name, rosdep_db):
         """
-        Load stack data into rosdep_db. If the stack has already been
-        loaded into rosdep_db, this method does nothing.  If stack has
-        no rosdep data, it will be initialized with an empty data map.
+        Load stack data into *rosdep_db*. If the stack has already
+        been loaded into *rosdep_db*, this method does nothing.  If
+        stack has no rosdep data, it will be initialized with an empty
+        data map.
 
-        @raise InvalidRosdepData: if stack rosdep.yaml is invalid
-        @raise rospkg.ResourceNotFound: if stack cannot be located
+        :raises: :exc:`InvalidRosdepData` if stack rosdep.yaml is invalid
+        :raises: :exc:`rospkg.ResourceNotFound` if stack cannot be located
 
-        @return: True if stack was loaded.  False if stack was already loaded.
+        :returns: ``True`` if stack was loaded.  ``False`` if stack
+          was already loaded.
         """
         if rosdep_db.is_loaded(stack_name):
             return
@@ -89,16 +91,17 @@ class RosPkgLoader(RosdepLoader):
 
     def load_package(self, package_name, rosdep_db):
         """
-        Load data for stack that contains package into rosdep_db. If
+        Load data for stack that contains package into *rosdep_db*. If
         the package or containing stack has already been loaded into
-        rosdep_db, this method does nothing.  If package has no
+        *rosdep_db*, this method does nothing.  If package has no
         associated rosdep data, it will be initialized with an empty
         data map.
 
-        @raise InvalidRosdepData: if stack rosdep.yaml is invalid
-        @raise rospkg.ResourceNotFound: if stack cannot be located
+        :raises: :exc:`InvalidRosdepData` if stack rosdep.yaml is invalid
+        :raises: :exc:`rospkg.ResourceNotFound` if stack cannot be located
 
-        @return: True if package was loaded, False if package was already loaded or is not part of stack.
+        :returns: ``True`` if package was loaded, ``False`` if package
+          was already loaded or is not part of stack.
         """
 
         stack_name = self._rospack.stack_of(package_name)

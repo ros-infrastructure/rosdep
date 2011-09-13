@@ -37,6 +37,11 @@ ENABLE_PIP    = False
 
 from .installers import InstallerContext
 
+from .model import InvalidRosdepData, RosdepDatabase, RosdepDatabaseEntry
+from .lookup import RosdepDefinition, RosdepConflict, RosdepView, RosdepLookup
+from .loader import RosdepLoader
+from .rospkg_loader import RosPkgLoader
+
 def create_default_installer_context():
     if ENABLE_CYGWIN:
         from .platforms import cygwin

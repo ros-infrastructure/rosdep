@@ -34,8 +34,8 @@ import sys
 from collections import defaultdict
 from rospkg.os_detect import OsDetect
 
-# This class is basically just a bunch of dictionaries with defined lookup methods
-
+# InstallerContext: This class is basically just a bunch of
+# dictionaries with defined lookup methods
 class InstallerContext:
     """
     :class:`InstallerContext` manages the context of execution for rosdep as it
@@ -86,8 +86,8 @@ class InstallerContext:
         
         :param os_key: Key for OS
         :param installer_mode_key: Key for installer to add to OS
-        :raises: :exc`KeyError`: if installer for *installer_mode_key*
-        is not set.
+        :raises: :exc:`KeyError`: if installer for *installer_mode_key*
+          is not set.
         """
         # validate, will throw KeyError
         installer_class = self.get_installer(installer_mode_key)
@@ -100,7 +100,7 @@ class InstallerContext:
         :meth:`InstallerContext.get_installer`.
         
         :param os_key: Key for OS
-        :raises: :exc`KeyError`: if no information for OS *os_key* is registered.
+        :raises: :exc:`KeyError`: if no information for OS *os_key* is registered.
         """
         return self.os_installers[os_key][:]
 
@@ -110,8 +110,8 @@ class InstallerContext:
 
         :param os_key: Key for OS
         :param installer_mode_key: Key for installer to add to OS
-        :raises: :exc`KeyError`: if installer for *installer_mode_key*
-        is not set.
+        :raises: :exc:`KeyError`: if installer for *installer_mode_key*
+          is not set.
         """
         # validate, will throw KeyError
         installer_class = self.get_installer(installer_mode_key)
@@ -124,7 +124,7 @@ class InstallerContext:
 
         :param os_key: Key for OS
         :returns: :class:`Installer`
-        :raises: :exc`KeyError`: if no information for OS *os_key* is registered.
+        :raises: :exc:`KeyError`: if no information for OS *os_key* is registered.
         """
         if not os_key in self.os_installers:
             raise KeyError("unknown OS: %s"%(os_key))

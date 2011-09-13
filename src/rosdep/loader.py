@@ -54,8 +54,8 @@ class RosdepLoader:
         """
         Utility routine for unmarshalling rosdep data encoded as YAML.
 
-        @param origin: origin of yaml contents (for error messages)
-        @raise yaml.YAMLError
+        :param origin: origin of yaml contents (for error messages)
+        :raises: :exc:`yaml.YAMLError`
         """
         try:
             return yaml.load(yaml_contents)
@@ -67,19 +67,17 @@ class RosdepLoader:
         Load stack data into rosdep_db. If the stack has already been
         loaded into rosdep_db, this method does nothing.
 
-        @param stack_name: name of ROS stack to load
-        @type stack_name: str
-        @param rosdep_db: database to load stack data into
-        @type rosdep_db: RosdepDatabase
+        :param stack_name: name of ROS stack to load, ``str``
+        :param rosdep_db: database to load stack data into, :class:`RosdepDatabase`
 
-        @raise InvalidRosdepData
+        :raises: :exc:`InvalidRosdepData`
         """
         raise NotImplementedError()
 
     def load_package(self, package_name, rosdep_db):
         raise NotImplementedError()
 
-    def load_package_manifest(self, package_name):
+    def get_package_manifest(self, package_name):
         raise NotImplementedError()
 
     def get_loadable_packages(self):

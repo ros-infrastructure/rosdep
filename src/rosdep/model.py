@@ -105,13 +105,13 @@ class RosdepDatabase:
     
     def get_stack_data(self, stack_name):
         """
-        @return: :class:`RosdepDatabaseEntry` of given stack.  
+        :returns: :class:`RosdepDatabaseEntry` of given stack.  
         """
         return self._rosdep_db[stack_name]
     
     def get_stack_dependencies(self, stack_name):
         """
-        :raises: exc:`KeyError` if *stack_name* is not an entry, or if
+        :raises: :exc:`KeyError` if *stack_name* is not an entry, or if
           all of stack's dependencies have not been properly loaded.
         """
         entry = self.get_stack_data(stack_name)
