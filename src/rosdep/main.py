@@ -148,7 +148,7 @@ def command_what_needs(args, options):
     lookup = _get_default_RosdepLookup()
     packages = []
     for rosdep_name in args:
-        packages.extend(lookup.what_needs(rosdep_name))
+        packages.extend(lookup.get_packages_that_need(rosdep_name))
 
     for error in lookup.get_errors():
         print("WARNING: %s"%(str(error)), file=sys.stderr)
@@ -159,7 +159,7 @@ def command_where_defined(args, options):
     lookup = _get_default_RosdepLookup()
     locations = []
     for rosdep_name in args:
-        locations.extend(lookup.where_defined(rosdep_name))
+        locations.extend(lookup.get_stacks_that_define(rosdep_name))
 
     for error in lookup.get_errors():
         print("WARNING: %s"%(str(error)), file=sys.stderr)

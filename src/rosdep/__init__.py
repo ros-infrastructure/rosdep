@@ -31,7 +31,7 @@
 rosdep library and command-line tool
 """
 
-from .installers import InstallerContext
+from .installers import InstallerContext, Installer, PackageManagerInstaller
 
 from .model import InvalidRosdepData, RosdepDatabase, RosdepDatabaseEntry
 from .lookup import RosdepDefinition, RosdepConflict, RosdepView, RosdepLookup

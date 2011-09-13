@@ -49,14 +49,23 @@ class RosdepDefinition:
     
     def __init__(self, data, origin="<dynamic>"):
         """
+        :param data: raw rosdep data for a single rosdep dependency, ``dict``
         :param origin: string that indicates where data originates from (e.g. filename)
         """
         self.data = data
         self.origin = origin
     
 class RosdepConflict(Exception):
+    """
+    Rosdep rules do not have compatbile definitions.
+    """
 
     def __init__(self, definition_name, definition1, definition2):
+        """
+        :apram definition_name: name of rosdep key that has conflicting definition.
+        :param definition1: Existing rule, :class:`RosdepDefinition`
+        :param definition2: Conflicting rule, :class:`RosdepDefinition`
+        """
         self.definition_name = definition_name
         self.definition1 = definition1
         self.definition2 = definition2
@@ -122,7 +131,6 @@ class RosdepLookup:
     """
     
     def __init__(self, rosdep_db, loader,
-                 default_os_name, default_os_version,
                  override_entry=None):
         """
         :param loader: Loader to use for loading rosdep data by stack
@@ -133,8 +141,6 @@ class RosdepLookup:
         """
         self.rosdep_db = rosdep_db
         self.loader = loader
-        self.default_os_name = default_os_name
-        self.default_os_version = default_os_version
 
         self._view_cache = {} # {str: {RosdepView}}
 
@@ -166,7 +172,7 @@ class RosdepLookup:
         m = self.loader.get_package_manifest(package)
         return [d.name for d in m.rosdeps]
 
-    def what_needs(self, rosdep_name):
+    def get_packages_that_need(self, rosdep_name):
         """
         :param rosdep_name: name of rosdep dependency
         
@@ -175,8 +181,7 @@ class RosdepLookup:
         return [p for p in self.loader.get_loadable_packages() if rosdep_name in self.get_rosdeps(p)]
 
     @staticmethod
-    def create_from_rospkg(rospack=None, rosstack=None, ros_home=None,
-                           os_name=None, os_version=None):
+    def create_from_rospkg(rospack=None, rosstack=None, ros_home=None):
         """
         Create :class:`RosdepLookup` based on current ROS package
         environment.
@@ -185,10 +190,6 @@ class RosdepLookup:
           instance used to crawl ROS packages.
         :param rosstack: (optional) Override :class:`rospkg.RosStack`
           instance used to crawl ROS stacks.
-        :param os_name: (optional) OS name to use for view.  Defaults
-          to default_os_name.
-        :param os_version: (optional) OS version to use for view.
-          Defaults to default_os_version.
         """
         # initialize the loader
         if rospack is None:
@@ -199,15 +200,6 @@ class RosdepLookup:
             ros_home = get_ros_home()
 
         loader = RosPkgLoader(rospack=rospack, rosstack=rosstack)
-
-        # detect the operating system
-        if os_name is None or os_version is None:
-            os_detect = OsDetect()
-            if os_name is None:
-                os_name = os_detect.get_name()
-            if os_version is None:
-                os_version = os_detect.get_version()
-
         rosdep_db = RosdepDatabase()
         
         # Load ros_home/rosdep.yaml, if present.  It will be used to
@@ -219,24 +211,13 @@ class RosdepLookup:
                 data = loader.load_rosdep_yaml(f.read(), path)
             override_entry = RosdepDatabaseEntry(data, [], path)
 
-        return RosdepLookup(rosdep_db, loader, os_name, os_version, override_entry=override_entry)
+        return RosdepLookup(rosdep_db, loader, override_entry=override_entry)
 
-    def resolve_definition(self, os_name=None, os_version=None):
+    def resolve_definition(self, os_name, os_version):
         """
         Resolve a :class:`RosdepDefinition` for a particular
         os/version spec.
-        
-        :param os_name: (optional) OS name to use for view.  Defaults
-          to default_os_name.
-
-        :param os_version: (optional) OS version to use for view.
-          Defaults to default_os_version.
         """
-        if os_name is None:
-            os_name = self.default_os_name
-        if os_version is None:
-            os_version = self.default_os_version
-
         #TODO: self.override_entry
         raise NotImplementedError("TODO")
         
@@ -308,14 +289,14 @@ class RosdepLookup:
         self._view_cache[stack_name] = view
         return view
 
-    def where_defined(self, rosdep_name):
+    def get_stacks_that_define(self, rosdep_name):
         """
         Locate all stacks that define *rosdep_name*.  A side-effect of
         this method is that all available rosdep files in the
         configuration will be loaded into memory.
 
         Error state from single-stack failures
-        (e.g. :exc:`InvalidRosdepData`) are not propogated.  Caller
+        (e.g. :exc:`InvalidRosdepData`) are not propagated.  Caller
         must check :meth:`RosdepLookup.get_errors` to check for single-stack
         error state.  Error state does not reset -- it accumulates.
 

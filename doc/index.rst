@@ -1,25 +1,20 @@
 .. module:: rosdep
 
-Welcome to rosdep's documentation!
-==================================
+rosdep
+======
 
-Contents:
-
-.. toctree::
-   :maxdepth: 2
-
-.. autoclass:: InstallerContext
-   :members:
+.. contents:: Table of Contents
+   :depth: 2
 
 Exceptions
-==========
+----------
 
 .. autoclass:: InvalidRosdepData
 
 .. autoclass:: RosdepConflict
 
 Database Model
-==============
+--------------
 
 .. autoclass:: RosdepDatabase
    :members:
@@ -28,7 +23,7 @@ Database Model
    :members:
 
 View Model
-==========
+----------
 
 .. autoclass:: RosdepDefinition
    :members:
@@ -40,12 +35,24 @@ View Model
    :members:
 
 Loaders
-=======
+-------
 
 .. autoclass:: RosdepLoader
    :members:
 
 .. autoclass:: RosPkgLoader
+   :members:
+
+Installers
+----------
+
+.. autoclass:: InstallerContext
+   :members:
+
+.. autoclass:: Installer
+   :members:
+
+.. autoclass:: PackageManagerInstaller
    :members:
 
 Indices and tables

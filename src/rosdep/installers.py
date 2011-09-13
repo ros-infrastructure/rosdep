@@ -92,6 +92,12 @@ class InstallerContext:
         """
         return self.installers.keys()
 
+    def get_os_keys(self):
+        """
+        :returns: list of OS keys that have registered with this context, ``[str]``
+        """
+        return self.os_installers.keys()
+    
     def add_os_installer_key(self, os_key, installer_mode_key):
         """
         Register an installer for the specified OS.  This will fail
@@ -140,7 +146,7 @@ class InstallerContext:
 
     def get_default_os_installer_key(self, os_key):
         """
-        Get the default OS installer key to use for OS, or `None` if
+        Get the default OS installer key to use for OS, or ``None`` if
         there is no default.
 
         :param os_key: Key for OS
@@ -165,7 +171,7 @@ class Installer:
     def is_installed(self, resolved):
         """
         :param resolved: resolved installation items
-        :returns: True if all of the *resolved* items are installed on
+        :returns: ``True`` if all of the *resolved* items are installed on
           the local system
         """
         raise NotImplementedError("is_installed")        

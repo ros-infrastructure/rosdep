@@ -40,7 +40,7 @@ def test_RosdepLoader():
         assert False, "should have raised NotImplementedError"
     except NotImplementedError: pass
     try:
-        loader.load_package_manifest('foo')
+        loader.get_package_manifest('foo')
         assert False, "should have raised NotImplementedError"
     except NotImplementedError: pass
     try:

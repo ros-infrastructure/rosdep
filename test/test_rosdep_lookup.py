@@ -159,17 +159,17 @@ def test_RosdepLookup_get_rosdeps():
     print(lookup.get_rosdeps('stack1_p2'))
     assert set(lookup.get_rosdeps('stack1_p2')) == set(['stack1_dep1', 'stack1_dep2', 'stack1_p2_dep1'])
 
-def test_RosdepLookup_what_needs():
+def test_RosdepLookup_get_packages_that_need():
     from rosdep.lookup import RosdepLookup
     rospack, rosstack = get_test_rospkgs()
     ros_home = os.path.join(get_test_tree_dir(), 'fake')
     
     lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rospack, ros_home=ros_home)
 
-    assert lookup.what_needs('fake') ==  []
-    assert set(lookup.what_needs('stack1_dep1')) ==  set(['stack1_p1', 'stack1_p2'])
-    assert lookup.what_needs('stack1_dep2') ==  ['stack1_p2']
-    assert lookup.what_needs('stack1_p1_dep1') ==  ['stack1_p1']
+    assert lookup.get_packages_that_need('fake') ==  []
+    assert set(lookup.get_packages_that_need('stack1_dep1')) ==  set(['stack1_p1', 'stack1_p2'])
+    assert lookup.get_packages_that_need('stack1_dep2') ==  ['stack1_p2']
+    assert lookup.get_packages_that_need('stack1_p1_dep1') ==  ['stack1_p1']
     
 def test_RosdepLookup_create_from_rospkg():
     from rosdep.lookup import RosdepLookup
@@ -186,13 +186,6 @@ def test_RosdepLookup_create_from_rospkg():
     assert rospack == lookup.loader._rospack
     assert rosstack == lookup.loader._rosstack
     
-    lookup = RosdepLookup.create_from_rospkg(ros_home=ros_home)
-    
-    lookup = RosdepLookup.create_from_rospkg(os_name='foo')
-    assert 'foo' == lookup.default_os_name
-    
-    lookup = RosdepLookup.create_from_rospkg(os_version='foo-version')
-    assert 'foo-version' == lookup.default_os_version
     
 def test_RosdepLookup_get_rosdep_view():
     from rosdep.lookup import RosdepLookup
@@ -256,8 +249,8 @@ def test_RosdepLookup_ros_home_override():
     assert 'atlas' in lookup.override_entry.rosdep_data
 
     # make sure it surfaces in relevant APIs
-    # - where_defined
-    val = lookup.where_defined('atlas')
+    # - get_stacks_that_define
+    val = lookup.get_stacks_that_define('atlas')
     assert len(val) == 1, val
     assert val[0] == (OVERRIDE_ENTRY, ros_home_path)
 
@@ -288,20 +281,20 @@ def test_RosdepLookup_get_errors():
     errors = [e for e in errors if 'invalid/rosdep.yaml' in e.origin]
     assert errors
     
-def test_RosdepLookup_where_defined():
+def test_RosdepLookup_get_stacks_that_define():
     from rosdep.lookup import RosdepLookup
     rospack, rosstack = get_test_rospkgs()
     tree_dir = get_test_tree_dir()
     ros_home = os.path.join(tree_dir, 'fake')
     lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack, ros_home=ros_home)
 
-    val = lookup.where_defined('python')
+    val = lookup.get_stacks_that_define('python')
     assert len(val) == 1
     entry = val[0]
     assert entry == ('ros', os.path.join(rospack.get_ros_root(), 'rosdep.yaml')), entry
 
     # look for multiply defined
-    vals = lookup.where_defined('twin')
+    vals = lookup.get_stacks_that_define('twin')
     assert len(vals) == 2
 
     stack_names = [entry[0] for entry in vals]
