@@ -1,4 +1,4 @@
-# Copyright (c) 2009, Willow Garage, Inc.
+# Copyright (c) 2011, Willow Garage, Inc.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -25,10 +25,11 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from __future__ import print_function
-
 import os
-def rd_debug(s):
-    if "ROSDEP_DEBUG" in os.environ:
-        print(s)
 
+def test_rd_debug():
+    # just tripwire/coverage
+    from rosdep.core import rd_debug
+    rd_debug('foo')
+    os.environ['ROSDEP_DEBUG'] = '1'
+    rd_debug('foo')    

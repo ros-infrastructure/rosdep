@@ -105,7 +105,9 @@ class RosdepDatabase:
     
     def get_stack_data(self, stack_name):
         """
-        :returns: :class:`RosdepDatabaseEntry` of given stack.  
+        :returns: :class:`RosdepDatabaseEntry` of given stack.
+
+        :raises: :exc:`KeyError` if no entry for *stack_name*
         """
         return self._rosdep_db[stack_name]
     

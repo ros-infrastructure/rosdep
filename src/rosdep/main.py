@@ -37,14 +37,16 @@ from __future__ import print_function
 import os
 import sys
 
+from optparse import OptionParser
+
+import rospkg
+
+from . import create_default_installer_context
+from .lookup import RosdepLookup
+
 _usage = """usage: rosdep [options] <command> <args>
 
 Commands:
-
-rosdep generate_bash  <packages>...
-rosdep satisfy <packages>...
-  will try to generate a bash script which will satisfy the 
-  dependencies of package(s) on your operating system.
 
 rosdep install <packages>...
   will generate a bash script and then execute it.
@@ -56,15 +58,18 @@ rosdep depdb <packages>...
 
 rosdep what_needs <rosdeps>...
   will print a list of packages that declare a rosdep on (at least
-  one of) ROSDEP_NAME[S]
+  one of) <rosdeps>
 
 rosdep where_defined <rosdeps>...
   will print a list of yaml files that declare a rosdep on (at least
-  one of) ROSDEP_NAME[S]
+  one of) <rosdeps>
 
 rosdep check <packages>...
   will check if the dependencies of package(s) have been met.
 """
+
+def _get_default_RosdepLookup():
+    return RosdepLookup.create_from_rospkg()
 
 def rosdep_main():
     try:
@@ -74,8 +79,9 @@ def rosdep_main():
         return 1
         
 def _rosdep_main():
-    from optparse import OptionParser
     parser = OptionParser(usage=_usage, prog='rosdep')
+    parser.add_option("--os", dest="os_override", default=None, 
+                      metavar="OS_NAME:OS_VERSION", help="Override OS name and version (colon-separated), e.g. ubuntu:lucid")
     parser.add_option("--verbose", "-v", dest="verbose", default=False, 
                       action="store_true", help="verbose display")
     parser.add_option("--include_duplicates", "-i", dest="include_duplicates", default=False, 
@@ -98,41 +104,84 @@ def _rosdep_main():
         parser.error("Please enter arguments for '%s'"%command)
     args = args[1:]
 
-    if command in _command_rosdep_args: # rosdep keys as args
-        if options.rosdep_all:
-            parser.error("-a, --all is not a valid option for this command")
-        return command_handlers[command](args, options)
+    if command in _command_rosdep_args:
+        _rosdep_args_handler(parser, options, args)
     else:
-        # package names as args
-        if options.rosdep_all:
+        _package_args_handler(parser, options, args)
+
+def _rosdep_args_handler(parser, options, args):
+    # rosdep keys as args
+    if options.rosdep_all:
+        parser.error("-a, --all is not a valid option for this command")
+    else:
+        return command_handlers[command](args, options)
+    
+def _package_args_handler(parser, options, args, rospack=None, rosstack=None, loader=None):
+    # package names as args
+    # - overrides to enable testing
+    if rospack is None:
+        rospack = rospkg.RosPack()
+    if rosstack is None:
+        rosstack = rospkg.RosStack()
+    if loader is None:
+        loader = RosPkgLoader(rospack, rosstack)
+
+    if options.rosdep_all:
+        if args:
+            parser.error("cannot specify additional arguments with -a")
+        else:
             args = loader.get_loadable_packages()
-        
-        verified_packages, rejected_packages = roslib.stacks.expand_to_packages(args)
-        valid_stacks = [s for s in roslib.stacks.list_stacks() if s in args]
+    if not args:
+        parser.error("no packages or stacks specified")
+
+    val = rospkg.expand_to_packages(rospack, rosstack)
+    packages = val[0]
+    not_found = val[1]
+    if not_found:
+        parser.error("ERROR: the following are neither a package or stack: %s"%(' '.join(not_found)))
+
+    if not packages:
+        # possible with empty stacks
+        print("No packages in arguments, aborting")
+        return
     
-        if len(rejected_packages) > 0:
-            print("Warning: could not identify %s as a package"%rejected_packages, file=sys.stderr)
-        if len(verified_packages) == 0 and len(valid_stacks) == 0:
-            parser.error("No Valid Packages or stacks listed as arguments")
-                
-        return command_handlers[command](args, verified_packages, options)
+    lookup = RosdepLookup(loader)
+    return command_handlers[command](lookup, packages, options)
 
-def _get_default_RosdepLookup():
-    from .lookup import RosdepLookup
-    return RosdepLookup.create_from_rospkg()
-
-def _compute_depdb_output(args, options):
-    lookup = _get_default_RosdepLookup()
-
-    # detect OS
-    # TODO: allow command-line override of os name and version
-    os_name = os_version = "TODO"
+def configure_installer_context_os(installer_context, options):
+    """
+    Override the OS detector in *installer_context* if necessary.
+    """
+    if not options.os_override:
+        return
+    val = options.os_override
+    if not ':' in val:
+        parser.error("OS override must be colon-separated OS_NAME:OS_VERSION, e.g. ubuntu:maverick")
+    os_name = val[:val.find(':')]
+    os_version = val[val.find(':')+1:]
+    installer_context.set_os_override(os_name, os_version)
     
+def command_check(lookup, packages, options):
+    # unmap options
+    verbose = options.verbose
+    interactive = not options.default_yes
+    continue_on_error = options.robust
+    
+    installer_context = create_default_installer_context()
+    configure_installer_context_os(installer_context, options)
+    installer = RosdepInstaller(installer_context, lookup)
+    resolutions = lookup.resolve_all(packages, installer_context)
+    #TODO
+    raise NotImplemented('TODO')
+
+def _compute_depdb_output(lookup, packages, options):
+    installer_context = create_default_installer_context()
+    os_name, os_version = _detect_os(installer_context, options)
     
     output = "Rosdep dependencies for operating system %s version %s "%(os_name, os_version)
     for stack_name in stacks:
         output += "\nSTACK: %s\n"%(stack_name)
-        view = lookup.get_rosdep_view(stack_name)
+        view = lookup.get_stack_rosdep_view(stack_name)
         for rosdep in view.keys():
             definition = view.lookup(rosdep)
             resolved = resolve_definition(definition, os_name, os_version)
@@ -168,20 +217,9 @@ def command_where_defined(args, options):
         origin = location[1]
         print(origin)
 
-def command_check(r, args, options):
-    missing_packages = r.check()
-    if len(rejected_packages) > 0:
-        print("Arguments %s are not packages"%rejected_packages, file=sys.stderr)
-        return  1
-    if len(missing_packages) == 0:
-        print("All required rosdeps are installed")
-        return 0
-    else:
-        print("The following rosdeps were not installed", missing_packages)
-        return 1
-
 def command_install(r, args, verified_packages, options):
-    error = r.install(options.include_duplicates, options.default_yes)
+    interactive = not options.default_yes
+    error = r.install(interactive=interactive, simulate=options.simulate, continue_on_error=options.robust)
     if error:
         print("rosdep install ERROR:\n%s"%error, file=sys.stderr)
         return 1
@@ -189,14 +227,6 @@ def command_install(r, args, verified_packages, options):
         print("All required rosdeps installed successfully")
         return 0
     
-def command_generate_bash(r, options):
-    missing_packages = r.satisfy()
-    if not missing_packages:
-        return 0
-    else:
-        print("The following rosdeps are not installed but are required", missing_packages)
-        return 1
-        
 command_handlers = {
     'debdb': command_depdb,
     'check': command_check,

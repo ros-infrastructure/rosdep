@@ -28,14 +28,32 @@
 
 # Author Tully Foote/tfoote@willowgarage.com, Ken Conley/kwc@willowgarage.com
 
+from __future__ import print_function
+
 import os
 import sys
 
 from collections import defaultdict
 from rospkg.os_detect import OsDetect
 
-# InstallerContext: This class is basically just a bunch of
-# dictionaries with defined lookup methods
+from .core import rd_debug
+
+class InstallFailed(Exception):
+    pass
+
+# use OsDetect.get_version() for OS version key
+TYPE_VERSION = 'version'
+# use OsDetect.get_codename() for OS version key
+TYPE_CODENAME = 'codename'
+
+# kwc: InstallerContext is basically just a bunch of dictionaries with
+# defined lookup methods.  It really encompasses two facets of a
+# rosdep configuration: the pluggable nature of installers and
+# platforms, as well as the resolution of the operating system for a
+# specific machine.  It is possible to decouple those two notions,
+# though there are some touch points over how this interfaces with the
+# rospkg.os_detect library, i.e. how platforms can tweak these
+# detectors and how the higher-level APIs can override them.
 class InstallerContext:
     """
     :class:`InstallerContext` manages the context of execution for rosdep as it
@@ -50,16 +68,61 @@ class InstallerContext:
           detecting platforms.  If `None`, default instance will be
           used.
         """
-        if os_detect is None:
-            os_detect = OsDetect()
-        self.os_detect = os_detect
+        # platform configuration
         self.installers = {}
         self.os_installers = defaultdict(list)
         self.default_os_installer = {}
+
+        # stores configuration of which value to use for the OS version key (version number or codename)
+        self.os_version_type = {}
+
+        # OS detection and override
+        if os_detect is None:
+            os_detect = OsDetect()
+        self.os_detect = os_detect
+        self.os_override = None
+        
+    def set_os_override(self, os_name, os_version):
+        """
+        Override the OS detector with *os_name* and *os_version*.  See
+        :meth:`InstallerContext.detect_os`.
+
+        :param os_name: OS name value to use, ``str``
+        :param os_version: OS version value to use, ``str``
+        """
+        self.os_override = os_name, os_version
+
+    def get_os_version_type(self, os_name):
+        return self.os_version_type.get(os_name, TYPE_VERSION)
+
+    def set_os_version_type(self, os_name, version_type):
+        if version_type not in (TYPE_VERSION, TYPE_CODENAME):
+            raise ValueError("version type not TYPE_VERSION or TYPE_CODENAME")
+        self.os_version_type[os_name] = version_type
+        
+    def get_os_name_and_version(self):
+        """
+        Get the OS name and version key to use for resolution and
+        installation.  This will be the detected OS name/version
+        unless :meth:`InstallerContext.set_os_override()` has been
+        called.
+
+        :returns: (os_name, os_version), ``(str, str)``
+        """
+        if self.os_override:
+            return self.os_override
+        else:
+            os_name = self.os_detect.get_name()
+            if self.get_os_version_type(os_name) == TYPE_CODENAME:
+                os_version = self.os_detect.get_codename()
+            else:
+                os_version = self.os_detect.get_version()
+            return os_name, os_version
         
     def get_os_detect(self):
         """
-        :returns os_detect: :class:`OsDetect` instance to use for detecting platforms.
+        :returns os_detect: :class:`OsDetect` instance used for
+          detecting platforms.
         """
         return self.os_detect
 
@@ -272,3 +335,120 @@ class PackageManagerInstaller(Installer):
         if self.supports_depends:
             return rosdep_args_dict.get('depends', [])
         return [] # Default return empty list
+
+class RosdepInstaller:
+
+    def __init__(self, installer_context, lookup):
+        self.installer_context = installer_context
+        self.lookup = lookup
+        
+    def get_uninstalled(self):
+        pass
+    
+    def check(self, package, verbose=False):
+        """
+        :param packages: list of ROS packages
+        :returns: list of failed rosdeps, ``[str]``
+        """
+        failed_rosdeps = []
+        rdlp_cache = {}
+
+
+        # this logic is wrong: it should go through package by
+        # package, as each package has a unique view.  it should
+        # resolve within that packages/stacks scope.  After it has
+        # collected all resolutions, it can unique() them, and then it
+        # can install them.
+        
+        for r, packages in self.get_rosdeps(packages).iteritems():
+            # use first package for lookup rule
+            p = packages[0]
+            if p in rdlp_cache:
+                rdlp = rdlp_cache[p]
+            else:
+                rdlp = RosdepLookupPackage(self.osi.get_name(), self.osi.get_version(), p, self.yc)
+                rdlp_cache[p] = rdlp
+            if not self.install_rosdep(r, rdlp, interactive=True, simulate=True, verbose=verbose):
+                failed_rosdeps.append(r)
+
+        return failed_rosdeps
+
+    def install(self, interactive=True, simulate=False, continue_on_error=False):
+        """
+        :param interactive: (optional) If ``False``, suppress interactive prompts (e.g. by passing '-y' to ``apt``).  
+        :param simulate: (optional) If ``False`` simulate installation without actually executing.
+        :raises: :exc:`InstallFailed` if any rosdeps fail to install and *continue_on_error* is ``False``.
+        :raises: :exc:`MultipleInstallsFailed` If *continue_on_error* is set and one or more installs failed.
+        """
+        failures = []
+
+        for r, packages in self.get_rosdeps(self.packages).iteritems():
+            # use the first package as the lookup rule
+            p = packages[0]
+            rdlp = RosdepLookupPackage(self.osi.get_name(), self.osi.get_version(), p, self.yc)
+            try:
+                self.install_rosdep(r, rdlp, interactive, simulate)
+            except InstallFailed as e:
+                if not continue_on_error:
+                    raise
+                else:
+                    failures.append(e)
+        if failures:
+            raise MultipleInstallsFailed(failures)
+
+    def install_rosdep(self, rosdep_name, rdlp, simulate=False, interactive=True, verbose=False):
+        """
+        Install a single rosdep given it's name and a lookup table. 
+
+        :param interactive: (optional) If ``False``, suppress interactive prompts (e.g. by passing '-y' to ``apt``).  
+        :param simulate: (optional) If ``False`` simulate installation without actually executing.
+        :returns: ``True`` if the install was successful.
+        """
+        rd_debug("Processing rosdep %s in install_rosdep method"%rosdep_name)
+        rosdep_dict = rdlp.lookup_rosdep(rosdep_name)
+        if not rosdep_dict:
+            return False
+        mode = 'default'
+        installer = None
+        modes = rosdep_dict.keys()
+        if len(modes) != 1:
+            print("ERROR: only one mode allowed, rosdep %s has mode %s"%(rosdep_name, modes))
+            return False
+        else:
+            mode = modes[0]
+
+        rd_debug("rosdep mode:", mode)
+        installer = self.osi.get_os().get_installer(mode)
+        
+        if not installer:
+            raise RosdepException( "Rosdep failed to get an installer for mode %s"%mode)
+            
+        my_installer = installer(rosdep_dict[mode])
+
+        # Check if it's already there
+        if my_installer.check_presence():
+            rd_debug("rosdep %s already present"%rosdep_name)
+            return True
+        else:
+            rd_debug("rosdep %s not detected.  It will be installed"%rosdep_name)
+        
+        # Check for dependencies
+        dependencies = my_installer.get_depends()
+        for d in dependencies:
+            self.install_rosdep(d, rdlp, default_yes, execute)
+
+        command = my_installer.get_install_command(default_yes, execute)
+        if verbose or simulate:
+            print("Installation command/script:\n"+80*'='+str(command)+80*'=')
+        if not simulate:
+            result = my_installer.execute_install_command(command)
+            if result:
+                print("successfully installed %s"%(rosdep_name))
+                if not my_installer.is_installed(resolved):
+                    print("rosdep %s failed check-presence-script after installation.\nResolved packages were %s"%(rosdep_name, resolved), file=sys.stderr)
+                    return False
+
+        elif execute:
+            print ("Failed to install %s!"%(rosdep_name))
+        return result
+

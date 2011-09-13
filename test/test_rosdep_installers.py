@@ -44,6 +44,49 @@ def test_InstallerContext_ctor():
     assert [] == context.get_installer_keys()
     assert [] == context.get_os_installer_keys('foo')
 
+def test_InstallerContext_get_os_version_type():
+    from rospkg.os_detect import OS_UBUNTU
+    from rosdep.installers import InstallerContext, TYPE_CODENAME, TYPE_VERSION
+    context = InstallerContext()
+
+    try:
+        context.set_os_version_type(OS_UBUNTU, 'bad')
+        assert False, "should check type"
+    except ValueError:
+        pass
+
+    assert TYPE_VERSION == context.get_os_version_type(OS_UBUNTU)
+    context.set_os_version_type(OS_UBUNTU, TYPE_CODENAME)
+    assert TYPE_CODENAME == context.get_os_version_type(OS_UBUNTU)
+    
+def test_InstallerContext_os_version_and_name():
+    from rosdep.installers import InstallerContext, TYPE_CODENAME, TYPE_VERSION
+    context = InstallerContext()
+    os_name, os_version = context.get_os_name_and_version()
+    assert os_name is not None
+    assert os_version is not None
+    
+    val = ("fakeos", "blah")
+    context.set_os_override(*val)
+    assert val == context.get_os_name_and_version()
+
+    from mock import Mock
+    from rospkg.os_detect import OsDetect
+    os_detect_mock = Mock(spec=OsDetect)
+    os_detect_mock.get_name.return_value = 'fakeos'
+    os_detect_mock.get_version.return_value = 'fakeos-version'
+    os_detect_mock.get_codename.return_value = 'fakeos-codename'
+    context = InstallerContext(os_detect_mock)
+    context.set_os_version_type('fakeos', TYPE_CODENAME)
+    os_name, os_version = context.get_os_name_and_version()
+    assert os_name == 'fakeos', os_name
+    assert os_version == 'fakeos-codename', os_version
+
+    context.set_os_version_type('fakeos', TYPE_VERSION)
+    os_name, os_version = context.get_os_name_and_version()
+    assert os_name == 'fakeos', os_name
+    assert os_version == 'fakeos-version', os_version
+    
 def test_InstallerContext_installers():
     from rosdep.installers import InstallerContext, Installer
     from rospkg.os_detect import OsDetect
@@ -240,3 +283,14 @@ def test_PackageManagerInstaller_get_packages_to_install():
     installer = PackageManagerInstaller(detect_fn_single)
     assert set(['baba', 'cada']) == set(installer.get_packages_to_install(['a', 'baba', 'b', 'cada', 'c']))
     
+
+def test_RosdepInstaller_ctor():
+    # tripwire/coverage
+    from rosdep import create_default_installer_context
+    from rosdep.lookup import RosdepLookup
+    from rosdep.installers import RosdepInstaller
+    lookup = RosdepLookup.create_from_rospkg()
+    context = create_default_installer_context()
+    installer = RosdepInstaller(context, lookup)
+    assert lookup == installer.lookup
+    assert context == installer.installer_context    

@@ -36,8 +36,9 @@ import urllib
 
 import yaml
 
-from ..core import RosdepException, rd_debug
-from ..installers import Installer
+from ..core import rd_debug
+from ..installers import Installer, InstallFailed
+from ..model import InvalidRosdepData
 from ..shell_utils import create_tempfile_from_string_and_execute, fetch_file, Md5Mismatch, DownloadFailed
 
 SOURCE_INSTALLER='source'
@@ -85,9 +86,13 @@ def load_rdmanifest(url, md5sum, alt_url=None):
 class SourceInstaller(Installer):
 
     def __init__(self, arg_dict):
+        #TODOXXX: should not take in arg_dict
+        """
+        :raises: :exc:`InvalidRosdepData`
+        """
         self.url = arg_dict.get("uri")
         if not self.url:
-            raise RosdepException("uri required for source rosdeps") 
+            raise InvalidRosdepData("uri required for source rosdeps") 
         self.alt_url = arg_dict.get("alternate-uri")
         self.md5sum = arg_dict.get("md5sum")
 
@@ -98,9 +103,10 @@ class SourceInstaller(Installer):
             rd_debug("Downloading manifest %s"%self.url)
             set_manifest(load_rdmanifest(self.url, self.md5sum, self.alt_url))
         except DownloadFailed as ex:
-            raise RosdepException(str(ex))            
+            # not sure this should be masked this way
+            raise InvalidRosdepData(str(ex))            
         except InvalidRdmanifest as ex:
-            raise RosdepException(str(ex))
+            raise InvalidRosdepData(str(ex))
 
     def set_manifest(self, manifest):
         self.manifest = manifest
@@ -120,7 +126,7 @@ class SourceInstaller(Installer):
     def check_presence(self):
         return create_tempfile_from_string_and_execute(self.check_presence_command)
 
-    def generate_package_install_command(self, default_yes = False, execute = True, display =True):
+    def get_install_command(self, interactive=True):
         tempdir = tempfile.mkdtemp()
         success = False
 
@@ -136,9 +142,9 @@ class SourceInstaller(Installer):
                     filename = f[0]
                     hash2 = get_file_hash(filename)
                     if self.tarball_md5sum != hash2:
-                        raise RosdepException("md5sum check on %s and %s failed.  Expected %s got %s and %s"%(self.tarball, self.alternate_tarball, self.tarball_md5sum, hash1, hash2))
+                        raise InstallFailed("md5sum check on %s and %s failed.  Expected %s got %s and %s"%(self.tarball, self.alternate_tarball, self.tarball_md5sum, hash1, hash2))
                 else:
-                    raise RosdepException("md5sum check on %s failed.  Expected %s got %s "%(self.tarball, self.tarball_md5sum, hash1))
+                    raise InstallFailed("md5sum check on %s failed.  Expected %s got %s "%(self.tarball, self.tarball_md5sum, hash1))
         else:
             rd_debug("No md5sum defined for tarball, not checking.")
             

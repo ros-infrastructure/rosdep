@@ -187,7 +187,7 @@ def test_RosdepLookup_create_from_rospkg():
     assert rosstack == lookup.loader._rosstack
     
     
-def test_RosdepLookup_get_rosdep_view():
+def test_RosdepLookup_get_stack_rosdep_view():
     from rosdep.lookup import RosdepLookup
     rospack, rosstack = get_test_rospkgs()
     ros_home = os.path.join(get_test_tree_dir(), 'fake')
@@ -199,7 +199,7 @@ def test_RosdepLookup_get_rosdep_view():
     with open(ros_rosdep_path) as f:
         ros_raw = yaml.load(f.read())
     # - first pass: no cache
-    ros_view = lookup.get_rosdep_view('ros')
+    ros_view = lookup.get_stack_rosdep_view('ros')
     libtool = ros_view.lookup('libtool')
     assert ros_rosdep_path == libtool.origin
     assert ros_raw['libtool'] == libtool.data
@@ -208,13 +208,13 @@ def test_RosdepLookup_get_rosdep_view():
     assert ros_raw['python'] == python.data
 
     # - second pass: with cache
-    ros_view = lookup.get_rosdep_view('ros')
+    ros_view = lookup.get_stack_rosdep_view('ros')
     libtool = ros_view.lookup('libtool')
     assert ros_rosdep_path == libtool.origin
     assert ros_raw['libtool'] == libtool.data
     
     # depends on ros
-    stack1_view = lookup.get_rosdep_view('stack1')
+    stack1_view = lookup.get_stack_rosdep_view('stack1')
     stack1_rosdep_path = os.path.join(rosstack.get_path('stack1'), 'rosdep.yaml')
     
     # - make sure a couple of deps made it
@@ -254,8 +254,8 @@ def test_RosdepLookup_ros_home_override():
     assert len(val) == 1, val
     assert val[0] == (OVERRIDE_ENTRY, ros_home_path)
 
-    # - get_rosdep_view
-    ros_view = lookup.get_rosdep_view('ros')
+    # - get_stack_rosdep_view
+    ros_view = lookup.get_stack_rosdep_view('ros')
     atlas = ros_view.lookup('atlas')
     assert ros_home_path == atlas.origin
     assert ros_raw['atlas'] == atlas.data

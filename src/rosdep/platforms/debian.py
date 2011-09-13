@@ -34,7 +34,7 @@ from rospkg.os_detect import OsDetect, OsDetector, OS_DEBIAN, OS_UBUNTU, OS_MINT
 
 from .pip import PIP_INSTALLER
 from .source import SOURCE_INSTALLER
-from ..installers import PackageManagerInstaller
+from ..installers import PackageManagerInstaller, TYPE_CODENAME, TYPE_VERSION
 from ..shell_utils import create_tempfile_from_string_and_execute, read_stdout
 
 # apt package manager key
@@ -53,12 +53,14 @@ def register_debian(context):
     context.add_os_installer_key(OS_DEBIAN, PIP_INSTALLER)
     context.add_os_installer_key(OS_DEBIAN, SOURCE_INSTALLER)
     context.set_default_os_installer_key(OS_DEBIAN, APT_INSTALLER)
+    context.set_os_version_type(OS_DEBIAN, TYPE_CODENAME)
     
 def register_ubuntu(context):
     context.add_os_installer_key(OS_UBUNTU, APT_INSTALLER)
     context.add_os_installer_key(OS_UBUNTU, PIP_INSTALLER)
     context.add_os_installer_key(OS_UBUNTU, SOURCE_INSTALLER)
     context.set_default_os_installer_key(OS_UBUNTU, APT_INSTALLER)
+    context.set_os_version_type(OS_UBUNTU, TYPE_CODENAME)
 
 def register_mint(context):
     # override mint detector with different version info
@@ -70,6 +72,7 @@ def register_mint(context):
     context.add_os_installer_key(OS_MINT, PIP_INSTALLER)
     context.add_os_installer_key(OS_MINT, SOURCE_INSTALLER)
     context.set_default_os_installer_key(OS_MINT, APT_INSTALLER)
+    context.set_os_version_type(OS_MINT, TYPE_VERSION)    
     
 def dpkg_detect(pkgs):
     """ 

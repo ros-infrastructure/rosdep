@@ -29,7 +29,9 @@
 
 import os
 
-from rospkg import RosPack, RosStack, get_ros_home
+from collections import defaultdict
+
+from rospkg import RosPack, RosStack, get_ros_home, ResourceNotFound
 from rospkg.os_detect import OsDetect
 
 from .model import RosdepDatabase, RosdepDatabaseEntry, InvalidRosdepData
@@ -38,6 +40,11 @@ from .rospkg_loader import RosPkgLoader
 # key for representing .ros/rosdep.yaml override entry
 OVERRIDE_ENTRY = '.ros'
 
+class RosdepInternalError(Exception):
+
+    def __init__(self, e):
+        self.error = e
+        
 class RosdepDefinition:
     """
     Single rosdep dependency definition.  This data is stored as the
@@ -55,6 +62,21 @@ class RosdepDefinition:
         self.data = data
         self.origin = origin
     
+class ResolutionError(Exception):
+
+    def __init__(self, rosdep_key, rosdep_data, os_name, os_version, message):
+        self.rosdep_key = rosdep_key
+        self.rosdep_data = rosdep_data
+        self.os_name = os_name
+        self.os_version = os_version
+        super(ResolutionError, self).__init__(message)
+
+    def __str__(self):
+        return """%s
+\trosdep key : %s
+\tOS name    : %s
+\tOS version : %s"""%(self.args[0], rosdep_key, os_name, os_version)
+
 class RosdepConflict(Exception):
     """
     Rosdep rules do not have compatbile definitions.
@@ -90,7 +112,7 @@ class RosdepView:
     def lookup(self, rosdep_name):
         """
         :returns: :class:`RosdepDefinition`
-        :raises: :exc:`KeyError`
+        :raises: :exc:`KeyError` If *rosdep_name* is not declared
         """
         return self.rosdep_defs[rosdep_name]
 
@@ -152,6 +174,9 @@ class RosdepLookup:
         # robust to single-stack faults.
         self.errors = []
 
+    def get_loader(self):
+        return self.loader
+    
     def get_errors(self):
         """
         Retrieve error state for API calls that do not directly report
@@ -213,23 +238,79 @@ class RosdepLookup:
 
         return RosdepLookup(rosdep_db, loader, override_entry=override_entry)
 
-    def resolve_definition(self, os_name, os_version):
+    def resolve_all(self, packages, installer_context):
+        """
+        Resolve all the rosdep dependencies for *packages* using *installer_context*.
+
+        :param packages: list of ROS packages, ``[str]]``
+        :param installer_context: :class:`InstallerContext`
+        :returns: (resolutions, errors), ``({str: opaque}, {str: ResolutionError})``.  resolutions maps the installer keys
+          to resolved objects.  Resolved objects are opaque but can be passed into the associated installer for processing.
+          errors maps package names to an :exc:`ResolutionError` or :exc:`KeyError` exception.
+        """
+        resolutions = defaultdict(list)
+        errors = {}
+        for p in packages:
+            rosdep_keys = lookup.get_rosdeps(p)
+            for rosdep_key in rosdep_keys:
+                try:
+                    installer_key, resolution = lookup.resolve(rosdep_key, package_name, installer_context)
+                    resolutions[installer_key].append(resolution)
+                except ResolutionError as e:
+                    errors[p] = e
+                except KeyError as e:
+                    errors[p] = e
+
+        # consolidate resolutions
+        for installer_key, val in resolutions.items(): #py3k
+            installer = installer_context.get_installer(installer_key)
+            resolutions[installer_key] = installer.unique(*val)
+
+        return resolutions, errors
+
+    def resolve(self, rosdep_key, package_name, installer_context):
         """
         Resolve a :class:`RosdepDefinition` for a particular
         os/version spec.
+
+        :param package_name: package to resolve key within
+        :param rosdep_key: rosdep key to resolve
+        :param os_name: OS name to use for resolution
+        :param os_version: OS name to use for resolution
+
+        :raises: :exc:`ResolutionError` If *rosdep_key* cannot be resolved for *package_name* in *installer_context*
+        :raises: :exc:`KeyError` If ROS package *package_name* does not exist
+        :raises: :exc:`rospkg.ResourceNotFound` if *package_name* cannot be located
         """
-        #TODO: self.override_entry
-        raise NotImplementedError("TODO")
+        os_name, os_version = installer_context.get_os_name_and_version()
+        view = get_package_rosdep_view(package)
+        try:
+            definition = view.lookup(view)
+        except KeyError:
+            raise ResolutionError(rosdep_key, None, os_name, os_version, "No definition for  [%s]"%(os_name))
+
+        definition_data = None
+        if os_name not in definition_data:
+            raise ResolutionError(rosdep_key, definition_data, os_name, os_version, "No definition for OS [%s]"%(os_name))
+
+        resolution = installer.resolve(rosdep_args_dict)
+        
+        return installer_key, resolution
         
     def _load_all_stacks(self):
         """
         Load all available stacks.  In general, this is equivalent to
-        loading all stacks on the package path.  If errors occur while
-        loading a stack, they will be saved in the errors field.
+        loading all stacks on the package path.  If
+        :exc:`InvalidRosdepData` errors occur while loading a stack,
+        they will be saved in the *errors* field.  
+
+        :raises: :exc:`RosdepInternalError` 
         """
         for stack_name in self.loader.get_loadable_stacks():
             try:
                 self._load_stack_dependencies(stack_name)
+            except ResourceNotFound as e:
+                raise RosdepInternalError(e)
             except InvalidRosdepData as e:
                 self.errors.append(e)
         
@@ -237,6 +318,10 @@ class RosdepLookup:
         """
         Initialize internal :exc:`RosdepDatabase` on demand.  Not
         thread-safe.
+
+        :raises: :exc:`rospkg.ResourceNotFound` if stack cannot be located
+        :raises: :exc:`InvalidRosdepData` if stack's data is invaid
+        :raises: :exc:`RosdepInternalError`
         """
         db = self.rosdep_db
         if db.is_loaded(stack_name):
@@ -253,18 +338,56 @@ class RosdepLookup:
             db.mark_loaded(stack_name)
             # re-raise
             raise
+        except KeyError as e:
+            raise RosdepInternalError(e)
     
-    def get_rosdep_view(self, stack_name):
+    def create_rosdep_view(self, view_name, stack_names):
         """
-        Get a :class:`RosdepView` for a specific stack and OS
-        combination.  A view enables queries for a particular stack or
-        package in that stack.
+        :raises: :exc:`RosdepConflict` If view cannot be created due to conflicting definitions.
+        """
+        # Create view and initialize with dbs from all of the
+        # dependencies. 
+        view = RosdepView(view_name)
+
+        db = self.rosdep_db
+        for stack_name in stack_names:
+            db_entry = db.get_stack_data(stack_name)
+            view.merge(db_entry)
+
+        # ~/.ros/rosdep.yaml has precedence
+        if self.override_entry is not None:
+            view.merge(self.override_entry, override=True)
+        return view
+    
+    def get_package_rosdep_view(self, package_name):
+        """
+        Get a :class:`RosdepView` for a specific ROS package
+        *package_name*.  Views can be queries to resolve rosdep keys
+        to definitions.
 
         :raises: :exc:`RosdepConflict` if view cannot be created due
           to conflict rosdep definitions.
+        :raises: :exc:`rospkg.ResourceNotFound` if *package_name* cannot be located
+        :raises: :exc:`RosdepInternalError` 
+        """
+        stack_name = rospack.stack_of(package_name)
+        if stack_name:
+            return get_stack_rosdep_view(stack_name)
+        else:
+            #TODOXXX: recursively compute all stacks that this package depends on
+            #view = self.create_rosdep_view(package_name, dependencies)
+            raise NotImplemented("TODO")
+        
+    def get_stack_rosdep_view(self, stack_name):
+        """
+        Get a :class:`RosdepView` for a specific ROS stack
+        *stack_name*.  Views can be queries to resolve rosdep keys to
+        definitions.
 
-        :raises: :exc:`KeyError` if stack or stack dependencies do not
-         exist.
+        :raises: :exc:`RosdepConflict` if view cannot be created due
+          to conflict rosdep definitions.
+        :raises: :exc:`rospkg.ResourceNotFound` if *stack_name* cannot be located
+        :raises: :exc:`RosdepInternalError` 
         """
         if stack_name in self._view_cache:
             return self._view_cache[stack_name]
@@ -272,20 +395,9 @@ class RosdepLookup:
         # lazy-init
         self._load_stack_dependencies(stack_name)
 
-        # Create view and initialize with dbs from all of the
-        # dependencies. 
-        view = RosdepView(stack_name)
-
-        db = self.rosdep_db
-        dependencies = db.get_stack_dependencies(stack_name)
-        for s in [stack_name] + dependencies:
-            db_entry = db.get_stack_data(s)
-            view.merge(db_entry)
-
-        # ~/.ros/rosdep.yaml has precedence
-        if self.override_entry is not None:
-            view.merge(self.override_entry, override=True)
-
+        # use stack dependencies to create view
+        dependencies = self.rosdep_db.get_stack_dependencies(stack_name)
+        view = self.create_rosdep_view(stack_name, [stack_name] + dependencies)
         self._view_cache[stack_name] = view
         return view
 
@@ -302,6 +414,8 @@ class RosdepLookup:
 
         :param rosdep_name: name of rosdep to lookup
         :returns: list of (stack_name, origin) where rosdep is defined.
+
+        :raises: :exc:`RosdepInternalError` 
         """
         self._load_all_stacks()
         db = self.rosdep_db

@@ -34,7 +34,7 @@ from rospkg.os_detect import OS_OSX
 
 from .pip import PIP_INSTALLER
 from .source import SOURCE_INSTALLER
-from ..installers import Installer, PackageManagerInstaller
+from ..installers import Installer, PackageManagerInstaller, TYPE_CODENAME
 from ..shell_utils import create_tempfile_from_string_and_execute, read_stdout
 
 # add additional os names for brew, macports (TODO)
@@ -59,11 +59,13 @@ def register_osx(context):
     context.add_os_installer_key(OS_OSX, PIP_INSTALLER)
     context.add_os_installer_key(OS_OSX, SOURCE_INSTALLER)
     context.set_default_os_installer_key(OS_OSX, MACPORTS_INSTALLER)
-
+    context.set_os_version_type(OS_OSX, TYPE_CODENAME)
+    
 def register_osxbrew(context):
     context.add_os_installer_key(OSXBREW_OS_NAME, PIP_INSTALLER)
     context.add_os_installer_key(OSXBREW_OS_NAME, SOURCE_INSTALLER)
     context.set_default_os_installer_key(OSXBREW_OS_NAME, BREW_INSTALLER)
+    context.set_os_version_type(OS_OSX, TYPE_CODENAME)
     raise NotImplemented
 
 class MacportsInstaller(PackageManagerInstaller):
