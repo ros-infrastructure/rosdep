@@ -121,12 +121,19 @@ class InstallerContext:
     def set_default_os_installer_key(self, os_key, installer_mode_key):
         """
         Set the default OS installer to use for OS.
+        :meth:`InstallerContext.add_os_installer` must have previously
+        been called with the same arguments.
 
         :param os_key: Key for OS
         :param installer_mode_key: Key for installer to add to OS
         :raises: :exc:`KeyError`: if installer for *installer_mode_key*
-          is not set.
+          is not set or if OS for *os_key* has no associated installers.
         """
+        if not os_key in self.os_installers:
+            raise KeyError("unknown OS: %s"%(os_key))
+        if not installer_mode_key in self.os_installers[os_key]:
+            raise KeyError("installer [%s] is not associated with OS [%s]. call add_os_installer_key() first"%(installer_mode_key, os_key))
+
         # validate, will throw KeyError
         installer_class = self.get_installer(installer_mode_key)
         self.default_os_installer[os_key] = installer_mode_key
@@ -148,6 +155,12 @@ class InstallerContext:
             return None
 
 class Installer:
+    """
+    The :class:`Installer` API is designed around opaque *resolved*
+    parameters. These parameters can be any type of sequence object,
+    but they must obey set arithmetic.  They should also implement
+    ``__str__()`` methods so they can be pretty printed.
+    """
 
     def is_installed(self, resolved):
         """
@@ -157,8 +170,9 @@ class Installer:
         """
         raise NotImplementedError("is_installed")        
         
-    def get_install_command(self, interactive=True):
+    def get_install_command(self, resolved, interactive=True):
         """
+        :param resolved: resolved installation items
         :param interactive: If `False`, disable interactive prompts,
           e.g. Pass through ``-y`` or equivalant to package manager.
         """
@@ -178,9 +192,9 @@ class Installer:
         """
         raise NotImplementedError("Base class resolve")
 
-    def unique(self, resolved_rules):
+    def unique(self, *resolved_rules):
         """
-        Combine the list of resolved rules into a unique list.  This
+        Combine the resolved rules into a unique list.  This
         is meant to combine the results of multiple calls to
         :meth:`PackageManagerInstaller.resolve`.
 
@@ -188,9 +202,9 @@ class Installer:
 
             resolved1 = installer.resolve(args1)
             resolved2 = installer.resolve(args2)
-            resolved = installer.unique([resolved1, resolved2])
+            resolved = installer.unique(resolved1, resolved2)
 
-        :param resolved_rules: list of resolved arguments.  Resolved
+        :param *resolved_rules: resolved arguments.  Resolved
           arguments must all be from this :class:`Installer` instance.
         """
         raise NotImplementedError("Base class unique")
@@ -201,11 +215,19 @@ class PackageManagerInstaller(Installer):
     implementation that assumes:
 
      - installer rosdep args spec is a list of package names stored with the key "packages"
-     - a function exists that can return a list of packages that are installed
+     - a detect function exists that can return a list of packages that are installed
+
+    Also, if *supports_depends* is set to ``True``:
+    
+     - installer rosdep args spec can also include dependency specification with the key "depends"
     """
 
     def __init__(self, detect_fn, supports_depends=False):
+        """
+        @param supports_depends:
+        """
         self.detect_fn = detect_fn
+        self.supports_depends = supports_depends
 
     def resolve(self, rosdep_args_dict):
         """
@@ -217,7 +239,7 @@ class PackageManagerInstaller(Installer):
         #TODOXXX: return type needs to be wrapped so it can be recombined/printed, etc...
         return packages
 
-    def unique(self, resolved_rules):
+    def unique(self, *resolved_rules):
         """
         See :meth:`Installer.unique()`
         """

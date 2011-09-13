@@ -106,6 +106,14 @@ def test_InstallerContext_os_installers():
         context.add_os_installer_key(os_key, 'fake-key')
         assert False, "should have raised"
     except KeyError: pass
+    try:
+        context.set_default_os_installer_key(os_key, 'fake-key')
+        assert False, "should have raised"
+    except KeyError: pass
+    try:
+        context.get_default_os_installer_key('bad-os')
+        assert False, "should have raised"
+    except KeyError: pass
     
     installer_key1 = 'fake1'
     installer_key2 = 'fake2'
@@ -113,5 +121,122 @@ def test_InstallerContext_os_installers():
         pass
     class FakeInstaller2(Installer):
         pass
+
+    # configure our context with two valid installers
     context.set_installer(installer_key1, FakeInstaller)
     context.set_installer(installer_key2, FakeInstaller2)
+
+    # retest set_default_os_installer_key, now with installer_key not configured on os
+    try:
+        context.set_default_os_installer_key(os_key, installer_key1)
+        assert False, "should have raised"
+    except KeyError: pass
+
+    # start adding installers for os_key
+    context.add_os_installer_key(os_key, installer_key1)
+    assert context.get_os_installer_keys(os_key) == [installer_key1]
+    context.add_os_installer_key(os_key, installer_key2)
+    assert set(context.get_os_installer_keys(os_key)) == set([installer_key1, installer_key2])
+
+    # test default
+    assert None == context.get_default_os_installer_key(os_key)
+    context.set_default_os_installer_key(os_key, installer_key1)
+    assert installer_key1 == context.get_default_os_installer_key(os_key)
+    context.set_default_os_installer_key(os_key, installer_key2)    
+    assert installer_key2 == context.get_default_os_installer_key(os_key)
+
+    # retest set_default_os_installer_key, now with invalid os
+    try:
+        context.set_default_os_installer_key('bad-os', installer_key1)
+        assert False, "should have raised"
+    except KeyError: pass
+
+
+def test_Installer_tripwire():
+    from rosdep.installers import Installer
+    try:
+        Installer().is_installed(['foo'])
+        assert False
+    except NotImplementedError: pass
+    try:
+        Installer().get_install_command(['foo'])
+        assert False
+    except NotImplementedError: pass
+    try:
+        Installer().resolve({})
+        assert False
+    except NotImplementedError: pass
+    try:
+        Installer().unique([])
+        assert False
+    except NotImplementedError: pass
+    assert Installer().get_depends({}) == []
+
+def detect_fn_empty(packages):
+    return []
+def detect_fn_all(packages):
+    return packages
+# return any packages that are string length 1
+def detect_fn_single(packages):
+    return [p for p in packages if len(p) == 1]
+
+
+def test_PackageManagerInstaller():
+    from rosdep.installers import PackageManagerInstaller
+    try:
+        PackageManagerInstaller(detect_fn_all).get_install_command(['foo'])
+        assert False
+    except NotImplementedError: pass
+
+def test_PackageManagerInstaller_resolve():
+    from rosdep.installers import PackageManagerInstaller
+
+    installer = PackageManagerInstaller(detect_fn_all)
+    assert ['baz'] == installer.resolve(dict(depends=['foo', 'bar'], packages=['baz']))
+    assert ['baz', 'bar'] == installer.resolve(dict(packages=['baz', 'bar']))
+
+    #test string logic
+    assert ['baz'] == installer.resolve(dict(depends=['foo', 'bar'], packages='baz'))
+    assert ['baz', 'bar'] == installer.resolve(dict(packages='baz bar'))
+
+def test_PackageManagerInstaller_depends():
+    from rosdep.installers import PackageManagerInstaller
+
+    installer = PackageManagerInstaller(detect_fn_all, supports_depends=True)
+    assert ['foo', 'bar'] == installer.get_depends(dict(depends=['foo', 'bar'], packages=['baz']))
+    installer = PackageManagerInstaller(detect_fn_all, supports_depends=False)
+    assert [] == installer.get_depends(dict(depends=['foo', 'bar'], packages=['baz']))
+
+def test_PackageManagerInstaller_unique():
+    from rosdep.installers import PackageManagerInstaller
+
+    installer = PackageManagerInstaller(detect_fn_all)
+
+    assert [] == installer.unique()
+    assert [] == installer.unique([])
+    assert [] == installer.unique([], [])
+    assert ['a'] == installer.unique([], [], ['a'])
+    assert ['a'] == installer.unique(['a'], [], ['a'])
+    assert set(['a', 'b', 'c']) == set(installer.unique(['a', 'b', 'c'], ['a', 'b', 'c']))
+    assert set(['a', 'b', 'c']) == set(installer.unique(['a'], ['b'], ['c']))
+    assert set(['a', 'b', 'c']) == set(installer.unique(['a', 'b'], ['c']))    
+    assert set(['a', 'b', 'c']) == set(installer.unique(['a', 'b'], ['c', 'a']))    
+
+def test_PackageManagerInstaller_is_installed():
+    from rosdep.installers import PackageManagerInstaller
+
+    installer = PackageManagerInstaller(detect_fn_all)
+    assert True == installer.is_installed(['a', 'b', 'c']), installer.is_installed(['a', 'b', 'c'])
+    installer = PackageManagerInstaller(detect_fn_empty)
+    assert False == installer.is_installed(['a', 'b', 'c'])
+
+def test_PackageManagerInstaller_get_packages_to_install():
+    from rosdep.installers import PackageManagerInstaller
+
+    installer = PackageManagerInstaller(detect_fn_all)
+    assert [] == installer.get_packages_to_install(['a', 'b', 'c'])
+    installer = PackageManagerInstaller(detect_fn_empty)
+    assert set(['a', 'b', 'c']) == set(installer.get_packages_to_install(['a', 'b', 'c']))
+    installer = PackageManagerInstaller(detect_fn_single)
+    assert set(['baba', 'cada']) == set(installer.get_packages_to_install(['a', 'baba', 'b', 'cada', 'c']))
+    

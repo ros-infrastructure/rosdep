@@ -44,16 +44,11 @@ def rd_debug(s):
         
         # This is a map to provide backwards compatability for rep111 changes.  
         # See http://www.ros.org/reps/rep-0111.html for more info. 
-        rep111version_map = {'lucid':'10.04', 'maverick':'10.10', 'natty':'11.04'}
 
         if type(os_specific) == type("String"): # It's just a single string 
             return os_specific
         if self.os_version in os_specific: # if it is a version key, just return it
             return os_specific[self.os_version]
-        if self.os_version in rep111version_map: # check for rep 111 special versions 
-            rep_version = rep111version_map[self.os_version]
-            if rep_version in os_specific:
-                return os_specific[rep_version]
         if type(os_specific) == type({}): # detected a map
             for k in os_specific.keys():
                 if not k in self.installers:
@@ -69,66 +64,13 @@ class RosdepException(Exception):
     pass
 
 class RosdepInstaller:
+
     def __init__(self, packages, robust=False):
-        os_list = TODO
-        # Make sure that these classes are all well formed.  
-        for o in os_list:
-            if not isinstance(o, rosdep.base_rosdep.RosdepBaseOS):
-                raise RosdepException("Class [%s] not derived from RosdepBaseOS"%o.__class__.__name__)
         # Detect the OS on which this program is running. 
-        self.osi = roslib.os_detect.OSDetect(os_list)
-        self.yc = YamlCache(self.osi.get_name(), self.osi.get_version(), self.osi.get_os().installers)
         self.packages = packages
-        rp = roslib.packages.ROSPackages()
+        #TODO: replace with rospkg
         self.rosdeps = rp.rosdeps(packages)
         self.robust = robust
-            
-    def get_packages_and_scripts(self, rdlp_cache=None):
-        """
-        @param rdlp_cache: cache of L{RosdepLookupPackage} instances.  Instances must have been created
-        with self.osi.get_name(), self.osi.get_version(), and self.yc.
-        @type  rdlp_cache: {str: RosdepLookupPackage}
-        """
-        if len(self.packages) == 0:
-            return ([], [])
-        native_packages = []
-        scripts = []
-        failed_rosdeps = []
-        start_time = time.time()
-        rd_debug("Generating package list and scripts for %d packages.  This may take a few seconds..."%len(self.packages))
-        if rdlp_cache == None:
-            rdlp_cache = {}
-            
-        for r, packages in self.get_rosdeps(self.packages).iteritems():
-            # use first package for lookup rules
-            p = packages[0]
-            if p in rdlp_cache:
-                rdlp = rdlp_cache[p]
-            else:
-                rdlp = RosdepLookupPackage(self.osi.get_name(), self.osi.get_version(), p, self.yc)
-                rdlp_cache[p] = rdlp
-            specific = rdlp.lookup_rosdep(r)
-            if specific:
-                if type(specific) == type({}):
-                    rd_debug("%s NEW TYPE, SKIPPING"%r)
-                elif len(specific.split('\n')) == 1:
-                    for pk in specific.split():
-                        native_packages.append(pk)
-                else:
-                    scripts.append(specific)
-            else:
-                failed_rosdeps.append(r)
-
-        if len(failed_rosdeps) > 0:
-            if not self.robust:
-                raise RosdepException("ABORTING: Rosdeps %s could not be resolved"%failed_rosdeps)
-            else:
-                print("WARNING: Rosdeps %s could not be resolved"%failed_rosdeps, file=sys.stderr)
-
-        time_delta = (time.time() - start_time)
-        rd_debug("Done loading rosdeps in %f seconds, averaging %f per rosdep."%(time_delta, time_delta/len(self.packages)))
-
-        return (list(set(native_packages)), list(set(scripts)))
         
     def satisfy(self):
         """ 
