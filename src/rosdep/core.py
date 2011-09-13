@@ -29,74 +29,33 @@ from __future__ import print_function
 
 import os
 import sys
-import yaml
-import time
 
 def rd_debug(s):
     if "ROSDEP_DEBUG" in os.environ:
         print(s)
     
-    def get_version_from_yaml(self, rosdep_name, os_specific, source_path):
-        """
-        Helper function for get_os_from_yaml to parse if version is required.  
-        @return The os (and version specific if required) local package name
-        """
-        
-        # This is a map to provide backwards compatability for rep111 changes.  
-        # See http://www.ros.org/reps/rep-0111.html for more info. 
-
-        if type(os_specific) == type("String"): # It's just a single string 
-            return os_specific
-        if self.os_version in os_specific: # if it is a version key, just return it
-            return os_specific[self.os_version]
-        if type(os_specific) == type({}): # detected a map
-            for k in os_specific.keys():
-                if not k in self.installers:
-                    print("Invalid identifier found [%s] when processing rosdep %s.  \n{{{\n%s\n}}}\n"%(k, rosdep_name, os_specific))
-                    return False # If the map doesn't have a valid installer key reject it, it must be a version key
-            # return the map 
-            return os_specific
-        else:
-            print("Unknown formatting of os_specific", os_specific)
-            return False                    
-
-class RosdepException(Exception):
+class InstallFailed(Exception):
     pass
 
 class RosdepInstaller:
 
-    def __init__(self, packages, robust=False):
-        # Detect the OS on which this program is running. 
-        self.packages = packages
-        #TODO: replace with rospkg
-        self.rosdeps = rp.rosdeps(packages)
-        self.robust = robust
+    def __init__(self, lookup):
+        self.lookup = lookup
         
-    def satisfy(self):
-        """ 
-        return a list of failed rosdeps and print what would have been done to install them
-        """
-        return self.check(display = True)
-
-    def check(self, display = False):
+    def check(self, packages, verbose=False):
         """ 
         Return a list of failed rosdeps
         """
         failed_rosdeps = []
         rdlp_cache = {}
-        try:
-            native_packages, scripts = self.get_packages_and_scripts(rdlp_cache=rdlp_cache)
-            num_scripts = len(scripts)
-            if num_scripts > 0:
-                print("Found %d scripts.  Cannot check scripts for presence. rosdep check will always fail."%num_scripts)
-                failure = False
-                if display == True:
-                    for s in scripts:
-                        print("Script:\n{{{\n%s\n}}}"%s)
-        except RosdepException as e:
-            print("error in processing scripts", e, file=sys.stderr)
 
-        for r, packages in self.get_rosdeps(self.packages).iteritems():
+        # this logic is wrong: it should go through package by
+        # package, as each package has a unique view.  it should
+        # resolve within that packages/stacks scope.  After it has
+        # collected all resolutions, it can unique() them, and then it
+        # can install them.
+        
+        for r, packages in self.get_rosdeps(packages).iteritems():
             # use first package for lookup rule
             p = packages[0]
             if p in rdlp_cache:
@@ -104,34 +63,41 @@ class RosdepInstaller:
             else:
                 rdlp = RosdepLookupPackage(self.osi.get_name(), self.osi.get_version(), p, self.yc)
                 rdlp_cache[p] = rdlp
-            if not self.install_rosdep(r, rdlp, default_yes=False, execute=False, display=display):
+            if not self.install_rosdep(r, rdlp, interactive=True, simulate=True, verbose=verbose):
                 failed_rosdeps.append(r)
 
         return failed_rosdeps
 
-    def install(self, include_duplicates, default_yes, execute=True):
-        failure = False
+    def install(self, interactive=True, simulate=False, continue_on_error=False):
+        """
+        :param interactive: (optional) If ``False``, suppress interactive prompts (e.g. by passing '-y' to ``apt``).  
+        :param simulate: (optional) If ``False`` simulate installation without actually executing.
+        :raises: :exc:`InstallFailed` if any rosdeps fail to install and *continue_on_error* is ``False``.
+        :raises: :exc:`MultipleInstallsFailed` If *continue_on_error* is set and one or more installs failed.
+        """
+        failures = []
 
         for r, packages in self.get_rosdeps(self.packages).iteritems():
             # use the first package as the lookup rule
             p = packages[0]
             rdlp = RosdepLookupPackage(self.osi.get_name(), self.osi.get_version(), p, self.yc)
-            if not self.install_rosdep(r, rdlp, default_yes, execute):
-                failure = True
-                if not self.robust:
-                    return "failed to install %s"%r
+            try:
+                self.install_rosdep(r, rdlp, interactive, simulate):
+            except InstallFailed as e:
+                if not continue_on_error:
+                    raise
+                else:
+                    failures.append(e)
+        if failures:
+            raise MultipleInstallsFailed(failures)
 
-        if failure:
-            return "Rosdep install failed"
-        return None
-        
-
-    def install_rosdep(self, rosdep_name, rdlp, default_yes, execute, display=True):
+    def install_rosdep(self, rosdep_name, rdlp, simulate=False, interactive=True, verbose=False):
         """
         Install a single rosdep given it's name and a lookup table. 
-        @param default_yes Add a -y to the installation call
-        @param execute If True execute, if false, don't execute just print
-        @return If the install was successful
+
+        :param interactive: (optional) If ``False``, suppress interactive prompts (e.g. by passing '-y' to ``apt``).  
+        :param simulate: (optional) If ``False`` simulate installation without actually executing.
+        :returns: ``True`` if the install was successful.
         """
         rd_debug("Processing rosdep %s in install_rosdep method"%rosdep_name)
         rosdep_dict = rdlp.lookup_rosdep(rosdep_name)
@@ -139,26 +105,12 @@ class RosdepInstaller:
             return False
         mode = 'default'
         installer = None
-        if type(rosdep_dict) != type({}):
-            rd_debug("OLD TYPE BACKWARDS COMPATABILITY MODE", rosdep_dict)
-
-            if len(rosdep_dict.split('\n')) > 1:
-                raise RosdepException( "SCRIPT UNIMPLEMENTED AT THE MOMENT TODO")
-
-            installer = self.osi.get_os().get_installer('default')
-            packages = rosdep_dict.split()
-            arg_map = {}
-            arg_map['packages'] = packages
-            rosdep_dict = {} #override old values
-            rosdep_dict['default'] = arg_map 
-
+        modes = rosdep_dict.keys()
+        if len(modes) != 1:
+            print("ERROR: only one mode allowed, rosdep %s has mode %s"%(rosdep_name, modes))
+            return False
         else:
-            modes = rosdep_dict.keys()
-            if len(modes) != 1:
-                print("ERROR: only one mode allowed, rosdep %s has mode %s"%(rosdep_name, modes))
-                return False
-            else:
-                mode = modes[0]
+            mode = modes[0]
 
         rd_debug("rosdep mode:", mode)
         installer = self.osi.get_os().get_installer(mode)
@@ -180,12 +132,16 @@ class RosdepInstaller:
         for d in dependencies:
             self.install_rosdep(d, rdlp, default_yes, execute)
 
-        result = my_installer.generate_package_install_command(default_yes, execute, display)
-        if result:
-            print("successfully installed %s"%(rosdep_name))
-            if not my_installer.check_presence():
-                print("rosdep %s failed check-presence-script after installation"%(rosdep_name))
-                return False
+        command = my_installer.get_install_command(default_yes, execute)
+        if verbose or simulate:
+            print("Installation command/script:\n"+80*'='+str(command)+80*'=')
+        if not simulate:
+            result = my_installer.execute_install_command(command)
+            if result:
+                print("successfully installed %s"%(rosdep_name))
+                if not my_installer.is_installed(resolved):
+                    print("rosdep %s failed check-presence-script after installation.\nResolved packages were %s"%(rosdep_name, resolved), file=sys.stderr)
+                    return False
 
         elif execute:
             print ("Failed to install %s!"%(rosdep_name))
