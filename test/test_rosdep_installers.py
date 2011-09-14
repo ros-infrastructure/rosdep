@@ -283,7 +283,6 @@ def test_PackageManagerInstaller_get_packages_to_install():
     installer = PackageManagerInstaller(detect_fn_single)
     assert set(['baba', 'cada']) == set(installer.get_packages_to_install(['a', 'baba', 'b', 'cada', 'c']))
     
-
 def test_RosdepInstaller_ctor():
     # tripwire/coverage
     from rosdep import create_default_installer_context

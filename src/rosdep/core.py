@@ -32,3 +32,12 @@ def rd_debug(s):
     if "ROSDEP_DEBUG" in os.environ:
         print(s)
 
+class RosdepInternalError(Exception):
+
+    def __init__(self, e):
+        self.error = e
+        
+class InstallFailed(Exception):
+    pass
+
+

@@ -117,3 +117,5 @@ class RosPkgLoader(RosdepLoader):
     def get_loadable_stacks(self):
         return self._rosstack.list()
 
+    def stack_of(self, package_name):
+        return self._rospack.stack_of(package_name)

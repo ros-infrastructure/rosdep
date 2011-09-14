@@ -36,10 +36,7 @@ import sys
 from collections import defaultdict
 from rospkg.os_detect import OsDetect
 
-from .core import rd_debug
-
-class InstallFailed(Exception):
-    pass
+from .core import rd_debug, RosdepInternalError, InstallFailed
 
 # use OsDetect.get_version() for OS version key
 TYPE_VERSION = 'version'
@@ -342,37 +339,42 @@ class RosdepInstaller:
         self.installer_context = installer_context
         self.lookup = lookup
         
-    def get_uninstalled(self):
-        pass
-    
-    def check(self, package, verbose=False):
+    def get_uninstalled(self, packages):
         """
-        :param packages: list of ROS packages
-        :returns: list of failed rosdeps, ``[str]``
+        Get list of system dependencies that have not been installed
+        as well as a list of errors from performing the resolution.
+        This is a bulk API in order to provide performance
+        optimizations in checking install state.
+
+        :param packages: List of ROS package names, ``[str]]``
+
+        :returns: (uninstalled, errors), ``({str: opaque}, {str: ResolutionError})``.
+          Uninstalled is a dictionary with the installer_key as the key.
+        :raises: :exc:`RosdepInternalError`
         """
-        failed_rosdeps = []
-        rdlp_cache = {}
-
-
-        # this logic is wrong: it should go through package by
-        # package, as each package has a unique view.  it should
-        # resolve within that packages/stacks scope.  After it has
-        # collected all resolutions, it can unique() them, and then it
-        # can install them.
         
-        for r, packages in self.get_rosdeps(packages).iteritems():
-            # use first package for lookup rule
-            p = packages[0]
-            if p in rdlp_cache:
-                rdlp = rdlp_cache[p]
-            else:
-                rdlp = RosdepLookupPackage(self.osi.get_name(), self.osi.get_version(), p, self.yc)
-                rdlp_cache[p] = rdlp
-            if not self.install_rosdep(r, rdlp, interactive=True, simulate=True, verbose=verbose):
-                failed_rosdeps.append(r)
+        installer_context = self.installer_context
 
-        return failed_rosdeps
-
+        # resolutions have been unique()d
+        resolutions, errors = self.lookup.resolve_all(packages, installer_context)
+        rd_debug("RESOLUTIONS: %s"%(resolutions.values()))
+        
+        uninstalled = {}
+        # for each installer, figureout what is left to install
+        for installer_key, resolved in resolutions.items(): #py3k
+            try:
+                installer = installer_context.get_installer(installer_key)
+            except KeyError as e:
+                rd_debug(traceback.format_exc())
+                raise RosdepInternalError(e)
+            try:
+                uninstalled[installer_key] = installer.get_packages_to_install(resolved)
+            except Exception as e:
+                rd_debug(traceback.format_exc())
+                raise RosdepInternalError(e)
+        
+        return uninstalled, errors
+    
     def install(self, interactive=True, simulate=False, continue_on_error=False):
         """
         :param interactive: (optional) If ``False``, suppress interactive prompts (e.g. by passing '-y' to ``apt``).  

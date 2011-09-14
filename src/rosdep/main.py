@@ -36,36 +36,39 @@ from __future__ import print_function
 
 import os
 import sys
+import traceback
 
 from optparse import OptionParser
 
 import rospkg
 
 from . import create_default_installer_context
+from .core import RosdepInternalError
+from .installers import RosdepInstaller
 from .lookup import RosdepLookup
 
 _usage = """usage: rosdep [options] <command> <args>
 
 Commands:
 
+rosdep check <packages>...
+  will check if the dependencies of package(s) have been met.
+
 rosdep install <packages>...
   will generate a bash script and then execute it.
 
-rosdep depdb <packages>...
+rosdep db <packages>...
   will generate the dependency database for package(s) and print
   it to the console (note that the database will change depending
   on which package(s) you query.
 
-rosdep what_needs <rosdeps>...
+rosdep what-needs <rosdeps>...
   will print a list of packages that declare a rosdep on (at least
   one of) <rosdeps>
 
-rosdep where_defined <rosdeps>...
+rosdep where-defined <rosdeps>...
   will print a list of yaml files that declare a rosdep on (at least
   one of) <rosdeps>
-
-rosdep check <packages>...
-  will check if the dependencies of package(s) have been met.
 """
 
 def _get_default_RosdepLookup():
@@ -75,7 +78,13 @@ def rosdep_main():
     try:
         _rosdep_main()
     except Exception as e:
-        print("ERROR: %s"%e, file=sys.stderr)
+        print("""
+ERROR: Rosdep experienced an internal error: %s
+Please go to the rosdep page [1] and file a bug report with the stack trace below.
+[1] : http://www.ros.org/wiki/rosdep
+
+%s
+"""%(e, traceback.format_exc(e)), file=sys.stderr)
         return 1
         
 def _rosdep_main():
@@ -105,27 +114,27 @@ def _rosdep_main():
     args = args[1:]
 
     if command in _command_rosdep_args:
-        _rosdep_args_handler(parser, options, args)
+        _rosdep_args_handler(command, parser, options, args)
     else:
-        _package_args_handler(parser, options, args)
+        _package_args_handler(command, parser, options, args)
 
-def _rosdep_args_handler(parser, options, args):
+def _rosdep_args_handler(command, parser, options, args):
     # rosdep keys as args
     if options.rosdep_all:
         parser.error("-a, --all is not a valid option for this command")
     else:
         return command_handlers[command](args, options)
     
-def _package_args_handler(parser, options, args, rospack=None, rosstack=None, loader=None):
+def _package_args_handler(command, parser, options, args, rospack=None, rosstack=None):
     # package names as args
     # - overrides to enable testing
     if rospack is None:
         rospack = rospkg.RosPack()
     if rosstack is None:
         rosstack = rospkg.RosStack()
-    if loader is None:
-        loader = RosPkgLoader(rospack, rosstack)
-
+    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack)
+    loader = lookup.get_loader()
+    
     if options.rosdep_all:
         if args:
             parser.error("cannot specify additional arguments with -a")
@@ -134,7 +143,7 @@ def _package_args_handler(parser, options, args, rospack=None, rosstack=None, lo
     if not args:
         parser.error("no packages or stacks specified")
 
-    val = rospkg.expand_to_packages(rospack, rosstack)
+    val = rospkg.expand_to_packages(args, rospack, rosstack)
     packages = val[0]
     not_found = val[1]
     if not_found:
@@ -144,8 +153,7 @@ def _package_args_handler(parser, options, args, rospack=None, rosstack=None, lo
         # possible with empty stacks
         print("No packages in arguments, aborting")
         return
-    
-    lookup = RosdepLookup(loader)
+
     return command_handlers[command](lookup, packages, options)
 
 def configure_installer_context_os(installer_context, options):
@@ -170,9 +178,22 @@ def command_check(lookup, packages, options):
     installer_context = create_default_installer_context()
     configure_installer_context_os(installer_context, options)
     installer = RosdepInstaller(installer_context, lookup)
-    resolutions = lookup.resolve_all(packages, installer_context)
-    #TODO
-    raise NotImplemented('TODO')
+
+    val = installer.get_uninstalled(packages)
+    uninstalled = val[0]
+    errors = val[1]
+
+    if uninstalled:
+        print("System dependencies have not been satisified:")
+        for installer_key, resolved in uninstalled.items():
+            print("%s\t%s"%(installer_key, '\n'.join(resolved)))
+    if errors:
+        for package_name, ex in errors.items():
+            print("ERROR[%s]: %s"%(package_name, str(ex)), file=sys.stderr)
+    if uninstalled:
+        return 1
+    else:
+        return 0
 
 def _compute_depdb_output(lookup, packages, options):
     installer_context = create_default_installer_context()
@@ -228,13 +249,11 @@ def command_install(r, args, verified_packages, options):
         return 0
     
 command_handlers = {
-    'debdb': command_depdb,
+    'db': command_depdb,
     'check': command_check,
     'install': command_install,
-    'generate_bash': command_generate_bash,
-    'satisfy': command_generate_bash,
-    'what_needs': command_what_needs,
-    'where_defined': command_where_defined,
+    'what-needs': command_what_needs,
+    'where-defined': command_where_defined,
     }
 
 # commands that accept rosdep names as args

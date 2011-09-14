@@ -85,3 +85,6 @@ class RosdepLoader:
 
     def get_loadable_stacks(self):
         raise NotImplementedError()     
+
+    def stack_of(self, package_name):
+        raise NotImplementedError()             

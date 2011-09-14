@@ -33,6 +33,7 @@ rosdep library and command-line tool
 
 from .installers import InstallerContext, Installer, PackageManagerInstaller
 
+from .core import RosdepInternalError, InstallFailed
 from .model import InvalidRosdepData, RosdepDatabase, RosdepDatabaseEntry
 from .lookup import RosdepDefinition, RosdepConflict, RosdepView, RosdepLookup
 from .loader import RosdepLoader
