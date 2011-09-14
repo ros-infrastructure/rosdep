@@ -47,7 +47,7 @@ class InvalidRosdepData(Exception):
         super(InvalidRosdepData, self).__init__(message)
         self.origin = origin
 
-class RosdepDatabaseEntry:
+class RosdepDatabaseEntry(object):
     """
     Stores rosdep data and metadata for a single stack.
     """
@@ -62,7 +62,7 @@ class RosdepDatabaseEntry:
         self.stack_dependencies = stack_dependencies
         self.origin = origin
         
-class RosdepDatabase:
+class RosdepDatabase(object):
     """
     Stores loaded rosdep data for multiple stacks.
     """

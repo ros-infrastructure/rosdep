@@ -41,7 +41,7 @@ from ..shell_utils import create_tempfile_from_string_and_execute, read_stdout
 APT_INSTALLER='apt'
 
 def register_installers(context):
-    context.set_installer(APT_INSTALLER, AptInstaller)
+    context.set_installer(APT_INSTALLER, AptInstaller())
 
 def register_platforms(context):
     register_debian(context)

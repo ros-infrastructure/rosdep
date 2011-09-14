@@ -100,39 +100,46 @@ def test_InstallerContext_installers():
     except KeyError: pass
 
     class Foo: pass
+    class FakeInstaller(Installer):
+        pass
+    class FakeInstaller2(Installer):
+        pass
+
     # test TypeError on set_installer
     try:
         context.set_installer(key, 1)
         assert False, "should have raised"
     except TypeError: pass
     try:
-        context.set_installer(key, Foo)
+        context.set_installer(key, Foo())
+        assert False, "should have raised"
+    except TypeError: pass
+    try:
+        # must be instantiated
+        context.set_installer(key, FakeInstaller)
         assert False, "should have raised"
     except TypeError: pass
 
-    class FakeInstaller(Installer):
-        pass
-    class FakeInstaller2(Installer):
-        pass
-
-    context.set_installer(key, FakeInstaller)
-    assert context.get_installer(key) == FakeInstaller
+    installer = FakeInstaller()
+    installer2 = FakeInstaller2()
+    context.set_installer(key, installer)
+    assert context.get_installer(key) == installer
     assert context.get_installer_keys() == [key]
 
     # repeat with same args
-    context.set_installer(key, FakeInstaller)
-    assert context.get_installer(key) == FakeInstaller
+    context.set_installer(key, installer)
+    assert context.get_installer(key) == installer
     assert context.get_installer_keys() == [key]
 
     # repeat with new installer
-    context.set_installer(key, FakeInstaller2)
-    assert context.get_installer(key) == FakeInstaller2
+    context.set_installer(key, installer2)
+    assert context.get_installer(key) == installer2
     assert context.get_installer_keys() == [key]
     
     # repeat with new key
     key2 = 'fake-port'
-    context.set_installer(key2, FakeInstaller2)
-    assert context.get_installer(key2) == FakeInstaller2
+    context.set_installer(key2, installer2)
+    assert context.get_installer(key2) == installer2
     assert set(context.get_installer_keys()) == set([key, key2])
 
 
@@ -166,8 +173,8 @@ def test_InstallerContext_os_installers():
         pass
 
     # configure our context with two valid installers
-    context.set_installer(installer_key1, FakeInstaller)
-    context.set_installer(installer_key2, FakeInstaller2)
+    context.set_installer(installer_key1, FakeInstaller())
+    context.set_installer(installer_key2, FakeInstaller2())
 
     # retest set_default_os_installer_key, now with installer_key not configured on os
     try:

@@ -44,7 +44,7 @@ from ..shell_utils import create_tempfile_from_string_and_execute, fetch_file, M
 SOURCE_INSTALLER='source'
 
 def register_installers(context):
-    context.set_installer(SOURCE_INSTALLER, SourceInstaller)
+    context.set_installer(SOURCE_INSTALLER, SourceInstaller())
 
 class InvalidRdmanifest(Exception):
     """
@@ -85,16 +85,20 @@ def load_rdmanifest(url, md5sum, alt_url=None):
 
 class SourceInstaller(Installer):
 
-    def __init__(self, arg_dict):
-        #TODOXXX: should not take in arg_dict
+    def __init__(self):
+        pass
+    
+    def resolve(self, rosdep_args):
         """
         :raises: :exc:`InvalidRosdepData`
         """
-        self.url = arg_dict.get("uri")
+        #TODOXXX: should not take in rosdep_args
+        
+        self.url = rosdep_args.get("uri")
         if not self.url:
             raise InvalidRosdepData("uri required for source rosdeps") 
-        self.alt_url = arg_dict.get("alternate-uri")
-        self.md5sum = arg_dict.get("md5sum")
+        self.alt_url = rosdep_args.get("alternate-uri")
+        self.md5sum = rosdep_args.get("md5sum")
 
         self.manifest = None
 

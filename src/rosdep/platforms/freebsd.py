@@ -42,7 +42,7 @@ from ..shell_utils import read_stdout
 PKG_ADD_INSTALLER = 'pkg_add'
 
 def register_installers(context):
-    context.set_installer(PKG_ADD_INSTALLER, PkgAddInstaller)
+    context.set_installer(PKG_ADD_INSTALLER, PkgAddInstaller())
     
 def register_platforms(context):
     context.add_os_installer_key(OS_FREEBSD, SOURCE_INSTALLER)

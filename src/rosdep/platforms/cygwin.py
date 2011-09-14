@@ -44,7 +44,7 @@ OS_CYGWIN = 'cygwin'
 APT_CYG_INSTALLER = 'apt-cyg'
 
 def register_installers(context):
-    context.set_installer(APT_CYG_INSTALLER, AptCygInstaller)
+    context.set_installer(APT_CYG_INSTALLER, AptCygInstaller())
     
 def register_platforms(context):
     context.add_os_installer_key(OS_CYGWIN, SOURCE_INSTALLER)

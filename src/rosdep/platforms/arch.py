@@ -38,7 +38,7 @@ ARCH_OS_NAME = 'arch'
 PACMAN_INSTALLER = 'pacman'
 
 def register_installers(context):
-    context.set_installer(PACMAN_INSTALLER, PacmanInstaller)
+    context.set_installer(PACMAN_INSTALLER, PacmanInstaller())
     
 def register_platforms(context):
     context.add_os_installer_key(ARCH_OS_NAME, SOURCE_INSTALLER)

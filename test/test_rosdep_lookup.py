@@ -50,9 +50,11 @@ def get_test_rospkgs():
 def test_RosdepDefinition():
     from rosdep.lookup import RosdepDefinition
     d = dict(a=1, b=2, c=3)
-    def1 = RosdepDefinition(d)
+    def1 = RosdepDefinition('d', d)
+    assert def1.rosdep_key == 'd'
     assert def1.data == d
-    def2 = RosdepDefinition(d, 'file1.txt')
+    def2 = RosdepDefinition('d', d, 'file1.txt')
+    assert def2.rosdep_key == 'd'
     assert def2.data == d
     assert def2.origin == 'file1.txt'
     

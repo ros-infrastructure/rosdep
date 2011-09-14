@@ -40,7 +40,7 @@ from ..installers import PackageManagerInstaller, Installer
 PIP_INSTALLER = 'pip'
 
 def register_installers(context):
-    context.set_installer(PIP_INSTALLER, PipInstaller)
+    context.set_installer(PIP_INSTALLER, PipInstaller())
 
 def pip_detect(self, pkgs):
     """ 
@@ -64,7 +64,7 @@ class PipInstaller(PackageManagerInstaller):
     :class:`Installer` support for pip.
     """
 
-    def __init__(self, rosdep_rule_arg_dict):
+    def __init__(self):
         super(PipInstaller, self).__init__(pip_detect)
 
     def get_install_command(self, resolved, interactive=True):

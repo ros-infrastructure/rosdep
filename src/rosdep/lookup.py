@@ -44,7 +44,7 @@ from .rospkg_loader import RosPkgLoader
 # key for representing .ros/rosdep.yaml override entry
 OVERRIDE_ENTRY = '.ros'
 
-class RosdepDefinition:
+class RosdepDefinition(object):
     """
     Single rosdep dependency definition.  This data is stored as the
     raw dictionary definition for the dependency.
@@ -63,13 +63,14 @@ class RosdepDefinition:
         self.data = data
         self.origin = origin
 
-    def get_rule_for_platform(self, os_name, os_version, installer_keys):
+    def get_rule_for_platform(self, os_name, os_version, installer_keys, default_installer_key):
         """
         Get installer_key and rule for the specified rule.  See REP 111 for precedence rules.
 
         :param os_name: OS name to get rule for
         :param os_version: OS version to get rule for
-        :param installer_keys: Keys of known installers for matching, ``[str]``
+        :param installer_keys: Keys of installers for platform, ``[str]``
+        :param default_installer_key: Default installer key for platform, ``[str]``
         :returns: (installer_key, rosdep_args_dict), ``(str, dict)``
         """
         rosdep_key = self.rosdep_key
@@ -78,7 +79,7 @@ class RosdepDefinition:
         if os_name not in data:
             raise ResolutionError(rosdep_key, data, os_name, os_version, "No definition for OS [%s]"%(os_name))
         data = data[os_name]
-        return_key = None
+        return_key = default_installer_key
         
         # REP 111: "rosdep first interprets the key as a
         # PACKAGE_MANAGER. If this test fails, it will be interpreted
@@ -89,17 +90,17 @@ class RosdepDefinition:
                 return_key = installer_key
                 break
         else:
-            # There must be an OS version at this point if the loop has failed to match
-            if not os_version in data:
-                raise ResolutionError(rosdep_key, self.data, os_name, os_version, "No definition for OS version [%s]"%(os_version))
-            data = data[os_version]
-            for installer_key in installer_keys:
-                if installer_key in data:
-                    data = data[installer_key]
-                    return_key = installer_key                    
-                    break
-            else:
-                raise ResolutionError(rosdep_key, self.data, os_name, os_version, "No matching package manager definition for [%s:%s] in keys [%s]"%(os_name, os_version, installer_keys))
+            # check for
+            #   hardy:
+            #     apt:
+            #       stuff
+            if os_version in data:
+                data = data[os_version]
+                for installer_key in installer_keys:
+                    if installer_key in data:
+                        data = data[installer_key]
+                        return_key = installer_key                    
+                        break
         return return_key, data
 
     def __str__(self):
@@ -141,7 +142,7 @@ class RosdepConflict(Exception):
 \t%s [%s]
 \t%s [%s]"""%(self.definition_name, self.definition1.data, self.definition1.origin, self.definition2.data, self.definition2.origin)
     
-class RosdepView:
+class RosdepView(object):
     """
     View of :class:`RosdepDatabase`.  Unlike :class:`RosdepDatabase`,
     which stores :class:`RosdepDatabaseEntry` data for all stacks, a
@@ -189,7 +190,7 @@ class RosdepView:
                 if definition.data != dep_data:
                     raise RosdepConflict(dep_name, definition, update_definition) 
 
-class RosdepLookup:
+class RosdepLookup(object):
     """
     Lookup rosdep definitions.  Provides API for most
     non-install-related commands for rosdep.
@@ -338,8 +339,16 @@ class RosdepLookup:
             rd_debug(view)
             raise ResolutionError(rosdep_key, None, os_name, os_version, "No definition for OS [%s]"%(os_name))
 
-        installer_key, rosdep_args_dict = definition.get_rule_for_platform(os_name, os_version, installer_context.get_installer_keys())
-        installer = installer_config.get_installer(installer_key)
+        # get the rosdep data for the platform
+        try:
+            installer_keys = installer_context.get_os_installer_keys(os_name)
+            default_key = installer_context.get_default_os_installer_key(os_name)
+        except KeyError:
+            raise ResolutionError(rosdep_key, definition.data, os_name, os_version, "Unsupported OS [%s]"%(os_name))
+        installer_key, rosdep_args_dict = definition.get_rule_for_platform(os_name, os_version, installer_keys, default_key)
+
+        # resolve the rosdep data for the platform
+        installer = installer_context.get_installer(installer_key)()
         resolution = installer.resolve(rosdep_args_dict)
         return installer_key, resolution
         

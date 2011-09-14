@@ -51,7 +51,7 @@ TYPE_CODENAME = 'codename'
 # though there are some touch points over how this interfaces with the
 # rospkg.os_detect library, i.e. how platforms can tweak these
 # detectors and how the higher-level APIs can override them.
-class InstallerContext:
+class InstallerContext(object):
     """
     :class:`InstallerContext` manages the context of execution for rosdep as it
     relates to the installers, OS detectors, and other extensible
@@ -135,8 +135,8 @@ class InstallerContext:
         :raises: :exc:`TypeError` if *installer* is not a subclass of
           :class:`Installer`
         """
-        if not issubclass(installer, Installer):
-            raise TypeError("installer must be a subclass of Installer")
+        if not isinstance(installer, Installer):
+            raise TypeError("installer must be a instance of Installer")
         self.installers[installer_key] = installer
         
     def get_installer(self, installer_key):
@@ -220,7 +220,7 @@ class InstallerContext:
         except KeyError:
             return None
 
-class Installer:
+class Installer(object):
     """
     The :class:`Installer` API is designed around opaque *resolved*
     parameters. These parameters can be any type of sequence object,
@@ -295,14 +295,21 @@ class PackageManagerInstaller(Installer):
         self.detect_fn = detect_fn
         self.supports_depends = supports_depends
 
-    def resolve(self, rosdep_args_dict):
+    def resolve(self, rosdep_args):
         """
         See :meth:`Installer.resolve()`
         """
-        packages = rosdep_args_dict.get("packages", [])
-        if type(packages) == type("string"):
-            packages = packages.split()
-        #TODOXXX: return type needs to be wrapped so it can be recombined/printed, etc...
+        packages = None
+        if type(rosdep_args) == dict:
+            packages = rosdep_args.get("packages", [])
+            if type(packages) == type("string"):
+                packages = packages.split()
+        elif type(rosdep_args) == type('str'):
+            packages = rosdep_args.split(' ')
+        elif type(rosdep_args) == list:
+            packages = rosdep_args
+        else:
+            raise InvalidRosdepData("Invalid rosdep args: %s"%(rosdep_args))
         return packages
 
     def unique(self, *resolved_rules):
@@ -333,7 +340,7 @@ class PackageManagerInstaller(Installer):
             return rosdep_args_dict.get('depends', [])
         return [] # Default return empty list
 
-class RosdepInstaller:
+class RosdepInstaller(object):
 
     def __init__(self, installer_context, lookup):
         self.installer_context = installer_context

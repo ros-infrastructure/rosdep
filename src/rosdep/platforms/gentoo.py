@@ -37,7 +37,7 @@ from ..shell_utils import create_tempfile_from_string_and_execute, read_stdout
 EQUERY_INSTALLER = 'equery'
 
 def register_installers(context):
-    context.set_installer(EQUERY_INSTALLER, EqueryInstaller)
+    context.set_installer(EQUERY_INSTALLER, EqueryInstaller())
 
 def register_platforms(context):
     context.add_os_installer_key(OS_GENTOO, EQUERY_INSTALLER)
@@ -62,7 +62,7 @@ def equery_available():
 class EqueryInstaller(PackageManagerInstaller):
 
     def __init__(self):
-        super(Gentoo, self).__init__(equery_detect)
+        super(EqueryInstaller, self).__init__(equery_detect)
         
     def get_install_command(self, resolved, interactive=True):
         packages = self.get_packages_to_install(resolved)                

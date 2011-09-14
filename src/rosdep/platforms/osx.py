@@ -48,7 +48,7 @@ def port_detect(p):
     return std_out.count("(active)") > 0
 
 def register_installers(context):
-    context.set_installer(MACPORTS_INSTALLER, MacportsInstaller)
+    context.set_installer(MACPORTS_INSTALLER, MacportsInstaller())
 
 def register_platforms(context):
     register_osx(context)
@@ -74,7 +74,7 @@ class MacportsInstaller(PackageManagerInstaller):
     macports systems.
     """
     def __init__(self):
-        super(MacPortsInstaller, self).__init__(port_detect)
+        super(MacportsInstaller, self).__init__(port_detect)
 
     def get_install_command(self, resolved, interactive=True):
         packages = self.get_packages_to_install(resolved)

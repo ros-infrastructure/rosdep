@@ -40,7 +40,7 @@ from ..installers import PackageManagerInstaller
 YUM_INSTALLER='yum'
 
 def register_installers(context):
-    context.set_installer(YUM_INSTALLER, YumInstaller)
+    context.set_installer(YUM_INSTALLER, YumInstaller())
 
 def register_platforms(context):
     register_fedora(context)
