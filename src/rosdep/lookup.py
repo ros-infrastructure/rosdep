@@ -348,7 +348,7 @@ class RosdepLookup(object):
         installer_key, rosdep_args_dict = definition.get_rule_for_platform(os_name, os_version, installer_keys, default_key)
 
         # resolve the rosdep data for the platform
-        installer = installer_context.get_installer(installer_key)()
+        installer = installer_context.get_installer(installer_key)
         resolution = installer.resolve(rosdep_args_dict)
         return installer_key, resolution
         

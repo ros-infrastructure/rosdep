@@ -363,8 +363,9 @@ class RosdepInstaller(object):
         installer_context = self.installer_context
 
         # resolutions have been unique()d
+        rd_debug("resolving for packages %s"%(packages))
         resolutions, errors = self.lookup.resolve_all(packages, installer_context)
-        rd_debug("RESOLUTIONS: %s"%(resolutions.values()))
+        rd_debug("resolutions: %s"%(resolutions.values()))
         
         uninstalled = {}
         # for each installer, figureout what is left to install
