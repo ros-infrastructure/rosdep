@@ -170,16 +170,13 @@ def configure_installer_context_os(installer_context, options):
     installer_context.set_os_override(os_name, os_version)
     
 def command_check(lookup, packages, options):
-    # unmap options
     verbose = options.verbose
-    interactive = not options.default_yes
-    continue_on_error = options.robust
     
-    installer_context = create_default_installer_context()
+    installer_context = create_default_installer_context(verbose=verbose)
     configure_installer_context_os(installer_context, options)
     installer = RosdepInstaller(installer_context, lookup)
 
-    val = installer.get_uninstalled(packages)
+    val = installer.get_uninstalled(packages, verbose=verbose)
     uninstalled = val[0]
     errors = val[1]
 
@@ -203,7 +200,7 @@ def command_check(lookup, packages, options):
         return 0
 
 def _compute_depdb_output(lookup, packages, options):
-    installer_context = create_default_installer_context()
+    installer_context = create_default_installer_context(verbose=options.verbose)
     os_name, os_version = _detect_os(installer_context, options)
     
     output = "Rosdep dependencies for operating system %s version %s "%(os_name, os_version)

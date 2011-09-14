@@ -78,6 +78,11 @@ class InstallerContext(object):
             os_detect = OsDetect()
         self.os_detect = os_detect
         self.os_override = None
+
+        self.verbose = False
+        
+    def set_verbose(self, verbose):
+        self.verbose = verbose
         
     def set_os_override(self, os_name, os_version):
         """
@@ -87,6 +92,8 @@ class InstallerContext(object):
         :param os_name: OS name value to use, ``str``
         :param os_version: OS version value to use, ``str``
         """
+        if self.verbose:
+            print("overriding OS to [%s:%s]"%(os_name, os_version))
         self.os_override = os_name, os_version
 
     def get_os_version_type(self, os_name):
@@ -137,6 +144,8 @@ class InstallerContext(object):
         """
         if not isinstance(installer, Installer):
             raise TypeError("installer must be a instance of Installer")
+        if self.verbose:
+            print("registering installer [%s]"%(installer_key))
         self.installers[installer_key] = installer
         
     def get_installer(self, installer_key):
@@ -158,20 +167,22 @@ class InstallerContext(object):
         """
         return self.os_installers.keys()
     
-    def add_os_installer_key(self, os_key, installer_mode_key):
+    def add_os_installer_key(self, os_key, installer_key):
         """
         Register an installer for the specified OS.  This will fail
         with a :exc:`KeyError` if no :class:`Installer` can be found
-        with the associated *installer_mode_key*.
+        with the associated *installer_key*.
         
         :param os_key: Key for OS
-        :param installer_mode_key: Key for installer to add to OS
-        :raises: :exc:`KeyError`: if installer for *installer_mode_key*
+        :param installer_key: Key for installer to add to OS
+        :raises: :exc:`KeyError`: if installer for *installer_key*
           is not set.
         """
         # validate, will throw KeyError
-        installer_class = self.get_installer(installer_mode_key)
-        self.os_installers[os_key].append(installer_mode_key)
+        installer_class = self.get_installer(installer_key)
+        if self.verbose:
+            print("add installer [%s] to OS [%s]"%(installer_key, os_key))
+        self.os_installers[os_key].append(installer_key)
 
     def get_os_installer_keys(self, os_key):
         """
@@ -184,25 +195,27 @@ class InstallerContext(object):
         """
         return self.os_installers[os_key][:]
 
-    def set_default_os_installer_key(self, os_key, installer_mode_key):
+    def set_default_os_installer_key(self, os_key, installer_key):
         """
         Set the default OS installer to use for OS.
         :meth:`InstallerContext.add_os_installer` must have previously
         been called with the same arguments.
 
         :param os_key: Key for OS
-        :param installer_mode_key: Key for installer to add to OS
-        :raises: :exc:`KeyError`: if installer for *installer_mode_key*
+        :param installer_key: Key for installer to add to OS
+        :raises: :exc:`KeyError`: if installer for *installer_key*
           is not set or if OS for *os_key* has no associated installers.
         """
         if not os_key in self.os_installers:
             raise KeyError("unknown OS: %s"%(os_key))
-        if not installer_mode_key in self.os_installers[os_key]:
-            raise KeyError("installer [%s] is not associated with OS [%s]. call add_os_installer_key() first"%(installer_mode_key, os_key))
+        if not installer_key in self.os_installers[os_key]:
+            raise KeyError("installer [%s] is not associated with OS [%s]. call add_os_installer_key() first"%(installer_key, os_key))
 
         # validate, will throw KeyError
-        installer_class = self.get_installer(installer_mode_key)
-        self.default_os_installer[os_key] = installer_mode_key
+        installer_class = self.get_installer(installer_key)
+        if self.verbose:
+            print("set default installer [%s] for OS [%s]"%(installer_key, os_key))
+        self.default_os_installer[os_key] = installer_key
 
     def get_default_os_installer_key(self, os_key):
         """
@@ -346,7 +359,7 @@ class RosdepInstaller(object):
         self.installer_context = installer_context
         self.lookup = lookup
         
-    def get_uninstalled(self, packages):
+    def get_uninstalled(self, packages, verbose=False):
         """
         Get list of system dependencies that have not been installed
         as well as a list of errors from performing the resolution.
@@ -363,13 +376,15 @@ class RosdepInstaller(object):
         installer_context = self.installer_context
 
         # resolutions have been unique()d
-        rd_debug("resolving for packages %s"%(packages))
+        if verbose:
+            print("resolving for packages [%s]"%(', '.join(packages)))
         resolutions, errors = self.lookup.resolve_all(packages, installer_context)
-        rd_debug("resolutions: %s"%(resolutions.values()))
         
         uninstalled = {}
         # for each installer, figureout what is left to install
         for installer_key, resolved in resolutions.items(): #py3k
+            if verbose:
+                print("resolution: %s [%s]"%(installer_key, ', '.join(resolved)))
             try:
                 installer = installer_context.get_installer(installer_key)
             except KeyError as e:
@@ -377,6 +392,8 @@ class RosdepInstaller(object):
                 raise RosdepInternalError(e)
             try:
                 uninstalled[installer_key] = installer.get_packages_to_install(resolved)
+                if verbose:
+                    print("uninstalled: [%s]"%(', '.join(uninstalled[installer_key])))
             except Exception as e:
                 rd_debug(traceback.format_exc())
                 raise RosdepInternalError(e)

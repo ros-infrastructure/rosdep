@@ -31,6 +31,8 @@
 rosdep library and command-line tool
 """
 
+from __future__ import print_function
+
 from .installers import InstallerContext, Installer, PackageManagerInstaller
 
 from .core import RosdepInternalError, InstallFailed
@@ -39,7 +41,7 @@ from .lookup import RosdepDefinition, RosdepConflict, RosdepView, RosdepLookup
 from .loader import RosdepLoader
 from .rospkg_loader import RosPkgLoader
 
-def create_default_installer_context():
+def create_default_installer_context(verbose=False):
     from .platforms import arch
     from .platforms import cygwin
     from .platforms import debian
@@ -49,18 +51,23 @@ def create_default_installer_context():
     from .platforms import pip
     from .platforms import redhat
     from .platforms import source
-    
+
     platform_mods = [arch, cygwin, debian, gentoo, opensuse, osx]
     installer_mods = [source, pip] + platform_mods
 
     context = InstallerContext()
-
+    context.set_verbose(verbose)
+    
     # setup installers
     for m in installer_mods:
+        if verbose:
+            print("registering installers for %s"%(m.__name__))
         m.register_installers(context)
 
     # setup platforms
     for m in platform_mods:
+        if verbose:
+            print("registering platforms for %s"%(m.__name__))
         m.register_platforms(context)
 
     return context
