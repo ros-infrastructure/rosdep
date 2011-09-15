@@ -213,7 +213,8 @@ class RosdepLookup(object):
         self.loader = loader
 
         self._view_cache = {} # {str: {RosdepView}}
-
+        self._resolve_cache[rosdep_key] = {} # {str : (os_name, os_version, installer_key, resolution)}
+        
         # ROS_HOME/rosdep.yaml can override 
         self.override_entry  = override_entry
 
@@ -304,13 +305,28 @@ class RosdepLookup(object):
                 try:
                     installer_key, resolution = self.resolve(rosdep_key, package_name, installer_context)
                     resolutions[installer_key].append(resolution)
+
+                    # check and resolve dependencies
+                    installer = installer_context.get_installer(installer_key)
+                    dependencies = installer.get_depends()
+                    for depend_rosdep_key in dependencies:
+                        installer_key, resolution = self.resolve(depend_rosdep_key, package_name, installer_context)
+                        resolutions[installer_key].append(resolution)
+                        
                 except ResolutionError as e:
                     errors[package_name] = e
                 except KeyError as e:
                     rd_debug(traceback.format_exc())
                     errors[package_name] = e
 
-        # consolidate resolutions
+        # check for dependencies
+        for installer_key, val in resolutions.items(): #py3k
+
+            for d in dependencies:
+                self.install_rosdep(d, rdlp, default_yes, execute)
+
+            
+        # consolidate resolutions 
         for installer_key, val in resolutions.items(): #py3k
             installer = installer_context.get_installer(installer_key)
             resolutions[installer_key] = installer.unique(*val)
@@ -332,6 +348,15 @@ class RosdepLookup(object):
         :raises: :exc:`rospkg.ResourceNotFound` if *package_name* cannot be located
         """
         os_name, os_version = installer_context.get_os_name_and_version()
+
+        # check cache
+        if rosdep_key in self._resolve_cache:
+            cache_value = self._resolve_cache[rosdep_key]
+            cache_os_name = cache_value[0]
+            cache_os_version = cache_value[1]
+            if cache_os_name == os_name and cache_os_version == os_version:
+                return cache_value[2], cache_value[3]
+            
         view = self.get_package_rosdep_view(package_name)
         try:
             definition = view.lookup(rosdep_key)
@@ -350,6 +375,10 @@ class RosdepLookup(object):
         # resolve the rosdep data for the platform
         installer = installer_context.get_installer(installer_key)
         resolution = installer.resolve(rosdep_args_dict)
+
+        # cache value
+        self._resolve_cache[rosdep_key] = os_name, os_version, installer_key, resolution
+
         return installer_key, resolution
         
     def _load_all_stacks(self):

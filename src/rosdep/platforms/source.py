@@ -39,7 +39,7 @@ import yaml
 from ..core import rd_debug
 from ..installers import Installer, InstallFailed
 from ..model import InvalidRosdepData
-from ..shell_utils import create_tempfile_from_string_and_execute, fetch_file, Md5Mismatch, DownloadFailed
+from ..shell_utils import create_tempfile_from_string_and_execute
 
 SOURCE_INSTALLER='source'
 
@@ -52,10 +52,39 @@ class InvalidRdmanifest(Exception):
     """
     pass
 
-def _fetch_file(url, md5sum):
+class DownloadFailed(Exception): pass
+class Md5Mismatch(Exception): pass
+
+def _sub_fetch_file(url, md5sum=None):
+    """
+    Sub-routine of _fetch_file
+    
+    :raises: :exc:`Md5Mismatch`
+    :raises: :exc:`DownloadFailed`
+    """
+    contents = ''
+    try:
+        fh = urllib2.urlopen(url)
+        contents = fh.read()
+        filehash =  hashlib.md5(contents).hexdigest()
+        if md5sum and filehash != md5sum:
+            raise Md5Mismatch( "md5sum didn't match for %s.  Expected %s got %s"%(url, md5sum, filehash))
+    except urllib2.URLError as ex:
+        raise DownloadFailed(str(ex))
+
+    return contents    
+
+def get_file_hash(filename):
+    md5 = hashlib.md5()
+    with open(filename,'rb') as f: 
+        for chunk in iter(lambda: f.read(8192), ''): 
+            md5.update(chunk)
+    return md5.hexdigest()
+
+def fetch_file(url, md5sum):
     error = contents = ''
     try:
-        contents = fetch_file(url, md5sum)
+        contents = _sub_fetch_file(url, md5sum)
     except DownloadFailed as e:
         rd_debug("Download of file %s failed"%(url))
         error = str(e)
@@ -69,11 +98,11 @@ def load_rdmanifest(url, md5sum, alt_url=None):
     :returns: contents of rdmanifest
     :raises: :exc:`DownloadFailed`
     """
-    contents, error = _fetch_file(url, md5sum)
+    contents, error = fetch_file(url, md5sum)
     # fetch the manifest
     error_prefix = "Failed to load a rdmanifest from %s: "%(url)
     if not contents and alt_url: # try the backup url
-        contents, error = _fetch_file(url, md5sum)
+        contents, error = fetch_file(url, md5sum)
         error_prefix = "Failed to load a rdmanifest from either %s or %s: "%(url, alt_url)
     if not contents:
         raise DownloadFailed(error_prefix + error)
@@ -83,6 +112,7 @@ def load_rdmanifest(url, md5sum, alt_url=None):
         raise InvalidRdmanifest("Failed to parse yaml in %s:  Error: %s"%(contents, ex))        
     return manifest
 
+#TODO: create SourceInstall instance objects
 class SourceInstaller(Installer):
 
     def __init__(self):

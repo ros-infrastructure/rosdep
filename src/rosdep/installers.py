@@ -368,7 +368,7 @@ class RosdepInstaller(object):
 
         :param packages: List of ROS package names, ``[str]]``
 
-        :returns: (uninstalled, errors), ``({str: opaque}, {str: ResolutionError})``.
+        :returns: (uninstalled, errors), ``({str: [opaque]}, {str: ResolutionError})``.
           Uninstalled is a dictionary with the installer_key as the key.
         :raises: :exc:`RosdepInternalError`
         """
@@ -380,8 +380,8 @@ class RosdepInstaller(object):
             print("resolving for packages [%s]"%(', '.join(packages)))
         resolutions, errors = self.lookup.resolve_all(packages, installer_context)
         
+        # for each installer, figure out what is left to install
         uninstalled = {}
-        # for each installer, figureout what is left to install
         for installer_key, resolved in resolutions.items(): #py3k
             if verbose:
                 print("resolution: %s [%s]"%(installer_key, ', '.join(resolved)))
@@ -400,21 +400,38 @@ class RosdepInstaller(object):
         
         return uninstalled, errors
     
-    def install(self, interactive=True, simulate=False, continue_on_error=False):
+    def install(self, uninstalled, interactive=True, simulate=False, continue_on_error=False):
         """
-        :param interactive: (optional) If ``False``, suppress interactive prompts (e.g. by passing '-y' to ``apt``).  
-        :param simulate: (optional) If ``False`` simulate installation without actually executing.
-        :raises: :exc:`InstallFailed` if any rosdeps fail to install and *continue_on_error* is ``False``.
-        :raises: :exc:`MultipleInstallsFailed` If *continue_on_error* is set and one or more installs failed.
+        Install the uninstalled rosdeps.  This API is for the bulk
+        workflow of rosdep (see example below).  For a more targeted
+        install API, see :meth:`RosdepInstaller.install_resolved`.
+
+        :param uninstalled: uninstalled value from
+          :meth:`RosdepInstaller.get_uninstalled`.  Value is a
+          dictionary mapping installer key to a opaque resolution
+          list, ``{str: [opaque]}``
+        :param interactive: (optional) If ``False``, suppress
+          interactive prompts (e.g. by passing '-y' to ``apt``).
+        :param simulate: (optional) If ``False`` simulate installation
+          without actually executing.
+        :raises: :exc:`InstallFailed` if any rosdeps fail to install
+          and *continue_on_error* is ``False``.
+        :raises: :exc:`MultipleInstallsFailed` If *continue_on_error*
+          is set and one or more installs failed.
+        :raises: :exc:`KeyError` If *uninstalled* value has invalid
+          installer keys
+        
+        Example::
+
+            uninstalled, errors = installer.get_uninstalled(packages)
+            installer.install(uninstalled)
         """
         failures = []
-
-        for r, packages in self.get_rosdeps(self.packages).iteritems():
-            # use the first package as the lookup rule
-            p = packages[0]
-            rdlp = RosdepLookupPackage(self.osi.get_name(), self.osi.get_version(), p, self.yc)
+        for installer_key, resolved in uninstalled.items(): #py3k:
+            if verbose:
+                print("processing rosdeps for installer [%s]"%(intsaller_key))
             try:
-                self.install_rosdep(r, rdlp, interactive, simulate)
+                self.install_resolved(installer_key, resolved, simulate=simulate, verbose=verbose)
             except InstallFailed as e:
                 if not continue_on_error:
                     raise
@@ -423,6 +440,24 @@ class RosdepInstaller(object):
         if failures:
             raise MultipleInstallsFailed(failures)
 
+    def install_resolved(self, installer_key, resolved, simulate=False, interactive=True, verbose=False):
+        """
+        :param installer_key: Key for installer to apply to *resolved*, ``str``
+        :param resolved: Opaque resolution list from :class:`RosdepLookup`.
+
+        :raises: :exc:`InstallFailed` if *resolved* fail to install.
+        """
+        installer_context = self.installer_context
+        installer = installer_context.get_installer(installer_key)
+        command = installer.get_install_command(resolved, interactive=interactive)
+        if simulate:
+            print("[simulate]: rosdep would run: \n%s"%command)
+        else:
+            if verbose:
+                print(command)
+            result = create_tempfile_from_string_and_execute(command)
+
+    
     def install_rosdep(self, rosdep_name, rdlp, simulate=False, interactive=True, verbose=False):
         """
         Install a single rosdep given it's name and a lookup table. 

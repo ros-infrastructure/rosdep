@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # Copyright (c) 2009, Willow Garage, Inc.
 # All rights reserved.
 # 
@@ -43,9 +42,6 @@ if sys.hexversion > 0x03000000: #Python3
     python3 = True
 else:
     python3 = False
-    
-class DownloadFailed(Exception): pass
-class Md5Mismatch(Exception): pass
 
 def read_stdout(cmd):
     p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -57,7 +53,7 @@ def read_stdout(cmd):
 
 def create_tempfile_from_string_and_execute(string_script, path=None):
     """
-    @param path: (optional) path to temp directory, or None to use default temp directory
+    :param path: (optional) path to temp directory, or ``None`` to use default temp directory, ``str``
     """
     if path is None:
         path = tempfile.gettempdir()
@@ -79,28 +75,4 @@ def create_tempfile_from_string_and_execute(string_script, path=None):
     
     rd_debug("Return code was:", result)
     return result == 0
-
-def fetch_file(url, md5sum=None):
-    """
-    @raise Md5Mismatch
-    @raise DownloadFailed
-    """
-    contents = ''
-    try:
-        fh = urllib2.urlopen(url)
-        contents = fh.read()
-        filehash =  hashlib.md5(contents).hexdigest()
-        if md5sum and filehash != md5sum:
-            raise Md5Mismatch( "md5sum didn't match for %s.  Expected %s got %s"%(url, md5sum, filehash))
-    except urllib2.URLError as ex:
-        raise DownloadFailed(str(ex))
-
-    return contents    
-
-def get_file_hash(filename):
-    md5 = hashlib.md5()
-    with open(filename,'rb') as f: 
-        for chunk in iter(lambda: f.read(8192), ''): 
-            md5.update(chunk)
-    return md5.hexdigest()
 
