@@ -443,15 +443,27 @@ class RosdepInstaller(object):
 
     def install_resolved(self, rosdep_key, installer_key, resolved, simulate=False, interactive=True, verbose=False):
         """
+        Lower-level API for installing a rosdep dependency.  The
+        *rosdep_key* have already been resolved to *installer_key* and
+        *resolved* via :exc:`RosdepLookup` or other means.
+        
         :param rosdep_key: Key of rosdep being installed (for debugging only), ``str``
         :param installer_key: Key for installer to apply to *resolved*, ``str``
         :param resolved: Opaque resolution list from :class:`RosdepLookup`.
-
+        :param interactive: If ``True``, allow interactive prompts (default ``True``)
+        :param simulate: If ``True``, don't execute installation commands, just print to screen.
+        :param verbose: If ``True``, print verbose output to screen (default ``False``)
+        
         :raises: :exc:`InstallFailed` if *resolved* fail to install.
         """
         installer_context = self.installer_context
         installer = installer_context.get_installer(installer_key)
         command = installer.get_install_command(resolved, interactive=interactive)
+        if not command:
+            if verbose:
+                print("[%s] no packages to install"%(rosdep_key))
+            return
+
         if simulate or verbose:
             print("[%s] Installation command/script:\n"%(rosdep_key)+80*'='+str(command)+80*'=')
         if not simulate:
