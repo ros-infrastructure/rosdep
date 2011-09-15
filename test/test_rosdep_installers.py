@@ -62,6 +62,7 @@ def test_InstallerContext_get_os_version_type():
 def test_InstallerContext_os_version_and_name():
     from rosdep.installers import InstallerContext, TYPE_CODENAME, TYPE_VERSION
     context = InstallerContext()
+    context.set_verbose(True)
     os_name, os_version = context.get_os_name_and_version()
     assert os_name is not None
     assert os_version is not None
@@ -239,6 +240,7 @@ def test_PackageManagerInstaller():
     except NotImplementedError: pass
 
 def test_PackageManagerInstaller_resolve():
+    from rosdep.model import InvalidRosdepData
     from rosdep.installers import PackageManagerInstaller
 
     installer = PackageManagerInstaller(detect_fn_all)
@@ -248,6 +250,18 @@ def test_PackageManagerInstaller_resolve():
     #test string logic
     assert ['baz'] == installer.resolve(dict(depends=['foo', 'bar'], packages='baz'))
     assert ['baz', 'bar'] == installer.resolve(dict(packages='baz bar'))
+    assert ['baz'] == installer.resolve('baz')
+    assert ['baz', 'bar'] == installer.resolve('baz bar')
+
+    #test list logic
+    assert ['baz'] == installer.resolve(['baz'])
+    assert ['baz', 'bar'] == installer.resolve(['baz', 'bar'])
+
+    # test invalid data
+    try:
+        installer.resolve(0)
+        assert False, "should have raised"
+    except InvalidRosdepData: pass
 
 def test_PackageManagerInstaller_depends():
     from rosdep.installers import PackageManagerInstaller

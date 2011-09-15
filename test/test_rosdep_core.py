@@ -27,6 +27,14 @@
 
 import os
 
+def test_RosdepInternalError():
+    from rosdep.core import RosdepInternalError
+    try:
+        raise Exception('foo')
+    except Exception as e:
+        ex = RosdepInternalError(e)
+        assert e == ex.error
+    
 def test_rd_debug():
     # just tripwire/coverage
     from rosdep.core import rd_debug

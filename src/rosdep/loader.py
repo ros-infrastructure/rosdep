@@ -87,4 +87,8 @@ class RosdepLoader:
         raise NotImplementedError()     
 
     def stack_of(self, package_name):
-        raise NotImplementedError()             
+        """
+        :returns: Name of ROS stack that *package_name* is in, or ``None`` if not in a stack, ``str``.
+        :raises: :exc:`rospkg.ResourceNotFound` if *package_name* cannot be found.
+        """
+        raise NotImplementedError() 

@@ -37,6 +37,7 @@ from collections import defaultdict
 from rospkg.os_detect import OsDetect
 
 from .core import rd_debug, RosdepInternalError, InstallFailed
+from .model import InvalidRosdepData
 
 # use OsDetect.get_version() for OS version key
 TYPE_VERSION = 'version'
@@ -440,8 +441,9 @@ class RosdepInstaller(object):
         if failures:
             raise MultipleInstallsFailed(failures)
 
-    def install_resolved(self, installer_key, resolved, simulate=False, interactive=True, verbose=False):
+    def install_resolved(self, rosdep_key, installer_key, resolved, simulate=False, interactive=True, verbose=False):
         """
+        :param rosdep_key: Key of rosdep being installed (for debugging only), ``str``
         :param installer_key: Key for installer to apply to *resolved*, ``str``
         :param resolved: Opaque resolution list from :class:`RosdepLookup`.
 
@@ -450,67 +452,12 @@ class RosdepInstaller(object):
         installer_context = self.installer_context
         installer = installer_context.get_installer(installer_key)
         command = installer.get_install_command(resolved, interactive=interactive)
-        if simulate:
-            print("[simulate]: rosdep would run: \n%s"%command)
-        else:
-            if verbose:
-                print(command)
-            result = create_tempfile_from_string_and_execute(command)
-
-    
-    def install_rosdep(self, rosdep_name, rdlp, simulate=False, interactive=True, verbose=False):
-        """
-        Install a single rosdep given it's name and a lookup table. 
-
-        :param interactive: (optional) If ``False``, suppress interactive prompts (e.g. by passing '-y' to ``apt``).  
-        :param simulate: (optional) If ``False`` simulate installation without actually executing.
-        :returns: ``True`` if the install was successful.
-        """
-        rd_debug("Processing rosdep %s in install_rosdep method"%rosdep_name)
-        rosdep_dict = rdlp.lookup_rosdep(rosdep_name)
-        if not rosdep_dict:
-            return False
-        mode = 'default'
-        installer = None
-        modes = rosdep_dict.keys()
-        if len(modes) != 1:
-            print("ERROR: only one mode allowed, rosdep %s has mode %s"%(rosdep_name, modes))
-            return False
-        else:
-            mode = modes[0]
-
-        rd_debug("rosdep mode:", mode)
-        installer = self.osi.get_os().get_installer(mode)
-        
-        if not installer:
-            raise RosdepException( "Rosdep failed to get an installer for mode %s"%mode)
-            
-        my_installer = installer(rosdep_dict[mode])
-
-        # Check if it's already there
-        if my_installer.check_presence():
-            rd_debug("rosdep %s already present"%rosdep_name)
-            return True
-        else:
-            rd_debug("rosdep %s not detected.  It will be installed"%rosdep_name)
-        
-        # Check for dependencies
-        dependencies = my_installer.get_depends()
-        for d in dependencies:
-            self.install_rosdep(d, rdlp, default_yes, execute)
-
-        command = my_installer.get_install_command(default_yes, execute)
-        if verbose or simulate:
-            print("Installation command/script:\n"+80*'='+str(command)+80*'=')
+        if simulate or verbose:
+            print("[%s] Installation command/script:\n"%(rosdep_key)+80*'='+str(command)+80*'=')
         if not simulate:
-            result = my_installer.execute_install_command(command)
+            result = create_tempfile_from_string_and_execute(command)
             if result:
-                print("successfully installed %s"%(rosdep_name))
+                if verbose:
+                    print("successfully installed %s"%(rosdep_key))
                 if not my_installer.is_installed(resolved):
-                    print("rosdep %s failed check-presence-script after installation.\nResolved packages were %s"%(rosdep_name, resolved), file=sys.stderr)
-                    return False
-
-        elif execute:
-            print ("Failed to install %s!"%(rosdep_name))
-        return result
-
+                    raise InstallFailed("rosdep %s failed check-presence-script after installation.\nResolved packages were %s"%(rosdep_key, resolved))

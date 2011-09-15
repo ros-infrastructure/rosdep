@@ -51,3 +51,7 @@ def test_RosdepLoader():
         loader.get_loadable_stacks()
         assert False, "should have raised NotImplementedError"
     except NotImplementedError: pass
+    try:
+        loader.stack_of('foo')
+        assert False, "should have raised NotImplementedError"
+    except NotImplementedError: pass

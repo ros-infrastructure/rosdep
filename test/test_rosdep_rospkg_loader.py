@@ -120,6 +120,15 @@ def test_RosPkgLoader():
     rosdep_db.is_loaded.assert_called_with('ros')
     assert rosdep_db.set_stack_data.call_args_list == []
 
+    # test stack_of
+    from rospkg import ResourceNotFound
+    assert loader.stack_of('stack1_p1') == 'stack1'
+    assert loader.stack_of('stackless') == None
+    try:
+        loader.stack_of('fake')
+        assert False, "should error"
+    except ResourceNotFound: pass
+        
 def test_RosPkgLoader_get_loadable():
     from rosdep.rospkg_loader import RosPkgLoader
     

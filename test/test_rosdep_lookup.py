@@ -47,8 +47,22 @@ def get_test_rospkgs():
     rosstack = RosStack(ros_root, ros_package_path)
     return rospack, rosstack
 
+FAKE_TINYXML_RULE = """tinyxml:
+  ubuntu:
+    lucid:
+      apt:
+        packages: libtinyxml-dev
+  debian: libtinyxml-dev
+  osx:
+    source:
+      uri: 'http://kforge.ros.org/rosrelease/viewvc/sourcedeps/tinyxml/tinyxml-2.6.2-1.rdmanifest'
+      md5sum: 13760e61e08c9004493c302a16966c42
+  fedora:
+    yum:
+      packages: tinyxml-devel"""
+
 def test_RosdepDefinition():
-    from rosdep.lookup import RosdepDefinition
+    from rosdep.lookup import RosdepDefinition, ResolutionError, InvalidRosdepData
     d = dict(a=1, b=2, c=3)
     def1 = RosdepDefinition('d', d)
     assert def1.rosdep_key == 'd'
@@ -57,7 +71,64 @@ def test_RosdepDefinition():
     assert def2.rosdep_key == 'd'
     assert def2.data == d
     assert def2.origin == 'file1.txt'
+
+    # test get_rule_for_platform
+    #  - test w/invalid data
+    try:
+        RosdepDefinition('dbad', 'foo', 'bad.txt').get_rule_for_platform('ubuntu', 'hardy', ['apt'], 'apt')
+        assert False, "should have failed"
+    except InvalidRosdepData: pass
+    try:
+        RosdepDefinition('dbad', {'ubuntu': 1}, 'bad2.txt').get_rule_for_platform('ubuntu', 'hardy', ['apt'], 'apt')
+        assert False, "should have failed"
+    except InvalidRosdepData: pass
+    try:
+        RosdepDefinition('dbad', {'ubuntu': {'hardy': 1}}, 'bad2.txt').get_rule_for_platform('ubuntu', 'hardy', ['apt'], 'apt')
+        assert False, "should have failed"
+    except InvalidRosdepData: pass
+
+    #  - test w/valid data
+    d2 = yaml.load(FAKE_TINYXML_RULE)['tinyxml']
+    definition = RosdepDefinition('d2', d2, 'file2.txt')
+    #  - tripwire
+    str(definition)
+
+    val = definition.get_rule_for_platform('fedora', 'fake-version', ['yum', 'source', 'pip'], 'yum')
+    assert val == ('yum', dict(packages='tinyxml-devel')), val
     
+    val = definition.get_rule_for_platform('debian', 'sid', ['apt', 'source', 'pip'], 'apt')
+    assert val == ('apt', 'libtinyxml-dev')
+
+    val = definition.get_rule_for_platform('ubuntu', 'lucid', ['apt', 'source', 'pip'], 'apt')
+    assert val == ('apt', dict(packages='libtinyxml-dev')), val
+
+    val = definition.get_rule_for_platform('osx', 'snow', ['macports', 'source', 'pip'], 'macports')
+    assert val == ('source', dict(md5sum='13760e61e08c9004493c302a16966c42', uri='http://kforge.ros.org/rosrelease/viewvc/sourcedeps/tinyxml/tinyxml-2.6.2-1.rdmanifest')), val
+
+    # test bad resolutions
+    try:
+        val = definition.get_rule_for_platform('ubuntu', 'hardy', ['apt', 'source', 'pip'], 'apt')
+        assert False, "should have raised: %s"%(str(val))
+    except ResolutionError as e:
+        assert e.rosdep_key == 'd2'
+        assert e.rosdep_data == d2
+        assert e.os_name == 'ubuntu'
+        assert e.os_version == 'hardy'
+        # tripwire
+        str(e)
+
+    try:
+        val = definition.get_rule_for_platform('fakeos', 'fakeversion', ['apt', 'source', 'pip'], 'apt')
+        assert False, "should have raised: %s"%(str(val))
+    except ResolutionError as e:
+        assert e.rosdep_key == 'd2'
+        assert e.rosdep_data == d2
+        assert e.os_name == 'fakeos'
+        assert e.os_version == 'fakeversion'
+        # tripwire
+        str(e)
+        
+
 def test_RosdepConflict():
     from rosdep.lookup import RosdepConflict, RosdepDefinition
     def1 = RosdepDefinition(dict(a=1), 'origin1')
@@ -78,6 +149,8 @@ def test_RosdepView_merge():
     # create empty view and test
     view = RosdepView('common')
     assert view.keys() == []
+    # - tripwire
+    str(view)
 
     # make sure lookups fail if not found
     try:
@@ -127,16 +200,18 @@ def test_RosdepView_merge():
     assert view.lookup('d').data == 4
     assert view.lookup('e').data == 5
 
-
-def test_RosdepLookup():
-    from rosdep.lookup import RosdepLookup
+    # - tripwire
+    str(view)
 
 def test_RosdepLookup_get_rosdeps():
+    from rosdep.loader import RosdepLoader
     from rosdep.lookup import RosdepLookup
     rospack, rosstack = get_test_rospkgs()
     ros_home = os.path.join(get_test_tree_dir(), 'fake')
     
     lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rospack, ros_home=ros_home)
+    assert lookup.get_loader() is not None
+    assert isinstance(lookup.get_loader(), RosdepLoader)
     print(lookup.get_rosdeps('empty_package'))
     assert lookup.get_rosdeps('empty_package') == []
 
@@ -146,21 +221,6 @@ def test_RosdepLookup_get_rosdeps():
     print(lookup.get_rosdeps('stack1_p2'))
     assert set(lookup.get_rosdeps('stack1_p2')) == set(['stack1_dep1', 'stack1_dep2', 'stack1_p2_dep1'])
     
-def test_RosdepLookup_get_rosdeps():
-    from rosdep.lookup import RosdepLookup
-    rospack, rosstack = get_test_rospkgs()
-    ros_home = os.path.join(get_test_tree_dir(), 'fake')
-    
-    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rospack, ros_home=ros_home)
-    print(lookup.get_rosdeps('empty_package'))
-    assert lookup.get_rosdeps('empty_package') == []
-
-    print(lookup.get_rosdeps('stack1_p1'))
-    assert set(lookup.get_rosdeps('stack1_p1')) == set(['stack1_dep1', 'stack1_p1_dep1', 'stack1_p1_dep2'])
-
-    print(lookup.get_rosdeps('stack1_p2'))
-    assert set(lookup.get_rosdeps('stack1_p2')) == set(['stack1_dep1', 'stack1_dep2', 'stack1_p2_dep1'])
-
 def test_RosdepLookup_get_packages_that_need():
     from rosdep.lookup import RosdepLookup
     rospack, rosstack = get_test_rospkgs()

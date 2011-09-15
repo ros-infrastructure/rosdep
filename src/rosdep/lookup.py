@@ -72,10 +72,15 @@ class RosdepDefinition(object):
         :param installer_keys: Keys of installers for platform, ``[str]``
         :param default_installer_key: Default installer key for platform, ``[str]``
         :returns: (installer_key, rosdep_args_dict), ``(str, dict)``
+
+        :raises: :exc:`ResolutionError` If no rule is available
+        :raises: :exc:`InvalidRosdepData` If rule data is not valid
         """
         rosdep_key = self.rosdep_key
         data = self.data
 
+        if type(data) != dict:
+            raise InvalidRosdepData("rosdep value for [%s] must be a dictionary"%(self.rosdep_key), origin=self.origin)
         if os_name not in data:
             raise ResolutionError(rosdep_key, data, os_name, os_version, "No definition for OS [%s]"%(os_name))
         data = data[os_name]
@@ -84,23 +89,36 @@ class RosdepDefinition(object):
         # REP 111: "rosdep first interprets the key as a
         # PACKAGE_MANAGER. If this test fails, it will be interpreted
         # as an OS_VERSION."
-        for installer_key in installer_keys:
-            if installer_key in data:
-                data = data[installer_key]
-                return_key = installer_key
-                break
-        else:
-            # check for
-            #   hardy:
-            #     apt:
-            #       stuff
-            if os_version in data:
-                data = data[os_version]
-                for installer_key in installer_keys:
-                    if installer_key in data:
-                        data = data[installer_key]
-                        return_key = installer_key                    
-                        break
+        if type(data) == dict:
+            for installer_key in installer_keys:
+                if installer_key in data:
+                    data = data[installer_key]
+                    return_key = installer_key
+                    break
+            else:
+                # data must be a dictionary, string, or list
+                if type(data) == dict:
+                    # check for
+                    #   hardy:
+                    #     apt:
+                    #       stuff
+
+                    # we've already checked for PACKAGE_MANAGER_KEY, so
+                    # version key must be present here for data to be valid
+                    # dictionary value.
+                    if os_version not in data:
+                        raise ResolutionError(rosdep_key, self.data, os_name, os_version, "No definition for OS version [%s]"%(os_name))
+                    data = data[os_version]
+                    if type(data) == dict:
+                        for installer_key in installer_keys:
+                            if installer_key in data:
+                                data = data[installer_key]
+                                return_key = installer_key                    
+                                break
+
+        if type(data) not in (dict, list, type('str')):
+            raise InvalidRosdepData("rosdep OS definition for [%s:%s] must be a dictionary, string, or list: %s"%(self.rosdep_key, os_name, data), origin=self.origin)
+
         return return_key, data
 
     def __str__(self):
@@ -213,7 +231,7 @@ class RosdepLookup(object):
         self.loader = loader
 
         self._view_cache = {} # {str: {RosdepView}}
-        self._resolve_cache[rosdep_key] = {} # {str : (os_name, os_version, installer_key, resolution)}
+        self._resolve_cache = {} # {str : (os_name, os_version, installer_key, resolution)}
         
         # ROS_HOME/rosdep.yaml can override 
         self.override_entry  = override_entry

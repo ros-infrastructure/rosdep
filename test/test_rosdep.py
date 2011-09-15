@@ -33,16 +33,17 @@ import sys
 def test_create_default_installer_context():
     import rosdep
     from rosdep.installers import TYPE_CODENAME
-    
-    context = rosdep.create_default_installer_context()
-    assert context is not None
-    assert isinstance(context, rosdep.InstallerContext)
 
-    #this is just tripwire as we actual value will change over time
-    from rospkg.os_detect import OS_UBUNTU
-    assert OS_UBUNTU in context.get_os_keys()
-    assert context.get_installer('apt') is not None
-    assert 'apt' in context.get_os_installer_keys(OS_UBUNTU)
-    assert TYPE_CODENAME == context.get_os_version_type(OS_UBUNTU)
+    # test both constructors
+    for context in [rosdep.create_default_installer_context(), rosdep.create_default_installer_context(verbose=True)]:
+        assert context is not None
+        assert isinstance(context, rosdep.InstallerContext)
+
+        #this is just tripwire as we actual value will change over time
+        from rospkg.os_detect import OS_UBUNTU
+        assert OS_UBUNTU in context.get_os_keys()
+        assert context.get_installer('apt') is not None
+        assert 'apt' in context.get_os_installer_keys(OS_UBUNTU)
+        assert TYPE_CODENAME == context.get_os_version_type(OS_UBUNTU)
     
     
