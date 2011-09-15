@@ -27,11 +27,6 @@
 
 # Author Ken Conley/kwc@willowgarage.com
 
-"""
-Library for loading rosdep files from the ROS package/stack
-filesystem.
-"""
-
 import os
 import yaml
 

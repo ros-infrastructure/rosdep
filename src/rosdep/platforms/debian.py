@@ -74,9 +74,11 @@ def register_mint(context):
     context.set_default_os_installer_key(OS_MINT, APT_INSTALLER)
     context.set_os_version_type(OS_MINT, TYPE_VERSION)    
     
-def dpkg_detect(pkgs):
+def dpkg_detect(pkgs, exec_fn=None):
     """ 
     Given a list of package, return the list of installed packages.
+
+    :param exec_fn: function to execute Popen and read stdout (for testing)
     """
     ret_list = []
     # this is mainly a hack to support version locking for eigen.
@@ -91,14 +93,16 @@ def dpkg_detect(pkgs):
     cmd = ['dpkg-query', '-W', '-f=\'${Package} ${Status}\n\'']
     cmd.extend(version_lock_map.keys())
 
-    std_out = read_stdout(cmd)
+    if exec_fn is None:
+        exec_fn = read_stdout
+    std_out = exec_fn(cmd)
     std_out = std_out.replace('\'','')
     pkg_list = std_out.split('\n')
     for pkg in pkg_list:
         pkg_row = pkg.split()
         if len(pkg_row) == 4 and (pkg_row[3] =='installed'):
             ret_list.append( pkg_row[0])
-    return [version_lock_map[r] for r in ret_list]        
+    return [version_lock_map[r] for r in ret_list]
 
 class AptInstaller(PackageManagerInstaller):
     """ 
@@ -111,7 +115,7 @@ class AptInstaller(PackageManagerInstaller):
     def get_install_command(self, resolved, interactive=True):
         packages = self.get_packages_to_install(resolved)        
         if not packages:
-            return "#!/bin/bash\n#No Packages to install"
+            return ''
         if not interactive:
             return "#!/bin/bash\n#Packages %s\nsudo apt-get install -y %s"%(packages, ' '.join(packages))
         else:
