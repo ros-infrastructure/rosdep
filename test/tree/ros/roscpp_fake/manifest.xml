@@ -1,0 +1,16 @@
+<package>
+  <description brief="roscpp">
+
+     roscpp
+
+  </description>
+  <author>Ken Conley</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/roscpp</url>
+
+  <rosdep name="boost" />
+  <rosdep name="libtool" />
+</package>
+
+

@@ -367,3 +367,87 @@ def test_RosdepLookup_get_stacks_that_define():
     assert set(origins) == set(origins_actual)
     
 
+def test_RosdepLookup_resolve():
+    from rosdep2 import create_default_installer_context
+    from rosdep2.lookup import RosdepLookup
+    rospack, rosstack = get_test_rospkgs()
+    ros_home = os.path.join(get_test_tree_dir(), 'fake')
+    
+    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack, ros_home=ros_home)
+    installer_context = create_default_installer_context()
+    installer_context.set_os_override('ubuntu', 'lucid')
+
+    # depends on nothing
+    ros_rosdep_path = os.path.join(rosstack.get_path('ros'), 'rosdep.yaml')
+    with open(ros_rosdep_path) as f:
+        ros_raw = yaml.load(f.read())
+
+    # repeat for caching
+    for count in xrange(0, 2):
+        installer_key, resolution, dependencies = lookup.resolve('tinyxml', 'rospack_fake', installer_context)
+        assert 'apt' == installer_key
+        assert ['libtinyxml-dev'] == resolution
+        assert [] == dependencies
+
+        installer_key, resolution, dependencies = lookup.resolve('boost', 'roscpp_fake', installer_context)
+        assert 'apt' == installer_key
+        assert ['libboost1.40-all-dev'] == resolution
+        assert [] == dependencies
+
+        installer_key, resolution, dependencies = lookup.resolve('libtool', 'roscpp_fake', installer_context)
+        assert 'apt' == installer_key
+        assert ['libtool', 'libltdl-dev'] == resolution
+        assert [] == dependencies
+
+        installer_key, resolution, dependencies = lookup.resolve('stack1_dep2', 'stack1_p1', installer_context)
+        assert 'apt' == installer_key
+        assert ['dep1-ubuntu'] == resolution
+        assert [] == dependencies
+
+        installer_key, resolution, dependencies = lookup.resolve('twin', 'twin1', installer_context)
+        assert 'apt' == installer_key
+        assert ['twin1-value'] == resolution
+        assert [] == dependencies
+
+        installer_key, resolution, dependencies = lookup.resolve('twin', 'twin2', installer_context)
+        assert 'apt' == installer_key
+        assert ['twin2-value'] == resolution, resolution
+        assert [] == dependencies
+
+        #TODO: test dependencies
+
+
+def test_RosdepLookup_resolve_all():
+    from rosdep2 import create_default_installer_context
+    from rosdep2.lookup import RosdepLookup
+    rospack, rosstack = get_test_rospkgs()
+    ros_home = os.path.join(get_test_tree_dir(), 'fake')
+    
+    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack, ros_home=ros_home)
+    installer_context = create_default_installer_context()
+    installer_context.set_os_override('ubuntu', 'lucid')
+
+    # depends on nothing
+    ros_rosdep_path = os.path.join(rosstack.get_path('ros'), 'rosdep.yaml')
+    with open(ros_rosdep_path) as f:
+        ros_raw = yaml.load(f.read())
+
+    # repeat for caching
+    for count in xrange(0, 2):
+        resolutions, errors = lookup.resolve_all(['rospack_fake', 'roscpp_fake'], installer_context)
+        assert not errors
+        assert 'apt' in resolutions
+        assert set(resolutions['apt']) == set(['libtinyxml-dev', 'libboost1.40-all-dev', 'libtool', 'libltdl-dev']), set(resolutions['apt'])
+        
+        # twin1/2 conflict on a key, so this makes sure we keep the views separate
+        resolutions, errors = lookup.resolve_all(['twin1', 'twin2'], installer_context)
+        assert not errors
+        assert 'apt' in resolutions, resolutions
+        assert set(resolutions['apt']) == set(['twin1-value', 'twin2-value'])
+
+        resolutions, errors = lookup.resolve_all(['stack1_p1', 'stack1_p2'], installer_context)
+        assert not errors
+        assert 'apt' in resolutions
+        assert set(resolutions['apt']) == set(["dep1-ubuntu", "p1dep1-ubuntu", "p1dep2-ubuntu", "p2dep1-ubuntu"]), set(resolutions['apt'])
+
+

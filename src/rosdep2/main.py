@@ -257,11 +257,13 @@ command_handlers = {
     'check': command_check,
     'install': command_install,
     'what-needs': command_what_needs,
+    'what_needs': command_what_needs,
     'where-defined': command_where_defined,
+    'where_defined': command_where_defined,
     }
 
 # commands that accept rosdep names as args
-_command_rosdep_args = ['what_needs', 'where_defined']
+_command_rosdep_args = ['what-needs', 'what_needs', 'where-defined', 'where_defined']
 
 _commands = command_handlers.keys()
 

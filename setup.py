@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(name='rosdep',
       version= '0.1.0',
-      packages=['rosdep2'],
+      packages=['rosdep2', 'rosdep2.platforms'],
       package_dir = {'':'src'},
       scripts = ['scripts/rosdep2'],
       author = "Tully Foote, Ken Conley", 

@@ -1,0 +1,15 @@
+<package>
+  <description brief="rospack">
+
+     rospack
+
+  </description>
+  <author>Ken Conley</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/rospack</url>
+
+  <rosdep name="tinyxml" />
+</package>
+
+

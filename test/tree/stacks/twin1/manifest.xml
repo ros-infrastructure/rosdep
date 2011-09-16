@@ -1,0 +1,15 @@
+<package>
+  <description brief="twin1_pkg">
+
+     twin1_pkg
+
+  </description>
+  <author>Ken Conley</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/twin1_pkg</url>
+
+  <rosdep name="twin" />
+</package>
+
+

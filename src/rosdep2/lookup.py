@@ -231,7 +231,7 @@ class RosdepLookup(object):
         self.loader = loader
 
         self._view_cache = {} # {str: {RosdepView}}
-        self._resolve_cache = {} # {str : (os_name, os_version, installer_key, resolution)}
+        self._resolve_cache = {} # {str : (os_name, os_version, installer_key, resolution, dependencies)}
         
         # ROS_HOME/rosdep.yaml can override 
         self.override_entry  = override_entry
@@ -321,14 +321,12 @@ class RosdepLookup(object):
             rosdep_keys = self.get_rosdeps(package_name)
             for rosdep_key in rosdep_keys:
                 try:
-                    installer_key, resolution = self.resolve(rosdep_key, package_name, installer_context)
+                    installer_key, resolution, dependencies = self.resolve(rosdep_key, package_name, installer_context)
                     resolutions[installer_key].append(resolution)
-
-                    # check and resolve dependencies
-                    installer = installer_context.get_installer(installer_key)
-                    dependencies = installer.get_depends()
-                    for depend_rosdep_key in dependencies:
-                        installer_key, resolution = self.resolve(depend_rosdep_key, package_name, installer_context)
+                    while dependencies:
+                        depend_rosdep_key = dependencies.pop()
+                        installer_key, resolution, more_dependencies = self.resolve(depend_rosdep_key, package_name, installer_context)
+                        dependencies.extend(more_dependencies)
                         resolutions[installer_key].append(resolution)
                         
                 except ResolutionError as e:
@@ -361,26 +359,37 @@ class RosdepLookup(object):
         :param os_name: OS name to use for resolution
         :param os_version: OS name to use for resolution
 
+        :returns: *(installer_key, resolution, dependencies)*, ``(str,
+          [opaque], [str])``.  *resolution* are the system
+          dependencies for the specified installer.  The value is an
+          opaque list and meant to be interpreted by the
+          installer. *dependencies* is a list of rosdep keys that the
+          definition depends on.
+
         :raises: :exc:`ResolutionError` If *rosdep_key* cannot be resolved for *package_name* in *installer_context*
         :raises: :exc:`KeyError` If ROS package *package_name* does not exist
         :raises: :exc:`rospkg.ResourceNotFound` if *package_name* cannot be located
         """
         os_name, os_version = installer_context.get_os_name_and_version()
 
-        # check cache
-        if rosdep_key in self._resolve_cache:
-            cache_value = self._resolve_cache[rosdep_key]
-            cache_os_name = cache_value[0]
-            cache_os_version = cache_value[1]
-            if cache_os_name == os_name and cache_os_version == os_version:
-                return cache_value[2], cache_value[3]
-            
         view = self.get_package_rosdep_view(package_name)
         try:
             definition = view.lookup(rosdep_key)
         except KeyError:
             rd_debug(view)
             raise ResolutionError(rosdep_key, None, os_name, os_version, "No definition for OS [%s]"%(os_name))
+
+        # check cache: the main motivation for the cache is that
+        # source rosdeps are expensive to resolve
+        if rosdep_key in self._resolve_cache:
+            cache_value = self._resolve_cache[rosdep_key]
+            cache_os_name = cache_value[0]
+            cache_os_version = cache_value[1]
+            cache_view_name = cache_value[2]
+            if cache_os_name == os_name and \
+                   cache_os_version == os_version and \
+                   cache_view_name == view.name:
+                return cache_value[3:]
 
         # get the rosdep data for the platform
         try:
@@ -393,11 +402,12 @@ class RosdepLookup(object):
         # resolve the rosdep data for the platform
         installer = installer_context.get_installer(installer_key)
         resolution = installer.resolve(rosdep_args_dict)
+        dependencies = installer.get_depends(rosdep_args_dict)        
 
         # cache value
-        self._resolve_cache[rosdep_key] = os_name, os_version, installer_key, resolution
+        self._resolve_cache[rosdep_key] = os_name, os_version, view.name, installer_key, resolution, dependencies
 
-        return installer_key, resolution
+        return installer_key, resolution, dependencies
         
     def _load_all_stacks(self):
         """
