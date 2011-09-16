@@ -62,7 +62,7 @@ FAKE_TINYXML_RULE = """tinyxml:
       packages: tinyxml-devel"""
 
 def test_RosdepDefinition():
-    from rosdep.lookup import RosdepDefinition, ResolutionError, InvalidRosdepData
+    from rosdep2.lookup import RosdepDefinition, ResolutionError, InvalidRosdepData
     d = dict(a=1, b=2, c=3)
     def1 = RosdepDefinition('d', d)
     assert def1.rosdep_key == 'd'
@@ -130,7 +130,7 @@ def test_RosdepDefinition():
         
 
 def test_RosdepConflict():
-    from rosdep.lookup import RosdepConflict, RosdepDefinition
+    from rosdep2.lookup import RosdepConflict, RosdepDefinition
     def1 = RosdepDefinition(dict(a=1), 'origin1')
     def2 = RosdepDefinition(dict(b=2), 'origin2')
     
@@ -141,8 +141,8 @@ def test_RosdepConflict():
     assert def2.origin in str_ex
     
 def test_RosdepView_merge():
-    from rosdep.model import RosdepDatabaseEntry
-    from rosdep.lookup import RosdepView, RosdepConflict
+    from rosdep2.model import RosdepDatabaseEntry
+    from rosdep2.lookup import RosdepView, RosdepConflict
     
     data = dict(a=1, b=2, c=3)
     
@@ -204,8 +204,8 @@ def test_RosdepView_merge():
     str(view)
 
 def test_RosdepLookup_get_rosdeps():
-    from rosdep.loader import RosdepLoader
-    from rosdep.lookup import RosdepLookup
+    from rosdep2.loader import RosdepLoader
+    from rosdep2.lookup import RosdepLookup
     rospack, rosstack = get_test_rospkgs()
     ros_home = os.path.join(get_test_tree_dir(), 'fake')
     
@@ -222,7 +222,7 @@ def test_RosdepLookup_get_rosdeps():
     assert set(lookup.get_rosdeps('stack1_p2')) == set(['stack1_dep1', 'stack1_dep2', 'stack1_p2_dep1'])
     
 def test_RosdepLookup_get_packages_that_need():
-    from rosdep.lookup import RosdepLookup
+    from rosdep2.lookup import RosdepLookup
     rospack, rosstack = get_test_rospkgs()
     ros_home = os.path.join(get_test_tree_dir(), 'fake')
     
@@ -234,7 +234,7 @@ def test_RosdepLookup_get_packages_that_need():
     assert lookup.get_packages_that_need('stack1_p1_dep1') ==  ['stack1_p1']
     
 def test_RosdepLookup_create_from_rospkg():
-    from rosdep.lookup import RosdepLookup
+    from rosdep2.lookup import RosdepLookup
     rospack, rosstack = get_test_rospkgs()
     ros_home = os.path.join(get_test_tree_dir(), 'fake')
 
@@ -250,7 +250,7 @@ def test_RosdepLookup_create_from_rospkg():
     
     
 def test_RosdepLookup_get_stack_rosdep_view():
-    from rosdep.lookup import RosdepLookup
+    from rosdep2.lookup import RosdepLookup
     rospack, rosstack = get_test_rospkgs()
     ros_home = os.path.join(get_test_tree_dir(), 'fake')
     
@@ -296,7 +296,7 @@ def test_RosdepLookup_get_stack_rosdep_view():
     assert ros_raw['python'] == python.data
 
 def test_RosdepLookup_ros_home_override():
-    from rosdep.lookup import RosdepLookup, OVERRIDE_ENTRY
+    from rosdep2.lookup import RosdepLookup, OVERRIDE_ENTRY
     rospack, rosstack = get_test_rospkgs()
     ros_home = os.path.join(get_test_dir(), 'ros_home')
     lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack, ros_home=ros_home)
@@ -326,7 +326,7 @@ def test_RosdepLookup_ros_home_override():
 
     
 def test_RosdepLookup_get_errors():
-    from rosdep.lookup import RosdepLookup
+    from rosdep2.lookup import RosdepLookup
     rospack, rosstack = get_test_rospkgs()
     tree_dir = get_test_tree_dir()
     ros_home = os.path.join(tree_dir, 'fake')
@@ -344,7 +344,7 @@ def test_RosdepLookup_get_errors():
     assert errors
     
 def test_RosdepLookup_get_stacks_that_define():
-    from rosdep.lookup import RosdepLookup
+    from rosdep2.lookup import RosdepLookup
     rospack, rosstack = get_test_rospkgs()
     tree_dir = get_test_tree_dir()
     ros_home = os.path.join(tree_dir, 'fake')

@@ -31,13 +31,13 @@ import os
 import sys
 
 def test_create_default_installer_context():
-    import rosdep
-    from rosdep.installers import TYPE_CODENAME
+    import rosdep2
+    from rosdep2.installers import TYPE_CODENAME
 
     # test both constructors
-    for context in [rosdep.create_default_installer_context(), rosdep.create_default_installer_context(verbose=True)]:
+    for context in [rosdep2.create_default_installer_context(), rosdep2.create_default_installer_context(verbose=True)]:
         assert context is not None
-        assert isinstance(context, rosdep.InstallerContext)
+        assert isinstance(context, rosdep2.InstallerContext)
 
         #this is just tripwire as we actual value will change over time
         from rospkg.os_detect import OS_UBUNTU

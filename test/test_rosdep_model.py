@@ -26,7 +26,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 def test_InvalidRosdepData():
-    from rosdep.model import InvalidRosdepData
+    from rosdep2.model import InvalidRosdepData
     try:
         raise InvalidRosdepData('hi')
     except InvalidRosdepData as ex:
@@ -34,14 +34,14 @@ def test_InvalidRosdepData():
 
 def test_RosdepDatabaseEntry():
     # not muich to test with container
-    from rosdep.model import RosdepDatabaseEntry
+    from rosdep2.model import RosdepDatabaseEntry
     d = RosdepDatabaseEntry({'a': 1}, [], 'foo')
     assert d.rosdep_data == {'a': 1}
     assert d.stack_dependencies == []
     assert d.origin == 'foo'
 
 def test_RosdepDatabase():
-    from rosdep.model import RosdepDatabase
+    from rosdep2.model import RosdepDatabase
 
     db = RosdepDatabase()
     assert not db.is_loaded('foo')
@@ -77,7 +77,7 @@ def test_RosdepDatabase():
     
 
 def test_RosdepDatabase_get_stack_dependencies():
-    from rosdep.model import RosdepDatabase
+    from rosdep2.model import RosdepDatabase
 
     data = {'a': 1}
     db = RosdepDatabase()

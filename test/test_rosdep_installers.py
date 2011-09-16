@@ -31,7 +31,7 @@ import os
 import sys
 
 def test_InstallerContext_ctor():
-    from rosdep.installers import InstallerContext
+    from rosdep2.installers import InstallerContext
     from rospkg.os_detect import OsDetect
 
     context = InstallerContext()
@@ -46,7 +46,7 @@ def test_InstallerContext_ctor():
 
 def test_InstallerContext_get_os_version_type():
     from rospkg.os_detect import OS_UBUNTU
-    from rosdep.installers import InstallerContext, TYPE_CODENAME, TYPE_VERSION
+    from rosdep2.installers import InstallerContext, TYPE_CODENAME, TYPE_VERSION
     context = InstallerContext()
 
     try:
@@ -60,7 +60,7 @@ def test_InstallerContext_get_os_version_type():
     assert TYPE_CODENAME == context.get_os_version_type(OS_UBUNTU)
     
 def test_InstallerContext_os_version_and_name():
-    from rosdep.installers import InstallerContext, TYPE_CODENAME, TYPE_VERSION
+    from rosdep2.installers import InstallerContext, TYPE_CODENAME, TYPE_VERSION
     context = InstallerContext()
     context.set_verbose(True)
     os_name, os_version = context.get_os_name_and_version()
@@ -89,7 +89,7 @@ def test_InstallerContext_os_version_and_name():
     assert os_version == 'fakeos-version', os_version
     
 def test_InstallerContext_installers():
-    from rosdep.installers import InstallerContext, Installer
+    from rosdep2.installers import InstallerContext, Installer
     from rospkg.os_detect import OsDetect
     detect = OsDetect()
     context = InstallerContext(detect)
@@ -145,7 +145,7 @@ def test_InstallerContext_installers():
 
 
 def test_InstallerContext_os_installers():
-    from rosdep.installers import InstallerContext, Installer
+    from rosdep2.installers import InstallerContext, Installer
     from rospkg.os_detect import OsDetect
     detect = OsDetect()
     context = InstallerContext(detect)
@@ -204,7 +204,7 @@ def test_InstallerContext_os_installers():
 
 
 def test_Installer_tripwire():
-    from rosdep.installers import Installer
+    from rosdep2.installers import Installer
     try:
         Installer().is_installed(['foo'])
         assert False
@@ -233,15 +233,15 @@ def detect_fn_single(packages):
 
 
 def test_PackageManagerInstaller():
-    from rosdep.installers import PackageManagerInstaller
+    from rosdep2.installers import PackageManagerInstaller
     try:
         PackageManagerInstaller(detect_fn_all).get_install_command(['foo'])
         assert False
     except NotImplementedError: pass
 
 def test_PackageManagerInstaller_resolve():
-    from rosdep.model import InvalidRosdepData
-    from rosdep.installers import PackageManagerInstaller
+    from rosdep2.model import InvalidRosdepData
+    from rosdep2.installers import PackageManagerInstaller
 
     installer = PackageManagerInstaller(detect_fn_all)
     assert ['baz'] == installer.resolve(dict(depends=['foo', 'bar'], packages=['baz']))
@@ -264,7 +264,7 @@ def test_PackageManagerInstaller_resolve():
     except InvalidRosdepData: pass
 
 def test_PackageManagerInstaller_depends():
-    from rosdep.installers import PackageManagerInstaller
+    from rosdep2.installers import PackageManagerInstaller
 
     installer = PackageManagerInstaller(detect_fn_all, supports_depends=True)
     assert ['foo', 'bar'] == installer.get_depends(dict(depends=['foo', 'bar'], packages=['baz']))
@@ -272,7 +272,7 @@ def test_PackageManagerInstaller_depends():
     assert [] == installer.get_depends(dict(depends=['foo', 'bar'], packages=['baz']))
 
 def test_PackageManagerInstaller_unique():
-    from rosdep.installers import PackageManagerInstaller
+    from rosdep2.installers import PackageManagerInstaller
 
     installer = PackageManagerInstaller(detect_fn_all)
 
@@ -287,7 +287,7 @@ def test_PackageManagerInstaller_unique():
     assert set(['a', 'b', 'c']) == set(installer.unique(['a', 'b'], ['c', 'a']))    
 
 def test_PackageManagerInstaller_is_installed():
-    from rosdep.installers import PackageManagerInstaller
+    from rosdep2.installers import PackageManagerInstaller
 
     installer = PackageManagerInstaller(detect_fn_all)
     assert True == installer.is_installed(['a', 'b', 'c']), installer.is_installed(['a', 'b', 'c'])
@@ -295,7 +295,7 @@ def test_PackageManagerInstaller_is_installed():
     assert False == installer.is_installed(['a', 'b', 'c'])
 
 def test_PackageManagerInstaller_get_packages_to_install():
-    from rosdep.installers import PackageManagerInstaller
+    from rosdep2.installers import PackageManagerInstaller
 
     installer = PackageManagerInstaller(detect_fn_all)
     assert [] == installer.get_packages_to_install(['a', 'b', 'c'])
@@ -306,9 +306,9 @@ def test_PackageManagerInstaller_get_packages_to_install():
     
 def test_RosdepInstaller_ctor():
     # tripwire/coverage
-    from rosdep import create_default_installer_context
-    from rosdep.lookup import RosdepLookup
-    from rosdep.installers import RosdepInstaller
+    from rosdep2 import create_default_installer_context
+    from rosdep2.lookup import RosdepLookup
+    from rosdep2.installers import RosdepInstaller
     lookup = RosdepLookup.create_from_rospkg()
     context = create_default_installer_context()
     installer = RosdepInstaller(context, lookup)

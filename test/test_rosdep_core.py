@@ -28,7 +28,7 @@
 import os
 
 def test_RosdepInternalError():
-    from rosdep.core import RosdepInternalError
+    from rosdep2.core import RosdepInternalError
     try:
         raise Exception('foo')
     except Exception as e:
@@ -37,7 +37,7 @@ def test_RosdepInternalError():
     
 def test_rd_debug():
     # just tripwire/coverage
-    from rosdep.core import rd_debug
+    from rosdep2.core import rd_debug
     rd_debug('foo')
     os.environ['ROSDEP_DEBUG'] = '1'
     rd_debug('foo')    

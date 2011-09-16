@@ -33,7 +33,7 @@ def get_test_dir():
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'debian'))
 
 def test_dpkg_detect():
-    from rosdep.platforms.debian import dpkg_detect
+    from rosdep2.platforms.debian import dpkg_detect
     from mock import Mock
     
     m = Mock()
@@ -53,7 +53,7 @@ def test_dpkg_detect():
 
 
 def test_AptInstaller():
-    from rosdep.platforms.debian import AptInstaller
+    from rosdep2.platforms.debian import AptInstaller
     from mock import patch
 
     @patch.object(AptInstaller, 'get_packages_to_install')
@@ -82,7 +82,7 @@ class FakeDetector:
         return self.version
 
 def test_MintOsDetect():
-    from rosdep.platforms.debian import MintOsDetect
+    from rosdep2.platforms.debian import MintOsDetect
     d = MintOsDetect(FakeDetector('11'))
     assert d.is_os()
     assert 'codename' == d.get_codename()

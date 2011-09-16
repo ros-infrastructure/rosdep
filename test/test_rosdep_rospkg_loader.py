@@ -46,9 +46,9 @@ def get_rospkg():
     return rospack, rosstack
 
 def test_RosPkgLoader():
-    from rosdep.model import RosdepDatabase
-    from rosdep.rospkg_loader import RosPkgLoader
-    from rosdep.loader import InvalidRosdepData
+    from rosdep2.model import RosdepDatabase
+    from rosdep2.rospkg_loader import RosPkgLoader
+    from rosdep2.loader import InvalidRosdepData
     
     # tripwire
     loader = RosPkgLoader()
@@ -125,7 +125,7 @@ def test_RosPkgLoader():
     except ResourceNotFound: pass
         
 def test_RosPkgLoader_get_loadable():
-    from rosdep.rospkg_loader import RosPkgLoader
+    from rosdep2.rospkg_loader import RosPkgLoader
     
     rospack, rosstack = get_rospkg()
     loader = RosPkgLoader(rospack, rosstack)
