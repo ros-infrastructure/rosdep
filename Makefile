@@ -40,9 +40,6 @@ binary_deb: dsc
 	# need to convert unstable to each distro and repeat
 	cd deb_dist/${NAME}-${VERSION} && dpkg-buildpackage -sa -k84C5CECD
 
-upload: source_deb
-	cd deb_dist && dput ppa:tully.foote/tully-test-ppa ../${NAME}_${VERSION}-1_source.changes 
-
 testsetup:
 	echo "running rosdep tests"
 
