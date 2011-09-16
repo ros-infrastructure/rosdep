@@ -1,4 +1,4 @@
-.. module:: rosdep
+.. module:: rosdep2
 
 rosdep
 ======
