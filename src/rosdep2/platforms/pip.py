@@ -42,7 +42,7 @@ PIP_INSTALLER = 'pip'
 def register_installers(context):
     context.set_installer(PIP_INSTALLER, PipInstaller())
 
-def pip_detect(self, pkgs):
+def pip_detect(pkgs):
     """ 
     Given a list of package, return the list of installed packages.
     """

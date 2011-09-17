@@ -80,6 +80,14 @@ def _get_default_RosdepLookup():
 def rosdep_main():
     try:
         _rosdep_main()
+    except RosdepInternalError as e:
+        print("""
+ERROR: Rosdep experienced an internal error.
+Please go to the rosdep page [1] and file a bug report with the stack trace below.
+[1] : http://www.ros.org/wiki/rosdep
+
+%s
+"""%(e.message), file=sys.stderr)
     except Exception as e:
         print("""
 ERROR: Rosdep experienced an internal error: %s
@@ -199,7 +207,8 @@ def command_check(lookup, packages, options):
     if missing:
         print("System dependencies have not been satisified:")
         for installer_key, resolved in uninstalled.items():
-            print("%s\t%s"%(installer_key, '\n'.join(resolved)))
+            if resolved:
+                print("%s\t%s"%(installer_key, '\n'.join(resolved)))
     else:
         print("All system dependencies have been satisified")
     if errors:

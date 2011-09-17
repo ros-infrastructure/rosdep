@@ -28,6 +28,8 @@
 from __future__ import print_function
 
 import os
+import traceback
+
 def rd_debug(s):
     if "ROSDEP_DEBUG" in os.environ:
         print(s)
@@ -36,6 +38,10 @@ class RosdepInternalError(Exception):
 
     def __init__(self, e):
         self.error = e
+        self.message = traceback.format_exc(e)
+
+    def __str__(self):
+        return self.message
         
 class InstallFailed(Exception):
     pass

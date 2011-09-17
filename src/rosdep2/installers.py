@@ -32,6 +32,7 @@ from __future__ import print_function
 
 import os
 import sys
+import traceback
 
 from collections import defaultdict
 from rospkg.os_detect import OsDetect
@@ -258,7 +259,7 @@ class Installer(object):
         """
         raise NotImplementedError("get_package_install_command")
 
-    def get_depends(self, rosdep_args_dict): 
+    def get_depends(self, rosdep_args): 
         """ 
         :returns: list of dependencies on other rosdep keys.  Only
           necessary if the package manager doesn't handle
@@ -344,13 +345,13 @@ class PackageManagerInstaller(Installer):
     def get_install_command(self, resolved, interactive=True):
         raise NotImplementedError('subclasses must implement')
 
-    def get_depends(self, rosdep_args_dict): 
+    def get_depends(self, rosdep_args): 
         """ 
         :returns: list of dependencies on other rosdep keys.  Only
           necessary if the package manager doesn't handle
           dependencies.
         """
-        if self.supports_depends:
+        if self.supports_depends and type(rosdep_args) == dict:
             return rosdep_args_dict.get('depends', [])
         return [] # Default return empty list
 
