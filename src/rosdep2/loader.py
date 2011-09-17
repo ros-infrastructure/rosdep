@@ -78,6 +78,10 @@ class RosdepLoader:
         raise NotImplementedError()
 
     def get_package_manifest(self, package_name):
+        """
+        :raises: :exc:`rospkg.ResourceNotFound` If package cannot be
+          located.
+        """
         raise NotImplementedError()
 
     def get_loadable_packages(self):

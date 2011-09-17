@@ -62,6 +62,9 @@ rosdep db <packages>...
   it to the console (note that the database will change depending
   on which package(s) you query.
 
+rosdep keys <packages>...
+  will list the rosdep keys that the packages depend on.
+
 rosdep what-needs <rosdeps>...
   will print a list of packages that declare a rosdep on (at least
   one of) <rosdeps>
@@ -172,13 +175,10 @@ def configure_installer_context_os(installer_context, options):
 def command_keys(lookup, packages, options):
     lookup = _get_default_RosdepLookup()
     rosdep_keys = []
-    for package_name in args:
-        rosdep_keys.extend(lookup.get_rosdeps(package_name, recursive=True))
+    for package_name in packages:
+        rosdep_keys.extend(lookup.get_rosdeps(package_name, implicit=True))
 
-    for error in lookup.get_errors():
-        print("WARNING: %s"%(str(error)), file=sys.stderr)
-
-    print('\n'.join(set(packages)))
+    print('\n'.join(set(rosdep_keys)))
 
 def command_check(lookup, packages, options):
     verbose = options.verbose

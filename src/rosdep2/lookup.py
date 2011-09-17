@@ -255,14 +255,26 @@ class RosdepLookup(object):
         """
         return self.errors[:]
     
-    def get_rosdeps(self, package):
+    def get_rosdeps(self, package, implicit=True):
         """
-        Get rosdeps that this package directly requires.
+        Get rosdeps that this package requires.
+
+        :param implicit: If ``True``, include implicit rosdep
+          dependencies. Default: ``True``.
 
         :returns: list of rosdep names, ``[str]``
         """
-        m = self.loader.get_package_manifest(package)
-        return [d.name for d in m.rosdeps]
+
+        if not implicit:
+            packages = [package]
+        else:
+            packages = [package] + self.loader.get_package_depends(package, implicit=True)
+            
+        rosdep_keys = []
+        for package in packages:
+            m = self.loader.get_package_manifest(package)
+            rosdep_keys.extend([d.name for d in m.rosdeps])
+        return rosdep_keys
 
     def get_packages_that_need(self, rosdep_name):
         """
@@ -270,7 +282,7 @@ class RosdepLookup(object):
         
         :returns: list of package names that require rosdep, ``[str]``
         """
-        return [p for p in self.loader.get_loadable_packages() if rosdep_name in self.get_rosdeps(p)]
+        return [p for p in self.loader.get_loadable_packages() if rosdep_name in self.get_rosdeps(p, implicit=False)]
 
     @staticmethod
     def create_from_rospkg(rospack=None, rosstack=None, ros_home=None):
@@ -318,7 +330,7 @@ class RosdepLookup(object):
         resolutions = defaultdict(list)
         errors = {}
         for package_name in packages:
-            rosdep_keys = self.get_rosdeps(package_name)
+            rosdep_keys = self.get_rosdeps(package_name, implicit=True)
             for rosdep_key in rosdep_keys:
                 try:
                     installer_key, resolution, dependencies = self.resolve(rosdep_key, package_name, installer_context)

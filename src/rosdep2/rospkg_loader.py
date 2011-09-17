@@ -109,6 +109,11 @@ class RosPkgLoader(RosdepLoader):
             return self.load_stack(stack_name, rosdep_db)
 
     def get_package_manifest(self, package_name):
+        """
+        :param package_name: Name of ROS package, ``str``.
+        :raises: :exc:`rospkg.ResourceNotFound` If package cannot be
+          located.
+        """
         return self._rospack.get_manifest(package_name)
 
     def get_loadable_packages(self):
