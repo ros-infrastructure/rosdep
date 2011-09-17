@@ -46,4 +46,11 @@ class RosdepInternalError(Exception):
 class InstallFailed(Exception):
     pass
 
+class MultipleInstallsFailed(InstallFailed):
+    def __init__(self, failures):
+        """
+        :param failures: List of :class:`InstalledFailed` exception instances
+        """
+        self.failures = failures
+
 

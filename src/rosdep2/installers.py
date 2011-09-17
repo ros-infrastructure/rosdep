@@ -37,8 +37,9 @@ import traceback
 from collections import defaultdict
 from rospkg.os_detect import OsDetect
 
-from .core import rd_debug, RosdepInternalError, InstallFailed
+from .core import rd_debug, RosdepInternalError, InstallFailed, MultipleInstallsFailed
 from .model import InvalidRosdepData
+from .shell_utils import create_tempfile_from_string_and_execute
 
 # use OsDetect.get_version() for OS version key
 TYPE_VERSION = 'version'
@@ -337,7 +338,10 @@ class PackageManagerInstaller(Installer):
         return sorted(list(s))
         
     def get_packages_to_install(self, resolved):
-        return list(set(resolved) - set(self.detect_fn(resolved)))
+        if not resolved:
+            return []
+        else:
+            return list(set(resolved) - set(self.detect_fn(resolved)))
 
     def is_installed(self, resolved):
         return not self.get_packages_to_install(resolved)
@@ -352,7 +356,7 @@ class PackageManagerInstaller(Installer):
           dependencies.
         """
         if self.supports_depends and type(rosdep_args) == dict:
-            return rosdep_args_dict.get('depends', [])
+            return rosdep_args.get('depends', [])
         return [] # Default return empty list
 
 class RosdepInstaller(object):
@@ -402,7 +406,8 @@ class RosdepInstaller(object):
         
         return uninstalled, errors
     
-    def install(self, uninstalled, interactive=True, simulate=False, continue_on_error=False):
+    def install(self, uninstalled, interactive=True, simulate=False,
+                continue_on_error=False, verbose=False):
         """
         Install the uninstalled rosdeps.  This API is for the bulk
         workflow of rosdep (see example below).  For a more targeted
@@ -412,10 +417,14 @@ class RosdepInstaller(object):
           :meth:`RosdepInstaller.get_uninstalled`.  Value is a
           dictionary mapping installer key to a opaque resolution
           list, ``{str: [opaque]}``
-        :param interactive: (optional) If ``False``, suppress
+        :param interactive: If ``False``, suppress
           interactive prompts (e.g. by passing '-y' to ``apt``).
-        :param simulate: (optional) If ``False`` simulate installation
+        :param simulate: If ``False`` simulate installation
           without actually executing.
+        :param continue_on_error: If ``True``, continue installation
+          even if an install fails.  Otherwise, stop after first
+          installation failure.
+
         :raises: :exc:`InstallFailed` if any rosdeps fail to install
           and *continue_on_error* is ``False``.
         :raises: :exc:`MultipleInstallsFailed` If *continue_on_error*
@@ -442,13 +451,12 @@ class RosdepInstaller(object):
         if failures:
             raise MultipleInstallsFailed(failures)
 
-    def install_resolved(self, rosdep_key, installer_key, resolved, simulate=False, interactive=True, verbose=False):
+    def install_resolved(self, installer_key, resolved, simulate=False, interactive=True, verbose=False):
         """
         Lower-level API for installing a rosdep dependency.  The
-        *rosdep_key* have already been resolved to *installer_key* and
+        rosdep keys have already been resolved to *installer_key* and
         *resolved* via :exc:`RosdepLookup` or other means.
         
-        :param rosdep_key: Key of rosdep being installed (for debugging only), ``str``
         :param installer_key: Key for installer to apply to *resolved*, ``str``
         :param resolved: Opaque resolution list from :class:`RosdepLookup`.
         :param interactive: If ``True``, allow interactive prompts (default ``True``)
@@ -462,15 +470,20 @@ class RosdepInstaller(object):
         command = installer.get_install_command(resolved, interactive=interactive)
         if not command:
             if verbose:
-                print("[%s] no packages to install"%(rosdep_key))
+                print("No packages to install")
             return
 
         if simulate or verbose:
-            print("[%s] Installation command/script:\n"%(rosdep_key)+80*'='+str(command)+80*'=')
+            line = 80*'='
+            print("[%s] Installation command/script:"%(installer_key))
+            #print("[%s] Installation command/script:\n%s\n%s\n%s"%(installer_key, line, command, line))
+            for line in command.split('\n'):
+                print('  '+line)
+
         if not simulate:
             result = create_tempfile_from_string_and_execute(command)
             if result:
                 if verbose:
-                    print("successfully installed %s"%(rosdep_key))
+                    print("successfully installed")
                 if not my_installer.is_installed(resolved):
-                    raise InstallFailed("rosdep %s failed check-presence-script after installation.\nResolved packages were %s"%(rosdep_key, resolved))
+                    raise InstallFailed("[%s] rosdep failed check-presence-script after installation.\nResolved packages were %s"%(installer_key, resolved))

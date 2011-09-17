@@ -68,7 +68,7 @@ class PipInstaller(PackageManagerInstaller):
         super(PipInstaller, self).__init__(pip_detect)
 
     def get_install_command(self, resolved, interactive=True):
-        packages = self.get_packages(resolved)
+        packages = self.get_packages_to_install(resolved)
         if not packages:
             return  "#!/bin/bash\n#No PIP Packages to install"
         else:

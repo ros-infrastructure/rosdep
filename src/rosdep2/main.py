@@ -43,7 +43,7 @@ from optparse import OptionParser
 import rospkg
 
 from . import create_default_installer_context
-from .core import RosdepInternalError
+from .core import RosdepInternalError, InstallFailed, MultipleInstallsFailed
 from .installers import RosdepInstaller
 from .lookup import RosdepLookup
 
@@ -108,6 +108,8 @@ def _rosdep_main():
                       action="store_true", help="do not deduplicate")
     parser.add_option("--default-yes", "-y", dest="default_yes", default=False, 
                       action="store_true", help="Tell the package manager to default to y or fail when installing")
+    parser.add_option("--simulate", "-s", dest="simulate", default=False, 
+                      action="store_true", help="Simulate install")
     parser.add_option("-r", dest="robust", default=False, 
                       action="store_true", help="Continue installing despite errors.")
     parser.add_option("-a", "--all", dest="rosdep_all", default=False, 
@@ -195,16 +197,10 @@ def command_check(lookup, packages, options):
     configure_installer_context_os(installer_context, options)
     installer = RosdepInstaller(installer_context, lookup)
 
-    val = installer.get_uninstalled(packages, verbose=verbose)
-    uninstalled = val[0]
-    errors = val[1]
+    uninstalled, errors = installer.get_uninstalled(packages, verbose=verbose)
 
-    missing = False
-    for resolved in uninstalled.values():
-        if resolved:
-            missing = True
-
-    if missing:
+    # pretty print the result
+    if [r for r in resolved in uninstalled.values() if r]:
         print("System dependencies have not been satisified:")
         for installer_key, resolved in uninstalled.items():
             if resolved:
@@ -218,6 +214,37 @@ def command_check(lookup, packages, options):
         return 1
     else:
         return 0
+
+def command_install(lookup, packages, options):
+    # map options
+    install_options = dict(interactive=not options.default_yes, verbose=options.verbose,
+                           continue_on_error=options.robust, simulate=options.simulate)
+
+    # setup installer
+    installer_context = create_default_installer_context(verbose=options.verbose)
+    configure_installer_context_os(installer_context, options)
+    installer = RosdepInstaller(installer_context, lookup)
+
+    uninstalled, errors = installer.get_uninstalled(packages, verbose=options.verbose)
+    if errors:
+        print("TODO: deal with errors in resolution: %s"%(errors), file=sys.stderr)
+        raise Exception("TODO")
+    try:
+        installer.install(uninstalled, **install_options)
+        print("All required rosdeps installed successfully")
+        return 0
+    except KeyError as e:
+        raise RosdepInternalError(e)
+    except InstallFailed as e:
+        #TODO
+        traceback.print_exc()
+        print("rosdep install ERROR:\n%s"%error, file=sys.stderr)
+        return 1
+    except MultipleInstallsFailed as e:
+        #TODO
+        traceback.print_exc()
+        print("rosdep install ERROR:\n%s"%error, file=sys.stderr)
+        return 1
 
 def _compute_depdb_output(lookup, packages, options):
     installer_context = create_default_installer_context(verbose=options.verbose)
@@ -262,16 +289,6 @@ def command_where_defined(args, options):
         origin = location[1]
         print(origin)
 
-def command_install(r, args, verified_packages, options):
-    interactive = not options.default_yes
-    error = r.install(interactive=interactive, simulate=options.simulate, continue_on_error=options.robust)
-    if error:
-        print("rosdep install ERROR:\n%s"%error, file=sys.stderr)
-        return 1
-    else:
-        print("All required rosdeps installed successfully")
-        return 0
-    
 command_handlers = {
     'db': command_depdb,
     'check': command_check,

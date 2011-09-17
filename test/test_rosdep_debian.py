@@ -38,6 +38,9 @@ def test_dpkg_detect():
     
     m = Mock()
     m.return_value = ''
+    val = dpkg_detect([], exec_fn=m)
+    assert val == [], val
+
     val = dpkg_detect(['tinyxml-dev'], exec_fn=m)
     assert val == [], val
     #assert m.assert_called_with(['dpkg-query', '-W', '-f=\'${Package} ${Status}\n\''])

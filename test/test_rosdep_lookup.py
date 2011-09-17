@@ -217,9 +217,11 @@ def test_RosdepLookup_get_rosdeps():
 
     print(lookup.get_rosdeps('stack1_p1'))
     assert set(lookup.get_rosdeps('stack1_p1')) == set(['stack1_dep1', 'stack1_p1_dep1', 'stack1_p1_dep2'])
-
+    assert set(lookup.get_rosdeps('stack1_p1', implicit=False)) == set(['stack1_dep1', 'stack1_p1_dep1', 'stack1_p1_dep2'])
+    
     print(lookup.get_rosdeps('stack1_p2'))
-    assert set(lookup.get_rosdeps('stack1_p2')) == set(['stack1_dep1', 'stack1_dep2', 'stack1_p2_dep1'])
+    assert set(lookup.get_rosdeps('stack1_p2', implicit=False)) == set(['stack1_dep1', 'stack1_dep2', 'stack1_p2_dep1']), set(lookup.get_rosdeps('stack1_p2'))
+    assert set(lookup.get_rosdeps('stack1_p2', implicit=True)) == set(['stack1_dep1', 'stack1_dep2', 'stack1_p1_dep1', 'stack1_p1_dep2', 'stack1_p2_dep1']), set(lookup.get_rosdeps('stack1_p2'))    
     
 def test_RosdepLookup_get_packages_that_need():
     from rosdep2.lookup import RosdepLookup
