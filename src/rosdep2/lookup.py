@@ -138,7 +138,7 @@ class ResolutionError(Exception):
 \trosdep key : %s
 \tOS name    : %s
 \tOS version : %s
-\tData: %s"""%(self.args[0], self.rosdep_key, self.os_name, self.os_version, self.rosdep_data)
+\tData: %s"""%(self.args[0], self.rosdep_key, self.os_name, self.os_version, self.rosdep_data or '<no data>')
 
 class RosdepConflict(Exception):
     """
@@ -389,7 +389,7 @@ class RosdepLookup(object):
             definition = view.lookup(rosdep_key)
         except KeyError:
             rd_debug(view)
-            raise ResolutionError(rosdep_key, None, os_name, os_version, "No definition for OS [%s]"%(os_name))
+            raise ResolutionError(rosdep_key, None, os_name, os_version, "Cannot locate rosdep definition for [%s]"%(rosdep_key))
 
         # check cache: the main motivation for the cache is that
         # source rosdeps are expensive to resolve
