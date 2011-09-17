@@ -14,6 +14,7 @@
 
   <rosdep name="stack1_p2_dep1" />
 
+  <depend package="stack1_p1" />
 </package>
 
 

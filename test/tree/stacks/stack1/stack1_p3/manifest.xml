@@ -9,6 +9,7 @@
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/stack1_p3</url>
 
+  <depend package="stack1_p2" />
 </package>
 
 

@@ -86,6 +86,15 @@ class RosdepLoader:
     def get_loadable_stacks(self):
         raise NotImplementedError()     
 
+    def get_package_depends(self, package_name, implicit=True):
+        """
+        :param package_name: ROS package name to get dependencies of.
+        :param implicit: If ``True``, include implicit dependencies of
+          package, otherwise just direct dependencies, ``bool``.
+        :returns: Names of packages *package_name* depends on, ``[str]``.
+        """
+        raise NotImplementedError()
+    
     def stack_of(self, package_name):
         """
         :returns: Name of ROS stack that *package_name* is in, or ``None`` if not in a stack, ``str``.

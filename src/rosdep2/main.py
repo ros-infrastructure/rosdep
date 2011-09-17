@@ -169,6 +169,17 @@ def configure_installer_context_os(installer_context, options):
     os_version = val[val.find(':')+1:]
     installer_context.set_os_override(os_name, os_version)
     
+def command_keys(lookup, packages, options):
+    lookup = _get_default_RosdepLookup()
+    rosdep_keys = []
+    for package_name in args:
+        rosdep_keys.extend(lookup.get_rosdeps(package_name, recursive=True))
+
+    for error in lookup.get_errors():
+        print("WARNING: %s"%(str(error)), file=sys.stderr)
+
+    print('\n'.join(set(packages)))
+
 def command_check(lookup, packages, options):
     verbose = options.verbose
     
@@ -255,6 +266,7 @@ def command_install(r, args, verified_packages, options):
 command_handlers = {
     'db': command_depdb,
     'check': command_check,
+    'keys': command_keys,
     'install': command_install,
     'what-needs': command_what_needs,
     'what_needs': command_what_needs,

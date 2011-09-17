@@ -139,3 +139,14 @@ def test_RosPkgLoader_get_loadable():
     for s in ['ros', 'empty', 'invalid', 'stack1']:
         assert s in stacks, stacks
 
+
+def test_RosPkgLoader_get_package_depends():
+    from rosdep2.rospkg_loader import RosPkgLoader
+    
+    rospack, rosstack = get_rospkg()
+    loader = RosPkgLoader(rospack, rosstack)
+    assert set([]) == set(loader.get_package_depends('stack1_p1')) 
+    assert set([]) == set(loader.get_package_depends('stack1_p1', implicit=False)) 
+    assert set(['stack1_p1', 'stack1_p2']) == set(loader.get_package_depends('stack1_p3'))
+    assert set(['stack1_p2']) == set(loader.get_package_depends('stack1_p3', implicit=False)), set(loader.get_package_depends('stack1_p3', implicit=False))
+
