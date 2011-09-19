@@ -43,10 +43,6 @@ OSXBREW_OS_NAME = 'osxbrew'
 BREW_INSTALLER = 'brew'
 MACPORTS_INSTALLER = 'macports'
 
-def port_detect(p):
-    std_out = read_stdout(['port', 'installed', p])
-    return std_out.count("(active)") > 0
-
 def register_installers(context):
     context.set_installer(MACPORTS_INSTALLER, MacportsInstaller())
 
@@ -68,6 +64,13 @@ def register_osxbrew(context):
     context.set_os_version_type(OS_OSX, TYPE_CODENAME)
     raise NotImplemented
 
+def port_detect_single(p):
+    std_out = read_stdout(['port', 'installed', p])
+    return std_out.count("(active)") > 0
+
+def port_detect(packages):
+    return [p for p in packages if port_detect_single(p)]
+
 class MacportsInstaller(PackageManagerInstaller):
     """ 
     An implementation of the :class:`Installer` API for use on
@@ -83,3 +86,4 @@ class MacportsInstaller(PackageManagerInstaller):
         else:
             #TODO: interactive
             return ['sudo', 'port', 'install'] + packages
+

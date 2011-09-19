@@ -67,9 +67,9 @@ class EqueryInstaller(PackageManagerInstaller):
     def get_install_command(self, resolved, interactive=True):
         packages = self.get_packages_to_install(resolved)                
         #TODO: interactive
-        if len(packages) == 0:
-            return "# Package prerequisites satisfied - nothing to do"
+        if not packages:
+            return []
         elif equery_available():
-            return "#Packages\nsudo emerge %s"%(' '.join(packages))
+            return [['sudo', 'emerge']+packages]
         else:
-            return "#Packages\nsudo emerge -u %s"%(' '.join(packages))
+            return [['sudo', 'emerge', '-u',]+packages]

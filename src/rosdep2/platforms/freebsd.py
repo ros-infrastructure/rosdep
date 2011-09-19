@@ -49,7 +49,7 @@ def register_platforms(context):
     context.add_os_installer_key(OS_FREEBSD, PKG_ADD_INSTALLER)
     context.set_default_os_installer_key(OS_FREEBSD, PKG_ADD_INSTALLER)
 
-def pkg_info_detect(p):
+def pkg_info_detect_single(p):
     if p == "builtin":
         return True
     # The next code is a lot of hassle, but there is no
@@ -67,6 +67,9 @@ def pkg_info_detect(p):
         portname = p + "-\*"
     pop = subprocess.Popen("/usr/sbin/pkg_info -qE " + portname, shell=True)
     return os.waitpid(pop.pid, 0)[1] == 0 # pkg_info -E returns 0 if pkg installed, 1 if not
+
+def pkg_info_detect(packages):
+    return [p for p in packages if pkg_info_detect_single(p)]
 
 class PkgAddInstaller(Installer):
     """

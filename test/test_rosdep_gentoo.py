@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# Copyright (c) 2009, Willow Garage, Inc.
+# Copyright (c) 2011, Willow Garage, Inc.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -26,54 +25,48 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-# Tingfan Wu tingfan@gmail.com
-
-from __future__ import print_function
+# Author Ken Conley/kwc@willowgarage.com
 
 import os
-import subprocess
+import traceback
+from mock import Mock, patch
 
-from rospkg.os_detect import OS_CYGWIN
+def get_test_dir():
+    # not used yet
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), 'gentoo'))
 
-from .source import SOURCE_INSTALLER
+from rospkg.os_detect import OsDetect, OS_GENTOO
+def test_equery_available():
+    # not sure this test is right, but provides some basic tripwire for now.
+    from rosdep2.platforms.gentoo import equery_available
+    if OsDetect().get_name() != OS_GENTOO:
+        assert not equery_available(), "equery should not be available"
+    else:
+        assert equery_available(), "equery should be available"
+        
+def test_EqueryInstaller():
+    from rosdep2.platforms.gentoo import EqueryInstaller, equery_available
 
-from ..installers import Installer, PackageManagerInstaller
-from ..shell_utils import read_stdout
+    @patch.object(EqueryInstaller, 'get_packages_to_install')
+    def test(mock_method):
+        installer = EqueryInstaller()
+        mock_method.return_value = []
+        assert [] == installer.get_install_command(['fake'])
 
-OS_CYGWIN = 'cygwin'
-APT_CYG_INSTALLER = 'apt-cyg'
+        # no interactive option with YUM
+        mock_method.return_value = ['a', 'b']
 
-def register_installers(context):
-    context.set_installer(APT_CYG_INSTALLER, AptCygInstaller())
-    
-def register_platforms(context):
-    context.add_os_installer_key(OS_CYGWIN, SOURCE_INSTALLER)
-    context.add_os_installer_key(OS_CYGWIN, APT_CYG_INSTALLER)
-    context.set_default_os_installer_key(OS_CYGWIN, APT_CYG_INSTALLER)
-
-def cygcheck_detect_single(p):
-    std_out = read_stdout(['cygcheck', '-c', p])
-    return std_out.count("OK") > 0
-
-def cygcheck_detect(packages):
-    return [p for p in packages if cygcheck_detect_single(p)]
-
-class AptCygInstaller(PackageManagerInstaller):
-    """
-    An implementation of the :class:`Installer` for use on
-    cygwin-style systems.
-    """
-
-    def __init__(self):
-        super(AptCygInstaller, self).__init__(cygcheck_detect)
-
-    def get_install_command(self, resolved, interactive=True):
-        packages = self.get_packages_to_install(resolved)        
-        #TODO: interactive
-        if not packages:
-            return []
+        if equery_available():
+            expected = [['sudo', 'emerge', 'a', 'b']]
         else:
-            return [['apt-cyg', '-m', 'ftp://sourceware.org/pub/cygwinports', 'install']+packages]
-
-if __name__ == '__main__':
-    print("test cygcheck_detect(true)", cygcheck_detect('cygwin'))
+            expected = [['sudo', 'emerge', '-u', 'a', 'b']]
+        val = installer.get_install_command(['whatever'], interactive=False)
+        assert val == expected, val
+        val = installer.get_install_command(['whatever'], interactive=True)
+        assert val == expected, val
+    try:
+        test()
+    except AssertionError:
+        traceback.print_exc()
+        raise
+    

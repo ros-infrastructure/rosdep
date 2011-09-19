@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# Copyright (c) 2009, Willow Garage, Inc.
+# Copyright (c) 2011, Willow Garage, Inc.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -26,40 +25,36 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-# Author Tully Foote/tfoote@willowgarage.com
+# Author Ken Conley/kwc@willowgarage.com
 
 import os
-import subprocess
+import traceback
+from mock import Mock, patch
 
-from ..installers import PackageManagerInstaller
-from .source import SOURCE_INSTALLER
+def get_test_dir():
+    # not used yet
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), 'cygwin'))
 
-ARCH_OS_NAME = 'arch'
-PACMAN_INSTALLER = 'pacman'
+def test_AptCygInstaller():
+    from rosdep2.platforms.cygwin import AptCygInstaller
 
-def register_installers(context):
-    context.set_installer(PACMAN_INSTALLER, PacmanInstaller())
+    @patch.object(AptCygInstaller, 'get_packages_to_install')
+    def test(mock_method):
+        installer = AptCygInstaller()
+        mock_method.return_value = []
+        assert [] == installer.get_install_command(['fake'])
+
+        # no interactive option implemented yet
+        mock_method.return_value = ['a', 'b']
+        expected = [['apt-cyg', '-m', 'ftp://sourceware.org/pub/cygwinports', 'install', 'a', 'b']]
+        val = installer.get_install_command(['whatever'], interactive=False)
+        assert val == expected, val
+        expected = [['apt-cyg', '-m', 'ftp://sourceware.org/pub/cygwinports', 'install', 'a', 'b']]
+        val = installer.get_install_command(['whatever'], interactive=True)
+        assert val == expected, val
+    try:
+        test()
+    except AssertionError:
+        traceback.print_exc()
+        raise
     
-def register_platforms(context):
-    context.add_os_installer_key(ARCH_OS_NAME, SOURCE_INSTALLER)
-    context.add_os_installer_key(ARCH_OS_NAME, PACMAN_INSTALLER)
-    context.set_default_os_installer_key(ARCH_OS_NAME, PACMAN_INSTALLER)
-
-def pacman_detect_single(p):
-    return subprocess.call(['pacman', '-Q', p], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    
-
-def pacman_detect(packages):
-    return [p for p in packages if pacman_detect_single(p)]
-
-class PacmanInstaller(PackageManagerInstaller):
-
-    def __init__(self):
-        super(PacmanInstaller, self).__init__(pacman_detect)
-
-    def get_install_command(self, resolved, interactive=True):
-        #TODO: interactive switch
-        packages = self.get_packages_to_install(resolved)
-        if not packages:
-            return []
-        else:
-            return [['sudo', 'pacman', '-Sy', '--needed']+packages]
