@@ -59,7 +59,7 @@ def register_rhel(context):
 def rpm_detect(packages):
     return subprocess.call(['rpm', '-q', packages], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    
 
-class YumInstall(PackageManagerInstaller):
+class YumInstaller(PackageManagerInstaller):
     """
     This class provides the functions for installing using yum
     it's methods partially implement the Rosdep OS api to complement 

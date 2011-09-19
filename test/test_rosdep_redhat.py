@@ -1,4 +1,4 @@
-# Copyright (c) 2009, Willow Garage, Inc.
+# Copyright (c) 2011, Willow Garage, Inc.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -25,50 +25,36 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-# Author Tully Foote/tfoote@willowgarage.com, Ken Conley/kwc@willowgarage.com
+# Author Ken Conley/kwc@willowgarage.com
 
-"""
-rosdep library and command-line tool
-"""
+import os
+import traceback
+from mock import Mock, patch
 
-from __future__ import print_function
+def get_test_dir():
+    # not used yet
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), 'redhat'))
 
-from .installers import InstallerContext, Installer, PackageManagerInstaller
+def test_YumInstaller():
+    from rosdep2.platforms.redhat import YumInstaller
 
-from .core import RosdepInternalError, InstallFailed
-from .model import InvalidRosdepData, RosdepDatabase, RosdepDatabaseEntry
-from .lookup import RosdepDefinition, RosdepConflict, RosdepView, RosdepLookup
-from .loader import RosdepLoader
-from .rospkg_loader import RosPkgLoader
+    @patch.object(YumInstaller, 'get_packages_to_install')
+    def test(mock_method):
+        installer = YumInstaller()
+        mock_method.return_value = []
+        assert [] == installer.get_install_command(['fake'])
 
-def create_default_installer_context(verbose=False):
-    from .platforms import arch
-    from .platforms import cygwin
-    from .platforms import debian
-    from .platforms import gentoo
-    from .platforms import opensuse
-    from .platforms import osx
-    from .platforms import pip
-    from .platforms import redhat
-    from .platforms import source
-
-    platform_mods = [arch, cygwin, debian, gentoo, opensuse, osx, redhat]
-    installer_mods = [source, pip] + platform_mods
-
-    context = InstallerContext()
-    context.set_verbose(verbose)
+        # no interactive option with YUM
+        mock_method.return_value = ['a', 'b']
+        expected = [['sudo', 'yum', '-y', 'install', 'a', 'b']]
+        val = installer.get_install_command(['whatever'], interactive=False)
+        assert val == expected, val
+        expected = [['sudo', 'yum', 'install', 'a', 'b']]
+        val = installer.get_install_command(['whatever'], interactive=True)
+        assert val == expected, val
+    try:
+        test()
+    except AssertionError:
+        traceback.print_exc()
+        raise
     
-    # setup installers
-    for m in installer_mods:
-        if verbose:
-            print("registering installers for %s"%(m.__name__))
-        m.register_installers(context)
-
-    # setup platforms
-    for m in platform_mods:
-        if verbose:
-            print("registering platforms for %s"%(m.__name__))
-        m.register_platforms(context)
-
-    return context
-
