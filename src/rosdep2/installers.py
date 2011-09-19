@@ -32,6 +32,7 @@ from __future__ import print_function
 
 import os
 import sys
+import subprocess
 import traceback
 
 from collections import defaultdict
@@ -39,7 +40,6 @@ from rospkg.os_detect import OsDetect
 
 from .core import rd_debug, RosdepInternalError, InstallFailed, MultipleInstallsFailed
 from .model import InvalidRosdepData
-from .shell_utils import create_tempfile_from_string_and_execute
 
 # use OsDetect.get_version() for OS version key
 TYPE_VERSION = 'version'
@@ -252,11 +252,12 @@ class Installer(object):
         """
         raise NotImplementedError("is_installed")        
         
-    def get_install_command(self, resolved, interactive=True):
+    def get_install_command(self, resolved, interactive=True, reinstall=False):
         """
         :param resolved: resolved installation items
         :param interactive: If `False`, disable interactive prompts,
           e.g. Pass through ``-y`` or equivalant to package manager.
+        :param reinstall: If `True`, install everything even if already installed
         """
         raise NotImplementedError("get_package_install_command")
 
@@ -337,7 +338,9 @@ class PackageManagerInstaller(Installer):
             s.update(resolved)
         return sorted(list(s))
         
-    def get_packages_to_install(self, resolved):
+    def get_packages_to_install(self, resolved, reinstall=False):
+        if reinstall:
+            return resolved
         if not resolved:
             return []
         else:
@@ -346,7 +349,7 @@ class PackageManagerInstaller(Installer):
     def is_installed(self, resolved):
         return not self.get_packages_to_install(resolved)
 
-    def get_install_command(self, resolved, interactive=True):
+    def get_install_command(self, resolved, interactive=True, reinstall=False):
         raise NotImplementedError('subclasses must implement')
 
     def get_depends(self, rosdep_args): 
@@ -407,7 +410,7 @@ class RosdepInstaller(object):
         return uninstalled, errors
     
     def install(self, uninstalled, interactive=True, simulate=False,
-                continue_on_error=False, verbose=False):
+                continue_on_error=False, reinstall=False, verbose=False):
         """
         Install the uninstalled rosdeps.  This API is for the bulk
         workflow of rosdep (see example below).  For a more targeted
@@ -424,6 +427,8 @@ class RosdepInstaller(object):
         :param continue_on_error: If ``True``, continue installation
           even if an install fails.  Otherwise, stop after first
           installation failure.
+        :param reinstall: If ``True``, install dependencies if even
+          already installed (default ``False``).
 
         :raises: :exc:`InstallFailed` if any rosdeps fail to install
           and *continue_on_error* is ``False``.
@@ -442,7 +447,7 @@ class RosdepInstaller(object):
             if verbose:
                 print("processing rosdeps for installer [%s]"%(intsaller_key))
             try:
-                self.install_resolved(installer_key, resolved, simulate=simulate, verbose=verbose)
+                self.install_resolved(installer_key, resolved, simulate=simulate, reinstall=reinstall, verbose=verbose)
             except InstallFailed as e:
                 if not continue_on_error:
                     raise
@@ -451,7 +456,8 @@ class RosdepInstaller(object):
         if failures:
             raise MultipleInstallsFailed(failures)
 
-    def install_resolved(self, installer_key, resolved, simulate=False, interactive=True, verbose=False):
+    def install_resolved(self, installer_key, resolved, simulate=False, interactive=True,
+                         reinstall=False, verbose=False):
         """
         Lower-level API for installing a rosdep dependency.  The
         rosdep keys have already been resolved to *installer_key* and
@@ -461,30 +467,33 @@ class RosdepInstaller(object):
         :param resolved: Opaque resolution list from :class:`RosdepLookup`.
         :param interactive: If ``True``, allow interactive prompts (default ``True``)
         :param simulate: If ``True``, don't execute installation commands, just print to screen.
+        :param reinstall: If ``True``, install dependencies if even
+          already installed (default ``False``).
         :param verbose: If ``True``, print verbose output to screen (default ``False``)
         
         :raises: :exc:`InstallFailed` if *resolved* fail to install.
         """
         installer_context = self.installer_context
         installer = installer_context.get_installer(installer_key)
-        command = installer.get_install_command(resolved, interactive=interactive)
+        command = installer.get_install_command(resolved, interactive=interactive, reinstall=reinstall)
         if not command:
             if verbose:
-                print("No packages to install")
+                print("#No packages to install")
             return
 
         if simulate or verbose:
             line = 80*'='
-            print("[%s] Installation command/script:"%(installer_key))
-            #print("[%s] Installation command/script:\n%s\n%s\n%s"%(installer_key, line, command, line))
-            for line in command.split('\n'):
-                print('  '+line)
+            print("#[%s] Installation commands:"%(installer_key))
+            for sub_command in command:
+                print('  '+' '.join(sub_command))
 
         if not simulate:
-            result = create_tempfile_from_string_and_execute(command)
-            if result:
-                if verbose:
-                    print("successfully installed")
-                if 0: #TODO:
-                    if not my_installer.is_installed(resolved):
-                        raise InstallFailed("[%s] rosdep failed check-presence-script after installation.\nResolved packages were %s"%(installer_key, resolved))
+            for sub_command in command:
+                result = subprocess.call(sub_command)
+                if not result:
+                    raise InstallFailed(installer_key, 'command [%s] failed'%(' '.join(command)))
+            failures = [r for r in resolved if not installer.is_installed([r])]
+            if failures:
+                raise InstallFailed(installer_key, "Failed to detect successful installation of [%s]"%(', '.join(failures)))
+            elif verbose:
+                print("#successfully installed")

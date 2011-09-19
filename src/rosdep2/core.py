@@ -45,9 +45,9 @@ class RosdepInternalError(Exception):
         
 class InstallFailed(Exception):
 
-    def __init__(self, rosdep_key, message):
+    def __init__(self, installer_key, message):
         super(InstallFailed, self).__init__(message)
-        self.rosdep_key = rosdep_key
+        self.installer_key = installer_key
         self.message = message
 
 class MultipleInstallsFailed(InstallFailed):

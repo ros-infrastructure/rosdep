@@ -79,7 +79,7 @@ class MacportsInstaller(PackageManagerInstaller):
     def __init__(self):
         super(MacportsInstaller, self).__init__(port_detect)
 
-    def get_install_command(self, resolved, interactive=True):
+    def get_install_command(self, resolved, interactive=True, reinstall=False):
         packages = self.get_packages_to_install(resolved)
         if not packages:
             return []

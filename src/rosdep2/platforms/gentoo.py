@@ -64,8 +64,8 @@ class EqueryInstaller(PackageManagerInstaller):
     def __init__(self):
         super(EqueryInstaller, self).__init__(equery_detect)
         
-    def get_install_command(self, resolved, interactive=True):
-        packages = self.get_packages_to_install(resolved)                
+    def get_install_command(self, resolved, interactive=True, reinstall=False):
+        packages = self.get_packages_to_install(resolved, reinstall=reinstall)        
         #TODO: interactive
         if not packages:
             return []

@@ -56,9 +56,9 @@ class PacmanInstaller(PackageManagerInstaller):
     def __init__(self):
         super(PacmanInstaller, self).__init__(pacman_detect)
 
-    def get_install_command(self, resolved, interactive=True):
+    def get_install_command(self, resolved, interactive=True, reinstall=False):
         #TODO: interactive switch
-        packages = self.get_packages_to_install(resolved)
+        packages = self.get_packages_to_install(resolved, reinstall=reinstall)        
         if not packages:
             return []
         else:

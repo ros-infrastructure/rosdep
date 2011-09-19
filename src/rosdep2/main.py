@@ -106,6 +106,8 @@ def _rosdep_main():
                       metavar="OS_NAME:OS_VERSION", help="Override OS name and version (colon-separated), e.g. ubuntu:lucid")
     parser.add_option("--verbose", "-v", dest="verbose", default=False, 
                       action="store_true", help="verbose display")
+    parser.add_option("--reinstall", dest="reinstall", default=False, 
+                      action="store_true", help="(re)install all dependencies, even if already installed")
     parser.add_option("--include_duplicates", "-i", dest="include_duplicates", default=False, 
                       action="store_true", help="do not deduplicate")
     parser.add_option("--default-yes", "-y", dest="default_yes", default=False, 
@@ -220,6 +222,7 @@ def command_check(lookup, packages, options):
 def command_install(lookup, packages, options):
     # map options
     install_options = dict(interactive=not options.default_yes, verbose=options.verbose,
+                           reinstall=options.reinstall,
                            continue_on_error=options.robust, simulate=options.simulate)
 
     # setup installer
@@ -227,24 +230,28 @@ def command_install(lookup, packages, options):
     configure_installer_context_os(installer_context, options)
     installer = RosdepInstaller(installer_context, lookup)
 
-    uninstalled, errors = installer.get_uninstalled(packages, verbose=options.verbose)
+    if options.reinstall:
+        uninstalled, errors = lookup.resolve_all(packages, installer_context)
+    else:
+        uninstalled, errors = installer.get_uninstalled(packages, verbose=options.verbose)
     if errors:
         print("TODO: deal with errors in resolution: %s"%(errors), file=sys.stderr)
         raise Exception("TODO")
     try:
         installer.install(uninstalled, **install_options)
-        print("All required rosdeps installed successfully")
+        if not options.simulate:
+            print("#All required rosdeps installed successfully")
         return 0
     except KeyError as e:
         raise RosdepInternalError(e)
     except InstallFailed as e:
-        print("ERROR: rosdep [%s] failed to install:\n\t%s"%(e.rosdep_key, e.message), file=sys.stderr)
+        print("ERROR: rosdep with installer [%s] failed to install:\n\t%s"%(e.installer_key, e.message), file=sys.stderr)
         return 1
     except MultipleInstallsFailed as e:
         #TODO
         traceback.print_exc()
         print("ERROR: the following rosdeps failed to install", file=sys.stderr)
-        print('\n'.join(["  [%s]: %s"%(f.rosdep_key, f.message) for f in e.failures]), file=sys.stderr)
+        print('\n'.join(["  [%s]: %s"%(f.installer_key, f.message) for f in e.failures]), file=sys.stderr)
         print("rosdep install ERROR:\n%s"%error, file=sys.stderr)
         return 1
 
