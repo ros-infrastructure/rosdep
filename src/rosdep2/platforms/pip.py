@@ -73,5 +73,6 @@ class PipInstaller(PackageManagerInstaller):
         if not packages:
             return []
         else:
-            return [['sudo', 'pip', 'install', '-U'] + packages]
+            return [['sudo', 'pip', 'install', '-U', p] for p in packages]
+            
 
