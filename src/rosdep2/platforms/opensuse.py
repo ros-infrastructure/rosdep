@@ -60,9 +60,8 @@ class ZypperInstaller(PackageManagerInstaller):
     def get_install_command(self, resolved, interactive=True):
         packages = self.get_packages_to_install(resolved)        
         if not packages:
-            return "#No Packages to install"
-
+            return []
         if not interactive:
-            return "#Packages\nsudo zypper install -yl " + ' '.join(packages)
+            return [['sudo', 'zypper', 'install', '-yl']+packages]
         else:
-            return "#Packages\nsudo zypper install " + ' '.join(packages)
+            return [['sudo', 'zypper', 'install']+packages]

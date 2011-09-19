@@ -113,13 +113,13 @@ class AptInstaller(PackageManagerInstaller):
         super(AptInstaller, self).__init__(dpkg_detect)
 
     def get_install_command(self, resolved, interactive=True):
-        packages = self.get_packages_to_install(resolved)        
+        packages = self.get_packages_to_install(resolved)
         if not packages:
-            return ''
+            return []
         if not interactive:
-            return "#!/bin/bash\n#Packages %s\nsudo apt-get install -y %s"%(packages, ' '.join(packages))
+            return [['sudo','apt-get', 'install', '-y'] + packages]
         else:
-            return "#!/bin/bash\n#Packages %s\nsudo apt-get install %s"%(packages, ' '.join(packages))
+            return [['sudo','apt-get', 'install'] + packages]
 
 class MintOsDetect(OsDetect):
     """

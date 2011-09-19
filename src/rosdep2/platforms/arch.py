@@ -55,5 +55,8 @@ class PacmanInstaller(PackageManagerInstaller):
 
     def get_install_command(self, resolved, interactive=True):
         #TODO: interactive switch
-        packages = self.get_packages_to_install(resolved)        
-        return "#Packages\nsudo pacman -Sy --needed " + ' '.join(packages)
+        packages = self.get_packages_to_install(resolved)
+        if not packages:
+            return []
+        else:
+            return [['sudo', 'pacman', '-Sy', '--needed']+packages]

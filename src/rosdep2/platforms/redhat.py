@@ -72,9 +72,9 @@ class YumInstall(PackageManagerInstaller):
     def get_install_command(self, resolved, interactive=True):
         packages = self.get_packages_to_install(resolved)
         if not packages:
-            return ''
+            return []
         elif not interactive:
-            return "#Packages\nsudo yum -y install " + ' '.join(packages)
+            return [['sudo', 'yum', '-y', 'install']+packages]
         else:
-            return "#Packages\nsudo yum install " + ' '.join(packages)
+            return [['sudo', 'yum', 'install']+packages]
 

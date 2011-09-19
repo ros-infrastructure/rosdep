@@ -73,6 +73,6 @@ def create_tempfile_from_string_and_execute(string_script, path=None):
         if os.path.exists(fh.name):
             os.remove(fh.name)
     
-    rd_debug("Return code was:", result)
+    rd_debug("Return code was: %s"%(result))
     return result == 0
 

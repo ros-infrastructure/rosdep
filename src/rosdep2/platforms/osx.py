@@ -79,7 +79,7 @@ class MacportsInstaller(PackageManagerInstaller):
     def get_install_command(self, resolved, interactive=True):
         packages = self.get_packages_to_install(resolved)
         if not packages:
-            return "#!/bin/bash\n#No Packages to install"
+            return []
         else:
             #TODO: interactive
-            return "#!/bin/bash\n#Packages %s\nsudo port install %s"%(packages, ' '.join(packages))
+            return ['sudo', 'port', 'install'] + packages

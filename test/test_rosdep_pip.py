@@ -32,45 +32,46 @@ import traceback
 from mock import Mock, patch
 
 def get_test_dir():
-    return os.path.abspath(os.path.join(os.path.dirname(__file__), 'debian'))
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), 'pip'))
 
-def test_dpkg_detect():
-    from rosdep2.platforms.debian import dpkg_detect
+def test_pip_detect():
+    from rosdep2.platforms.pip import pip_detect
     
     m = Mock()
+
+    # test behavior with empty freeze
     m.return_value = ''
-    val = dpkg_detect([], exec_fn=m)
+    val = pip_detect([], exec_fn=m)
     assert val == [], val
 
-    val = dpkg_detect(['tinyxml-dev'], exec_fn=m)
+    val = pip_detect(['paramiko'], exec_fn=m)
     assert val == [], val
-    #assert m.assert_called_with(['dpkg-query', '-W', '-f=\'${Package} ${Status}\n\''])
 
-    with open(os.path.join(get_test_dir(), 'dpkg-python-apt'), 'r') as f:
+    # read freeze output into mock exec_fn
+    with open(os.path.join(get_test_dir(), 'freeze_output'), 'r') as f:
         m.return_value = f.read()
-    val = dpkg_detect(['apt', 'tinyxml-dev', 'python'], exec_fn=m)
-    assert val == ['apt', 'python'], val
+    val = pip_detect(['paramiko'], exec_fn=m)
+    assert val == ['paramiko'], val
 
-    # test version lock code (should be filtered out w/o validation)
-    val = dpkg_detect(['apt=1.8', 'tinyxml-dev', 'python=2.7'], exec_fn=m)
-    assert val == ['apt=1.8', 'python=2.7'], val
+    val = pip_detect(['paramiko', 'fakito', 'pycrypto'], exec_fn=m)
+    assert val == ['paramiko', 'pycrypto'], val
 
 
-def test_AptInstaller():
-    from rosdep2.platforms.debian import AptInstaller
+def test_PipInstaller():
+    from rosdep2.platforms.pip import PipInstaller
 
-    @patch.object(AptInstaller, 'get_packages_to_install')
+    @patch.object(PipInstaller, 'get_packages_to_install')
     def test(mock_method):
-        installer = AptInstaller()
+        installer = PipInstaller()
         mock_method.return_value = []
         assert [] == installer.get_install_command(['fake'])
 
+        # no interactive option with PIP
         mock_method.return_value = ['a', 'b']
-        expected = [['sudo', 'apt-get', 'install', '-y', 'a', 'b']]
+        expected = [['sudo', 'pip', 'install', '-U', 'a', 'b']]
         val = installer.get_install_command(['whatever'], interactive=False)
-        print("VAL", val)
         assert val == expected, val
-        expected = [['sudo', 'apt-get', 'install', 'a', 'b']]
+        expected = [['sudo', 'pip', 'install', '-U', 'a', 'b']]
         val = installer.get_install_command(['whatever'], interactive=True)
         assert val == expected, val
     try:
@@ -79,19 +80,3 @@ def test_AptInstaller():
         traceback.print_exc()
         raise
     
-class FakeDetector:
-    def __init__(self, version):
-        self.version = version
-    def get_codename(self):
-        return 'codename'
-    def is_os(self):
-        return True
-    def get_version(self):
-        return self.version
-
-def test_MintOsDetect():
-    from rosdep2.platforms.debian import MintOsDetect
-    d = MintOsDetect(FakeDetector('11'))
-    assert d.is_os()
-    assert 'codename' == d.get_codename()
-    assert '11.04' == d.get_version()

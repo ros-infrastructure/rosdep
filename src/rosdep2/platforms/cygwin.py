@@ -67,7 +67,10 @@ class AptCygInstaller(PackageManagerInstaller):
     def get_install_command(self, resolved, interactive=True):
         packages = self.get_packages_to_install(resolved)        
         #TODO: interactive
-        return "#Packages\napt-cyg -m ftp://sourceware.org/pub/cygwinports install " + ' '.join(packages)        
+        if not packages:
+            return []
+        else:
+            return [['apt-cyg', '-m', 'ftp://sourceware.org/pub/cygwinports', 'install']+packages]
 
 if __name__ == '__main__':
     print("test cygcheck_detect(true)", cygcheck_detect('cygwin'))

@@ -32,9 +32,9 @@ from __future__ import print_function
 
 import os
 import sys
-import subprocess
 
 from ..installers import PackageManagerInstaller, Installer
+from ..shell_utils import read_stdout
 
 # pip package manager key
 PIP_INSTALLER = 'pip'
@@ -42,14 +42,15 @@ PIP_INSTALLER = 'pip'
 def register_installers(context):
     context.set_installer(PIP_INSTALLER, PipInstaller())
 
-def pip_detect(pkgs):
+def pip_detect(pkgs, exec_fn=None):
     """ 
     Given a list of package, return the list of installed packages.
+
+    :param exec_fn: function to execute Popen and read stdout (for testing)
     """
-    cmd = ['pip', 'freeze']
-    pop = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    (std_out, std_err) = pop.communicate()
-    pkg_list = std_out.split('\n')
+    if exec_fn is None:
+        exec_fn = read_stdout
+    pkg_list = exec_fn(['pip', 'freeze']).split('\n')
 
     ret_list = []
     for pkg in pkg_list:
@@ -70,7 +71,7 @@ class PipInstaller(PackageManagerInstaller):
     def get_install_command(self, resolved, interactive=True):
         packages = self.get_packages_to_install(resolved)
         if not packages:
-            return  "#!/bin/bash\n#No PIP Packages to install"
+            return []
         else:
-            return  "#!/bin/bash\n#Packages %s\nsudo pip install -U %s"%(packages, ' '.join(packages))
+            return [['sudo', 'pip', 'install', '-U'] + packages]
 

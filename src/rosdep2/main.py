@@ -79,7 +79,8 @@ def _get_default_RosdepLookup():
 
 def rosdep_main():
     try:
-        _rosdep_main()
+        exit_code = _rosdep_main()
+        sys.exit(exit_code)
     except RosdepInternalError as e:
         print("""
 ERROR: Rosdep experienced an internal error.
@@ -88,6 +89,7 @@ Please go to the rosdep page [1] and file a bug report with the stack trace belo
 
 %s
 """%(e.message), file=sys.stderr)
+        sys.exit(1)
     except Exception as e:
         print("""
 ERROR: Rosdep experienced an internal error: %s
@@ -96,7 +98,7 @@ Please go to the rosdep page [1] and file a bug report with the stack trace belo
 
 %s
 """%(e, traceback.format_exc(e)), file=sys.stderr)
-        return 1
+        sys.exit(1)
         
 def _rosdep_main():
     parser = OptionParser(usage=_usage, prog='rosdep')
@@ -127,9 +129,9 @@ def _rosdep_main():
     args = args[1:]
 
     if command in _command_rosdep_args:
-        _rosdep_args_handler(command, parser, options, args)
+        return _rosdep_args_handler(command, parser, options, args)
     else:
-        _package_args_handler(command, parser, options, args)
+        return _package_args_handler(command, parser, options, args)
 
 def _rosdep_args_handler(command, parser, options, args):
     # rosdep keys as args
@@ -236,13 +238,13 @@ def command_install(lookup, packages, options):
     except KeyError as e:
         raise RosdepInternalError(e)
     except InstallFailed as e:
-        #TODO
-        traceback.print_exc()
-        print("rosdep install ERROR:\n%s"%error, file=sys.stderr)
+        print("ERROR: rosdep [%s] failed to install:\n\t%s"%(e.rosdep_key, e.message), file=sys.stderr)
         return 1
     except MultipleInstallsFailed as e:
         #TODO
         traceback.print_exc()
+        print("ERROR: the following rosdeps failed to install", file=sys.stderr)
+        print('\n'.join(["  [%s]: %s"%(f.rosdep_key, f.message) for f in e.failures]), file=sys.stderr)
         print("rosdep install ERROR:\n%s"%error, file=sys.stderr)
         return 1
 
@@ -260,7 +262,7 @@ def _compute_depdb_output(lookup, packages, options):
             output = output + "<<<< %s -> %s >>>>\n"%(rosdep, resolved)
     return output
     
-def command_depdb(r, args, options):
+def command_depdb(lookup, packages, options):
     #TODO: get verified_packages from r
     print(_compute_depdb_output(r, args, options))
     return 0
@@ -295,9 +297,12 @@ command_handlers = {
     'keys': command_keys,
     'install': command_install,
     'what-needs': command_what_needs,
-    'what_needs': command_what_needs,
     'where-defined': command_where_defined,
+
+    # backwards compat
+    'what_needs': command_what_needs,
     'where_defined': command_where_defined,
+    'depdb': command_depdb, 
     }
 
 # commands that accept rosdep names as args

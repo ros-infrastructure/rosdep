@@ -80,8 +80,7 @@ class PkgAddInstaller(Installer):
     def get_install_command(self, resolved, interactive=True):
         packages = self.get_packages_to_install(resolved)                
         if not packages:
-            return "#No Packages to install"
+            return []
         else:
-            #TODO: warn
-            #print >> sys.stderr, "pkg_add does not have a default_yes option, continuing without"
-            return "#Packages\nsudo /usr/sbin/pkg_add -r %s"%(' '.join(packages))
+            #pkg_add does not have a non-interactive command
+            return [['sudo', '/usr/sbin/pkg_add', '-r']+packages]
