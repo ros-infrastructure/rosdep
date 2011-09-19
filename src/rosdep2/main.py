@@ -43,7 +43,7 @@ from optparse import OptionParser
 import rospkg
 
 from . import create_default_installer_context
-from .core import RosdepInternalError, InstallFailed, MultipleInstallsFailed
+from .core import RosdepInternalError, InstallFailed
 from .installers import RosdepInstaller
 from .lookup import RosdepLookup
 
@@ -245,14 +245,8 @@ def command_install(lookup, packages, options):
     except KeyError as e:
         raise RosdepInternalError(e)
     except InstallFailed as e:
-        print("ERROR: rosdep with installer [%s] failed to install:\n\t%s"%(e.installer_key, e.message), file=sys.stderr)
-        return 1
-    except MultipleInstallsFailed as e:
-        #TODO
-        traceback.print_exc()
         print("ERROR: the following rosdeps failed to install", file=sys.stderr)
-        print('\n'.join(["  [%s]: %s"%(f.installer_key, f.message) for f in e.failures]), file=sys.stderr)
-        print("rosdep install ERROR:\n%s"%error, file=sys.stderr)
+        print('\n'.join(["  [%s]: %s"%f for f in e.failures]), file=sys.stderr)
         return 1
 
 def _compute_depdb_output(lookup, packages, options):

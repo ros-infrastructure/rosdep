@@ -117,9 +117,9 @@ class AptInstaller(PackageManagerInstaller):
         if not packages:
             return []
         if not interactive:
-            return [['sudo','apt-get', 'install', '-y'] + packages]
+            return [['sudo', 'apt-get', 'install', '-y', p] for p in packages]
         else:
-            return [['sudo','apt-get', 'install'] + packages]
+            return [['sudo', 'apt-get', 'install', p] for p in packages]
 
 class MintOsDetect(OsDetect):
     """

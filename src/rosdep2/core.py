@@ -45,16 +45,8 @@ class RosdepInternalError(Exception):
         
 class InstallFailed(Exception):
 
-    def __init__(self, installer_key, message):
-        super(InstallFailed, self).__init__(message)
-        self.installer_key = installer_key
-        self.message = message
-
-class MultipleInstallsFailed(InstallFailed):
     def __init__(self, failures):
         """
-        :param failures: List of :class:`InstalledFailed` exception instances
+        :param failures: list of (installer_key, message) tuples
         """
         self.failures = failures
-
-

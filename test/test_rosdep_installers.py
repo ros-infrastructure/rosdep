@@ -206,11 +206,11 @@ def test_InstallerContext_os_installers():
 def test_Installer_tripwire():
     from rosdep2.installers import Installer
     try:
-        Installer().is_installed(['foo'])
+        Installer().is_installed('foo')
         assert False
     except NotImplementedError: pass
     try:
-        Installer().get_install_command(['foo'])
+        Installer().get_install_command('foo')
         assert False
     except NotImplementedError: pass
     try:
@@ -290,9 +290,11 @@ def test_PackageManagerInstaller_is_installed():
     from rosdep2.installers import PackageManagerInstaller
 
     installer = PackageManagerInstaller(detect_fn_all)
-    assert True == installer.is_installed(['a', 'b', 'c']), installer.is_installed(['a', 'b', 'c'])
+    for r in ['a', 'b', 'c']:
+        assert True == installer.is_installed(r), installer.is_installed(r)
     installer = PackageManagerInstaller(detect_fn_empty)
-    assert False == installer.is_installed(['a', 'b', 'c'])
+    for r in ['a', 'b', 'c']:
+        assert False == installer.is_installed(r), installer.is_installed(r)
 
 def test_PackageManagerInstaller_get_packages_to_install():
     from rosdep2.installers import PackageManagerInstaller
