@@ -29,9 +29,11 @@
 # Author Tully Foote/tfoote@willowgarage.com, Ken Conley
 
 import os
+import subprocess
 
 from rospkg.os_detect import OS_OSX
 
+from ..core import InstallFailed
 from .pip import PIP_INSTALLER
 from .source import SOURCE_INSTALLER
 from ..installers import Installer, PackageManagerInstaller, TYPE_CODENAME
@@ -64,12 +66,24 @@ def register_osxbrew(context):
     context.set_os_version_type(OS_OSX, TYPE_CODENAME)
     raise NotImplemented
 
-def port_detect_single(p):
-    std_out = read_stdout(['port', 'installed', p])
-    return std_out.count("(active)") > 0
-
-def port_detect(packages):
-    return [p for p in packages if port_detect_single(p)]
+def is_port_installed():
+    try:
+        subprocess.Popen(['port'], stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+    except OSError:
+        return False
+    
+def port_detect(packages, exec_fn=None):
+    ret_list = []
+    if not is_port_installed():
+        return ret_list
+    if exec_fn is None:
+        exec_fn = read_stdout
+    std_out = exec_fn(['port', 'installed']+pkgs)
+    for pkg in std_out.split('\n'):
+        pkg_row = pkg.split()
+        if len(pkg_row) == 3 and pkg_row[0] in pkgs and pkg_row[2] =='(active)':
+            ret_list.append(pkg_row[0])
+    return ret_list
 
 class MacportsInstaller(PackageManagerInstaller):
     """ 
@@ -80,6 +94,8 @@ class MacportsInstaller(PackageManagerInstaller):
         super(MacportsInstaller, self).__init__(port_detect)
 
     def get_install_command(self, resolved, interactive=True, reinstall=False):
+        if not is_port_installed():
+            raise InstallFailed((MACPORTS_INSTALLER, 'MacPorts is not installed'))
         packages = self.get_packages_to_install(resolved)
         if not packages:
             return []
@@ -87,3 +103,111 @@ class MacportsInstaller(PackageManagerInstaller):
             #TODO: interactive
             return ['sudo', 'port', 'install'] + packages
 
+def brew_detect(package_resolutions, exec_fn=None):
+    """ 
+    Given a list of package, return the list of installed packages.
+
+    :param packages: List of :class:`HomebrewResolution` instances
+    """
+        
+    if exec_fn is None:
+        exec_fn = read_stdout
+
+    # extract package names from resolutions
+    packages = []
+    for r in package_resolutions:
+        packages.extend(r.packages)
+    ret_list = []
+    std_out = exec_fn(['brew', 'list'])
+
+    # we will basically create new resolution instances in order to
+    # preserve the lists properly
+    for package in std_out.split():
+        matches = get_resolutions(package)
+        ret_list.extend(matches)
+    
+    return ret_list
+
+#TODOXXX: none of this code is correct
+def _validate_homebrew_resolutions(resolutions):
+    if len(resolutions) == 1:
+        resolutions[0]
+    args = resolutions[0].args
+    for r in resolutions:
+        if set(r.args) != set(args):
+            raise InvalidRosdepData("conflicting args in homebrew specifications:\n%s"%('\n'.join([str(x) for x in resolutions])))
+    else:
+        return resolutions[0]
+
+#TODOXXX: none of this code is correct
+# what it should do: split all resolutions into single-package resolution, then just use equality tests
+def validate_homebrew_resolutions(package, resolutions):
+    """
+    Validate :class:`HomebrewResolution` instances that contain the
+    specified *package*.  To pass validation, all resolutions with the
+    specified package must have the same arguments.
+    
+    """
+    vals = [r for r in resolutions if package in r.packages]
+    if vals:
+        # make sure vals have same specs
+        return _validate_homebrew_resolutions(val)
+        if v.formula_uris:
+            idx = v.packages.index(package)
+            return HomebrewResolution([package], v.formula_uris[idx], v.args)
+        else:
+            return HomebrewResolution([package], [], v.args)
+    else:
+        return []
+
+class HomebrewResolution(object):
+    """Stores resolution information for a Homebrew rosdep"""
+
+    def __init__(self, packages, formula_uris, args):
+        """
+        :param formula_uris: If specified, overrides packages, which will only be used for detection.
+        :raises InvalidRosdepData: if formula_uris are specified and not the same length as packages
+        """
+        if formula_uris and len(packages) != len(formula_uris):
+            raise InvalidRosdepData('When "formula_uris" are specified, they must be the same lengths as "packages": %s vs %s'%(str(packages), str(formula_uris)))
+        self.packages = packages
+        self.formula_uris = formula_uris
+        self.args = args
+        
+    def __eq__(self, other):
+        return other.packages == self.packages and \
+               other.formula_uris == self.formula_uris and \
+               other.args == self.args
+
+    def __str__(self):
+        return ' '.join(self.packages) + ' '.join(self.args)
+
+#TODO: override unique()
+class HomebrewInstaller(PackageManagerInstaller):
+
+    """An implementation of Installer for use on homebrew systems."""
+
+    def __init__(self):
+        super(HomebrewInstaller, self).__init__(brew_detect, supports_depends=True)
+
+    def resolve(self, rosdep_args):
+        """
+        See :meth:`Installer.resolve()`
+        """
+        packages = super(HomebrewInstaller, self).resolve(rosdep_args)
+        #TODO: seems that args is superfluous
+        args = rosdep_args.get("args", []) + rosdep_args.get("options", [])
+        return HomebrewResolution(packages, args)
+
+    def _validate_resolved(self):
+        
+    def get_install_command(self, resolved, interactive=True, reinstall=False):
+        if not is_brew_installed():
+            raise InstallFailed((BREW_INSTALLER, 'Homebrew is not installed'))
+        packages = self.get_packages_to_install(resolved, reinstall=reinstall)
+        if not packages:
+            return []
+        commands = []
+        for r in packages:
+            commands.append(['brew', 'install'] r.args + r.packages)
+        return commands

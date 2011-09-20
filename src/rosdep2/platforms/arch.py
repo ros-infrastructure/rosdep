@@ -62,4 +62,4 @@ class PacmanInstaller(PackageManagerInstaller):
         if not packages:
             return []
         else:
-            return [['sudo', 'pacman', '-Sy', '--needed']+packages]
+            return [['sudo', 'pacman', '-Sy', '--needed', p] for p in packages]

@@ -57,11 +57,31 @@ def test_pip_detect():
     assert val == ['paramiko', 'pycrypto'], val
 
 
+def test_PipInstaller_get_depends():
+    # make sure PipInstaller supports depends
+    from rosdep2.platforms.pip import PipInstaller
+    installer = PipInstaller()
+    assert ['foo'] == installer.get_depends(dict(depends=['foo']))
+    
 def test_PipInstaller():
+    from rosdep2 import InstallFailed
     from rosdep2.platforms.pip import PipInstaller
 
+    @patch('rosdep2.platforms.pip.is_pip_installed')
+    def test_no_pip(mock_method):
+        mock_method.return_value = False
+        try:
+            installer = PipInstaller()
+            installer.get_install_command(['whatever'])
+            assert False, "should have raised"
+        except InstallFailed: pass
+    
+    test_no_pip()
+    
+    @patch('rosdep2.platforms.pip.is_pip_installed')
     @patch.object(PipInstaller, 'get_packages_to_install')
-    def test(mock_method):
+    def test(mock_method, mock_is_pip_installed):
+        mock_is_pip_installed.return_value = True
         installer = PipInstaller()
         mock_method.return_value = []
         assert [] == installer.get_install_command(['fake'])

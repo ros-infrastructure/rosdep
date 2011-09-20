@@ -32,7 +32,9 @@ from __future__ import print_function
 
 import os
 import sys
+import subprocess
 
+from ..core import InstallFailed
 from ..installers import PackageManagerInstaller, Installer
 from ..shell_utils import read_stdout
 
@@ -41,6 +43,12 @@ PIP_INSTALLER = 'pip'
 
 def register_installers(context):
     context.set_installer(PIP_INSTALLER, PipInstaller())
+
+def is_pip_installed():
+    try:
+        subprocess.Popen(['pip'], stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+    except OSError:
+        return False
 
 def pip_detect(pkgs, exec_fn=None):
     """ 
@@ -55,7 +63,6 @@ def pip_detect(pkgs, exec_fn=None):
     ret_list = []
     for pkg in pkg_list:
         pkg_row = pkg.split("==")
-        #print(pkg_row)
         if pkg_row[0] in pkgs:
             ret_list.append( pkg_row[0])
     return ret_list
@@ -66,13 +73,14 @@ class PipInstaller(PackageManagerInstaller):
     """
 
     def __init__(self):
-        super(PipInstaller, self).__init__(pip_detect)
+        super(PipInstaller, self).__init__(pip_detect, supports_depends=True)
 
     def get_install_command(self, resolved, interactive=True, reinstall=False):
+        if not is_pip_installed():
+            raise InstallFailed((PIP_INSTALLER, "pip is not installed"))
         packages = self.get_packages_to_install(resolved, reinstall=reinstall)
         if not packages:
             return []
         else:
             return [['sudo', 'pip', 'install', '-U', p] for p in packages]
             
-

@@ -70,6 +70,6 @@ class EqueryInstaller(PackageManagerInstaller):
         if not packages:
             return []
         elif equery_available():
-            return [['sudo', 'emerge']+packages]
+            return [['sudo', 'emerge', p] for p in packages]
         else:
-            return [['sudo', 'emerge', '-u',]+packages]
+            return [['sudo', 'emerge', '-u', p] for p in packages]

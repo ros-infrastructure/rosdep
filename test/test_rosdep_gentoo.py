@@ -57,9 +57,11 @@ def test_EqueryInstaller():
         mock_method.return_value = ['a', 'b']
 
         if equery_available():
-            expected = [['sudo', 'emerge', 'a', 'b']]
+            expected = [['sudo', 'emerge', 'a'],
+                        ['sudo', 'emerge', 'b']]
         else:
-            expected = [['sudo', 'emerge', '-u', 'a', 'b']]
+            expected = [['sudo', 'emerge', '-u', 'a'],
+                        ['sudo', 'emerge', '-u', 'b']]
         val = installer.get_install_command(['whatever'], interactive=False)
         assert val == expected, val
         val = installer.get_install_command(['whatever'], interactive=True)

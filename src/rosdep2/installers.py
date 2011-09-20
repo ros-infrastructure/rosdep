@@ -155,6 +155,7 @@ class InstallerContext(object):
         """
         :returns: :class:`Installer` class associated with *installer_key*.
         :raises: :exc:`KeyError`
+        :raises: :exc:`InstallFailed` If installer cannot produce an install command (e.g. if installer is not installed)
         """
         return self.installers[installer_key]
 
