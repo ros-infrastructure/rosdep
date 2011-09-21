@@ -200,6 +200,7 @@ class HomebrewInstaller(PackageManagerInstaller):
         return HomebrewResolution(packages, args)
 
     def _validate_resolved(self):
+        pass
         
     def get_install_command(self, resolved, interactive=True, reinstall=False):
         if not is_brew_installed():
