@@ -210,5 +210,5 @@ class HomebrewInstaller(PackageManagerInstaller):
             return []
         commands = []
         for r in packages:
-            commands.append(['brew', 'install'] r.args + r.packages)
+            commands.append(['brew', 'install'] + r.args + r.packages)
         return commands
