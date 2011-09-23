@@ -265,6 +265,8 @@ class RosdepLookup(object):
         :returns: list of rosdep names, ``[str]``
         """
 
+        # TODO: RosPack implements a cached version of this that
+        # should probalby be used here instead.
         if not implicit:
             packages = [package]
         else:

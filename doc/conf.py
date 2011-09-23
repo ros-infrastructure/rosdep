@@ -41,7 +41,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'rosdep'
-copyright = u'2011, Tully Foote, Ken Conley'
+copyright = u'2011, Willow Garage'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -211,8 +211,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'rosdep', u'rosdep Documentation',
-     [u'Tully Foote, Ken Conley'], 1)
+    ('man/rosdep', 'rosdep', u'rosdep command', [u'Tully Foote, Ken Conley'], 1)
 ]
 
 
