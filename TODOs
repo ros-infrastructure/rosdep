@@ -1,7 +1,7 @@
 Major TODOs
 
 depdb command
-source packagers
+test source packagers
 end-to-end integration tests
 osx brew integration
 install -s > script
