@@ -191,6 +191,11 @@ class SourceInstaller(Installer):
         return create_tempfile_from_string_and_execute(resolved_item.check_presence_command)
 
     def get_install_command(self, resolved, interactive=True, reinstall=False):
+        # Instead of attempting to describe the source-install steps
+        # inside of the rosdep command chain, we shell out to an
+        # external rosdep-source command.  This separation means that
+        # users can manually invoke rosdep-source and also keeps
+        # 'get_install_command()' cleaner.
         packages = self.get_packages_to_install(resolved, reinstall=reinstall)
         commands = []
         for p in packages:

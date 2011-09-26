@@ -1,0 +1,21 @@
+uri: 'https://kforge.ros.org/rosrelease/viewvc/sourcedeps/yaml-cpp/yaml-cpp-0.2.5.tar.gz'
+md5sum: b17dc36055cd2259c88b2602601415d9
+install-script: |
+  #!/bin/bash
+  set -o errexit
+  mkdir -p build
+  cd build
+  cmake ..
+  make
+  echo "About to run checkinstall make install"
+  sudo checkinstall -y --nodoc --pkgname=yaml-cpp-sourcedep make install
+check-presence-script: |
+  #!/bin/bash
+  dpkg-query -W -f='${Package} ${Status}\n' yaml-cpp-sourcedep | awk '{\
+  if ($4 =="installed")
+    exit 0
+  else
+    print "yaml-cpp-sourcedep not installed"
+    exit 1}'
+exec-path: yaml-cpp-0.2.5
+depends: [checkinstall ]
