@@ -1,5 +1,7 @@
 .. module:: rosdep2
 
+.. _rosdep2:
+
 rosdep
 ======
 

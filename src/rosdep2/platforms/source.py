@@ -29,10 +29,10 @@
 
 from __future__ import print_function
 
-import shutil
-import tarfile
-import tempfile
+import os
+import sys
 import urllib
+import hashlib
 
 import yaml
 
@@ -52,14 +52,16 @@ class InvalidRdmanifest(Exception):
     """
     pass
 
-class DownloadFailed(Exception): pass
-class Md5Mismatch(Exception): pass
+class DownloadFailed(Exception):
+    """
+    File download failed either due to i/o issues or md5sum validation.
+    """
+    pass
 
 def _sub_fetch_file(url, md5sum=None):
     """
     Sub-routine of _fetch_file
     
-    :raises: :exc:`Md5Mismatch`
     :raises: :exc:`DownloadFailed`
     """
     contents = ''
@@ -68,7 +70,7 @@ def _sub_fetch_file(url, md5sum=None):
         contents = fh.read()
         filehash =  hashlib.md5(contents).hexdigest()
         if md5sum and filehash != md5sum:
-            raise Md5Mismatch( "md5sum didn't match for %s.  Expected %s got %s"%(url, md5sum, filehash))
+            raise DownloadFailed("md5sum didn't match for %s.  Expected %s got %s"%(url, md5sum, filehash))
     except urllib2.URLError as ex:
         raise DownloadFailed(str(ex))
 
@@ -88,119 +90,170 @@ def fetch_file(url, md5sum):
     except DownloadFailed as e:
         rd_debug("Download of file %s failed"%(url))
         error = str(e)
-    except Md5Mismatch as e:
-        rd_debug("Download of file %s failed"%(url))
-        error = str(e)
     return contents, error
 
-def load_rdmanifest(url, md5sum, alt_url=None):
+def load_rdmanifest(contents):
     """
-    :returns: contents of rdmanifest
+    :raises: :exc:`InvalidRdmanifest`
+    """
+    try:
+        return yaml.load(contents)
+    except yaml.scanner.ScannerError as ex:
+        raise InvalidRdmanifest("Failed to parse yaml in %s:  Error: %s"%(contents, ex))
+    
+def download_rdmanifest(url, md5sum, alt_url=None):
+    """
+    :returns: (contents of rdmanifest, download_url).  download_url is
+      either *url* or *alt_url* and indicates which of the locations
+      contents was generated from.
     :raises: :exc:`DownloadFailed`
+    :raises: :exc:`InvalidRdmanifest`
     """
-    contents, error = fetch_file(url, md5sum)
     # fetch the manifest
+    download_url = url
     error_prefix = "Failed to load a rdmanifest from %s: "%(url)
-    if not contents and alt_url: # try the backup url
-        contents, error = fetch_file(url, md5sum)
+    contents, error = fetch_file(download_url, md5sum)
+    # - try the backup url
+    if not contents and alt_url: 
         error_prefix = "Failed to load a rdmanifest from either %s or %s: "%(url, alt_url)
+        download_url = alt_url
+        contents, error = fetch_file(download_url, md5sum)
     if not contents:
         raise DownloadFailed(error_prefix + error)
-    try:
-        manifest = yaml.load(contents)
-    except yaml.scanner.ScannerError as ex:
-        raise InvalidRdmanifest("Failed to parse yaml in %s:  Error: %s"%(contents, ex))        
-    return manifest
+    manifest = load_rdmanifest(contents)
+    return manifest, download_url
 
 #TODO: create SourceInstall instance objects
+class SourceInstall(object):
+
+    def __init__(self):
+        self.manifest = self.manifest_url = None
+        self.install_command = self.check_presence_command = None
+        self.exec_path = None
+        self.tarball = self.alternate_tarball = None
+        self.tarball_md5sum = None
+    
+    @staticmethod
+    def from_manifest(manifest, manifest_url):
+        r = SourceInstall()
+        r.manifest = manifest
+        r.manifest_url = manifest_url
+        rd_debug("Loading manifest:\n{{{%s\n}}}\n"%manifest)
+        
+        r.install_command = manifest.get("install-script", '')
+        r.check_presence_command = manifest.get("check-presence-script", '')
+
+        r.exec_path = manifest.get("exec-path", ".")
+        try:
+            r.tarball = manifest["uri"]
+        except KeyError:
+            raise InvalidRdmanifest("uri required for source rosdeps") 
+        r.alternate_tarball = manifest.get("alternate-uri")
+        r.tarball_md5sum = manifest.get("md5sum")
+        return r
+    
 class SourceInstaller(Installer):
 
     def __init__(self):
-        pass
+        self._rdmanifest_cache = {}
     
     def resolve(self, rosdep_args):
         """
-        :raises: :exc:`InvalidRosdepData`
+        :raises: :exc:`InvalidRosdepData` If format invalid or unable
+          to retrieve rdmanifests.
         """
-        #TODOXXX: should not take in rosdep_args
-        
-        self.url = rosdep_args.get("uri")
-        if not self.url:
-            raise InvalidRosdepData("uri required for source rosdeps") 
-        self.alt_url = rosdep_args.get("alternate-uri")
-        self.md5sum = rosdep_args.get("md5sum")
-
-        self.manifest = None
-
         try:
-            #TODO add md5sum verification
-            rd_debug("Downloading manifest %s"%self.url)
-            set_manifest(load_rdmanifest(self.url, self.md5sum, self.alt_url))
+            url = rosdep_args.get["uri"]
+        except KeyError:
+            raise InvalidRosdepData("'uri' key required for source rosdeps") 
+        alt_url = rosdep_args.get("alternate-uri", None)
+        md5sum = rosdep_args.get("md5sum", None)
+
+        # load manifest from cache or from web
+        manifest = None
+        if url in self._rdmanifest_cache:
+            return self._rdmanifest_cache[url]
+        elif alt_url in self._rdmanifest_cache:
+            return self._rdmanifest_cache[alt_url]
+        try:
+            rd_debug("Downloading manifest [%s], mirror [%s]"%(url, alt_url))
+            manifest, download_url = download_rdmanifest(url, md5sum, alt_url)
+            resolved = SourceInstall.from_manifest(manifest, download_url)
+            self._rdmanifest_cache[download_url] = resolved
+            return resolved
         except DownloadFailed as ex:
             # not sure this should be masked this way
             raise InvalidRosdepData(str(ex))            
         except InvalidRdmanifest as ex:
             raise InvalidRosdepData(str(ex))
-
-    def set_manifest(self, manifest):
-        self.manifest = manifest
-        rd_debug("Loading manifest:\n{{{%s\n}}}\n"%manifest)
         
-        self.install_command = manifest.get("install-script", "#!/bin/bash\n#no install-script specificd")
-        self.check_presence_command = manifest.get("check-presence-script", "#!/bin/bash\n#no check-presence-script\nfalse")
+    def is_installed(self, resolved_item):
+        return create_tempfile_from_string_and_execute(resolved_item.check_presence_command)
 
-        self.exec_path = manifest.get("exec-path", ".")
-        self.depends = manifest.get("depends", [])
-        self.tarball = manifest.get("uri")
-        if not self.tarball:
-            raise RosdepException("uri required for source rosdeps") 
-        self.alternate_tarball = manifest.get("alternate-uri")
-        self.tarball_md5sum = manifest.get("md5sum")
-        
-    def check_presence(self):
-        return create_tempfile_from_string_and_execute(self.check_presence_command)
+    def get_install_command(self, resolved, interactive=True, reinstall=False):
+        packages = self.get_packages_to_install(resolved, reinstall=reinstall)
+        commands = []
+        for p in packages:
+            commands.append(['rosdep-source', 'install', p.manifest_url])
+        return commands
 
-    def get_install_command(self, interactive=True):
-        tempdir = tempfile.mkdtemp()
-        success = False
+    def get_depends(self, rosdep_args): 
+        return rosdep_args.get('depends', [])
 
-        rd_debug("Fetching %s"%self.tarball)
-        f = urllib.urlretrieve(self.tarball)
-        filename = f[0]
-        if self.tarball_md5sum:
-            hash1 = get_file_hash(filename)
-            if self.tarball_md5sum != hash1:
-                #try backup tarball if it is defined
-                if self.alternate_tarball:
-                    f = urllib.urlretrieve(self.alternate_tarball)
-                    filename = f[0]
-                    hash2 = get_file_hash(filename)
-                    if self.tarball_md5sum != hash2:
-                        raise InstallFailed("md5sum check on %s and %s failed.  Expected %s got %s and %s"%(self.tarball, self.alternate_tarball, self.tarball_md5sum, hash1, hash2))
-                else:
-                    raise InstallFailed("md5sum check on %s failed.  Expected %s got %s "%(self.tarball, self.tarball_md5sum, hash1))
-        else:
-            rd_debug("No md5sum defined for tarball, not checking.")
-            
-        try:
-            tarf = tarfile.open(filename)
-            tarf.extractall(tempdir)
+def install_from_file(rdmanifest_file):
+    with open(rdmanifest_file, 'r') as f:
+        contents = f.read()
+    manifest = load_rdmanifest(contents)
+    install_source(SourceInstall.from_manifest(manifest, rdmanifest_file))
+    
+def install_from_url(rdmanifest_url):
+    manifest, download_url = download_rdmanifest(url, md5sum, alt_url)
+    install_source(SourceInstall.from_manifest(manifest, download_url))
 
-            if execute:
-                rd_debug("Running installation script")
-                success = create_tempfile_from_string_and_execute(self.install_command, os.path.join(tempdir, self.exec_path))
-            elif display:
-                print("Would have executed\n{{{%s\n}}}"%self.install_command)
-        finally:
-            shutil.rmtree(tempdir)
-            os.remove(f[0])
+def install_source(resolved):
+    import shutil
+    import tarfile
+    import tempfile
+
+    tempdir = tempfile.mkdtemp()
+    rd_debug("created tmpdir [%s]"%(tempdir))
+
+    rd_debug("Fetching tarball %s"%resolved.tarball)
+    f = urllib.urlretrieve(resolved.tarball)
+    filename = f[0]
+
+    if resolved.tarball_md5sum:
+        rd_debug("checking md5sum on tarball")
+        hash1 = get_file_hash(filename)
+        if resolved.tarball_md5sum != hash1:
+            #try backup tarball if it is defined
+            if resolved.alternate_tarball:
+                f = urllib.urlretrieve(resolved.alternate_tarball)
+                filename = f[0]
+                hash2 = get_file_hash(filename)
+                if resolved.tarball_md5sum != hash2:
+                    raise InstallFailed("md5sum check on %s and %s failed.  Expected %s got %s and %s"%(resolved.tarball, resolved.alternate_tarball, resolved.tarball_md5sum, hash1, hash2))
+            else:
+                raise InstallFailed("md5sum check on %s failed.  Expected %s got %s "%(resolved.tarball, resolved.tarball_md5sum, hash1))
+    else:
+        rd_debug("No md5sum defined for tarball, not checking.")
+
+    try:
+        rd_debug("Extracting tarball")
+        tarf = tarfile.open(filename)
+        tarf.extractall(tempdir)
+
+        rd_debug("Running installation script")
+        success = create_tempfile_from_string_and_execute(resolved.install_command, os.path.join(tempdir, resolved.exec_path))
 
         if success:
             rd_debug("successfully executed script")
-            return True
-        return False
+        else:
+            raise InstallFailed("installation script returned with error code")
 
-    def get_depends(self): 
-        #todo verify type before returning
-        return self.depends
-        
+    finally:
+        rd_debug("cleaning up tmpdir [%s]"%(tempdir))
+        shutil.rmtree(tempdir)
+        os.remove(f[0])
+
+    

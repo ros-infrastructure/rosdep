@@ -5,4 +5,3 @@ source packagers
 end-to-end integration tests
 osx brew integration
 install -s > script
-validate post-install  (installers.py TODO)
