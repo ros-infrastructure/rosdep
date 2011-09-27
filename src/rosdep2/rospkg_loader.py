@@ -51,16 +51,18 @@ class RosPkgLoader(RosdepLoader):
         self._rosstack = rosstack
         self._rosdep_yaml_cache = {}
         
-    def _load_stack_rosdep_yaml(self, stack_name):
+    def _load_view_rosdep_yaml(self, view_name):
         """
+        Load the rosdep.yaml for the view (ROS stack).
+        
         :returns: parsed YAML data and filename it was loaded from,
-          ``(dict, str)``.  Returns ``(None, None)`` if stack does not
+          ``(dict, str)``.  Returns ``(None, None)`` if view does not
           have a rosdep YAML.
         
         :raises: :exc:`InvalidRosdepData`
-        :raises: :exc:`rospkg.ResourceNotFound` If stack cannot be located
+        :raises: :exc:`rospkg.ResourceNotFound` If view cannot be located
         """
-        stack_dir = self._rosstack.get_path(stack_name)
+        stack_dir = self._rosstack.get_path(view_name)
         filename = os.path.join(stack_dir, ROSDEP_YAML)
         if os.path.isfile(filename):
             with open(filename) as f:
@@ -68,62 +70,58 @@ class RosPkgLoader(RosdepLoader):
         else:
             return None, None
         
-    def load_stack(self, stack_name, rosdep_db):
+    def load_view(self, view_name, rosdep_db):
         """
-        Load stack data into *rosdep_db*. If the stack has already
+        Load view data into *rosdep_db*. If the view has already
         been loaded into *rosdep_db*, this method does nothing.  If
-        stack has no rosdep data, it will be initialized with an empty
+        view has no rosdep data, it will be initialized with an empty
         data map.
 
-        :raises: :exc:`InvalidRosdepData` if stack rosdep.yaml is invalid
-        :raises: :exc:`rospkg.ResourceNotFound` if stack cannot be located
+        :raises: :exc:`InvalidRosdepData` if view rosdep.yaml is invalid
+        :raises: :exc:`rospkg.ResourceNotFound` if view cannot be located
 
-        :returns: ``True`` if stack was loaded.  ``False`` if stack
+        :returns: ``True`` if view was loaded.  ``False`` if view
           was already loaded.
         """
-        if rosdep_db.is_loaded(stack_name):
+        if rosdep_db.is_loaded(view_name):
             return
-        rosdep_data, filename = self._load_stack_rosdep_yaml(stack_name)
+        rosdep_data, filename = self._load_view_rosdep_yaml(view_name)
         if rosdep_data is None:
             rosdep_data = {}
-        stack_dependencies = self._rosstack.get_depends(stack_name, implicit=False)
-        rosdep_db.set_stack_data(stack_name, rosdep_data, stack_dependencies, filename)
+        view_dependencies = self._rosstack.get_depends(view_name, implicit=False)
+        rosdep_db.set_view_data(view_name, rosdep_data, view_dependencies, filename)
 
-    def load_package(self, package_name, rosdep_db):
+    def get_loadable_views(self):
         """
-        Load data for stack that contains package into *rosdep_db*. If
-        the package or containing stack has already been loaded into
-        *rosdep_db*, this method does nothing.  If package has no
-        associated rosdep data, it will be initialized with an empty
-        data map.
-
-        :raises: :exc:`InvalidRosdepData` if stack rosdep.yaml is invalid
-        :raises: :exc:`rospkg.ResourceNotFound` if stack cannot be located
-
-        :returns: ``True`` if package was loaded, ``False`` if package
-          was already loaded or is not part of stack.
+        'Views' map to ROS stack names.
         """
-
-        stack_name = self._rospack.stack_of(package_name)
-        if stack_name:
-            return self.load_stack(stack_name, rosdep_db)
-
-    def get_package_manifest(self, package_name):
-        """
-        :param package_name: Name of ROS package, ``str``.
-        :raises: :exc:`rospkg.ResourceNotFound` If package cannot be
-          located.
-        """
-        return self._rospack.get_manifest(package_name)
-
-    def get_loadable_packages(self):
-        return self._rospack.list()
-
-    def get_loadable_stacks(self):
         return self._rosstack.list()
 
-    def get_package_depends(self, package_name, implicit=True):
-        return self._rospack.get_depends(package_name, implicit=implicit)
+    def get_loadable_resources(self):
+        """
+        'Resources' map to ROS packages names.
+        """
+        return self._rospack.list()
 
-    def stack_of(self, package_name):
-        return self._rospack.stack_of(package_name)
+    def get_rosdeps(self, resource_name, implicit=True):
+        try:
+            return self._rospack.get_rosdeps(resource_name, implicit=implicit)
+        except rospkg.ResourceNotFound:
+            # it's not, so it is the view key
+            return []
+
+    def get_view_key(self, resource_name):
+        """
+        Map *resource_name* to a view key.  In rospkg, this maps a ROS
+        package name to a ROS stack name.  If *resource_name* is a ROS
+        stack name, it returns the ROS stack name.
+
+        :raises: :exc:`rospkg.ResourceNotFound`
+        """
+        if resource_name in self._rospack.list():
+            # assume it's a package, and get the stack
+            return self._rospack.stack_of(resource_name)
+        elif resource_name in self._rosstack.list():
+            resource_name
+        else:
+            raise rospkg.ResourceNotFound(resource_name)

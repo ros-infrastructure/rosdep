@@ -156,7 +156,8 @@ def _package_args_handler(command, parser, options, args, rospack=None, rosstack
         if args:
             parser.error("cannot specify additional arguments with -a")
         else:
-            args = loader.get_loadable_packages()
+            # we don't use get_loadable b/c here we know we want all packages
+            args = rospack.list()
     if not args:
         parser.error("no packages or stacks specified")
 
@@ -272,7 +273,7 @@ def command_what_needs(args, options):
     lookup = _get_default_RosdepLookup()
     packages = []
     for rosdep_name in args:
-        packages.extend(lookup.get_packages_that_need(rosdep_name))
+        packages.extend(lookup.get_resources_that_need(rosdep_name))
 
     for error in lookup.get_errors():
         print("WARNING: %s"%(str(error)), file=sys.stderr)

@@ -29,12 +29,12 @@
 
 """
 Underlying model of rosdep data.  The basic data model of rosdep is to
-store a dictionary of data indexed by stack.  This data includes a
-dictionary mapping rosdep dependency names to rules and the stack
-dependencies.
+store a dictionary of data indexed by view name (i.e. ROS stack name).
+This data includes a dictionary mapping rosdep dependency names to
+rules and the view dependencies.
 
 This is a lower-level representation.  Higher-level representation can
-combine these rosdep dependency maps and stack dependencies together
+combine these rosdep dependency maps and view dependencies together
 into a combined view on which queries can be made.
 """
 
@@ -49,75 +49,75 @@ class InvalidRosdepData(Exception):
 
 class RosdepDatabaseEntry(object):
     """
-    Stores rosdep data and metadata for a single stack.
+    Stores rosdep data and metadata for a single view.
     """
     
-    def __init__(self, rosdep_data, stack_dependencies, origin):
+    def __init__(self, rosdep_data, view_dependencies, origin):
         """
-        :param rosdep_data: raw rosdep dictionary map for stack
-        :param stack_dependencies: list of stack dependency names
+        :param rosdep_data: raw rosdep dictionary map for view
+        :param view_dependencies: list of view dependency names
         :param origin: name of where data originated, e.g. filename
         """
         self.rosdep_data = rosdep_data
-        self.stack_dependencies = stack_dependencies
+        self.view_dependencies = view_dependencies
         self.origin = origin
         
 class RosdepDatabase(object):
     """
-    Stores loaded rosdep data for multiple stacks.
+    Stores loaded rosdep data for multiple views.
     """
     
     def __init__(self):
-        self._rosdep_db = {} # {stack_name: RosdepDatabaseEntry}
+        self._rosdep_db = {} # {view_name: RosdepDatabaseEntry}
 
-    def is_loaded(self, stack_name):
+    def is_loaded(self, view_name):
         """
-        :param stack_name: name of stack to check
-        :returns: ``True`` if *stack_name* has been loaded into this
+        :param view_name: name of view to check, ``str``
+        :returns: ``True`` if *view_name* has been loaded into this
           database.
         """
-        return stack_name in self._rosdep_db
+        return view_name in self._rosdep_db
 
-    def mark_loaded(self, stack_name):
+    def mark_loaded(self, view_name):
         """
-        If stack is not already loaded, this will mark it as such.  This in effect sets the data for the stack to be empty.
+        If view is not already loaded, this will mark it as such.  This in effect sets the data for the view to be empty.
 
-        :param stack_name: name of stack to mark as loaded
+        :param view_name: name of view to mark as loaded
         """
-        self.set_stack_data(stack_name, {}, [], None)
+        self.set_view_data(view_name, {}, [], None)
         
-    def set_stack_data(self, stack_name, rosdep_data, stack_dependencies, origin):
+    def set_view_data(self, view_name, rosdep_data, view_dependencies, origin):
         """
-        Set data associated with stack.  This will create a new
+        Set data associated with view.  This will create a new
         :class:`RosdepDatabaseEntry`.
 
-        :param rosdep_data: rosdep data map to associated with stack.
+        :param rosdep_data: rosdep data map to associated with view.
           This will be copied.
-        :param origin: origin of stack data, e.g. filepath of ``rosdep.yaml``
+        :param origin: origin of view data, e.g. filepath of ``rosdep.yaml``
         """
-        self._rosdep_db[stack_name] = RosdepDatabaseEntry(rosdep_data.copy(), stack_dependencies, origin)
+        self._rosdep_db[view_name] = RosdepDatabaseEntry(rosdep_data.copy(), view_dependencies, origin)
 
-    def get_stack_names(self):
+    def get_view_names(self):
         """
-        :returns: list of stack names that are loaded into this database.
+        :returns: list of view names that are loaded into this database.
         """
         return self._rosdep_db.keys()
     
-    def get_stack_data(self, stack_name):
+    def get_view_data(self, view_name):
         """
-        :returns: :class:`RosdepDatabaseEntry` of given stack.
+        :returns: :class:`RosdepDatabaseEntry` of given view.
 
-        :raises: :exc:`KeyError` if no entry for *stack_name*
+        :raises: :exc:`KeyError` if no entry for *view_name*
         """
-        return self._rosdep_db[stack_name]
+        return self._rosdep_db[view_name]
     
-    def get_stack_dependencies(self, stack_name):
+    def get_view_dependencies(self, view_name):
         """
-        :raises: :exc:`KeyError` if *stack_name* is not an entry, or if
-          all of stack's dependencies have not been properly loaded.
+        :raises: :exc:`KeyError` if *view_name* is not an entry, or if
+          all of view's dependencies have not been properly loaded.
         """
-        entry = self.get_stack_data(stack_name)
-        dependencies = set(entry.stack_dependencies)
-        for s in entry.stack_dependencies:
-            dependencies.update(self.get_stack_dependencies(s))
+        entry = self.get_view_data(view_name)
+        dependencies = set(entry.view_dependencies)
+        for s in entry.view_dependencies:
+            dependencies.update(self.get_view_dependencies(s))
         return list(set(dependencies))

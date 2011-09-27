@@ -62,46 +62,34 @@ class RosdepLoader:
         except yaml.YAMLError as e:
             raise InvalidRosdepData("Invalid YAML in [%s]: %s"%(origin, e), origin=origin)
 
-    def load_stack(self, stack_name, rosdep_db):
+    def load_view(self, view_name, rosdep_db):
         """
-        Load stack data into rosdep_db. If the stack has already been
+        Load view data into rosdep_db. If the view has already been
         loaded into rosdep_db, this method does nothing.
 
-        :param stack_name: name of ROS stack to load, ``str``
+        :param view_name: name of ROS stack to load, ``str``
         :param rosdep_db: database to load stack data into, :class:`RosdepDatabase`
 
         :raises: :exc:`InvalidRosdepData`
         """
         raise NotImplementedError()
 
-    def load_package(self, package_name, rosdep_db):
+    def get_loadable_resources(self):
         raise NotImplementedError()
 
-    def get_package_manifest(self, package_name):
-        """
-        :raises: :exc:`rospkg.ResourceNotFound` If package cannot be
-          located.
-        """
+    def get_loadable_views(self):
         raise NotImplementedError()
 
-    def get_loadable_packages(self):
-        raise NotImplementedError()
-
-    def get_loadable_stacks(self):
-        raise NotImplementedError()     
-
-    def get_package_depends(self, package_name, implicit=True):
-        """
-        :param package_name: ROS package name to get dependencies of.
-        :param implicit: If ``True``, include implicit dependencies of
-          package, otherwise just direct dependencies, ``bool``.
-        :returns: Names of packages *package_name* depends on, ``[str]``.
-        """
+    def get_rosdeps(self, resource_name, implicit=True):
         raise NotImplementedError()
     
-    def stack_of(self, package_name):
+    def get_view_key(self, resource_name):
         """
-        :returns: Name of ROS stack that *package_name* is in, or ``None`` if not in a stack, ``str``.
-        :raises: :exc:`rospkg.ResourceNotFound` if *package_name* cannot be found.
+        Map *resource_name* to a view key.  In rospkg, this maps a ROS
+        package name to a ROS stack name.  If *resource_name* is a ROS
+        stack name, it returns the ROS stack name.
+
+        :returns: Name of view that *resource_name* is in, ``None`` if no associated view.
+        :raises: :exc:`rospkg.ResourceNotFound` if *resource_name* cannot be found.
         """
         raise NotImplementedError() 

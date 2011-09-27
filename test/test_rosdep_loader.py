@@ -32,30 +32,22 @@ def test_RosdepLoader():
     from rosdep2.loader import RosdepLoader
     loader = RosdepLoader()
     try:
-        loader.load_stack('foo', Mock())
+        loader.load_view('foo', Mock())
         assert False, "should have raised NotImplemented"
     except NotImplementedError: pass
     try:
-        loader.load_package('foo', Mock())
+        loader.get_loadable_resources()
         assert False, "should have raised NotImplementedError"
     except NotImplementedError: pass
     try:
-        loader.get_package_manifest('foo')
+        loader.get_loadable_views()
         assert False, "should have raised NotImplementedError"
     except NotImplementedError: pass
     try:
-        loader.get_loadable_packages()
+        loader.get_view_key('foo')
         assert False, "should have raised NotImplementedError"
     except NotImplementedError: pass
     try:
-        loader.get_loadable_stacks()
-        assert False, "should have raised NotImplementedError"
-    except NotImplementedError: pass
-    try:
-        loader.stack_of('foo')
-        assert False, "should have raised NotImplementedError"
-    except NotImplementedError: pass
-    try:
-        loader.get_package_depends('foo')
+        loader.get_rosdeps('foo', implicit=False)
         assert False, "should have raised NotImplementedError"
     except NotImplementedError: pass

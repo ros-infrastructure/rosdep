@@ -37,7 +37,7 @@ def test_RosdepDatabaseEntry():
     from rosdep2.model import RosdepDatabaseEntry
     d = RosdepDatabaseEntry({'a': 1}, [], 'foo')
     assert d.rosdep_data == {'a': 1}
-    assert d.stack_dependencies == []
+    assert d.view_dependencies == []
     assert d.origin == 'foo'
 
 def test_RosdepDatabase():
@@ -47,52 +47,52 @@ def test_RosdepDatabase():
     assert not db.is_loaded('foo')
 
     data = {'a': 1}
-    db.set_stack_data('foo', data, [], 'origin1')
+    db.set_view_data('foo', data, [], 'origin1')
     assert db.is_loaded('foo')    
-    entry = db.get_stack_data('foo')
+    entry = db.get_view_data('foo')
     assert entry.rosdep_data == data
     assert entry.origin == 'origin1'
-    assert entry.stack_dependencies == []
+    assert entry.view_dependencies == []
     # make sure data is copy
     data['a'] = 2
     assert entry.rosdep_data != data
     
     data = {'b': 2}
-    db.set_stack_data('bar', data, ['foo'], 'origin2')
+    db.set_view_data('bar', data, ['foo'], 'origin2')
     assert db.is_loaded('bar')    
-    entry = db.get_stack_data('bar')
+    entry = db.get_view_data('bar')
     assert entry.rosdep_data == data
     assert entry.origin == 'origin2'
-    assert entry.stack_dependencies == ['foo']
+    assert entry.view_dependencies == ['foo']
 
     # override entry for bar
     data = {'b': 3}
     assert db.is_loaded('bar')    
-    db.set_stack_data('bar', data, ['baz', 'blah'], 'origin3')
+    db.set_view_data('bar', data, ['baz', 'blah'], 'origin3')
     assert db.is_loaded('bar')    
-    entry = db.get_stack_data('bar')
+    entry = db.get_view_data('bar')
     assert entry.rosdep_data == data
     assert entry.origin == 'origin3'
-    assert set(entry.stack_dependencies) == set(['baz', 'blah'])
+    assert set(entry.view_dependencies) == set(['baz', 'blah'])
     
 
-def test_RosdepDatabase_get_stack_dependencies():
+def test_RosdepDatabase_get_view_dependencies():
     from rosdep2.model import RosdepDatabase
 
     data = {'a': 1}
     db = RosdepDatabase()
     
-    db.set_stack_data('foo', data, [], 'origin')
-    assert [] == db.get_stack_dependencies('foo')
+    db.set_view_data('foo', data, [], 'origin')
+    assert [] == db.get_view_dependencies('foo')
 
-    db.set_stack_data('bar', data, ['foo'], 'origin')
-    assert ['foo'] == db.get_stack_dependencies('bar')
+    db.set_view_data('bar', data, ['foo'], 'origin')
+    assert ['foo'] == db.get_view_dependencies('bar')
 
-    db.set_stack_data('baz', data, ['bar'], 'origin')
-    assert ['foo', 'bar'] ==  db.get_stack_dependencies('baz')
+    db.set_view_data('baz', data, ['bar'], 'origin')
+    assert ['foo', 'bar'] ==  db.get_view_dependencies('baz')
 
-    db.set_stack_data('rad', data, [], 'origin')
-    db.set_stack_data('fad', data, ['baz', 'rad'], 'origin')
-    retval = db.get_stack_dependencies('fad')
+    db.set_view_data('rad', data, [], 'origin')
+    db.set_view_data('fad', data, ['baz', 'rad'], 'origin')
+    retval = db.get_view_dependencies('fad')
     assert set(['baz', 'rad', 'foo', 'bar']) == set(retval), retval
     assert len(retval) == 4

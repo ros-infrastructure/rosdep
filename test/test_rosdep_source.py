@@ -36,6 +36,10 @@ def get_test_dir():
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'source'))
 
 def _subtest_rep112_rdmanifest(resolved):
+    test_dir = get_test_dir()
+    path = os.path.join(test_dir, 'rep112-example.rdmanifest')
+    manifest = yaml.load(open(path))
+
     assert resolved.manifest == manifest
     assert resolved.manifest_url == path
     assert resolved.install_command == """#!/bin/bash

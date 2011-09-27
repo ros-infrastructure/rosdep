@@ -62,22 +62,18 @@ def test_RosPkgLoader():
     assert loader._rospack == rospack
     assert loader._rosstack == rosstack    
 
-    # test load_package_manifest
-    assert loader.get_package_manifest('stackless').brief == 'stackless'
-    assert loader.get_package_manifest('stack1_p1').brief == 'stack1_p1'
-    
     # test with mock db
     rosdep_db = Mock(spec=RosdepDatabase)
     rosdep_db.is_loaded.return_value = False
 
     # test with no rosdep.yaml stack
-    loader.load_stack('empty', rosdep_db)
+    loader.load_view('empty', rosdep_db)
     rosdep_db.is_loaded.assert_called_with('empty')
-    rosdep_db.set_stack_data.assert_called_with('empty', {}, ['ros'], None)
+    rosdep_db.set_view_data.assert_called_with('empty', {}, ['ros'], None)
 
     # test invalid stack
     try:
-        loader.load_stack('invalid', rosdep_db)
+        loader.load_view('invalid', rosdep_db)
         assert False, "should have raised"
     except InvalidRosdepData as e:
         pass
@@ -86,41 +82,26 @@ def test_RosPkgLoader():
     path = os.path.join(ros_root, 'rosdep.yaml')
     with open(path) as f:
         ros_stack_data = yaml.load(f.read())
-    loader.load_stack('ros', rosdep_db)
+    loader.load_view('ros', rosdep_db)
     rosdep_db.is_loaded.assert_called_with('ros')
-    rosdep_db.set_stack_data.assert_called_with('ros', ros_stack_data, [], path)
+    rosdep_db.set_view_data.assert_called_with('ros', ros_stack_data, [], path)
 
-    # test with package
-    path = os.path.join(rosstack.get_path('stack1'), 'rosdep.yaml')
-    with open(path) as f:
-        stack1_data = yaml.load(f.read())
-
-    loader.load_package('stack1_p1', rosdep_db)
-    rosdep_db.is_loaded.assert_called_with('stack1')
-    rosdep_db.set_stack_data.assert_called_with('stack1', stack1_data, ['ros'], path)
-
-    # test with package that is not part of stack
-    rosdep_db.reset_mock()
-    loader.load_package('stackless', rosdep_db)
-    assert rosdep_db.is_loaded.call_args_list == []
-    assert rosdep_db.set_stack_data.call_args_list == []
-    
     # test call on db that is already loaded
     rosdep_db.reset_mock()
     rosdep_db.is_loaded.return_value = True
     path = os.path.join(ros_root, 'rosdep.yaml')
     with open(path) as f:
         ros_stack_data = yaml.load(f.read())
-    loader.load_stack('ros', rosdep_db)
+    loader.load_view('ros', rosdep_db)
     rosdep_db.is_loaded.assert_called_with('ros')
-    assert rosdep_db.set_stack_data.call_args_list == []
+    assert rosdep_db.set_view_data.call_args_list == []
 
-    # test stack_of
+    # test get_view_key
     from rospkg import ResourceNotFound
-    assert loader.stack_of('stack1_p1') == 'stack1'
-    assert loader.stack_of('stackless') == None
+    assert loader.get_view_key('stack1_p1') == 'stack1'
+    assert loader.get_view_key('stackless') == None
     try:
-        loader.stack_of('fake')
+        loader.get_view_key('fake')
         assert False, "should error"
     except ResourceNotFound: pass
         
@@ -132,21 +113,11 @@ def test_RosPkgLoader_get_loadable():
     assert loader._rospack == rospack
     assert loader._rosstack == rosstack    
 
-    packages = loader.get_loadable_packages()
+    keys = loader.get_loadable_resources()
     for p in ['stack1_p1', 'stack1_p2', 'stack1_p3']:
-        assert p in packages
-    stacks = loader.get_loadable_stacks()
+        assert p in keys
+    keys = loader.get_loadable_views()        
     for s in ['ros', 'empty', 'invalid', 'stack1']:
-        assert s in stacks, stacks
+        assert s in keys
 
-
-def test_RosPkgLoader_get_package_depends():
-    from rosdep2.rospkg_loader import RosPkgLoader
-    
-    rospack, rosstack = get_rospkg()
-    loader = RosPkgLoader(rospack, rosstack)
-    assert set([]) == set(loader.get_package_depends('stack1_p1')) 
-    assert set([]) == set(loader.get_package_depends('stack1_p1', implicit=False)) 
-    assert set(['stack1_p1', 'stack1_p2']) == set(loader.get_package_depends('stack1_p3'))
-    assert set(['stack1_p2']) == set(loader.get_package_depends('stack1_p3', implicit=False)), set(loader.get_package_depends('stack1_p3', implicit=False))
 
