@@ -36,9 +36,12 @@ def rd_debug(s):
 
 class RosdepInternalError(Exception):
 
-    def __init__(self, e):
+    def __init__(self, e, message=None):
         self.error = e
-        self.message = traceback.format_exc(e)
+        if message is None:
+            self.message = traceback.format_exc(e)
+        else:
+            self.message = message
 
     def __str__(self):
         return self.message

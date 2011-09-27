@@ -334,7 +334,6 @@ class RosdepLookup(object):
                 except ResolutionError as e:
                     errors[resource_name] = e
                 except KeyError as e:
-                    rd_debug(traceback.format_exc())
                     errors[resource_name] = e
 
         # check for dependencies
@@ -404,7 +403,10 @@ class RosdepLookup(object):
         installer_key, rosdep_args_dict = definition.get_rule_for_platform(os_name, os_version, installer_keys, default_key)
 
         # resolve the rosdep data for the platform
-        installer = installer_context.get_installer(installer_key)
+        try:
+            installer = installer_context.get_installer(installer_key)
+        except KeyError:
+            raise ResolutionError(rosdep_key, definition.data, os_name, os_version, "Unsupported installer [%s]"%(installer_key))
         resolution = installer.resolve(rosdep_args_dict)
         dependencies = installer.get_depends(rosdep_args_dict)        
 

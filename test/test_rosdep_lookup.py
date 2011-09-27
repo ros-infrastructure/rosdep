@@ -398,12 +398,12 @@ def test_RosdepLookup_resolve():
 
         installer_key, resolution, dependencies = lookup.resolve('libtool', 'roscpp_fake', installer_context)
         assert 'apt' == installer_key
-        assert ['libtool', 'libltdl-dev'] == resolution
+        assert set(['libtool', 'libltdl-dev']) == set(resolution)
         assert [] == dependencies
 
         installer_key, resolution, dependencies = lookup.resolve('stack1_dep2', 'stack1_p1', installer_context)
         assert 'apt' == installer_key
-        assert ['dep1-ubuntu'] == resolution
+        assert ['dep2-ubuntu'] == resolution
         assert [] == dependencies
 
         installer_key, resolution, dependencies = lookup.resolve('twin', 'twin1', installer_context)
@@ -450,6 +450,6 @@ def test_RosdepLookup_resolve_all():
         resolutions, errors = lookup.resolve_all(['stack1_p1', 'stack1_p2'], installer_context)
         assert not errors
         assert 'apt' in resolutions
-        assert set(resolutions['apt']) == set(["dep1-ubuntu", "p1dep1-ubuntu", "p1dep2-ubuntu", "p2dep1-ubuntu"]), set(resolutions['apt'])
+        assert set(resolutions['apt']) == set(["dep1-ubuntu", "dep2-ubuntu", "p1dep1-ubuntu", "p1dep2-ubuntu", "p2dep1-ubuntu"]), set(resolutions['apt'])
 
 

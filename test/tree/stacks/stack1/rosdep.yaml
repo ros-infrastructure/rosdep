@@ -2,8 +2,8 @@ stack1_dep1:
   ubuntu: dep1-ubuntu
   debian: dep1-debian
 stack1_dep2:
-  ubuntu: dep1-ubuntu
-  debian: dep1-debian
+  ubuntu: dep2-ubuntu
+  debian: dep2-debian
 stack1_p1_dep1:
   ubuntu: p1dep1-ubuntu
   debian: p1dep1-debian

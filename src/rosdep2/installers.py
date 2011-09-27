@@ -138,13 +138,18 @@ class InstallerContext(object):
         Set the installer to use for *installer_key*.  This will
         replace any existing installer associated with the key.
         *installer_key* should be the same key used for the
-        ``rosdep.yaml`` package manager key.
+        ``rosdep.yaml`` package manager key.  If *installer* is
+        ``None``, this will delete any existing associated installer
+        from this context.
 
         :param installer_key: key/name to associate with installer, ``str``
         :param installer: :class:`Installer` implementation, ``class``.
         :raises: :exc:`TypeError` if *installer* is not a subclass of
           :class:`Installer`
         """
+        if installer is None:
+            del self.installers[installer_key]
+            return
         if not isinstance(installer, Installer):
             raise TypeError("installer must be a instance of Installer")
         if self.verbose:
@@ -154,7 +159,7 @@ class InstallerContext(object):
     def get_installer(self, installer_key):
         """
         :returns: :class:`Installer` class associated with *installer_key*.
-        :raises: :exc:`KeyError`
+        :raises: :exc:`KeyError` If not associated installer
         :raises: :exc:`InstallFailed` If installer cannot produce an install command (e.g. if installer is not installed)
         """
         return self.installers[installer_key]
@@ -370,14 +375,14 @@ class RosdepInstaller(object):
         self.installer_context = installer_context
         self.lookup = lookup
         
-    def get_uninstalled(self, packages, verbose=False):
+    def get_uninstalled(self, resources, verbose=False):
         """
         Get list of system dependencies that have not been installed
         as well as a list of errors from performing the resolution.
         This is a bulk API in order to provide performance
         optimizations in checking install state.
 
-        :param packages: List of ROS package names, ``[str]]``
+        :param resources: List of resource names (e.g. ROS package names), ``[str]]``
 
         :returns: (uninstalled, errors), ``({str: [opaque]}, {str: ResolutionError})``.
           Uninstalled is a dictionary with the installer_key as the key.
@@ -388,8 +393,8 @@ class RosdepInstaller(object):
 
         # resolutions have been unique()d
         if verbose:
-            print("resolving for packages [%s]"%(', '.join(packages)))
-        resolutions, errors = self.lookup.resolve_all(packages, installer_context)
+            print("resolving for resources [%s]"%(', '.join(resources)))
+        resolutions, errors = self.lookup.resolve_all(resources, installer_context)
         
         # for each installer, figure out what is left to install
         uninstalled = {}
@@ -398,16 +403,19 @@ class RosdepInstaller(object):
                 print("resolution: %s [%s]"%(installer_key, ', '.join(resolved)))
             try:
                 installer = installer_context.get_installer(installer_key)
-            except KeyError as e:
-                rd_debug(traceback.format_exc())
+            except KeyError as e: # lookup has to be buggy to cause this
                 raise RosdepInternalError(e)
             try:
-                uninstalled[installer_key] = installer.get_packages_to_install(resolved)
-                if verbose:
-                    print("uninstalled: [%s]"%(', '.join(uninstalled[installer_key])))
+                packages_to_install = installer.get_packages_to_install(resolved)
             except Exception as e:
                 rd_debug(traceback.format_exc())
-                raise RosdepInternalError(e)
+                raise RosdepInternalError(e, message="Bad installer [%s]: %s"%(installer_key, e))
+
+            # only create key if there is something to do
+            if packages_to_install:
+                uninstalled[installer_key] = packages_to_install
+            if verbose:
+                print("uninstalled: [%s]"%(', '.join(packages_to_install)))
         
         return uninstalled, errors
     
