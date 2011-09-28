@@ -155,3 +155,60 @@ def test_load_rdmanifest():
     except InvalidRdmanifest as e:
         pass
     
+
+REP112_MD5SUM = 'af0dc0e2d0c0c3181dd7670c4147f155'
+def test_get_file_hash():
+    from rosdep2.platforms.source import get_file_hash
+    path = os.path.join(get_test_dir(), 'rep112-example.rdmanifest')
+    assert REP112_MD5SUM == get_file_hash(path)
+    
+def test_fetch_file():
+    test_dir = get_test_dir()
+    with open(os.path.join(test_dir, 'rep112-example.rdmanifest')) as f:
+        expected = f.read()
+
+    from rosdep2.platforms.source import fetch_file
+    url = 'https://kforge.ros.org/rosrelease/rosdep/raw-file/931b030d6b3b/test/source/rep112-example.rdmanifest'
+    contents, error = fetch_file(url, REP112_MD5SUM)
+    assert not error
+    assert contents == expected
+
+    contents, error = fetch_file(url, 'badmd5')
+    assert bool(error), "should have errored"
+    assert not contents
+
+    contents, error = fetch_file('http://badhostname.willowgarage.com', 'md5sum')
+    assert not contents
+    assert bool(error), "should have errored"
+    
+def test_download_rdmanifest():
+    test_dir = get_test_dir()
+    with open(os.path.join(test_dir, 'rep112-example.rdmanifest')) as f:
+        expected = yaml.load(f)
+
+    from rosdep2.platforms.source import download_rdmanifest, DownloadFailed
+    url = 'https://kforge.ros.org/rosrelease/rosdep/raw-file/931b030d6b3b/test/source/rep112-example.rdmanifest'
+    contents, download_url = download_rdmanifest(url, REP112_MD5SUM)
+    assert contents == expected
+    assert download_url == url
+
+    # test alt_url
+    contents, download_url = download_rdmanifest('http://badhostname.willowgarage.com/', REP112_MD5SUM, alt_url=url)
+    assert contents == expected
+    assert download_url == url
+
+    # test md5sum validate
+    try:
+        contents, error = download_rdmanifest(url, 'badmd5')
+        assert False, "should have errored"
+    except DownloadFailed:
+        pass
+
+    # test download verify
+    try:
+        contents, error = download_rdmanifest('http://badhostname.willowgarage.com', 'fakemd5')
+        assert False, "should have errored"
+    except DownloadFailed:
+        pass
+
+    
