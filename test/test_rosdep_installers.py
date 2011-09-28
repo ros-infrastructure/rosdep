@@ -58,8 +58,13 @@ def test_InstallerContext_ctor():
     context = InstallerContext(detect)
     assert context.get_os_detect() == detect
     assert [] == context.get_installer_keys()
-    assert [] == context.get_os_installer_keys('foo')
+    assert [] == context.get_os_keys()
 
+    context.verbose = True
+    assert context.get_os_detect() == detect
+    assert [] == context.get_installer_keys()
+    assert [] == context.get_os_keys()
+    
 def test_InstallerContext_get_os_version_type():
     from rospkg.os_detect import OS_UBUNTU
     from rosdep2.installers import InstallerContext, TYPE_CODENAME, TYPE_VERSION
@@ -109,6 +114,7 @@ def test_InstallerContext_installers():
     from rospkg.os_detect import OsDetect
     detect = OsDetect()
     context = InstallerContext(detect)
+    context.verbose = True
 
     key = 'fake-apt'
     try:
@@ -177,10 +183,19 @@ def test_InstallerContext_os_installers():
     from rospkg.os_detect import OsDetect
     detect = OsDetect()
     context = InstallerContext(detect)
+    context.verbose = True
 
     os_key = 'ubuntu'
-    assert [] == context.get_os_installer_keys(os_key)
-    assert None == context.get_default_os_installer_key(os_key)
+    try:
+        context.get_os_installer_keys(os_key)
+        assert False, "should have raised"
+    except KeyError:
+        pass
+    try:
+        context.get_default_os_installer_key(os_key)
+        assert False, "should have raised"
+    except KeyError:
+        pass
     try:
         context.add_os_installer_key(os_key, 'fake-key')
         assert False, "should have raised"
@@ -205,15 +220,18 @@ def test_InstallerContext_os_installers():
     context.set_installer(installer_key1, FakeInstaller())
     context.set_installer(installer_key2, FakeInstaller2())
 
-    # retest set_default_os_installer_key, now with installer_key not configured on os
-    try:
-        context.set_default_os_installer_key(os_key, installer_key1)
-        assert False, "should have raised"
-    except KeyError: pass
-
     # start adding installers for os_key
     context.add_os_installer_key(os_key, installer_key1)
     assert context.get_os_installer_keys(os_key) == [installer_key1]
+
+    # retest set_default_os_installer_key, now with installer_key not configured on os
+    try:
+        context.set_default_os_installer_key(os_key, installer_key2)
+        assert False, "should have raised"
+    except KeyError as e:
+        assert 'add_os_installer' in str(e), e
+
+    # now properly add in key2
     context.add_os_installer_key(os_key, installer_key2)
     assert set(context.get_os_installer_keys(os_key)) == set([installer_key1, installer_key2])
 

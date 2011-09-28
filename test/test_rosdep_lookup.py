@@ -31,7 +31,7 @@ import os
 import sys
 import yaml
 
-from rospkg import RosPack, RosStack
+from rospkg import RosPack, RosStack, ResourceNotFound
 
 def get_test_dir():
     return os.path.abspath(os.path.dirname(__file__))
@@ -215,6 +215,12 @@ def test_RosdepLookup_get_rosdeps():
     print(lookup.get_rosdeps('empty_package'))
     assert lookup.get_rosdeps('empty_package') == []
 
+    try:
+        assert lookup.get_rosdeps('not a resource') == []
+        assert False, "should have raised"
+    except ResourceNotFound:
+        pass
+    
     print(lookup.get_rosdeps('stack1_p1'))
     assert set(lookup.get_rosdeps('stack1_p1')) == set(['stack1_dep1', 'stack1_p1_dep1', 'stack1_p1_dep2'])
     assert set(lookup.get_rosdeps('stack1_p1', implicit=False)) == set(['stack1_dep1', 'stack1_p1_dep1', 'stack1_p1_dep2'])
@@ -250,6 +256,30 @@ def test_RosdepLookup_create_from_rospkg():
     assert rospack == lookup.loader._rospack
     assert rosstack == lookup.loader._rosstack
     
+    
+def test_RosdepLookup_get_rosdep_view_for_resource():
+    from rosdep2.lookup import RosdepLookup
+    rospack, rosstack = get_test_rospkgs()
+    ros_home = os.path.join(get_test_tree_dir(), 'fake')
+    
+    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack, ros_home=ros_home)
+
+    # depends on nothing
+    ros_rosdep_path = os.path.join(rosstack.get_path('ros'), 'rosdep.yaml')
+    with open(ros_rosdep_path) as f:
+        ros_raw = yaml.load(f.read())
+    # - first pass: no cache
+    ros_view = lookup.get_rosdep_view_for_resource('roscpp_fake')
+    libtool = ros_view.lookup('libtool')
+    assert ros_rosdep_path == libtool.origin
+    assert ros_raw['libtool'] == libtool.data
+    python = ros_view.lookup('python')
+    assert ros_rosdep_path == python.origin
+    assert ros_raw['python'] == python.data
+
+    # package not in stack
+    assert lookup.get_rosdep_view_for_resource('just_a_package') is None
+
     
 def test_RosdepLookup_get_rosdep_view():
     from rosdep2.lookup import RosdepLookup
@@ -368,6 +398,50 @@ def test_RosdepLookup_get_views_that_define():
     origins_actual = [os.path.join(tree_dir, 'stacks', 'twin1', 'rosdep.yaml'), os.path.join(tree_dir, 'stacks', 'twin2', 'rosdep.yaml')]
     assert set(origins) == set(origins_actual)
     
+def test_RosdepLookup_resolve_all_errors():
+    from rosdep2.installers import InstallerContext
+    from rosdep2.lookup import RosdepLookup, ResolutionError
+    rospack, rosstack = get_test_rospkgs()
+    ros_home = os.path.join(get_test_tree_dir(), 'fake')
+    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack, ros_home=ros_home)
+    # the installer context has nothing in it, lookups will fail
+    installer_context = InstallerContext()
+    installer_context.set_os_override('ubuntu', 'lucid')
+
+    resolutions, errors = lookup.resolve_all(['rospack_fake'], installer_context)
+    assert 'rospack_fake' in errors
+
+    resolutions, errors = lookup.resolve_all(['not_a_resource'], installer_context)
+    assert 'not_a_resource' in errors, errors
+
+def test_RosdepLookup_resolve_errors():
+    from rosdep2.installers import InstallerContext
+    from rosdep2.lookup import RosdepLookup, ResolutionError
+    rospack, rosstack = get_test_rospkgs()
+    ros_home = os.path.join(get_test_tree_dir(), 'fake')
+    
+    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack, ros_home=ros_home)
+    # the installer context has nothing in it, lookups will fail
+    installer_context = InstallerContext()
+    installer_context.set_os_override('ubuntu', 'lucid')
+
+    try:
+        lookup.resolve('tinyxml', 'rospack_fake', installer_context)
+        assert False, "should have raised"
+    except ResolutionError as e:
+        assert "Unsupported OS" in str(e), str(e)
+
+    try:
+        lookup.resolve('fakedep', 'rospack_fake', installer_context)
+        assert False, "should have raised"
+    except ResolutionError as e:
+        assert "Cannot locate rosdep definition" in str(e), str(e)
+
+    try:
+        lookup.resolve('tinyxml', 'just_a_package', installer_context)
+        assert False, "should have raised"
+    except ResolutionError as e:
+        assert "does not have a rosdep view" in str(e), str(e)
 
 def test_RosdepLookup_resolve():
     from rosdep2 import create_default_installer_context

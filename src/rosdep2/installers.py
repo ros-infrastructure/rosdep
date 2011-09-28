@@ -70,7 +70,7 @@ class InstallerContext(object):
         """
         # platform configuration
         self.installers = {}
-        self.os_installers = defaultdict(list)
+        self.os_installers = {}
         self.default_os_installer = {}
 
         # stores configuration of which value to use for the OS version key (version number or codename)
@@ -191,7 +191,10 @@ class InstallerContext(object):
         installer_class = self.get_installer(installer_key)
         if self.verbose:
             print("add installer [%s] to OS [%s]"%(installer_key, os_key))
-        self.os_installers[os_key].append(installer_key)
+        if os_key in self.os_installers:
+            self.os_installers[os_key].append(installer_key)
+        else:
+            self.os_installers[os_key] = [installer_key]
 
     def get_os_installer_keys(self, os_key):
         """
@@ -202,7 +205,10 @@ class InstallerContext(object):
         :param os_key: Key for OS
         :raises: :exc:`KeyError`: if no information for OS *os_key* is registered.
         """
-        return self.os_installers[os_key][:]
+        if os_key in self.os_installers:
+            return self.os_installers[os_key][:]
+        else:
+            raise KeyError(os_key)
 
     def set_default_os_installer_key(self, os_key, installer_key):
         """

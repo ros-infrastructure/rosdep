@@ -104,11 +104,18 @@ class RosPkgLoader(RosdepLoader):
         return self._rospack.list()
 
     def get_rosdeps(self, resource_name, implicit=True):
-        try:
+        """
+        If *resource_name* is a stack, returns an empty list.
+        
+        :raises: :exc:`rospkg.ResourceNotFound` if *resource_name* cannot be found.
+        """
+        if resource_name in self._rospack.list():
             return self._rospack.get_rosdeps(resource_name, implicit=implicit)
-        except rospkg.ResourceNotFound:
-            # it's not, so it is the view key
+        elif resource_name in self._rosstack.list():
+            # stacks currently do not have rosdeps of their own, implicit or otherwise
             return []
+        else:
+            raise rospkg.ResourceNotFound(resource_name)
 
     def get_view_key(self, resource_name):
         """

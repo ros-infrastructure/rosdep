@@ -320,29 +320,28 @@ class RosdepLookup(object):
         resolutions = defaultdict(list)
         errors = {}
         for resource_name in resources:
-            rosdep_keys = self.get_rosdeps(resource_name, implicit=True)
-            for rosdep_key in rosdep_keys:
-                try:
-                    installer_key, resolution, dependencies = self.resolve(rosdep_key, resource_name, installer_context)
-                    resolutions[installer_key].append(resolution)
-                    while dependencies:
-                        depend_rosdep_key = dependencies.pop()
-                        installer_key, resolution, more_dependencies = self.resolve(depend_rosdep_key, resource_name, installer_context)
-                        dependencies.extend(more_dependencies)
+            try:
+                rosdep_keys = self.get_rosdeps(resource_name, implicit=True)
+                for rosdep_key in rosdep_keys:
+                    try:
+                        installer_key, resolution, dependencies = self.resolve(rosdep_key, resource_name, installer_context)
                         resolutions[installer_key].append(resolution)
-                        
-                except ResolutionError as e:
-                    errors[resource_name] = e
-                except KeyError as e:
-                    errors[resource_name] = e
+                        while dependencies:
+                            depend_rosdep_key = dependencies.pop()
+                            installer_key, resolution, more_dependencies = self.resolve(depend_rosdep_key, resource_name, installer_context)
+                            dependencies.extend(more_dependencies)
+                            resolutions[installer_key].append(resolution)
+
+                    except ResolutionError as e:
+                        errors[resource_name] = e
+            except ResourceNotFound as e:
+                errors[resource_name] = e
 
         # check for dependencies
         for installer_key, val in resolutions.items(): #py3k
-
             for d in dependencies:
                 self.install_rosdep(d, rdlp, default_yes, execute)
 
-            
         # consolidate resolutions 
         for installer_key, val in resolutions.items(): #py3k
             installer = installer_context.get_installer(installer_key)
@@ -368,7 +367,6 @@ class RosdepLookup(object):
           definition depends on.
 
         :raises: :exc:`ResolutionError` If *rosdep_key* cannot be resolved for *resource_name* in *installer_context*
-        :raises: :exc:`KeyError` If *resource_name* does not exist
         :raises: :exc:`rospkg.ResourceNotFound` if *resource_name* cannot be located
         """
         os_name, os_version = installer_context.get_os_name_and_version()

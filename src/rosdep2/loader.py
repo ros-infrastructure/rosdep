@@ -81,6 +81,9 @@ class RosdepLoader:
         raise NotImplementedError()
 
     def get_rosdeps(self, resource_name, implicit=True):
+        """
+        :raises: :exc:`rospkg.ResourceNotFound` if *resource_name* cannot be found.
+        """
         raise NotImplementedError()
     
     def get_view_key(self, resource_name):
