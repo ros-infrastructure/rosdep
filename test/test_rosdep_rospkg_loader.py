@@ -41,8 +41,9 @@ def get_rospkg():
     test_dir = get_test_dir()
     ros_root = os.path.join(test_dir, 'ros')
     ros_package_path = os.path.join(test_dir, 'stacks')
-    rospack = RosPack(ros_root, ros_package_path)
-    rosstack = RosStack(ros_root, ros_package_path)
+    ros_paths = [ros_root, ros_package_path]
+    rospack = RosPack(ros_paths=ros_paths)
+    rosstack = RosStack(ros_paths=ros_paths)
     return rospack, rosstack
 
 def test_RosPkgLoader():

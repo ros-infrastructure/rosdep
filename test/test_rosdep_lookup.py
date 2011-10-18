@@ -43,8 +43,9 @@ def get_test_rospkgs():
     test_dir = get_test_tree_dir()
     ros_root = os.path.join(test_dir, 'ros')
     ros_package_path = os.path.join(test_dir, 'stacks')
-    rospack = RosPack(ros_root, ros_package_path)
-    rosstack = RosStack(ros_root, ros_package_path)
+    ros_paths = [ros_root, ros_package_path]
+    rospack = RosPack(ros_paths=ros_paths)
+    rosstack = RosStack(ros_paths=ros_paths)
     return rospack, rosstack
 
 FAKE_TINYXML_RULE = """tinyxml:
@@ -385,7 +386,7 @@ def test_RosdepLookup_get_views_that_define():
     val = lookup.get_views_that_define('python')
     assert len(val) == 1
     entry = val[0]
-    assert entry == ('ros', os.path.join(rospack.get_ros_root(), 'rosdep.yaml')), entry
+    assert entry == ('ros', os.path.join(rospack.get_ros_paths()[0], 'rosdep.yaml')), entry
 
     # look for multiply defined
     vals = lookup.get_views_that_define('twin')
