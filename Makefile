@@ -1,22 +1,17 @@
 .PHONY: all setup clean_dist distro clean install dsc source_deb upload
 
 NAME='rosdep'
-VERSION='0.1.0'
+VERSION=`python setup.py -V`
 
 all:
 	echo "noop for debbuild"
-
-setup:
-	echo "confirming version numbers are all consistent"
-	grep ${VERSION} setup.py
-	echo "building version ${VERSION}"
 
 clean_dist:
 	-rm -f MANIFEST
 	-rm -rf dist
 	-rm -rf deb_dist
 
-distro: setup clean_dist
+distro: clean_dist
 	python setup.py sdist
 
 push: distro
