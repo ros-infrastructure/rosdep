@@ -45,7 +45,7 @@ import rospkg
 from . import create_default_installer_context
 from .core import RosdepInternalError, InstallFailed
 from .installers import RosdepInstaller
-from .lookup import RosdepLookup
+from .lookup import RosdepLookup, ResolutionError
 
 _usage = """usage: rosdep [options] <command> <args>
 
@@ -89,6 +89,13 @@ Please go to the rosdep page [1] and file a bug report with the stack trace belo
 
 %s
 """%(e.message), file=sys.stderr)
+        sys.exit(1)
+    except ResolutionError as e:
+        print("""
+ERROR: %s
+
+%s
+"""%(e.message, e), file=sys.stderr)
         sys.exit(1)
     except Exception as e:
         print("""
@@ -284,7 +291,7 @@ def command_where_defined(args, options):
     lookup = _get_default_RosdepLookup()
     locations = []
     for rosdep_name in args:
-        locations.extend(lookup.get_stacks_that_define(rosdep_name))
+        locations.extend(lookup.get_views_that_define(rosdep_name))
 
     for error in lookup.get_errors():
         print("WARNING: %s"%(str(error)), file=sys.stderr)
@@ -293,6 +300,54 @@ def command_where_defined(args, options):
         origin = location[1]
         print(origin)
 
+def command_resolve(args, options):
+    lookup = _get_default_RosdepLookup()
+
+
+    installer_context = create_default_installer_context(verbose=options.verbose)
+    configure_installer_context_os(installer_context, options)
+    
+
+    os_name, os_version = installer_context.get_os_name_and_version()
+
+    try:
+        installer_keys = installer_context.get_os_installer_keys(os_name)
+        default_key = installer_context.get_default_os_installer_key(os_name)
+    except KeyError:
+        raise ResolutionError(rosdep_key, definition.data, os_name, os_version, "Unsupported OS [%s]"%(os_name))
+
+    installer = installer_context.get_installer(default_key)
+
+
+    #definition.get_rule_for_platform(os_name, os_version, installer_keys, default_key)
+
+    packages = []
+    view_names = []
+    for rosdep_name in args:
+        view_names = lookup.get_views_that_define(rosdep_name)
+        
+        if not view_names:
+            raise ResolutionError(rosdep_name, None, os_name, os_version, "Could not find definition for rosdep [%s]"%rosdep_name)
+        view = lookup.get_rosdep_view_for_resource(view_names[0][0]) # taking the first one #TODO FIXME
+        
+        d = view.lookup(rosdep_name)
+
+        
+
+
+        inst_key, rule = d.get_rule_for_platform(os_name, os_version, installer_keys, default_key)
+
+        resolved = installer.resolve(rule)
+        print (" ".join(resolved))
+
+        #print("rule is %s"%rule)
+    for error in lookup.get_errors():
+        print("WARNING: %s"%(str(error)), file=sys.stderr)
+
+    
+        
+    
+
 command_handlers = {
     'db': command_depdb,
     'check': command_check,
@@ -300,6 +355,7 @@ command_handlers = {
     'install': command_install,
     'what-needs': command_what_needs,
     'where-defined': command_where_defined,
+    'resolve': command_resolve,
 
     # backwards compat
     'what_needs': command_what_needs,
@@ -308,7 +364,7 @@ command_handlers = {
     }
 
 # commands that accept rosdep names as args
-_command_rosdep_args = ['what-needs', 'what_needs', 'where-defined', 'where_defined']
+_command_rosdep_args = ['what-needs', 'what_needs', 'where-defined', 'where_defined', 'resolve']
 
 _commands = command_handlers.keys()
 

@@ -114,6 +114,7 @@ class AptInstaller(PackageManagerInstaller):
 
     def get_install_command(self, resolved, interactive=True, reinstall=False):
         packages = self.get_packages_to_install(resolved, reinstall=reinstall)
+        print packages
         if not packages:
             return []
         if not interactive:

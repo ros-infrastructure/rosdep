@@ -63,6 +63,7 @@ class RosdepDefinition(object):
         self.data = data
         self.origin = origin
 
+
     def get_rule_for_platform(self, os_name, os_version, installer_keys, default_installer_key):
         """
         Get installer_key and rule for the specified rule.  See REP 111 for precedence rules.

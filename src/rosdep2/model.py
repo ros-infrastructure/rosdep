@@ -61,7 +61,7 @@ class RosdepDatabaseEntry(object):
         self.rosdep_data = rosdep_data
         self.view_dependencies = view_dependencies
         self.origin = origin
-        
+                
 class RosdepDatabase(object):
     """
     Stores loaded rosdep data for multiple views.
