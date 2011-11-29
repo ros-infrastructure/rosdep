@@ -5,3 +5,20 @@ test source packagers
 end-to-end integration tests
 osx brew integration
 install -s > script
+
+
+=Todos=
+
+release rosdep to pypi
+
+create repo of standardized rosdeps -- use github
+
+update rosdep seach path on /etc/rosdep/sources.list sources.list.d/*   build cache into /var/cache/rosdep
+
+precedence system < /var/cache/rosdep <  ROS_PACKAGE_PATH < ROS_HOME
+ * all are optional
+ * possibly add more if necessary (e.g. cwd, sysarg override)
+
+use apt syntax (update pulls from urls and populates cache)
+
+status works for everything except source and homebrew, need verification on non debian platforms
