@@ -205,7 +205,7 @@ def command_check(lookup, packages, options):
     uninstalled, errors = installer.get_uninstalled(packages, verbose=verbose)
 
     # pretty print the result
-    if [r for r in resolved in uninstalled.values() if r]:
+    if [r for r in uninstalled.values() if r]:
         print("System dependencies have not been satisified:")
         for installer_key, resolved in uninstalled.items():
             if resolved:
