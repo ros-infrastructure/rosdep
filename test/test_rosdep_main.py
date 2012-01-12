@@ -82,7 +82,7 @@ class TestRosdepMain(unittest.TestCase):
     def test_check(self):
         with fakeout() as b:
             try:
-                rosdep_main(['check', 'rospack_fake'])
+                rosdep_main(['check', 'python_dep'])
             except SystemExit:
                 assert False, "system exit occurred: %s\n%s"%(b[0].getvalue(), b[1].getvalue())
 
@@ -91,7 +91,7 @@ class TestRosdepMain(unittest.TestCase):
             assert not stderr.getvalue(), stderr.getvalue()
         try:
             with fakeout() as b:
-                rosdep_main(['check', 'rospack_fake', '--os', 'ubuntu:lucid'])
+                rosdep_main(['check', 'python_dep', '--os', 'ubuntu:lucid'])
                 stdout, stderr = b
                 assert stdout.getvalue().strip() == "All system dependencies have been satisified"
                 assert not stderr.getvalue(), stderr.getvalue()
