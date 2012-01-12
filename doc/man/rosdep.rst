@@ -51,4 +51,44 @@ Commands
   Print a list of YAML files that declare a rosdep on (at least
   one of) <rosdeps>
 
+Options
+-------
 
+**--os=OS_NAME:OS_VERSION**
+
+  Override OS name and version (colon-separated), e.g. ubuntu:lucid
+  
+**-i, --include_duplicates**
+
+  Do not deduplicate
+
+**-a, --all**
+
+  Select all ROS packages.  Only valid for commands that take <packages> as arguments.
+
+**-h, --help**
+
+  Show usage information
+
+**-v, --verbose**
+
+  Enable verbose output
+
+Install Options
+---------------
+
+**--reinstall**
+
+  (re)install all dependencies, even if already installed
+
+**-y, --default-yes**
+
+  Tell the package manager to default to y or fail when installing
+
+**-s, --simulate**
+
+  Simulate install
+
+**-r**
+
+  Continue installing despite errors.
