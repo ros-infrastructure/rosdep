@@ -80,14 +80,15 @@ class TestRosdepMain(unittest.TestCase):
                 pass
         
     def test_check(self):
-        try:
-            with fakeout() as b:
+        with fakeout() as b:
+            try:
                 rosdep_main(['check', 'rospack_fake'])
-                stdout, stderr = b
-                assert stdout.getvalue().strip() == "All system dependencies have been satisified", stdout.getvalue()
-                assert not stderr.getvalue(), stderr.getvalue()
-        except SystemExit:
-            assert False, "system exit occurred"
+            except SystemExit:
+                assert False, "system exit occurred: %s\n%s"%(b[0].getvalue(), b[1].getvalue())
+
+            stdout, stderr = b
+            assert stdout.getvalue().strip() == "All system dependencies have been satisified", stdout.getvalue()
+            assert not stderr.getvalue(), stderr.getvalue()
         try:
             with fakeout() as b:
                 rosdep_main(['check', 'rospack_fake', '--os', 'ubuntu:lucid'])
