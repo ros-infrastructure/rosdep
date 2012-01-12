@@ -427,7 +427,7 @@ class RosdepLookup(object):
             try:
                 self._load_view_dependencies(resource_name)
             except ResourceNotFound as e:
-                raise RosdepInternalError(e)
+                self.errors.append(e)
             except InvalidRosdepData as e:
                 self.errors.append(e)
         
@@ -535,8 +535,9 @@ class RosdepLookup(object):
         in the configuration will be loaded into memory.
 
         Error state from single-stack failures
-        (e.g. :exc:`InvalidRosdepData`) are not propagated.  Caller
-        must check :meth:`RosdepLookup.get_errors` to check for single-stack
+        (e.g. :exc:`InvalidRosdepData`, :exc:`ResourceNotFound`) are
+        not propagated.  Caller must check
+        :meth:`RosdepLookup.get_errors` to check for single-stack
         error state.  Error state does not reset -- it accumulates.
 
         :param rosdep_name: name of rosdep to lookup

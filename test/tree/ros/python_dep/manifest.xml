@@ -1,0 +1,15 @@
+<package>
+  <description brief="python dep">
+
+     needs python
+
+  </description>
+  <author>Ken Conley</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/</url>
+
+  <rosdep name="python" />
+</package>
+
+

@@ -1,0 +1,9 @@
+<stack>
+  <description brief="packageless">packageless</description>
+  <author>Maintained by Ken Conley</author>
+  <license></license>  
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/packageless</url>
+  <depend stack="ros" />
+
+</stack>
