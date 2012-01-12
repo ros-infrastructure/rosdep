@@ -7,15 +7,10 @@ to a ROS_PACKAGE_PATH.  Instead, it is designed to be
 installed as a system dependency via apt, pip, or the like.
 
    </description>
-  <author>Tully Foote/tfoote@willowgarage.com</author>
+  <author>Tully Foote/tfoote@willowgarage.com, Ken Conley/kwc@willowgarage.com</author>
   <license>BSD</license>
 
   <review status="experimental" notes="" />
-
-  <platform os="ubuntu" version="10.04"/>
-  <platform os="ubuntu" version="10.10"/>
-  <platform os="ubuntu" version="11.04"/>
-  <platform os="macports" version="macports"/>
 
   <export>
     <rosdoc config="rosdoc.yaml"/>    
