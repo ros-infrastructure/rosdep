@@ -58,15 +58,16 @@ class TestRosdepMain(unittest.TestCase):
         if 'ROSDEP_DEBUG' in os.environ:
             del os.environ['ROSDEP_DEBUG']
         self.old_rr = rospkg.get_ros_root()
+        self.old_rpp = rospkg.get_ros_package_path()
         if 'ROS_ROOT' in os.environ:
             del os.environ['ROS_ROOT']
-        self.old_rpp = os.environ['ROS_PACKAGE_PATH']
         os.environ['ROS_PACKAGE_PATH'] = os.path.join(get_test_tree_dir())
 
     def tearDown(self):
         if self.old_rr is not None:
             os.environ['ROS_ROOT'] = self.old_rr
-        os.environ['ROS_PACKAGE_PATH'] = self.old_rpp
+        if self.old_rpp is not None:
+            os.environ['ROS_PACKAGE_PATH'] = self.old_rpp
 
     def test_bad_commands(self):
         for commands in [[], ['fake', 'something'], ['check'], ['install', '-a', 'rospack_fake'],
