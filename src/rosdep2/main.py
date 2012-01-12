@@ -81,10 +81,15 @@ def rosdep_main():
     try:
         exit_code = _rosdep_main()
         sys.exit(exit_code)
+    except rospkg.ResourceNotFound as e:
+        print("""
+ERROR: Rosdep cannot find all required resources to answer your query
+Missing resource: %s
+"""%(e.args[0]))        
     except RosdepInternalError as e:
         print("""
 ERROR: Rosdep experienced an internal error.
-Please go to the rosdep page [1] and file a bug report with the stack trace below.
+Please go to the rosdep page [1] and file a bug report with the message below.
 [1] : http://www.ros.org/wiki/rosdep
 
 %s
@@ -193,6 +198,7 @@ def command_keys(lookup, packages, options):
     for package_name in packages:
         rosdep_keys.extend(lookup.get_rosdeps(package_name, implicit=True))
 
+    _print_lookup_errors(lookup)
     print('\n'.join(set(rosdep_keys)))
 
 def command_check(lookup, packages, options):
@@ -205,7 +211,7 @@ def command_check(lookup, packages, options):
     uninstalled, errors = installer.get_uninstalled(packages, verbose=verbose)
 
     # pretty print the result
-    if [r for r in resolved in uninstalled.values() if r]:
+    if [r for r in uninstalled.values() if r]:
         print("System dependencies have not been satisified:")
         for installer_key, resolved in uninstalled.items():
             if resolved:
@@ -214,7 +220,10 @@ def command_check(lookup, packages, options):
         print("All system dependencies have been satisified")
     if errors:
         for package_name, ex in errors.items():
-            print("ERROR[%s]: %s"%(package_name, str(ex)), file=sys.stderr)
+            if isinstance(ex, rospkg.ResourceNotFound):
+                print("ERROR[%s]: resource not found [%s]"%(package_name, ex.args[0]), file=sys.stderr)
+            else:
+                print("ERROR[%s]: %s"%(package_name, str(ex)), file=sys.stderr)                
     if uninstalled:
         return 1
     else:
@@ -269,29 +278,36 @@ def command_depdb(lookup, packages, options):
     print(_compute_depdb_output(r, args, options))
     return 0
 
+def _print_lookup_errors(lookup):
+    for error in lookup.get_errors():
+        if isinstance(error, rospkg.ResourceNotFound):
+            print("WARNING: unable to locate resource %s"%(str(error.args[0])), file=sys.stderr)
+        else:
+            print("WARNING: %s"%(str(error)), file=sys.stderr)
+            
 def command_what_needs(args, options):
     lookup = _get_default_RosdepLookup()
     packages = []
     for rosdep_name in args:
         packages.extend(lookup.get_resources_that_need(rosdep_name))
 
-    for error in lookup.get_errors():
-        print("WARNING: %s"%(str(error)), file=sys.stderr)
-
+    _print_lookup_errors(lookup)
     print('\n'.join(set(packages)))
     
 def command_where_defined(args, options):
     lookup = _get_default_RosdepLookup()
     locations = []
     for rosdep_name in args:
-        locations.extend(lookup.get_stacks_that_define(rosdep_name))
+        locations.extend(lookup.get_views_that_define(rosdep_name))
 
-    for error in lookup.get_errors():
-        print("WARNING: %s"%(str(error)), file=sys.stderr)
-
-    for location in locations:
-        origin = location[1]
-        print(origin)
+    _print_lookup_errors(lookup)
+    if locations:
+        for location in locations:
+            origin = location[1]
+            print(origin)
+    else:
+        print("ERROR: cannot find definition(s) for [%s]"%(', '.join(args)), file=sys.stderr)
+        sys.exit(1)
 
 command_handlers = {
     'db': command_depdb,
