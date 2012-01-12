@@ -47,6 +47,9 @@ from .core import RosdepInternalError, InstallFailed
 from .installers import RosdepInstaller
 from .lookup import RosdepLookup
 
+class UsageError(Exception):
+    pass
+
 _usage = """usage: rosdep [options] <command> <args>
 
 Commands:
@@ -77,15 +80,23 @@ rosdep where-defined <rosdeps>...
 def _get_default_RosdepLookup():
     return RosdepLookup.create_from_rospkg()
 
-def rosdep_main():
+def rosdep_main(args=None):
+    if args is None:
+        args = sys.argv[1:]
     try:
-        exit_code = _rosdep_main()
-        sys.exit(exit_code)
+        exit_code = _rosdep_main(args)
+        if exit_code not in [0, None]:
+            sys.exit(exit_code)
     except rospkg.ResourceNotFound as e:
         print("""
 ERROR: Rosdep cannot find all required resources to answer your query
 Missing resource: %s
-"""%(e.args[0]))        
+"""%(e.args[0]))
+        sys.exit(1)
+    except UsageError as e:
+        print(_usage, file=sys.stderr)
+        print("ERROR: %s"%(str(e)), file=sys.stderr)
+        sys.exit(os.EX_USAGE)
     except RosdepInternalError as e:
         print("""
 ERROR: Rosdep experienced an internal error.
@@ -105,7 +116,7 @@ Please go to the rosdep page [1] and file a bug report with the stack trace belo
 """%(e, traceback.format_exc(e)), file=sys.stderr)
         sys.exit(1)
         
-def _rosdep_main():
+def _rosdep_main(args):
     parser = OptionParser(usage=_usage, prog='rosdep')
     parser.add_option("--os", dest="os_override", default=None, 
                       metavar="OS_NAME:OS_VERSION", help="Override OS name and version (colon-separated), e.g. ubuntu:lucid")
@@ -124,7 +135,7 @@ def _rosdep_main():
     parser.add_option("-a", "--all", dest="rosdep_all", default=False, 
                       action="store_true", help="select all packages")
 
-    options, args = parser.parse_args()
+    options, args = parser.parse_args(args)
 
     if len(args) == 0:
         parser.error("Please enter a command")
@@ -170,7 +181,7 @@ def _package_args_handler(command, parser, options, args, rospack=None, rosstack
     packages = val[0]
     not_found = val[1]
     if not_found:
-        parser.error("ERROR: the following are neither a package or stack: %s"%(' '.join(not_found)))
+        raise rospkg.ResourceNotFound(not_found[0], rospack.get_ros_paths())
 
     if not packages:
         # possible with empty stacks
@@ -182,12 +193,14 @@ def _package_args_handler(command, parser, options, args, rospack=None, rosstack
 def configure_installer_context_os(installer_context, options):
     """
     Override the OS detector in *installer_context* if necessary.
+
+    :raises: :exc:`UsageError` If user input options incorrectly
     """
     if not options.os_override:
         return
     val = options.os_override
     if not ':' in val:
-        parser.error("OS override must be colon-separated OS_NAME:OS_VERSION, e.g. ubuntu:maverick")
+        raise UsageError("OS override must be colon-separated OS_NAME:OS_VERSION, e.g. ubuntu:maverick")
     os_name = val[:val.find(':')]
     os_version = val[val.find(':')+1:]
     installer_context.set_os_override(os_name, os_version)
@@ -215,7 +228,8 @@ def command_check(lookup, packages, options):
         print("System dependencies have not been satisified:")
         for installer_key, resolved in uninstalled.items():
             if resolved:
-                print("%s\t%s"%(installer_key, '\n'.join(resolved)))
+                for r in resolved:
+                    print("%s\t%s"%(installer_key, r))
     else:
         print("All system dependencies have been satisified")
     if errors:
