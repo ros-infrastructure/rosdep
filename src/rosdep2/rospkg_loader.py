@@ -32,6 +32,8 @@ Library for loading rosdep files from the ROS package/stack
 filesystem.
 """
 
+from __future__ import print_function
+
 import os
 import yaml
 
@@ -70,7 +72,7 @@ class RosPkgLoader(RosdepLoader):
         else:
             return None, None
         
-    def load_view(self, view_name, rosdep_db):
+    def load_view(self, view_name, rosdep_db, verbose=False):
         """
         Load view data into *rosdep_db*. If the view has already
         been loaded into *rosdep_db*, this method does nothing.  If
@@ -85,10 +87,16 @@ class RosPkgLoader(RosdepLoader):
         """
         if rosdep_db.is_loaded(view_name):
             return
+        if verbose:
+            print("loading view [%s] with rospkg loader"%(view_name))
         rosdep_data, filename = self._load_view_rosdep_yaml(view_name)
         if rosdep_data is None:
+            if verbose:
+                print("view [%s] has no rosdep data"%(view_name))
             rosdep_data = {}
         view_dependencies = self._rosstack.get_depends(view_name, implicit=False)
+        if verbose:
+            print("view [%s]: dependencies are [%s]"%(view_name, ', '.join(view_dependencies)))
         rosdep_db.set_view_data(view_name, rosdep_data, view_dependencies, filename)
 
     def get_loadable_views(self):

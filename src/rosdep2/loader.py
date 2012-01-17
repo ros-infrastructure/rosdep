@@ -62,7 +62,7 @@ class RosdepLoader:
         except yaml.YAMLError as e:
             raise InvalidRosdepData("Invalid YAML in [%s]: %s"%(origin, e), origin=origin)
 
-    def load_view(self, view_name, rosdep_db):
+    def load_view(self, view_name, rosdep_db, verbose=False):
         """
         Load view data into rosdep_db. If the view has already been
         loaded into rosdep_db, this method does nothing.

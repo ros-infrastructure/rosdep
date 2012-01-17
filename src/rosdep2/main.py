@@ -77,8 +77,10 @@ rosdep where-defined <rosdeps>...
   one of) <rosdeps>
 """
 
-def _get_default_RosdepLookup():
-    return RosdepLookup.create_from_rospkg()
+def _get_default_RosdepLookup(verbose=False):
+    lookup = RosdepLookup.create_from_rospkg()
+    lookup.verbose = verbose
+    return lookup
 
 def rosdep_main(args=None):
     if args is None:
@@ -173,6 +175,7 @@ def _package_args_handler(command, parser, options, args, rospack=None, rosstack
     if rosstack is None:
         rosstack = rospkg.RosStack()
     lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack)
+    lookup.verbose = options.verbose
     loader = lookup.get_loader()
     
     if options.rosdep_all:
@@ -213,7 +216,7 @@ def configure_installer_context_os(installer_context, options):
     installer_context.set_os_override(os_name, os_version)
     
 def command_keys(lookup, packages, options):
-    lookup = _get_default_RosdepLookup()
+    lookup = _get_default_RosdepLookup(verbose=options.verbose)
     rosdep_keys = []
     for package_name in packages:
         rosdep_keys.extend(lookup.get_rosdeps(package_name, implicit=True))
@@ -266,8 +269,10 @@ def command_install(lookup, packages, options):
     else:
         uninstalled, errors = installer.get_uninstalled(packages, verbose=options.verbose)
     if errors:
-        print("TODO: deal with errors in resolution: %s"%(errors), file=sys.stderr)
-        raise Exception("TODO")
+        print("ERROR: the following packages/stacks could not have their rosdep keys resolved\nto system dependencies:", file=sys.stderr)
+        for rosdep_key, error in errors.iteritems():
+            print("%s: %s"%(rosdep_key, str(error)), file=sys.stderr)
+        return 1
     try:
         installer.install(uninstalled, **install_options)
         if not options.simulate:
@@ -307,7 +312,7 @@ def _print_lookup_errors(lookup):
             print("WARNING: %s"%(str(error)), file=sys.stderr)
             
 def command_what_needs(args, options):
-    lookup = _get_default_RosdepLookup()
+    lookup = _get_default_RosdepLookup(verbose=options.verbose)
     packages = []
     for rosdep_name in args:
         packages.extend(lookup.get_resources_that_need(rosdep_name))
@@ -316,7 +321,7 @@ def command_what_needs(args, options):
     print('\n'.join(set(packages)))
     
 def command_where_defined(args, options):
-    lookup = _get_default_RosdepLookup()
+    lookup = _get_default_RosdepLookup(verbose=options.verbose)
     locations = []
     for rosdep_name in args:
         locations.extend(lookup.get_views_that_define(rosdep_name))
@@ -331,13 +336,11 @@ def command_where_defined(args, options):
         sys.exit(1)
 
 def command_resolve(args, options):
-    lookup = _get_default_RosdepLookup()
-
+    lookup = _get_default_RosdepLookup(verbose=options.verbose)
 
     installer_context = create_default_installer_context(verbose=options.verbose)
     configure_installer_context_os(installer_context, options)
     
-
     os_name, os_version = installer_context.get_os_name_and_version()
 
     try:
@@ -348,7 +351,6 @@ def command_resolve(args, options):
 
     installer = installer_context.get_installer(default_key)
 
-
     #definition.get_rule_for_platform(os_name, os_version, installer_keys, default_key)
 
     packages = []
@@ -358,13 +360,9 @@ def command_resolve(args, options):
         
         if not view_names:
             raise ResolutionError(rosdep_name, None, os_name, os_version, "Could not find definition for rosdep [%s]"%rosdep_name)
-        view = lookup.get_rosdep_view_for_resource(view_names[0][0]) # taking the first one #TODO FIXME
-        
+        # taking the first one #TODO FIXME
+        view = lookup.get_rosdep_view_for_resource(view_names[0][0]) 
         d = view.lookup(rosdep_name)
-
-        
-
-
         inst_key, rule = d.get_rule_for_platform(os_name, os_version, installer_keys, default_key)
 
         resolved = installer.resolve(rule)
@@ -374,8 +372,6 @@ def command_resolve(args, options):
     for error in lookup.get_errors():
         print("WARNING: %s"%(str(error)), file=sys.stderr)
 
-    
-        
     
 
 command_handlers = {

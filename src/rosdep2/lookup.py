@@ -27,6 +27,8 @@
 
 # Author Tully Foote/tfoote@willowgarage.com, Ken Conley/kwc@willowgarage.com
 
+from __future__ import print_function
+
 import os
 import sys
 import traceback
@@ -242,6 +244,9 @@ class RosdepLookup(object):
         # robust to single-stack faults.
         self.errors = []
 
+        # flag for turning on printing to console
+        self.verbose = False
+
     def get_loader(self):
         return self.loader
     
@@ -320,16 +325,22 @@ class RosdepLookup(object):
         """
         resolutions = defaultdict(list)
         errors = {}
+        if not self.verbose:
+            raise Exception("FIXME")
         for resource_name in resources:
             try:
                 rosdep_keys = self.get_rosdeps(resource_name, implicit=True)
+                if self.verbose:
+                    print("resolve_all: resource [%s] requires rosdep keys [%s]"%(resource_name, ', '.join(rosdep_keys)))
                 for rosdep_key in rosdep_keys:
                     try:
-                        installer_key, resolution, dependencies = self.resolve(rosdep_key, resource_name, installer_context)
+                        installer_key, resolution, dependencies = \
+                                       self.resolve(rosdep_key, resource_name, installer_context)
                         resolutions[installer_key].append(resolution)
                         while dependencies:
                             depend_rosdep_key = dependencies.pop()
-                            installer_key, resolution, more_dependencies = self.resolve(depend_rosdep_key, resource_name, installer_context)
+                            installer_key, resolution, more_dependencies = \
+                                           self.resolve(depend_rosdep_key, resource_name, installer_context)
                             dependencies.extend(more_dependencies)
                             resolutions[installer_key].append(resolution)
 
@@ -447,7 +458,7 @@ class RosdepLookup(object):
         if db.is_loaded(view_key):
             return
         try:
-            self.loader.load_view(view_key, db)
+            self.loader.load_view(view_key, db, verbose=self.verbose)
             entry = db.get_view_data(view_key)
             rd_debug("_load_view_dependencies[%s]: %s"%(view_key, entry.view_dependencies))            
             for d in entry.view_dependencies:
