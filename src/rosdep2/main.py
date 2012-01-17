@@ -45,7 +45,7 @@ import rospkg
 from . import create_default_installer_context
 from .core import RosdepInternalError, InstallFailed
 from .installers import RosdepInstaller
-from .lookup import RosdepLookup, ResolutionError
+from .lookup import RosdepLookup, ResolutionError, RosdepConflict
 
 class UsageError(Exception):
     pass
@@ -92,8 +92,8 @@ def rosdep_main(args=None):
     except rospkg.ResourceNotFound as e:
         print("""
 ERROR: Rosdep cannot find all required resources to answer your query
-Missing resource: %s
-"""%(e.args[0]))
+%s
+"""%(error_to_human_readable(e)))
         sys.exit(1)
     except UsageError as e:
         print(_usage, file=sys.stderr)
@@ -108,6 +108,12 @@ Please go to the rosdep page [1] and file a bug report with the message below.
 %s
 """%(e.message), file=sys.stderr)
         sys.exit(1)
+    except RosdepConflict as e:
+        print("""
+ERROR: conflict in rosdep data files
+%s
+"""%(e), file=sys.stderr)
+        sys.exit(1)        
     except ResolutionError as e:
         print("""
 ERROR: %s
@@ -256,7 +262,7 @@ def command_check(lookup, packages, options):
 
 def error_to_human_readable(error):
     if isinstance(error, rospkg.ResourceNotFound):
-        return "cannot locate resource [%s]"%(str(error.args[0]))
+        return "Missing resource [%s]"%(str(error.args[0]))
     elif isinstance(error, ResolutionError):
         return str(error.args[0])
     else:

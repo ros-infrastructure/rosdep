@@ -159,9 +159,16 @@ class RosdepConflict(Exception):
         self.definition2 = definition2
         
     def __str__(self):
+        pretty_data1 = yaml.dump(self.definition1.data, default_flow_style=False)
+        pretty_data2 = yaml.dump(self.definition2.data, default_flow_style=False)
         return """Rules for %s do not match:
-\t%s [%s]
-\t%s [%s]"""%(self.definition_name, self.definition1.data, self.definition1.origin, self.definition2.data, self.definition2.origin)
+In [%s]
+
+%s 
+
+In [%s]
+
+%s"""%(self.definition_name, self.definition1.origin, pretty_data1, self.definition2.origin, pretty_data2)
     
 class RosdepView(object):
     """
@@ -206,10 +213,16 @@ class RosdepView(object):
                 db[dep_name] = update_definition
             else:
                 definition = db[dep_name]
-                # original rosdep implementation had ability
-                # to record multiple sources; this does not.
-                if definition.data != dep_data:
-                    raise RosdepConflict(dep_name, definition, update_definition) 
+                curr_data = definition.data
+                # First, check for conflict.  Conflict's are
+                # OS-specific.  We cannot check at a finer granularity
+                # as keys further in the hierarchy are opaque.
+                for k, v in dep_data.items():
+                    if k in curr_data and curr_data[k] != v:
+                        raise RosdepConflict(dep_name, definition, update_definition) 
+                
+                # If no conflict, do an update
+                curr_data.update(dep_data)
 
 class RosdepLookup(object):
     """

@@ -145,7 +145,8 @@ def test_RosdepView_merge():
     from rosdep2.model import RosdepDatabaseEntry
     from rosdep2.lookup import RosdepView, RosdepConflict
     
-    data = dict(a=1, b=2, c=3)
+    # rosdep data must be dictionary of dictionaries
+    data = dict(a=dict(x=1), b=dict(y=2), c=dict(z=3))
     
     # create empty view and test
     view = RosdepView('common')
@@ -175,16 +176,16 @@ def test_RosdepView_merge():
         assert view.lookup(k).data == v
 
     # merge new for 'd', 'e'
-    d3 = RosdepDatabaseEntry(dict(d=4, e=5), [], 'origin3')
+    d3 = RosdepDatabaseEntry(dict(d=dict(o=4), e=dict(p=5)), [], 'origin3')
     view.merge(d3)
     assert set(view.keys()) == set(data.keys() + ['d', 'e'])
     for k, v in data.items():
         assert view.lookup(k).data == v
-    assert view.lookup('d').data == 4
-    assert view.lookup('e').data == 5
+    assert view.lookup('d').data == dict(o=4)
+    assert view.lookup('e').data == dict(p=5)
 
     # merge different data for 'a'
-    d4 = RosdepDatabaseEntry(dict(a=2), [], 'origin4')
+    d4 = RosdepDatabaseEntry(dict(a=dict(x=2)), [], 'origin4')
     # - first w/o override, should raise conflict
     try:
         view.merge(d4, override=False)
@@ -195,11 +196,11 @@ def test_RosdepView_merge():
     
     # - now w/ override
     view.merge(d4, override=True)
-    assert view.lookup('a').data == 2
-    assert view.lookup('b').data == 2
-    assert view.lookup('c').data == 3
-    assert view.lookup('d').data == 4
-    assert view.lookup('e').data == 5
+    assert view.lookup('a').data == dict(x=2)
+    assert view.lookup('b').data == dict(y=2)
+    assert view.lookup('c').data == dict(z=3)
+    assert view.lookup('d').data == dict(o=4)
+    assert view.lookup('e').data == dict(p=5)
 
     # - tripwire
     str(view)
