@@ -325,8 +325,6 @@ class RosdepLookup(object):
         """
         resolutions = defaultdict(list)
         errors = {}
-        if not self.verbose:
-            raise Exception("FIXME")
         for resource_name in resources:
             try:
                 rosdep_keys = self.get_rosdeps(resource_name, implicit=True)
