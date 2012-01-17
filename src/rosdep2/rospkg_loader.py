@@ -52,6 +52,8 @@ class RosPkgLoader(RosdepLoader):
         self._rospack = rospack
         self._rosstack = rosstack
         self._rosdep_yaml_cache = {}
+        # cache computed list of loadable resources
+        self._loadable_resource_cache = None
         
     def _load_view_rosdep_yaml(self, view_name):
         """
@@ -109,7 +111,13 @@ class RosPkgLoader(RosdepLoader):
         """
         'Resources' map to ROS packages names.
         """
-        return self._rospack.list()
+        # loading of catkinized ROS packages is currently excluded as
+        # they do not have a stack in the install layout.
+        if not self._loadable_resource_cache:
+            loadable_list = self._rospack.list()
+            self._loadable_resource_cache = \
+                                          [x for x in loadable_list if not self._rospack.get_manifest(x).is_catkin]
+        return self._loadable_resource_cache
 
     def get_rosdeps(self, resource_name, implicit=True):
         """

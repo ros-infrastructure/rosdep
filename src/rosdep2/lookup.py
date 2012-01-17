@@ -532,7 +532,12 @@ class RosdepLookup(object):
         self._load_view_dependencies(view_key)
 
         # use dependencies to create view
-        dependencies = self.rosdep_db.get_view_dependencies(view_key)
+        try:
+            dependencies = self.rosdep_db.get_view_dependencies(view_key)
+        except KeyError as e:
+            # convert to ResourceNotFound.  This should be decoupled
+            # in the future
+            raise ResourceNotFound(str(e.args[0]))
         view = self.create_rosdep_view(view_key, [view_key] + dependencies)
         self._view_cache[view_key] = view
         return view

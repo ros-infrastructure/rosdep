@@ -182,8 +182,9 @@ def _package_args_handler(command, parser, options, args, rospack=None, rosstack
         if args:
             parser.error("cannot specify additional arguments with -a")
         else:
-            # we don't use get_loadable b/c here we know we want all packages
-            args = rospack.list()
+            # let the loader filter the -a. This will take out some
+            # packages that are catkinized (for now).
+            args = loader.get_loadable_resources()
     if not args:
         parser.error("no packages or stacks specified")
 
@@ -253,6 +254,14 @@ def command_check(lookup, packages, options):
     else:
         return 0
 
+def error_to_human_readable(error):
+    if isinstance(error, rospkg.ResourceNotFound):
+        return "cannot locate resource [%s]"%(str(error.args[0]))
+    elif isinstance(error, ResolutionError):
+        return str(error.args[0])
+    else:
+        return str(error)
+    
 def command_install(lookup, packages, options):
     # map options
     install_options = dict(interactive=not options.default_yes, verbose=options.verbose,
@@ -277,7 +286,7 @@ def command_install(lookup, packages, options):
     if errors:
         print("ERROR: the following packages/stacks could not have their rosdep keys resolved\nto system dependencies:", file=sys.stderr)
         for rosdep_key, error in errors.iteritems():
-            print("%s: %s"%(rosdep_key, str(error)), file=sys.stderr)
+            print("%s: %s"%(rosdep_key, error_to_human_readable(error)), file=sys.stderr)
         return 1
     try:
         installer.install(uninstalled, **install_options)
