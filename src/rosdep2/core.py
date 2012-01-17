@@ -28,12 +28,23 @@
 from __future__ import print_function
 
 import os
+import sys
 import traceback
 
 def rd_debug(s):
     if "ROSDEP_DEBUG" in os.environ:
         print(s)
 
+def print_bold(msg):
+    """
+    print message printed to screen with bold decoration for greater clarity
+    :param msg: message to print, ``str``
+    """
+    if sys.platform in ['win32']:
+        print('%s'%msg)  #windows console is terrifically boring 
+    else:
+        print('\033[1m%s\033[0m'%msg)
+    
 class RosdepInternalError(Exception):
 
     def __init__(self, e, message=None):

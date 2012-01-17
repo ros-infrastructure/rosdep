@@ -38,7 +38,7 @@ import traceback
 from collections import defaultdict
 from rospkg.os_detect import OsDetect
 
-from .core import rd_debug, RosdepInternalError, InstallFailed
+from .core import rd_debug, RosdepInternalError, InstallFailed, print_bold
 from .model import InvalidRosdepData
 
 # use OsDetect.get_version() for OS version key
@@ -456,6 +456,10 @@ class RosdepInstaller(object):
             uninstalled, errors = installer.get_uninstalled(packages)
             installer.install(uninstalled)
         """
+        if verbose:
+            print("install options: reinstall[%s] simulate[%s] interactive[%s]"%(reinstall, simulate, interactive))
+            print("install: uninstalled keys are %s"%(', '.join(uninstalled.keys())))
+        
         failures = []
         for installer_key, resolved in uninstalled.items(): #py3k:
             if verbose:
@@ -511,8 +515,8 @@ class RosdepInstaller(object):
         # run each install command set and collect errors
         failures = []
         for sub_command in command:
-            if verbose:
-                print("running command [%s]"%' '.join(sub_command))
+            # always echo commands to screen
+            print_bold("executing command [%s]"%' '.join(sub_command))
             result = subprocess.call(sub_command)
             if verbose:
                 print("command return code [%s]: %s"%(' '.join(sub_command), result))

@@ -265,9 +265,15 @@ def command_install(lookup, packages, options):
     installer = RosdepInstaller(installer_context, lookup)
 
     if options.reinstall:
+        if options.verbose:
+            print("reinstall is true, resolving all dependencies")
         uninstalled, errors = lookup.resolve_all(packages, installer_context)
     else:
         uninstalled, errors = installer.get_uninstalled(packages, verbose=options.verbose)
+        
+    if options.verbose:
+        print("uninstalled dependencies are: [%s]"%(', '.join(uninstalled.keys())))
+        
     if errors:
         print("ERROR: the following packages/stacks could not have their rosdep keys resolved\nto system dependencies:", file=sys.stderr)
         for rosdep_key, error in errors.iteritems():
