@@ -47,6 +47,9 @@ from .core import RosdepInternalError, InstallFailed
 from .installers import RosdepInstaller
 from .lookup import RosdepLookup, ResolutionError, RosdepConflict
 
+class UnsupportedOs(Exception):
+    pass
+    
 class UsageError(Exception):
     pass
 
@@ -119,7 +122,10 @@ ERROR: conflict in rosdep data files
 ERROR: %s
 
 %s
-"""%(e.message, e), file=sys.stderr)
+"""%(e.args[0], e), file=sys.stderr)
+        sys.exit(1)
+    except UnsupportedOs as e:
+        print("Unsupported OS: %s\nSupported OSes are [%s]"%(e.args[0], ', '.join(e.args[1])), file=sys.stderr)
         sys.exit(1)
     except Exception as e:
         print("""
@@ -368,7 +374,7 @@ def command_resolve(args, options):
         installer_keys = installer_context.get_os_installer_keys(os_name)
         default_key = installer_context.get_default_os_installer_key(os_name)
     except KeyError:
-        raise ResolutionError(rosdep_key, definition.data, os_name, os_version, "Unsupported OS [%s]"%(os_name))
+        raise UnsupportedOs(os_name, installer_context.get_os_keys())
 
     installer = installer_context.get_installer(default_key)
 
@@ -377,23 +383,24 @@ def command_resolve(args, options):
     packages = []
     view_names = []
     for rosdep_name in args:
+        if len(args) > 1:
+            print("rosdep[%s]"%rosdep_name)
         view_names = lookup.get_views_that_define(rosdep_name)
         
         if not view_names:
             raise ResolutionError(rosdep_name, None, os_name, os_version, "Could not find definition for rosdep [%s]"%rosdep_name)
-        # taking the first one #TODO FIXME
-        view = lookup.get_rosdep_view_for_resource(view_names[0][0]) 
-        d = view.lookup(rosdep_name)
-        inst_key, rule = d.get_rule_for_platform(os_name, os_version, installer_keys, default_key)
+        for view_name, origin in view_names:
+            print("#[%s:%s]"%(view_name, origin))
+            view = lookup.get_rosdep_view_for_resource(view_name)
+            d = view.lookup(rosdep_name)
+            inst_key, rule = d.get_rule_for_platform(os_name, os_version, installer_keys, default_key)
 
-        resolved = installer.resolve(rule)
-        print (" ".join(resolved))
+            resolved = installer.resolve(rule)
+            print (" ".join(resolved))
 
         #print("rule is %s"%rule)
     for error in lookup.get_errors():
-        print("WARNING: %s"%(str(error)), file=sys.stderr)
-
-    
+        print("WARNING: %s"%(error_to_human_readable(error)), file=sys.stderr)
 
 command_handlers = {
     'db': command_depdb,

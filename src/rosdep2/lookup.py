@@ -137,11 +137,12 @@ class ResolutionError(Exception):
         super(ResolutionError, self).__init__(message)
 
     def __str__(self):
+        pretty_data = yaml.dump(self.rosdep_data or '<no data>', default_flow_style=False)
         return """%s
 \trosdep key : %s
 \tOS name    : %s
 \tOS version : %s
-\tData: %s"""%(self.args[0], self.rosdep_key, self.os_name, self.os_version, self.rosdep_data or '<no data>')
+\tData: %s"""%(self.args[0], self.rosdep_key, self.os_name, self.os_version, pretty_data)
 
 class RosdepConflict(Exception):
     """
@@ -521,9 +522,9 @@ class RosdepLookup(object):
         """
         view_key = self.loader.get_view_key(resource_name)
         if not view_key:
-            #TODO: not sure this is the right behavior. This basically
-            #happens for packages that are not in a stack.
-            return None
+            #NOTE: this may not be the right behavior and this happens
+            #for packages that are not in a stack.
+            raise ResourceNotFound("no view for resource [%s]"%(resource_name))
         return self.get_rosdep_view(view_key)
         
     def get_rosdep_view(self, view_key):

@@ -145,6 +145,6 @@ class RosPkgLoader(RosdepLoader):
             # assume it's a package, and get the stack
             return self._rospack.stack_of(resource_name)
         elif resource_name in self._rosstack.list():
-            resource_name
+            return resource_name
         else:
             raise rospkg.ResourceNotFound(resource_name)
