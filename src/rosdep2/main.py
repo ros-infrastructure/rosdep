@@ -326,10 +326,39 @@ def _compute_depdb_output(lookup, packages, options):
             output = output + "<<<< %s -> %s >>>>\n"%(rosdep, resolved)
     return output
     
-def command_depdb(lookup, packages, options):
-    #TODO: get verified_packages from r
-    print(_compute_depdb_output(r, args, options))
-    return 0
+def command_db(lookup, resources, options):
+    # exact same setup logic as command_resolve, should possibly combine
+    lookup = _get_default_RosdepLookup(verbose=options.verbose)
+    installer_context = create_default_installer_context(verbose=options.verbose)
+    configure_installer_context_os(installer_context, options)
+    os_name, os_version = installer_context.get_os_name_and_version()
+    try:
+        installer_keys = installer_context.get_os_installer_keys(os_name)
+        default_key = installer_context.get_default_os_installer_key(os_name)
+    except KeyError:
+        raise UnsupportedOs(os_name, installer_context.get_os_keys())
+    installer = installer_context.get_installer(default_key)
+
+    print("OS NAME: %s"%os_name)
+    print("OS VERSION: %s"%os_version)
+    errors = []
+    for resource_name in resources:
+        if len(resources) > 1:
+            print("RESOURCE: %s"%resource_name)
+        print("DB [key -> resolution]")
+        view = lookup.get_rosdep_view_for_resource(resource_name)
+        for rosdep_name in view.keys():
+            try:
+                d = view.lookup(rosdep_name)
+                inst_key, rule = d.get_rule_for_platform(os_name, os_version, installer_keys, default_key)
+                resolved = installer.resolve(rule)
+                resolved_str = " ".join(resolved)
+                print ("%s -> %s"%(rosdep_name, resolved_str))
+            except ResolutionError as e:
+                errors.append(e)
+
+    for error in errors:
+        print("WARNING: %s"%(error_to_human_readable(error)), file=sys.stderr)
 
 def _print_lookup_errors(lookup):
     for error in lookup.get_errors():
@@ -375,13 +404,8 @@ def command_resolve(args, options):
         default_key = installer_context.get_default_os_installer_key(os_name)
     except KeyError:
         raise UnsupportedOs(os_name, installer_context.get_os_keys())
-
     installer = installer_context.get_installer(default_key)
 
-    #definition.get_rule_for_platform(os_name, os_version, installer_keys, default_key)
-
-    packages = []
-    view_names = []
     for rosdep_name in args:
         if len(args) > 1:
             print("rosdep[%s]"%rosdep_name)
@@ -398,12 +422,11 @@ def command_resolve(args, options):
             resolved = installer.resolve(rule)
             print (" ".join(resolved))
 
-        #print("rule is %s"%rule)
     for error in lookup.get_errors():
         print("WARNING: %s"%(error_to_human_readable(error)), file=sys.stderr)
 
 command_handlers = {
-    'db': command_depdb,
+    'db': command_db,
     'check': command_check,
     'keys': command_keys,
     'install': command_install,
@@ -414,7 +437,7 @@ command_handlers = {
     # backwards compat
     'what_needs': command_what_needs,
     'where_defined': command_where_defined,
-    'depdb': command_depdb, 
+    'depdb': command_db, 
     }
 
 # commands that accept rosdep names as args

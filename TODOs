@@ -9,9 +9,6 @@ install -s > script
 
 =Todos=
 
-release rosdep to pypi
-
-
 update rosdep seach path on /etc/rosdep/sources.list sources.list.d/*   build cache into /var/cache/rosdep
 
 precedence system < /var/cache/rosdep <  ROS_PACKAGE_PATH < ROS_HOME

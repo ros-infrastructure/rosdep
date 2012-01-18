@@ -85,7 +85,7 @@ class RosdepDefinition(object):
         if type(data) != dict:
             raise InvalidRosdepData("rosdep value for [%s] must be a dictionary"%(self.rosdep_key), origin=self.origin)
         if os_name not in data:
-            raise ResolutionError(rosdep_key, data, os_name, os_version, "No definition for OS [%s]"%(os_name))
+            raise ResolutionError(rosdep_key, data, os_name, os_version, "No definition of [%s] for OS [%s]"%(rosdep_key, os_name))
         data = data[os_name]
         return_key = default_installer_key
         
