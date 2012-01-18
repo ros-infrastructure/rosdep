@@ -137,7 +137,10 @@ class ResolutionError(Exception):
         super(ResolutionError, self).__init__(message)
 
     def __str__(self):
-        pretty_data = yaml.dump(self.rosdep_data or '<no data>', default_flow_style=False)
+        if self.rosdep_data:
+            pretty_data = yaml.dump(self.rosdep_data, default_flow_style=False)
+        else:
+            pretty_data = '<no data>'
         return """%s
 \trosdep key : %s
 \tOS name    : %s
@@ -513,7 +516,7 @@ class RosdepLookup(object):
           package) to create view for, ``str``.
 
         :returns: :class:`RosdepView` for specific ROS resource
-          *resource_name*, or ``None`` if no view is available.
+          *resource_name*, or ``None`` if no view is associated with this resource.
         
         :raises: :exc:`RosdepConflict` if view cannot be created due
           to conflict rosdep definitions.
@@ -524,7 +527,7 @@ class RosdepLookup(object):
         if not view_key:
             #NOTE: this may not be the right behavior and this happens
             #for packages that are not in a stack.
-            raise ResourceNotFound("no view for resource [%s]"%(resource_name))
+            return None
         return self.get_rosdep_view(view_key)
         
     def get_rosdep_view(self, view_key):
