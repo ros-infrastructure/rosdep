@@ -1,7 +1,7 @@
 from distutils.core import setup
 
 setup(name='rosdep',
-      version= '0.3.1',
+      version= '0.4.0',
       packages=['rosdep2', 'rosdep2.platforms'],
       package_dir = {'':'src'},
 #      data_files=[('man/man1', ['doc/man/rosdep.1'])],
