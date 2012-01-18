@@ -466,7 +466,7 @@ class RosdepInstaller(object):
                 print("processing rosdeps for installer [%s]"%(installer_key))
             try:
                 self.install_resolved(installer_key, resolved, simulate=simulate,
-                                      reinstall=reinstall, continue_on_error=continue_on_error,
+                                      interactive=interactive, reinstall=reinstall, continue_on_error=continue_on_error,
                                       verbose=verbose)
             except InstallFailed as e:
                 if not continue_on_error:
