@@ -42,7 +42,7 @@ from optparse import OptionParser
 
 import rospkg
 
-from . import create_default_installer_context
+from . import create_default_installer_context, get_default_installer
 from .core import RosdepInternalError, InstallFailed
 from .installers import RosdepInstaller
 from .lookup import RosdepLookup, ResolutionError, RosdepConflict
@@ -395,19 +395,11 @@ def command_where_defined(args, options):
 
 def command_resolve(args, options):
     lookup = _get_default_RosdepLookup(verbose=options.verbose)
-
     installer_context = create_default_installer_context(verbose=options.verbose)
     configure_installer_context_os(installer_context, options)
-    
-    os_name, os_version = installer_context.get_os_name_and_version()
 
-    try:
-        installer_keys = installer_context.get_os_installer_keys(os_name)
-        default_key = installer_context.get_default_os_installer_key(os_name)
-    except KeyError:
-        raise UnsupportedOs(os_name, installer_context.get_os_keys())
-    installer = installer_context.get_installer(default_key)
-
+    installer, installer_keys, default_key, \
+            os_name, os_version = get_default_installer(lookup, installer_context=installer_context, verbose=options.verbose)
     for rosdep_name in args:
         if len(args) > 1:
             print("#ROSDEP[%s]"%rosdep_name)
@@ -421,7 +413,7 @@ def command_resolve(args, options):
             if view is None:
                 continue
             d = view.lookup(rosdep_name)
-            inst_key, rule = d.get_rule_for_platform(os_name, os_version, installer_keys, default_key)
+            _, rule = d.get_rule_for_platform(os_name, os_version, installer_keys, default_key)
 
             resolved = installer.resolve(rule)
             print (" ".join(resolved))

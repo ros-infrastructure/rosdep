@@ -72,3 +72,16 @@ def create_default_installer_context(verbose=False):
 
     return context
 
+def get_default_installer(lookup, installer_context=None, verbose=False):
+    if installer_context is None:
+        installer_context = create_default_installer_context(verbose=verbose)
+
+    os_name, os_version = installer_context.get_os_name_and_version()
+    try:
+        installer_keys = installer_context.get_os_installer_keys(os_name)
+        default_key = installer_context.get_default_os_installer_key(os_name)
+    except KeyError:
+        raise UnsupportedOs(os_name, installer_context.get_os_keys())
+    installer = installer_context.get_installer(default_key)
+    return installer, installer_keys, default_key, os_name, os_version
+    
