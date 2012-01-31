@@ -37,7 +37,7 @@ from .installers import InstallerContext, Installer, PackageManagerInstaller
 
 from .core import RosdepInternalError, InstallFailed
 from .model import InvalidRosdepData, RosdepDatabase, RosdepDatabaseEntry
-from .lookup import RosdepDefinition, RosdepConflict, RosdepView, RosdepLookup
+from .lookup import RosdepDefinition, RosdepConflict, RosdepView, RosdepLookup, ResolutionError
 from .loader import RosdepLoader
 from .rospkg_loader import RosPkgLoader
 
