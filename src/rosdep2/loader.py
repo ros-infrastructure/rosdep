@@ -71,6 +71,7 @@ class RosdepLoader:
         :param rosdep_db: database to load stack data into, :class:`RosdepDatabase`
 
         :raises: :exc:`InvalidRosdepData`
+        :raises: :exc:`rospkg.ResourceNotFound` if view cannot be located
         """
         raise NotImplementedError()
 
