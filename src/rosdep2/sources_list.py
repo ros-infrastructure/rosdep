@@ -1,13 +1,51 @@
+# Copyright (c) 2012, Willow Garage, Inc.
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#     * Neither the name of the Willow Garage, Inc. nor the names of its
+#       contributors may be used to endorse or promote products derived from
+#       this software without specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+
+# Author Ken Conley/kwc@willowgarage.com
+
 import os
 import sys
 import yaml
 import hashlib
 import urllib2
 
+try:
+    import urlparse
+except ImportError:
+    import urllib.parse as urlparse #py3k
+    
 import rospkg
 import rospkg.distro
 
 from .loader import RosdepLoader
+
+#TODO: download default sources list to initialize user : goes to a
+#github.com/ros/rosdep_rules URL and downloads a default sources list
+#file
 
 #seconds to wait before aborting download of rosdep data
 DOWNLOAD_TIMEOUT = 15.0 
@@ -25,15 +63,20 @@ def get_sources_cache_dir():
     ros_home = rospkg.get_ros_home()
     return os.path.join(ros_home, 'rosdep', SOURCES_CACHE_DIR)
 
-#TODO: download default sources list : goes to a
-#github.com/ros/rosdep_rules URL and downloads a default sources list
-#file
-
 # Default rosdep.yaml format.  For now this is the only valid type and
 # is specified for future compatibility.
 TYPE_YAML = 'yaml'
+VALID_TYPES = [TYPE_YAML]
 
 class SourceListDownloadFailure(Exception):
+    """
+    Failure downloading sources list data for I/O or other format reasons.
+    """
+    pass
+class InvalidSourcesFile(Exception):
+    """
+    Sources list data is in an invalid format
+    """
     pass
 
 class DataSource(object):
@@ -45,8 +88,18 @@ class DataSource(object):
         :param tags: tags for matching data source to configurations
         :param origin: filename or other indicator of where data came from for debugging.
         """
+        # validate inputs
+        if not type_ in VALID_TYPES:
+            raise ValueError("type must be one of [%s]"%(','.join(VALID_TYPES)))
+        parsed = urlparse.urlparse(url)
+        if not parsed.scheme or not parsed.netloc or parsed.path in ('', '/'):
+            raise ValueError("url must be a fully-specified URL with scheme, hostname, and path: %s"%(str(url)))
+        if not type(tags) == list:
+            raise ValueError("tags must be a list: %s"%(str(tags)))
+
         self.type = type_
         self.tags = tags
+        
         self.url = url
         self.origin = origin
 
@@ -110,15 +163,19 @@ def create_default_matcher():
     tags = [distro_name, os_name, os_codename]
     return DataSourceMatcher(tags)
 
-def parse_sources_data(data):
+def parse_sources_data(data, origin='<string>'):
     """
-    Parse sources file format::
+    Parse sources file format (tags optional)::
     
-      <type> <uri> <tags>
+      # comments and empty lines allowed
+      <type> <uri> [tags]
 
     e.g.::
 
       yaml http://foo/rosdep.yaml fuerte lucid ubuntu
+    
+    If tags are specified, *all* tags must match the current
+    configuration for the sources data to be used.
     
     :param data: data in sources file format
     :returns: List of data sources, [:class:`DataSource`]
@@ -126,13 +183,20 @@ def parse_sources_data(data):
     """
     sources = []
     for line in data.split('\n'):
+        line = line.strip()
+        # ignore empty lines or comments
+        if not line or line.startswith('#'):
+            continue
         splits = line.split(' ')
-        if len(splits) < 3:
-            raise InvalidSourcesFile("In [%s], invalid line:\n%s"%(filepath, line))
+        if len(splits) < 2:
+            raise InvalidSourcesFile("In [%s], invalid line:\n%s"%(origin, line))
         type_ = splits[0]
         url = splits[1]
         tags = splits[2:]
-        sources.append(DataSource(type_, url, tags))
+        try:
+            sources.append(DataSource(type_, url, tags, origin=origin))
+        except ValueError as e:
+            raise InvalidSourcesFile("In [%s], line:\n\t%s\n%s"%(origin, line, e))
     return sources
 
 def parse_sources_file(filepath):
@@ -140,39 +204,69 @@ def parse_sources_file(filepath):
     Parse file on disk
     
     :returns: List of data sources, [:class:`DataSource`]
-    :raises: :exc:`InvalidSourcesFile`
+    :raises: :exc:`InvalidSourcesFile` If any error occurs reading
+        file, so an I/O error, non-existent file, or invalid format.
     """
     try:
         with open(filepath, 'r') as f:
-            parse_sources_data(f.read())
+            return parse_sources_data(f.read(), origin=filepath)
     except IOError as e:
-        raise InvalidSourcesFile("I/O error reading sources file [%s]: %s"%(e))
+        raise InvalidSourcesFile("I/O error reading sources file [%s]: %s"%(filepath, e))
 
 def parse_sources_list(sources_list_dir=None):
     """
-    :returns: List of data sources, [:class:`DataSource`]
+    Parse data stored in on-disk sources list directory into a list of
+    :class:`DataSource` for processing.
+
+    :returns: List of data sources, [:class:`DataSource`]. If there is
+        no sources list dir, this returns an empty list.
     :raises: :exc:`InvalidSourcesFile`
+    :raises: :exc:`IOError` if *sources_list_dir* cannot be read.
     """
     if sources_list_dir is None:
-        source_list_dir = get_sources_list_dir()
+        sources_list_dir = get_sources_list_dir()
+    if not os.path.exists(sources_list_dir):
+        # no sources on this system.  this is a valid state.
+        return []
+        
     filelist = os.listdir(sources_list_dir)
     sources_list = []
     for f in sorted(filelist):
-        filepath = parse_sources_file(os.path.join(sources_list_dir, f))
-        parse_sources_file(filepath)
-        data_source = DataSource(type_, url, tags, source=filepath)
-        sources_list.append(data_source)
+        sources_list.extend(parse_sources_file(os.path.join(sources_list_dir, f)))
     return sources_list
 
-def update_sources_list():
-    sources = parse_sources_list()
-    write_cache_file(sources_cache_dir, url, rosdep_data)
-    
-    pass
+def update_sources_list(sources_list_dir=None, sources_cache_dir=None, error_handler=None):
+    """
+    :param sources_list_dir: override source list directory
+    :param sources_cache_dir: override sources cache directory
+    :param error_handler: fn(url, SourceListDownloadFailure) to call
+        if a particular source fails.  This hook is mainly for
+        printing errors to console.
+
+    :returns: list of cache files that were updated, ``[str]``
+    :raises: :exc:`InvalidSourcesFile` If any of the sources list files is invalid
+    :raises: :exc:`IOError` If *sources_list_dir* cannot be read or cache data cannot be written
+    """
+    sources = parse_sources_list(sources_list_dir=sources_list_dir)
+    if sources_cache_dir is None:
+        sources_cache_dir = get_sources_cache_dir()
+    for source in sources:
+        try:
+            rosdep_data = download_rosdep_data(source.url)
+            filepath = write_cache_file(sources_cache_dir, source.url, rosdep_data)
+        except SourceListDownloadFailure as e:
+            if error_handler is not None:
+                error_handler(source.url, e)
 
 def load_sources_list():
     sources = parse_sources_list()
+    raise NotImplemented()
 
+def compute_filename_hash(filename_key):
+    sha_hash = hashlib.sha1()
+    sha_hash.update(filename_key)
+    return sha_hash.hexdigest()
+    
 def write_cache_file(source_cache_d, filename_key, rosdep_data):
     """
     :param source_cache_d: directory to write cache file to
@@ -180,9 +274,7 @@ def write_cache_file(source_cache_d, filename_key, rosdep_data):
     :param rosdep_data: dictionary of data to serialize as YAML
     :returns: name of file where cache is stored
     """
-    sha_hash = hashlib.sha1()
-    sha_hash.update(filename_key)
-    key_hash = sha_hash.hexdigest()
+    key_hash = compute_filename_hash(filename_key)
     filepath = os.path.join(source_cache_d, key_hash)
     with open(filepath, 'w') as f:
         f.write(yaml.safe_dump(rosdep_data))
