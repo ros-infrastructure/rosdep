@@ -286,7 +286,7 @@ def parse_sources_list(sources_list_dir=None):
         # no sources on this system.  this is a valid state.
         return []
         
-    filelist = os.listdir(sources_list_dir)
+    filelist = [f for f in os.listdir(sources_list_dir) if f.endswith('.list')]
     sources_list = []
     for f in sorted(filelist):
         sources_list.extend(parse_sources_file(os.path.join(sources_list_dir, f)))
