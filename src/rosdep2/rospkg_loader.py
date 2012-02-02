@@ -40,10 +40,15 @@ import yaml
 import rospkg
 
 from .loader import RosdepLoader, InvalidRosdepData, ROSDEP_YAML
+from .sources_list import SourcesListLoader
 
 class RosPkgLoader(RosdepLoader):
     
-    def __init__(self, rospack=None, rosstack=None):
+    def __init__(self, rospack=None, rosstack=None, underlay_key=None):
+        """
+        :param underlay_key: If set, all views loaded by this loader
+            will depend on this key.
+        """
         if rospack is None:
             rospack = rospkg.RosPack()
         if rosstack is None:
@@ -52,6 +57,8 @@ class RosPkgLoader(RosdepLoader):
         self._rospack = rospack
         self._rosstack = rosstack
         self._rosdep_yaml_cache = {}
+        self._underlay_key = underlay_key
+        
         # cache computed list of loadable resources
         self._loadable_resource_cache = None
         
@@ -99,6 +106,8 @@ class RosPkgLoader(RosdepLoader):
         view_dependencies = self._rosstack.get_depends(view_name, implicit=False)
         if verbose:
             print("view [%s]: dependencies are [%s]"%(view_name, ', '.join(view_dependencies)))
+        if self._underlay_key:
+            view_dependencies = [self._underlay_key] + view_dependencies
         rosdep_db.set_view_data(view_name, rosdep_data, view_dependencies, filename)
 
     def get_loadable_views(self):

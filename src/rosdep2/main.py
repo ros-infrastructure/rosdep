@@ -274,8 +274,9 @@ def command_update(options):
     def update_error_handler(data_source, exc):
         print("ERROR: unable to process source [%s]:\n\t%s"%(data_source.url, exc), file=sys.stderr)
     try:
+        print("reading in sources list data from %s"%(get_sources_list_dir()))
         update_sources_list(success_handler=update_success_handler,
-                                                 error_handler=update_error_handler)
+                            error_handler=update_error_handler)
         print("updated cache in %s"%(get_sources_cache_dir()))
     except InvalidSourcesFile as e:
         print("ERROR: invalid sources list file:\n\t%s"%(e))

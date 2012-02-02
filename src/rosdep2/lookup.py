@@ -43,6 +43,8 @@ from .core import RosdepInternalError, rd_debug
 from .model import RosdepDatabase, RosdepDatabaseEntry, InvalidRosdepData
 from .rospkg_loader import RosPkgLoader
 
+from .sources_list import create_default_matcher, SourcesListLoader
+
 # key for representing .ros/rosdep.yaml override entry
 OVERRIDE_ENTRY = '.ros'
 
@@ -227,7 +229,7 @@ class RosdepView(object):
                 
                 # If no conflict, do an update
                 curr_data.update(dep_data)
-
+            
 class RosdepLookup(object):
     """
     Lookup rosdep definitions.  Provides API for most
@@ -238,8 +240,7 @@ class RosdepLookup(object):
     has already been loaded.
     """
     
-    def __init__(self, rosdep_db, loader,
-                 override_entry=None):
+    def __init__(self, rosdep_db, loader, override_entry=None):
         """
         :param loader: Loader to use for loading rosdep data by stack
           name, ``RosdepLoader``
@@ -249,7 +250,7 @@ class RosdepLookup(object):
         """
         self.rosdep_db = rosdep_db
         self.loader = loader
-
+        
         self._view_cache = {} # {str: {RosdepView}}
         self._resolve_cache = {} # {str : (os_name, os_version, installer_key, resolution, dependencies)}
         
@@ -298,7 +299,9 @@ class RosdepLookup(object):
         return [k for k in self.loader.get_loadable_resources() if rosdep_name in self.get_rosdeps(k, implicit=False)]
 
     @staticmethod
-    def create_from_rospkg(rospack=None, rosstack=None, ros_home=None):
+    def create_from_rospkg(rospack=None, rosstack=None, ros_home=None,
+                           sources_matcher=None, use_underlay=True,
+                           verbose=False):
         """
         Create :class:`RosdepLookup` based on current ROS package
         environment.
@@ -307,6 +310,11 @@ class RosdepLookup(object):
           instance used to crawl ROS packages.
         :param rosstack: (optional) Override :class:`rospkg.RosStack`
           instance used to crawl ROS stacks.
+        :param ros_home: (optional) Override ROS_HOME.
+        :param use_underlay: (optional) Disable the source.list underlay
+        :param sources_matcher: (optional) Override matcher used to
+            determine which sources.list entries are
+            loadable. :class:`DataSourceMatcher`
         """
         # initialize the loader
         if rospack is None:
@@ -315,9 +323,31 @@ class RosdepLookup(object):
             rosstack = RosStack()
         if ros_home is None:
             ros_home = get_ros_home()
+        if sources_matcher is None:
+            sources_matcher = create_default_matcher()
 
-        loader = RosPkgLoader(rospack=rospack, rosstack=rosstack)
         rosdep_db = RosdepDatabase()
+
+        if use_underlay:
+            # Use underlay to initialize rosdep_db.  Underlay has no
+            # notion of specific resources, and its view keys are just the
+            # individual sources it can load from.  Unlike RosPkgLoader,
+            # SourcesListLoader cannot do delayed evaluation of OS setting
+            # due to matcher.
+            if verbose:
+                print("using matcher with tags [%s]"%(', '.join(sources_matcher.tags)))
+            underlay_loader = SourcesListLoader.create_default(sources_matcher)
+            underlay_key = SourcesListLoader.ALL_VIEW_KEY
+        else:
+            underlay_key = underlay_loader = None
+            
+        # Create the rospkg loader on top of the underlay
+        loader = RosPkgLoader(rospack=rospack, rosstack=rosstack,
+                              underlay_key=underlay_key)
+
+        # TODO: (kwc) I really want to nix this feature. It creates
+        # extra special codepaths and isn't as important now that the
+        # underlay feature exists.
         
         # Load ros_home/rosdep.yaml, if present.  It will be used to
         # override individual stack views.
@@ -328,7 +358,17 @@ class RosdepLookup(object):
                 data = loader.load_rosdep_yaml(f.read(), path)
             override_entry = RosdepDatabaseEntry(data, [], path)
 
-        return RosdepLookup(rosdep_db, loader, override_entry=override_entry)
+        # create our actual instance
+        lookup = RosdepLookup(rosdep_db, loader, override_entry=override_entry)
+
+        # load in the underlay
+        if use_underlay:
+            lookup._load_all_views(loader=underlay_loader)
+            # use dependencies to implement precedence
+            view_dependencies = underlay_loader.get_loadable_views()
+            rosdep_db.set_view_data(underlay_key, {}, view_dependencies, underlay_key)
+
+        return lookup
 
     def resolve_all(self, resources, installer_context):
         """
@@ -440,24 +480,25 @@ class RosdepLookup(object):
 
         return installer_key, resolution, dependencies
         
-    def _load_all_views(self):
+    def _load_all_views(self, loader):
         """
         Load all available view keys.  In general, this is equivalent
         to loading all stacks on the package path.  If
         :exc:`InvalidRosdepData` errors occur while loading a view,
         they will be saved in the *errors* field.
 
+        :param loader: override self.loader
         :raises: :exc:`RosdepInternalError` 
         """
-        for resource_name in self.loader.get_loadable_views():
+        for resource_name in loader.get_loadable_views():
             try:
-                self._load_view_dependencies(resource_name)
+                self._load_view_dependencies(resource_name, loader)
             except ResourceNotFound as e:
                 self.errors.append(e)
             except InvalidRosdepData as e:
                 self.errors.append(e)
         
-    def _load_view_dependencies(self, view_key):
+    def _load_view_dependencies(self, view_key, loader):
         """
         Initialize internal :exc:`RosdepDatabase` on demand.  Not
         thread-safe.
@@ -473,14 +514,14 @@ class RosdepLookup(object):
         if db.is_loaded(view_key):
             return
         try:
-            self.loader.load_view(view_key, db, verbose=self.verbose)
+            loader.load_view(view_key, db, verbose=self.verbose)
             entry = db.get_view_data(view_key)
             rd_debug("_load_view_dependencies[%s]: %s"%(view_key, entry.view_dependencies))            
             for d in entry.view_dependencies:
-                self._load_view_dependencies(d)
+                self._load_view_dependencies(d, loader)
         except InvalidRosdepData:
             # mark view as loaded: as we are caching, the valid
-            # behavior is to not attempt loading this stack ever
+            # behavior is to not attempt loading this view ever
             # again.
             db.mark_loaded(view_key)
             # re-raise
@@ -546,7 +587,7 @@ class RosdepLookup(object):
             return self._view_cache[view_key]
 
         # lazy-init
-        self._load_view_dependencies(view_key)
+        self._load_view_dependencies(view_key, self.loader)
 
         # use dependencies to create view
         try:
@@ -555,7 +596,8 @@ class RosdepLookup(object):
             # convert to ResourceNotFound.  This should be decoupled
             # in the future
             raise ResourceNotFound(str(e.args[0]))
-        view = self.create_rosdep_view(view_key, [view_key] + dependencies)
+        # load views in order
+        view = self.create_rosdep_view(view_key, dependencies + [view_key])
         self._view_cache[view_key] = view
         return view
 
@@ -577,7 +619,7 @@ class RosdepLookup(object):
         :raises: :exc:`RosdepInternalError` 
         """
         #TODOXXX: change this to return errors object so that caller cannot ignore
-        self._load_all_views()
+        self._load_all_views(self.loader)
         db = self.rosdep_db
         retval = []
         for view_name in db.get_view_names():

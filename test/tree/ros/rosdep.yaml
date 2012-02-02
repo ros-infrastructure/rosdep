@@ -1,11 +1,11 @@
-tinyxml:
+testtinyxml:
   ubuntu: libtinyxml-dev
   debian: libtinyxml-dev
   osx:
     source:
       uri: 'http://kforge.ros.org/rosrelease/viewvc/sourcedeps/tinyxml/tinyxml-2.6.2-1.rdmanifest'
       md5sum: 13760e61e08c9004493c302a16966c42
-python:
+testpython:
   ubuntu: python-dev
   debian: python-dev
   arch: python
@@ -16,7 +16,7 @@ python:
   gentoo: python
   cygwin: python
   freebsd: python
-python-yaml:
+testpython-yaml:
   ubuntu: python-yaml
   debian: python-yaml
   opensuse: python-yaml
@@ -35,7 +35,7 @@ python-yaml:
         python setup.py install 
       fi
   freebsd: py27-yaml
-python-gtk2:
+testpython-gtk2:
   ubuntu: python-gtk2
   arch: pygtk
   debian: python-gtk2
@@ -45,7 +45,7 @@ python-gtk2:
   rhel: pygtk2
   gentoo: "=dev-python/pygtk-2*"
   freebsd: py-gtk2
-python-scipy:
+testpython-scipy:
   ubuntu: python-scipy
   debian: python-scipy
   arch: python-scipy
@@ -54,7 +54,7 @@ python-scipy:
   macports: py26-scipy
   gentoo: dev-libs/scipy
   freebsd: py-scipy
-bzip2:
+testbzip2:
   ubuntu: libbz2-dev
   debian: libbz2-dev
   opensuse: libbz2-devel 
@@ -65,7 +65,7 @@ bzip2:
   gentoo: app-arch/bzip2
   cygwin: bzip2
   freebsd: bzip2
-boost:
+testboost:
   ubuntu:
     lucid:
       apt:
@@ -108,7 +108,7 @@ boost:
   gentoo: dev-libs/boost
   cygwin: libboost-devel libboost1.40
   freebsd: boost-python-libs
-zlib:
+testzlib:
   ubuntu: zlib1g-dev
   debian: zlib1g-dev
   opensuse: zlib-devel 
@@ -119,7 +119,7 @@ zlib:
   gentoo: sys-libs/zlib
   cygwin: zlib
   freebsd: builtin
-graphviz:
+testgraphviz:
   ubuntu: graphviz
   debian: graphviz
   opensuse: graphviz 
@@ -129,7 +129,7 @@ graphviz:
   macports: graphviz
   gentoo: media-gfx/graphviz
   freebsd: graphviz
-wxwidgets:
+testwxwidgets:
   ubuntu: libwxgtk2.8-dev
   debian: libwxgtk2.8-dev
   opensuse: wxGTK-devel 
@@ -139,7 +139,7 @@ wxwidgets:
   arch: wxgtk
   gentoo: x11-libs/wxGTK
   freebsd: wxgtk2
-wxpython:
+testwxpython:
   ubuntu: python-wxgtk2.8
   arch: wxpython
   opensuse: python-wxGTK 
@@ -150,7 +150,7 @@ wxpython:
   macports: py26-wxpython py26-gobject py26-gtk py26-cairo
   gentoo: dev-python/wxpython
   freebsd: py27-wxPython
-gtk2:
+testgtk2:
   ubuntu: libgtk2.0-dev
   debian: libgtk2.0-dev
   opensuse: gtk2-devel 
@@ -160,7 +160,7 @@ gtk2:
   arch: gtk2
   gentoo: x11-libs/gtk+
   freebsd: gtk20
-pkg-config:
+testpkg-config:
   ubuntu: pkg-config
   debian: pkg-config
   opensuse: pkg-config 
@@ -171,7 +171,7 @@ pkg-config:
   gentoo: dev-util/pkgconfig
   cygwin: pkg-config
   freebsd: pkg-config
-qt4:
+testqt4:
   ubuntu: libqt4-dev qt4-dev-tools
   debian: libqt4-dev qt4-dev-tools 
   arch: qt
@@ -180,18 +180,18 @@ qt4:
   macports: qt4-mac
   gentoo: ">=x11-libs/qt-core-4"
   freebsd: qt4-corelib
-libstdc++5:
+testlibstdc++5:
   ubuntu: libstdc++5
   debian: libstdc++5
   opensuse: libstdc++33 
   freebsd: builtin
-intltool:
+testintltool:
   ubuntu: intltool
   opensuse: intltool 
   fedora: intltool
   gentoo: dev-util/intltool
   freebsd: intltool
-unzip:
+testunzip:
   ubuntu: unzip
   debian: unzip
   arch: unzip
@@ -201,7 +201,7 @@ unzip:
   macports: unzip
   gentoo: app-arch/unzip
   freebsd: unzip
-fltk:
+testfltk:
   ubuntu: libfltk1.1-dev
   debian: libfltk1.1-dev
   opensuse: fltk-devel 
@@ -210,7 +210,7 @@ fltk:
   macports: fltk
   gentoo: "=x11-libs/fltk-1*"
   freebsd: fltk
-bazaar:
+testbazaar:
   ubuntu: bzr
   debian: bzr
   opensuse: bzr 
@@ -218,7 +218,7 @@ bazaar:
   macports: bazaar
   gentoo: dev-vcs/bzr
   freebsd: bazaar
-git: 
+testgit: 
   ubuntu: git-core
   debian: git-core
   opensuse: git-core
@@ -226,7 +226,7 @@ git:
   macports: git-core
   gentoo: dev-vcs/git
   freebsd: git
-subversion:
+testsubversion:
   ubuntu: subversion
   debian: subversion
   opensuse: subversion
@@ -234,7 +234,7 @@ subversion:
   macports: subversion
   gentoo: dev-vcs/subversion
   freebsd: subversion
-mercurial:
+testmercurial:
   ubuntu: mercurial
   debian: mercurial
   opensuse: mercurial 
@@ -242,7 +242,7 @@ mercurial:
   macports: mercurial
   gentoo: dev-vcs/mercurial
   freebsd: mercurial
-gtest:
+testgtest:
   ubuntu: libgtest-dev
   debian: libgtest-dev
   opensuse: gtest-devel 
@@ -250,7 +250,7 @@ gtest:
   macports: google-test
   gentoo: dev-util/gtest
   freebsd: googletest
-autoconf:
+testautoconf:
   ubuntu: autoconf
   debian: autoconf
   opensuse: autoconf
@@ -260,7 +260,7 @@ autoconf:
   macports: autoconf
   gentoo: sys-devel/autoconf
   freebsd: autoconf213 autoconf268
-automake:
+testautomake:
   ubuntu: automake
   debian: automake
   opensuse: automake
@@ -270,7 +270,7 @@ automake:
   macports: automake
   gentoo: sys-devel/automake
   freebsd: automake14 automake111
-libtool:
+testlibtool:
   ubuntu:
     apt: 
       packages: [libtool, libltdl-dev]

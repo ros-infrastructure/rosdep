@@ -48,7 +48,7 @@ def get_test_rospkgs():
     rosstack = RosStack(ros_paths=ros_paths)
     return rospack, rosstack
 
-FAKE_TINYXML_RULE = """tinyxml:
+FAKE_TINYXML_RULE = """testtinyxml:
   ubuntu:
     lucid:
       apt:
@@ -89,7 +89,7 @@ def test_RosdepDefinition():
     except InvalidRosdepData: pass
 
     #  - test w/valid data
-    d2 = yaml.load(FAKE_TINYXML_RULE)['tinyxml']
+    d2 = yaml.load(FAKE_TINYXML_RULE)['testtinyxml']
     definition = RosdepDefinition('d2', d2, 'file2.txt')
     #  - tripwire
     str(definition)
@@ -211,7 +211,8 @@ def test_RosdepLookup_get_rosdeps():
     rospack, rosstack = get_test_rospkgs()
     ros_home = os.path.join(get_test_tree_dir(), 'fake')
     
-    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rospack, ros_home=ros_home)
+    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rospack,
+                                             ros_home=ros_home, use_underlay=False)
     assert lookup.get_loader() is not None
     assert isinstance(lookup.get_loader(), RosdepLoader)
     print(lookup.get_rosdeps('empty_package'))
@@ -236,7 +237,8 @@ def test_RosdepLookup_get_resources_that_need():
     rospack, rosstack = get_test_rospkgs()
     ros_home = os.path.join(get_test_tree_dir(), 'fake')
     
-    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rospack, ros_home=ros_home)
+    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rospack,
+                                             ros_home=ros_home, use_underlay=False)
 
     assert lookup.get_resources_that_need('fake') ==  []
     assert set(lookup.get_resources_that_need('stack1_dep1')) ==  set(['stack1_p1', 'stack1_p2'])
@@ -264,7 +266,8 @@ def test_RosdepLookup_get_rosdep_view_for_resource():
     rospack, rosstack = get_test_rospkgs()
     ros_home = os.path.join(get_test_tree_dir(), 'fake')
     
-    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack, ros_home=ros_home)
+    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack,
+                                             ros_home=ros_home, use_underlay=False)
 
     # depends on nothing
     ros_rosdep_path = os.path.join(rosstack.get_path('ros'), 'rosdep.yaml')
@@ -272,12 +275,12 @@ def test_RosdepLookup_get_rosdep_view_for_resource():
         ros_raw = yaml.load(f.read())
     # - first pass: no cache
     ros_view = lookup.get_rosdep_view_for_resource('roscpp_fake')
-    libtool = ros_view.lookup('libtool')
+    libtool = ros_view.lookup('testlibtool')
     assert ros_rosdep_path == libtool.origin
-    assert ros_raw['libtool'] == libtool.data
-    python = ros_view.lookup('python')
+    assert ros_raw['testlibtool'] == libtool.data
+    python = ros_view.lookup('testpython')
     assert ros_rosdep_path == python.origin
-    assert ros_raw['python'] == python.data
+    assert ros_raw['testpython'] == python.data
 
     # package not in stack
     assert lookup.get_rosdep_view_for_resource('just_a_package') is None
@@ -288,7 +291,8 @@ def test_RosdepLookup_get_rosdep_view():
     rospack, rosstack = get_test_rospkgs()
     ros_home = os.path.join(get_test_tree_dir(), 'fake')
     
-    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack, ros_home=ros_home)
+    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack,
+                                             ros_home=ros_home, use_underlay=False)
 
     # depends on nothing
     ros_rosdep_path = os.path.join(rosstack.get_path('ros'), 'rosdep.yaml')
@@ -296,18 +300,18 @@ def test_RosdepLookup_get_rosdep_view():
         ros_raw = yaml.load(f.read())
     # - first pass: no cache
     ros_view = lookup.get_rosdep_view('ros')
-    libtool = ros_view.lookup('libtool')
+    libtool = ros_view.lookup('testlibtool')
     assert ros_rosdep_path == libtool.origin
-    assert ros_raw['libtool'] == libtool.data
-    python = ros_view.lookup('python')
+    assert ros_raw['testlibtool'] == libtool.data
+    python = ros_view.lookup('testpython')
     assert ros_rosdep_path == python.origin
-    assert ros_raw['python'] == python.data
+    assert ros_raw['testpython'] == python.data
 
     # - second pass: with cache
     ros_view = lookup.get_rosdep_view('ros')
-    libtool = ros_view.lookup('libtool')
+    libtool = ros_view.lookup('testlibtool')
     assert ros_rosdep_path == libtool.origin
-    assert ros_raw['libtool'] == libtool.data
+    assert ros_raw['testlibtool'] == libtool.data
     
     # depends on ros
     stack1_view = lookup.get_rosdep_view('stack1')
@@ -322,18 +326,19 @@ def test_RosdepLookup_get_rosdep_view():
     assert s1p2d1.data == dict(ubuntu='p2dep1-ubuntu', debian='p2dep1-debian'), s1p2d1.data
 
     # - make sure ros data is available 
-    libtool = stack1_view.lookup('libtool')
+    libtool = stack1_view.lookup('testlibtool')
     assert ros_rosdep_path == libtool.origin
-    assert ros_raw['libtool'] == libtool.data
-    python = stack1_view.lookup('python')
+    assert ros_raw['testlibtool'] == libtool.data
+    python = stack1_view.lookup('testpython')
     assert ros_rosdep_path == python.origin
-    assert ros_raw['python'] == python.data
+    assert ros_raw['testpython'] == python.data
 
 def test_RosdepLookup_ros_home_override():
     from rosdep2.lookup import RosdepLookup, OVERRIDE_ENTRY
     rospack, rosstack = get_test_rospkgs()
     ros_home = os.path.join(get_test_dir(), 'ros_home')
-    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack, ros_home=ros_home)
+    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack,
+                                             ros_home=ros_home, use_underlay=False)
 
     ros_home_path = os.path.join(ros_home, 'rosdep.yaml')
     with open(ros_home_path) as f:
@@ -342,19 +347,19 @@ def test_RosdepLookup_ros_home_override():
     # low-level test: make sure entry was initialized
     assert lookup.override_entry is not None
     assert lookup.override_entry.origin == ros_home_path
-    assert 'atlas' in lookup.override_entry.rosdep_data
+    assert 'testatlas' in lookup.override_entry.rosdep_data
 
     # make sure it surfaces in relevant APIs
     # - get_views_that_define
-    val = lookup.get_views_that_define('atlas')
+    val = lookup.get_views_that_define('testatlas')
     assert len(val) == 1, val
     assert val[0] == (OVERRIDE_ENTRY, ros_home_path)
 
     # - get_rosdep_view
     ros_view = lookup.get_rosdep_view('ros')
-    atlas = ros_view.lookup('atlas')
+    atlas = ros_view.lookup('testatlas')
     assert ros_home_path == atlas.origin
-    assert ros_raw['atlas'] == atlas.data
+    assert ros_raw['testatlas'] == atlas.data
 
     #TODO: resolve_definition
 
@@ -364,13 +369,14 @@ def test_RosdepLookup_get_errors():
     rospack, rosstack = get_test_rospkgs()
     tree_dir = get_test_tree_dir()
     ros_home = os.path.join(tree_dir, 'fake')
-    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack, ros_home=ros_home)
+    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack,
+                                             ros_home=ros_home, use_underlay=False)
 
     # shouldn't be any errors (yet)
     assert lookup.get_errors() == []
 
     # force errors
-    lookup._load_all_views()
+    lookup._load_all_views(lookup.loader)
     
     # invalid should be present
     errors = lookup.get_errors()
@@ -382,9 +388,10 @@ def test_RosdepLookup_get_views_that_define():
     rospack, rosstack = get_test_rospkgs()
     tree_dir = get_test_tree_dir()
     ros_home = os.path.join(tree_dir, 'fake')
-    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack, ros_home=ros_home)
+    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack,
+                                             ros_home=ros_home, use_underlay=False)
 
-    val = lookup.get_views_that_define('python')
+    val = lookup.get_views_that_define('testpython')
     assert len(val) == 1
     entry = val[0]
     assert entry == ('ros', os.path.join(rospack.get_ros_paths()[0], 'rosdep.yaml')), entry
@@ -405,7 +412,8 @@ def test_RosdepLookup_resolve_all_errors():
     from rosdep2.lookup import RosdepLookup, ResolutionError
     rospack, rosstack = get_test_rospkgs()
     ros_home = os.path.join(get_test_tree_dir(), 'fake')
-    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack, ros_home=ros_home)
+    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack,
+                                             ros_home=ros_home, use_underlay=False)
     # the installer context has nothing in it, lookups will fail
     installer_context = InstallerContext()
     installer_context.set_os_override('ubuntu', 'lucid')
@@ -422,13 +430,14 @@ def test_RosdepLookup_resolve_errors():
     rospack, rosstack = get_test_rospkgs()
     ros_home = os.path.join(get_test_tree_dir(), 'fake')
     
-    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack, ros_home=ros_home)
+    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack,
+                                             ros_home=ros_home, use_underlay=False)
     # the installer context has nothing in it, lookups will fail
     installer_context = InstallerContext()
     installer_context.set_os_override('ubuntu', 'lucid')
 
     try:
-        lookup.resolve('tinyxml', 'rospack_fake', installer_context)
+        lookup.resolve('testtinyxml', 'rospack_fake', installer_context)
         assert False, "should have raised"
     except ResolutionError as e:
         assert "Unsupported OS" in str(e), str(e)
@@ -440,7 +449,7 @@ def test_RosdepLookup_resolve_errors():
         assert "Cannot locate rosdep definition" in str(e), str(e)
 
     try:
-        lookup.resolve('tinyxml', 'just_a_package', installer_context)
+        lookup.resolve('testtinyxml', 'just_a_package', installer_context)
         assert False, "should have raised"
     except ResolutionError as e:
         assert "does not have a rosdep view" in str(e), str(e)
@@ -451,7 +460,8 @@ def test_RosdepLookup_resolve():
     rospack, rosstack = get_test_rospkgs()
     ros_home = os.path.join(get_test_tree_dir(), 'fake')
     
-    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack, ros_home=ros_home)
+    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack,
+                                             ros_home=ros_home, use_underlay=False)
     installer_context = create_default_installer_context()
     installer_context.set_os_override('ubuntu', 'lucid')
 
@@ -462,17 +472,17 @@ def test_RosdepLookup_resolve():
 
     # repeat for caching
     for count in xrange(0, 2):
-        installer_key, resolution, dependencies = lookup.resolve('tinyxml', 'rospack_fake', installer_context)
+        installer_key, resolution, dependencies = lookup.resolve('testtinyxml', 'rospack_fake', installer_context)
         assert 'apt' == installer_key
         assert ['libtinyxml-dev'] == resolution
         assert [] == dependencies
 
-        installer_key, resolution, dependencies = lookup.resolve('boost', 'roscpp_fake', installer_context)
+        installer_key, resolution, dependencies = lookup.resolve('testboost', 'roscpp_fake', installer_context)
         assert 'apt' == installer_key
         assert ['libboost1.40-all-dev'] == resolution
         assert [] == dependencies
 
-        installer_key, resolution, dependencies = lookup.resolve('libtool', 'roscpp_fake', installer_context)
+        installer_key, resolution, dependencies = lookup.resolve('testlibtool', 'roscpp_fake', installer_context)
         assert 'apt' == installer_key
         assert set(['libtool', 'libltdl-dev']) == set(resolution)
         assert [] == dependencies
@@ -501,7 +511,8 @@ def test_RosdepLookup_resolve_all():
     rospack, rosstack = get_test_rospkgs()
     ros_home = os.path.join(get_test_tree_dir(), 'fake')
     
-    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack, ros_home=ros_home)
+    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack,
+                                             ros_home=ros_home, use_underlay=False)
     installer_context = create_default_installer_context()
     installer_context.set_os_override('ubuntu', 'lucid')
 
@@ -513,7 +524,7 @@ def test_RosdepLookup_resolve_all():
     # repeat for caching
     for count in xrange(0, 2):
         resolutions, errors = lookup.resolve_all(['rospack_fake', 'roscpp_fake'], installer_context)
-        assert not errors
+        assert not errors, errors
         assert 'apt' in resolutions
         assert set(resolutions['apt']) == set(['libtinyxml-dev', 'libboost1.40-all-dev', 'libtool', 'libltdl-dev']), set(resolutions['apt'])
         

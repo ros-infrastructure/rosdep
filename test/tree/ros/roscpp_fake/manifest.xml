@@ -9,8 +9,8 @@
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/roscpp</url>
 
-  <rosdep name="boost" />
-  <rosdep name="libtool" />
+  <rosdep name="testboost" />
+  <rosdep name="testlibtool" />
 </package>
 
 

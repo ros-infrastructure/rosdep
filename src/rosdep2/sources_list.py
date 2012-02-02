@@ -27,6 +27,8 @@
 
 # Author Ken Conley/kwc@willowgarage.com
 
+from __future__ import print_function
+
 import os
 import sys
 import yaml
@@ -393,9 +395,20 @@ class SourcesListLoader(RosdepLoader):
     like the :class:`rosdep2.rospkg_loader.RospkgLoader`.
     """
 
-    RESOURCE_KEY = 'all'
-    VIEW_KEY = 'sources.list'
+    ALL_VIEW_KEY = 'sources.list'
 
+    def __init__(self, sources):
+        """
+        :param sources: cached sources list entries, [:class:`CachedDataSource`]
+        """
+        self.sources = sources
+
+    @staticmethod
+    def create_default(matcher):
+        sources = load_cached_sources_list()
+        sources = [x for x in sources if matcher.matches(x)]
+        return SourcesListLoader(sources)
+        
     def load_view(self, view_name, rosdep_db, verbose=False):
         """
         Load view data into rosdep_db. If the view has already been
@@ -406,15 +419,41 @@ class SourcesListLoader(RosdepLoader):
 
         :raises: :exc:`InvalidRosdepData`
         """
-        if view_name != SourcesListLoader.VIEW_KEY:
-            raise rospkg.ResourceNotFound(view_name)
-        raise NotImplementedError()
+        if rosdep_db.is_loaded(view_name):
+            return
+        source = self.get_source(view_name)
+        if verbose:
+            print("loading view [%s] with sources.list loader"%(view_name))
+        view_dependencies = self.get_view_dependencies(view_name)
+        rosdep_db.set_view_data(view_name, source.rosdep_data, view_dependencies, view_name)
 
     def get_loadable_resources(self):
-        return [SourcesListLoader.RESOURCE_KEY]
+        return []
 
     def get_loadable_views(self):
-        return [SourcesListLoader.VIEW_KEY]
+        return [x.url for x in self.sources]
+
+    def get_view_dependencies(self, view_name):
+        # use dependencies to implement precedence
+        if not self.sources:
+            raise rospkg.ResourceNotFound(view_name)
+        if view_name == SourcesListLoader.ALL_VIEW_KEY:
+            return [x.url for x in self.sources]
+        deps = []
+        curr_source = self.sources[0]
+        for source in self.sources:
+            if source.url != view_name:
+                deps.append(source.url)
+            else:
+                break
+        return deps
+    
+    def get_source(self, view_name):
+        matches = [x for x in self.sources if x.url == view_name]
+        if matches:
+            return matches[0]
+        else:
+            raise rospkg.ResourceNotFound(view_name)
 
     def get_rosdeps(self, resource_name, implicit=True):
         """
@@ -422,9 +461,7 @@ class SourcesListLoader(RosdepLoader):
         
         :raises: :exc:`rospkg.ResourceNotFound` if *resource_name* cannot be found.
         """
-        if resource_name != SourcesListLoader.RESOURCE_KEY:
-            raise rospkg.ResourceNotFound(resource_name)
-        return []
+        raise rospkg.ResourceNotFound(resource_name)
     
     def get_view_key(self, resource_name):
         """
@@ -434,7 +471,4 @@ class SourcesListLoader(RosdepLoader):
         :returns: Name of view that *resource_name* is in, ``None`` if no associated view.
         :raises: :exc:`rospkg.ResourceNotFound` if *resource_name* cannot be found.
         """
-        if resource_name == SourcesListLoader.RESOURCE_KEY:
-            return SourcesListLoader.VIEW_KEY
-        else:
-            raise rospkg.ResourceNotFound(resource_name)
+        raise rospkg.ResourceNotFound(resource_name)

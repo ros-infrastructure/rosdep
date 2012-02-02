@@ -303,13 +303,3 @@ def test_create_default_matcher():
     distro_data_source = rosdep2.sources_list.DataSource('yaml', 'http://fake/url', [distro_name])
     assert matcher.matches(distro_data_source)
 
-
-def test_SourcesListLoader():
-    from rosdep2.sources_list import SourcesListLoader
-    loader = SourcesListLoader()
-    
-    assert [SourcesListLoader.RESOURCE_KEY] == loader.get_loadable_resources()    
-    assert [SourcesListLoader.VIEW_KEY] == loader.get_loadable_views()
-    assert SourcesListLoader.VIEW_KEY == loader.get_view_key(SourcesListLoader.RESOURCE_KEY)
-
-    

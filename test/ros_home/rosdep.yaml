@@ -1,4 +1,4 @@
-assimp:
+testassimp:
   ubuntu:
     apt:
       packages: [assimp-dev]
@@ -10,7 +10,7 @@ assimp:
     source:
       uri: 'https://kforge.ros.org/rosrelease/viewvc/sourcedeps/assimp/assimp-2.0.86-1.rdmanifest'
       md5sum: d5137302d8f00241ee10e623b97f9d22
-eigen:
+testeigen:
   ubuntu:
     lucid:
       apt:
@@ -29,7 +29,7 @@ eigen:
     source:
       uri: 'https://kforge.ros.org/rosrelease/viewvc/sourcedeps/eigen/eigen-3.0.1-1.rdmanifest'
       md5sum: 941db2fbb09d80c28426d335022fad95
-yaml-cpp:
+testyaml-cpp:
   ubuntu: 
     apt: 
       packages: [ yaml-cpp0.2.6-dev ]
@@ -41,14 +41,14 @@ yaml-cpp:
     source:
       uri: 'https://kforge.ros.org/rosrelease/viewvc/sourcedeps/yaml-cpp/yaml-cpp-cmake-0.2.5.rdmanifest'
       md5sum: 863fb3b7e5b5f1e22ff1365de6e66b34
-checkinstall:
+testcheckinstall:
   ubuntu: 
     apt: 
       packages: [checkinstall]
   debian:
     apt: 
       packages: [checkinstall]
-curl:
+testcurl:
   ubuntu: libcurl4-openssl-dev
   debian: libcurl4-openssl-dev
   opensuse: libcurl-devel
@@ -57,7 +57,7 @@ curl:
   macports: curl
   gentoo: net-misc/curl
   freebsd: curl
-libxml2:
+testlibxml2:
   ubuntu: libxml2-dev
   debian: libxml2-dev
   arch: libxml2
@@ -67,7 +67,7 @@ libxml2:
   gentoo: dev-libs/libxml2
   freebsd: libxml2
   fedora: libxml2-devel
-cppunit:
+testcppunit:
   ubuntu: libcppunit-dev
   debian: libcppunit-dev
   opensuse: libcppunit-devel
@@ -77,7 +77,7 @@ cppunit:
   macports: cppunit
   gentoo: dev-util/cppunit
   freebsd: cppunit
-scons:
+testscons:
   ubuntu: scons
   debian: scons
   arch: scons
@@ -86,7 +86,7 @@ scons:
   macports: scons
   gentoo: dev-util/scons
   freebsd: scons
-libxext:
+testlibxext:
   ubuntu: libxext-dev
   debian: libxext-dev
   opensuse: xorg-x11-libXext-devel
@@ -96,7 +96,7 @@ libxext:
   arch: libxext
   gentoo: x11-libs/libXext
   freebsd: libXext
-zziplib:
+testzziplib:
   ubuntu: libzzip-0-13 libzzip-dev
   debian: libzzip-0-13 libzzip-dev
   opensuse: zziplib-devel
@@ -106,7 +106,7 @@ zziplib:
   arch: zziplib
   gentoo: dev-libs/zziplib
   freebsd: zziplib
-libxaw:
+testlibxaw:
   ubuntu: libxaw7-dev
   debian: libxaw7-dev
   opensuse: xorg-x11-devel
@@ -116,7 +116,7 @@ libxaw:
   arch: libxaw
   gentoo: x11-libs/libXaw
   freebsd: libXaw
-opengl:
+testopengl:
   ubuntu: libgl1-mesa-dev libglu1-mesa-dev
   debian: libgl1-mesa-dev libglu1-mesa-dev
   opensuse: Mesa-devel
@@ -126,7 +126,7 @@ opengl:
   arch: mesa
   gentoo: media-libs/mesa
   freebsd: mesagl-mangled
-libxxf86vm:
+testlibxxf86vm:
   ubuntu: libxxf86vm-dev
   debian: libxxf86vm-dev
   opensuse: xorg-x11-devel
@@ -136,20 +136,20 @@ libxxf86vm:
   arch: libxxf86vm
   gentoo: x11-libs/libXxf86vm
   freebsd: libXxf86vm
-atlas:
+testatlas:
   ubuntu: libatlas-base-dev
   debian: libatlas-base-dev
   fedora: atlas-devel
   arch: |
   macports: atlas
   gentoo: atlas
-python-sip4:
+testpython-sip4:
   ubuntu: python-sip4-dev sip4
   debian: python-sip4-dev sip4
   macports: py25-sip
   gentoo: dev-python/sip
   arch: sip
-festival:
+testfestival:
   ubuntu: festival festvox-kallpc16k
   debian: festival festvox-kallpc16k
   arch: festival festival-kallpc16k

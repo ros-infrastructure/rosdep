@@ -9,7 +9,7 @@
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/rospack</url>
 
-  <rosdep name="tinyxml" />
+  <rosdep name="testtinyxml" />
 </package>
 
 
