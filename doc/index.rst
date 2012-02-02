@@ -1,61 +1,13 @@
-.. module:: rosdep2
+Overview
+========
 
-.. _rosdep2:
+.. toctree::
+   :maxdepth: 2
 
-rosdep
-======
-
-.. contents:: Table of Contents
-   :depth: 2
-
-Exceptions
-----------
-
-.. autoclass:: InvalidRosdepData
-
-.. autoclass:: RosdepConflict
-
-Database Model
---------------
-
-.. autoclass:: RosdepDatabase
-   :members:
-
-.. autoclass:: RosdepDatabaseEntry
-   :members:
-
-View Model
-----------
-
-.. autoclass:: RosdepDefinition
-   :members:
-
-.. autoclass:: RosdepView
-   :members:
-
-.. autoclass:: RosdepLookup
-   :members:
-
-Loaders
--------
-
-.. autoclass:: RosdepLoader
-   :members:
-
-.. autoclass:: RosPkgLoader
-   :members:
-
-Installers
-----------
-
-.. autoclass:: InstallerContext
-   :members:
-
-.. autoclass:: Installer
-   :members:
-
-.. autoclass:: PackageManagerInstaller
-   :members:
+   commands
+   rosdep_yaml_format
+   sources_list
+   rosdep2_api
 
 Indices and tables
 ==================
