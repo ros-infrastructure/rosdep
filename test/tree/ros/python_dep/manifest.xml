@@ -9,7 +9,7 @@
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/</url>
 
-  <rosdep name="python" />
+  <rosdep name="testpython" />
 </package>
 
 

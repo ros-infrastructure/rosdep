@@ -154,7 +154,7 @@ class TestRosdepMain(unittest.TestCase):
         try:
             expected = os.path.join(get_test_tree_dir(), 'ros', 'rosdep.yaml')
             with fakeout() as b:
-                rosdep_main(['where_defined', 'python'])
+                rosdep_main(['where_defined', 'testpython'])
                 stdout, stderr = b
                 output = stdout.getvalue().strip()
                 assert os.path.samefile(expected, output)
@@ -165,13 +165,13 @@ class TestRosdepMain(unittest.TestCase):
         try:
             expected = ['python_dep']
             with fakeout() as b:
-                rosdep_main(['what_needs', 'python'])
+                rosdep_main(['what-needs', 'testpython'])
                 stdout, stderr = b
                 output = stdout.getvalue().strip()
                 assert output.split('\n') == expected
             expected = ['python_dep']
             with fakeout() as b:
-                rosdep_main(['what_needs', 'python', '--os', 'ubuntu:lucid', '--verbose'])
+                rosdep_main(['what_needs', 'testpython', '--os', 'ubuntu:lucid', '--verbose'])
                 stdout, stderr = b
                 output = stdout.getvalue().strip()
                 assert output.split('\n') == expected
@@ -183,12 +183,12 @@ class TestRosdepMain(unittest.TestCase):
             with fakeout() as b:
                 rosdep_main(['keys', 'rospack_fake'])
                 stdout, stderr = b
-                assert stdout.getvalue().strip() == "tinyxml", stdout.getvalue()
+                assert stdout.getvalue().strip() == "testtinyxml", stdout.getvalue()
                 assert not stderr.getvalue(), stderr.getvalue()
             with fakeout() as b:
                 rosdep_main(['keys', 'rospack_fake', '--os', 'ubuntu:lucid', '--verbose'])
                 stdout, stderr = b
-                assert stdout.getvalue().strip() == "tinyxml", stdout.getvalue()
+                assert stdout.getvalue().strip() == "testtinyxml", stdout.getvalue()
                 assert not stderr.getvalue(), stderr.getvalue()
         except SystemExit:
             assert False, "system exit occurred"
