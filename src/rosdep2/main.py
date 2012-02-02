@@ -46,6 +46,8 @@ from . import create_default_installer_context, get_default_installer
 from .core import RosdepInternalError, InstallFailed
 from .installers import RosdepInstaller
 from .lookup import RosdepLookup, ResolutionError, RosdepConflict
+from .sources_list import update_sources_list, InvalidSourcesFile, get_sources_cache_dir,\
+     download_default_sources_list, get_sources_list_dir
 
 class UnsupportedOs(Exception):
     pass
@@ -58,25 +60,32 @@ _usage = """usage: rosdep [options] <command> <args>
 Commands:
 
 rosdep check <packages>...
-  will check if the dependencies of package(s) have been met.
+  check if the dependencies of package(s) have been met.
 
 rosdep install <packages>...
-  will generate a bash script and then execute it.
+  generate a bash script and then execute it.
 
 rosdep db <packages>...
-  will generate the dependency database for package(s) and print
+  generate the dependency database for package(s) and print
   it to the console (note that the database will change depending
   on which package(s) you query.
 
+rosdep init
+  initialize rosdep sources.  This command is only necessary on systems
+  without debian-package-based installs.
+  
 rosdep keys <packages>...
-  will list the rosdep keys that the packages depend on.
+  list the rosdep keys that the packages depend on.
 
+rosdep update
+  update your rosdep database based on your rosdep sources.
+  
 rosdep what-needs <rosdeps>...
-  will print a list of packages that declare a rosdep on (at least
+  print a list of packages that declare a rosdep on (at least
   one of) <rosdeps>
 
 rosdep where-defined <rosdeps>...
-  will print a list of yaml files that declare a rosdep on (at least
+  print a list of yaml files that declare a rosdep on (at least
   one of) <rosdeps>
 """
 
@@ -163,19 +172,28 @@ def _rosdep_main(args):
     command = args[0]
     if not command in _commands:
         parser.error("Unsupported command %s."%command)
-    if len(args) < 2 and not options.rosdep_all:
-        parser.error("Please enter arguments for '%s'"%command)
     args = args[1:]
 
     if command in _command_rosdep_args:
         return _rosdep_args_handler(command, parser, options, args)
+    elif command in _command_no_args:
+        return _no_args_handler(command, parser, options, args)        
     else:
         return _package_args_handler(command, parser, options, args)
 
+def _no_args_handler(command, parser, options, args):
+    if args:
+        parser.error("command [%s] takes no arguments"%(command))
+    else:
+        return command_handlers[command](options)
+    
 def _rosdep_args_handler(command, parser, options, args):
+
     # rosdep keys as args
     if options.rosdep_all:
         parser.error("-a, --all is not a valid option for this command")
+    elif len(args) < 1:
+        parser.error("Please enter arguments for '%s'"%command)
     else:
         return command_handlers[command](args, options)
     
@@ -227,6 +245,42 @@ def configure_installer_context_os(installer_context, options):
     os_name = val[:val.find(':')]
     os_version = val[val.find(':')+1:]
     installer_context.set_os_override(os_name, os_version)
+    
+def command_init(options):
+    data = download_default_sources_list()
+    # reuse path variable for error message
+    path = get_sources_list_dir()
+    try:
+        if not os.path.exists(path):
+            os.makedirs(path)
+        path = os.path.join(path, '20-default.list')
+        if os.path.exists(path):
+            print("ERROR: default sources list file already exists:\n\t%s\nPlease delete if you wish to re-initialize"%(path))
+            sys.exit(1)
+        with open(path, 'w') as f:
+            f.write(data)
+        print("Wrote %s"%(path))
+        print("Recommended: please run 'rosdep update' now")
+    except IOError as e:
+        print("ERROR: cannot create %s:\n\t%s"%(path, e), file=sys.stderr)
+        sys.exit(2)        
+    except OSError as e:
+        print("ERROR: cannot create %s:\n\t%s\nPerhaps you need to run 'sudo rosdep init' instead"%(path, e), file=sys.stderr)
+        sys.exit(3)
+    
+def command_update(options):
+    def update_success_handler(data_source):
+        print("Hit %s"%(data_source.url))
+    def update_error_handler(data_source, exc):
+        print("ERROR: unable to process source [%s]:\n\t%s"%(data_source.url, exc), file=sys.stderr)
+    try:
+        update_sources_list(success_handler=update_success_handler,
+                                                 error_handler=update_error_handler)
+        print("updated cache in %s"%(get_sources_cache_dir()))
+    except InvalidSourcesFile as e:
+        print("ERROR: invalid sources list file:\n\t%s"%(e))
+    except IOError as e:
+        print("ERROR: error loading sources list:\n\t%s"%(e))
     
 def command_keys(lookup, packages, options):
     lookup = _get_default_RosdepLookup(verbose=options.verbose)
@@ -429,6 +483,8 @@ command_handlers = {
     'what-needs': command_what_needs,
     'where-defined': command_where_defined,
     'resolve': command_resolve,
+    'init': command_init,
+    'update': command_update,
 
     # backwards compat
     'what_needs': command_what_needs,
@@ -438,6 +494,8 @@ command_handlers = {
 
 # commands that accept rosdep names as args
 _command_rosdep_args = ['what-needs', 'what_needs', 'where-defined', 'where_defined', 'resolve']
+# commands that take no args
+_command_no_args = ['update', 'init']
 
 _commands = command_handlers.keys()
 

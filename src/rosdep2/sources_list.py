@@ -43,9 +43,9 @@ import rospkg.distro
 
 from .loader import RosdepLoader
 
-#TODO: download default sources list to initialize user : goes to a
-#github.com/ros/rosdep_rules URL and downloads a default sources list
-#file
+# default file to download with 'init' command in order to bootstrap
+# rosdep
+DEFAULT_SOURCES_LIST_URL = 'https://raw.github.com/ros/rosdep_rules/master/sources.list.d/20-default.list'
 
 #seconds to wait before aborting download of rosdep data
 DOWNLOAD_TIMEOUT = 15.0 
@@ -97,10 +97,9 @@ class DataSource(object):
         # validate inputs
         if not type_ in VALID_TYPES:
             raise ValueError("type must be one of [%s]"%(','.join(VALID_TYPES)))
-        if not url.startswith('file://'):
-            parsed = urlparse.urlparse(url)
-            if not parsed.scheme or not parsed.netloc or parsed.path in ('', '/'):
-                raise ValueError("url must be a fully-specified URL with scheme, hostname, and path: %s"%(str(url)))
+        parsed = urlparse.urlparse(url)
+        if not parsed.scheme or not parsed.netloc or parsed.path in ('', '/'):
+            raise ValueError("url must be a fully-specified URL with scheme, hostname, and path: %s"%(str(url)))
         if not type(tags) == list:
             raise ValueError("tags must be a list: %s"%(str(tags)))
 
@@ -128,16 +127,17 @@ class DataSource(object):
 # create function we can pass in as model to parse_source_data.  The
 # function emulates the CachedDataSource constructor but does the
 # necessary full filepath calculation and loading of data.
-def cache_data_source_factory(sources_cache_dir):
+def cache_data_source_loader(sources_cache_dir):
     def create_model(type_, uri, tags, origin=None):
-        filename = os.path.join(sources_cache_dir, uri)
-        filepath = os.path.join(sources_cache_dir, uri)
+        # compute the filename has from the URL
+        filename = compute_filename_hash(uri)
+        filepath = os.path.join(sources_cache_dir, filename)
         if os.path.exists(filepath):
             with open(filepath) as f:
                 rosdep_data = yaml.load(f.read())
         else:
             rosdep_data = None
-        return CachedDataSource(type_, "file://%s"%(filename), tags, rosdep_data, origin=origin)
+        return CachedDataSource(type_, uri, tags, rosdep_data, origin=filepath)
     return create_model
     
 class CachedDataSource(DataSource):
@@ -194,6 +194,23 @@ def create_default_matcher():
     os_name, os_version, os_codename = os_detect.detect_os()
     tags = [distro_name, os_name, os_codename]
     return DataSourceMatcher(tags)
+
+def download_default_sources_list():
+    """
+    Download (and validate) contents of default sources list
+
+    :return: raw sources list data, ``str``
+    :raises: :exc:`InvalidSourcesFile`
+    :raises: :exc:`urllib2.URLError` If data cannot be
+        retrieved (e.g. 404, server down).
+    """
+    f = urllib2.urlopen(DEFAULT_SOURCES_LIST_URL, timeout=DOWNLOAD_TIMEOUT)
+    data = f.read()
+    f.close()
+    if not data:
+        raise InvalidSourceFile("cannot download defaults file: empty contents")
+    parse_sources_data(data)
+    return data
 
 def parse_sources_data(data, origin='<string>', model=None):
     """
@@ -258,6 +275,7 @@ def parse_sources_list(sources_list_dir=None):
     :returns: List of data sources, [:class:`DataSource`]. If there is
         no sources list dir, this returns an empty list.
     :raises: :exc:`InvalidSourcesFile`
+    :raises: :exc:`OSError` if *sources_list_dir* cannot be read.
     :raises: :exc:`IOError` if *sources_list_dir* cannot be read.
     """
     if sources_list_dir is None:
@@ -272,13 +290,17 @@ def parse_sources_list(sources_list_dir=None):
         sources_list.extend(parse_sources_file(os.path.join(sources_list_dir, f)))
     return sources_list
 
-def update_sources_list(sources_list_dir=None, sources_cache_dir=None, error_handler=None):
+def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
+                        success_handler=None, error_handler=None):
     """
     Re-downloaded data from remote sources and store in cache.  Also
     update the cache index based on current sources.
     
     :param sources_list_dir: override source list directory
     :param sources_cache_dir: override sources cache directory
+    :param success_handler: fn(DataSource) to call if a particular
+        source loads successfully.  This hook is mainly for printing
+        errors to console.
     :param error_handler: fn(DataSource, SourceListDownloadFailure) to call
         if a particular source fails.  This hook is mainly for
         printing errors to console.
@@ -286,31 +308,35 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None, error_han
     :returns: list of (`DataSource`, cache_file_path) pairs for cache
         files that were updated, ``[str]``
     :raises: :exc:`InvalidSourcesFile` If any of the sources list files is invalid
+    :raises: :exc:`OSError` if *sources_list_dir* cannot be read.
     :raises: :exc:`IOError` If *sources_list_dir* cannot be read or cache data cannot be written
     """
     if sources_cache_dir is None:
         sources_cache_dir = get_sources_cache_dir()
-    sources = parse_sources_list(sources_list_dir=sources_list_dir)
 
+    sources = parse_sources_list(sources_list_dir=sources_list_dir)
     retval = []
     for source in sources:
         try:
             rosdep_data = download_rosdep_data(source.url)
             retval.append((source, write_cache_file(sources_cache_dir, source.url, rosdep_data)))
+            if success_handler is not None:
+                success_handler(source)
         except SourceListDownloadFailure as e:
             if error_handler is not None:
                 error_handler(source, e)
 
-    # Create an index of *all* the sources.  We do all the sources
-    # regardless of failures because a cache from a previous attempt
-    # may still exist.  We have to do this cache index so that loads()
-    # see consistent data.
+    # Create a combined index of *all* the sources.  We do all the
+    # sources regardless of failures because a cache from a previous
+    # attempt may still exist.  We have to do this cache index so that
+    # loads() see consistent data.
+    if not os.path.exists(sources_cache_dir):
+        os.makedirs(sources_cache_dir)
     cache_index = os.path.join(sources_cache_dir, 'index')
     with open(cache_index, 'w') as f:
         f.write("#autogenerated by rosdep, do not edit. use 'rosdep update' instead\n")
         for source in sources:
-            filename = compute_filename_hash(source.url)
-            f.write("yaml %s %s\n"%(filename, ' '.join(source.tags)))
+            f.write("yaml %s %s\n"%(source.url, ' '.join(source.tags)))
     # mainly for debugging and testing
     return retval
 
@@ -318,6 +344,9 @@ def load_cached_sources_list(sources_cache_dir=None):
     """
     Load cached data based on the sources list.
     
+    :returns: list of :class:`CachedDataSource` instance with raw
+        rosdep data loaded.
+    :raises: :exc:`OSError` if cache cannot be read
     :raises: :exc:`IOError` if cache cannot be read
     """
     if sources_cache_dir is None:
@@ -327,7 +356,8 @@ def load_cached_sources_list(sources_cache_dir=None):
         return []
     with open(cache_index, 'r') as f:
         cache_data = f.read()
-    model = cache_data_source_factory(sources_cache_dir)
+    # the loader does all the work
+    model = cache_data_source_loader(sources_cache_dir)
     return parse_sources_data(cache_data, origin=cache_index, model=model)
 
 def compute_filename_hash(filename_key):
@@ -341,7 +371,11 @@ def write_cache_file(source_cache_d, filename_key, rosdep_data):
     :param filename_key: hash of filename is used to store data in
     :param rosdep_data: dictionary of data to serialize as YAML
     :returns: name of file where cache is stored
+    :raises: :exc:`OSError` if cannot write to cache file/directory
+    :raises: :exc:`IOError` if cannot write to cache file/directory
     """
+    if not os.path.exists(source_cache_d):
+        os.makedirs(source_cache_d)
     key_hash = compute_filename_hash(filename_key)
     filepath = os.path.join(source_cache_d, key_hash)
     with open(filepath, 'w') as f:
