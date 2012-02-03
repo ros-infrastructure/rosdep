@@ -47,7 +47,10 @@ from .loader import RosdepLoader
 
 # default file to download with 'init' command in order to bootstrap
 # rosdep
-DEFAULT_SOURCES_LIST_URL = 'https://raw.github.com/ros/rosdep_rules/master/sources.list.d/20-default.list'
+DEFAULT_SOURCES_LIST_URL = 'https://github.com/willowgarage/rosdistro/raw/master/rosdep/sources.list.d/20-default.list'
+
+# location of targets file for processing gbpdistro files
+GBP_TARGETS_URL = 'https://github.com/willowgarage/rosdistro/raw/master/targets.yaml'
 
 #seconds to wait before aborting download of rosdep data
 DOWNLOAD_TIMEOUT = 15.0 
@@ -57,7 +60,12 @@ SOURCES_CACHE_DIR = 'sources.cache'
 
 def get_sources_list_dir():
     # base of where we read config files from
-    etc_ros = rospkg.get_etc_ros_dir()
+    # TODO: windows
+    if 0:
+        # we can't use etc/ros because environment config does not carry over under sudo
+        etc_ros = rospkg.get_etc_ros_dir()
+    else:
+        etc_ros = '/etc/ros'
     # compute cache directory
     return os.path.join(etc_ros, 'rosdep', SOURCES_LIST_DIR)
 
@@ -68,7 +76,9 @@ def get_sources_cache_dir():
 # Default rosdep.yaml format.  For now this is the only valid type and
 # is specified for future compatibility.
 TYPE_YAML = 'yaml'
-VALID_TYPES = [TYPE_YAML]
+# git-buildpackage repo list
+TYPE_GBPDISTRO = 'gbpdistro'
+VALID_TYPES = [TYPE_YAML, TYPE_GBPDISTRO]
 
 class SourceListDownloadFailure(Exception):
     """
@@ -85,7 +95,7 @@ class DataSource(object):
     
     def __init__(self, type_, url, tags, origin=None):
         """
-        :param type_: data source type, e.g. TYPE_YAML
+        :param type_: data source type, e.g. TYPE_YAML, TYPE_GBPDISTRO
 
         :param url: URL of data location.  For file resources, must
           start with the file:// scheme.  For remote resources, URL
@@ -166,6 +176,44 @@ class DataSourceMatcher(object):
         # all of the rosdep_data_source tags must be in our matcher tags
         return not any(set(rosdep_data_source.tags)-set(self.tags))
                  
+def gbprepo_to_rosdep_data(gbpdistro_data, targets_data):
+    """
+    :raises: :exc:`TypeError`
+    :raises: :exc:`KeyError`
+    """
+    if not type(targets_data) == list:
+        raise TypeError("targets data must be a list")
+    if not type(gbpdistro_data) == dict:
+        raise TypeError("gbpdistro data must be a dictionary")        
+    release_name = gbpdistro_data['release-name']
+    if release_name not in targets_data:
+        raise KeyError(release_name)
+    gbp_repos = gbpdistro_data['gbp-repos']
+    for repo in gbp_repos:
+        assert type(repo) == dict
+        if 'targets' in repo:
+            if repo['targets'] == 'all':
+                targets = targets_data[release_name]
+    
+def download_gbpdistro_as_rosdep_data(url):
+    # we can convert a gbpdistro file into rosdep data by following a couple rules
+    try:
+        f = urllib2.urlopen(GBP_TARGETS_URL, timeout=DOWNLOAD_TIMEOUT)
+        text = f.read()
+        f.close()
+        targets_data = yaml.safe_load(text)
+    except Exception as e:
+        raise SourceListDownloadFailure("Failed to download target platform data for gbpdistro:\n\t%s"%(str(e)))
+    try:
+        f = urllib2.urlopen(url, timeout=DOWNLOAD_TIMEOUT)
+        text = f.read()
+        f.close()
+        gbpdistro_data = yaml.safe_load(text)
+        return gbprepo_to_rosdep_data(gbpdistro_data, targets_data)
+    except Exception as e:
+        raise SourceListDownloadFailure("Failed to download target platform data for gbpdistro:\n\t%s"%(    
+    pass
+
 def download_rosdep_data(url):
     """
     :raises: :exc:`SourceListDownloadFailure` If data cannot be
@@ -320,7 +368,10 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
     retval = []
     for source in sources:
         try:
-            rosdep_data = download_rosdep_data(source.url)
+            if source.type == TYPE_YAML:
+                rosdep_data = download_rosdep_data(source.url)
+            elif source.type == TYPE_GBPDISTRO:
+                rosdep_data = download_gbpdistro_as_rosdep_data(source.url)  
             retval.append((source, write_cache_file(sources_cache_dir, source.url, rosdep_data)))
             if success_handler is not None:
                 success_handler(source)
