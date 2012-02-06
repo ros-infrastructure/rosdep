@@ -275,22 +275,27 @@ def gbprepo_to_rosdep_data(gbpdistro_data, targets_data):
                 rosdep_data[rosdep_key][OS_UBUNTU][t] = {APT_INSTALLER:
                                                          {'packages': [deb_package_name]}}
         return rosdep_data
-    except TypeError as e:
-        raise InvalidData("Invalid GBP-distro/targets format: bad type: %s"%(str(e)))
     except KeyError as e:
         raise InvalidData("Invalid GBP-distro/targets format: missing key: %s"%(str(e)))
     
-def download_gbpdistro_as_rosdep_data(url):
+def download_gbpdistro_as_rosdep_data(gbpdistro_url, targets_url=GBP_TARGETS_URL):
+    """
+    Download gbpdistro file from web and convert format to rosdep distro data.
+    
+    :param gbpdistro_url: url of gbpdistro file, ``str``
+    :param target_url: override URL of platform targets file
+    :raises: :exc:`SourceListDownloadFailure`
+    """
     # we can convert a gbpdistro file into rosdep data by following a couple rules
     try:
-        f = urllib2.urlopen(GBP_TARGETS_URL, timeout=DOWNLOAD_TIMEOUT)
+        f = urllib2.urlopen(targets_url, timeout=DOWNLOAD_TIMEOUT)
         text = f.read()
         f.close()
         targets_data = yaml.safe_load(text)
     except Exception as e:
         raise SourceListDownloadFailure("Failed to download target platform data for gbpdistro:\n\t%s"%(str(e)))
     try:
-        f = urllib2.urlopen(url, timeout=DOWNLOAD_TIMEOUT)
+        f = urllib2.urlopen(gbpdistro_url, timeout=DOWNLOAD_TIMEOUT)
         text = f.read()
         f.close()
         gbpdistro_data = yaml.safe_load(text)
@@ -329,20 +334,22 @@ def create_default_matcher():
     tags = [distro_name, os_name, os_codename]
     return DataSourceMatcher(tags)
 
-def download_default_sources_list():
+def download_default_sources_list(url=DEFAULT_SOURCES_LIST_URL):
     """
-    Download (and validate) contents of default sources list
+    Download (and validate) contents of default sources list.
 
+    :param url: override URL of default sources list file
     :return: raw sources list data, ``str``
     :raises: :exc:`InvalidSourcesFile`
     :raises: :exc:`urllib2.URLError` If data cannot be
         retrieved (e.g. 404, server down).
     """
-    f = urllib2.urlopen(DEFAULT_SOURCES_LIST_URL, timeout=DOWNLOAD_TIMEOUT)
+    f = urllib2.urlopen(url, timeout=DOWNLOAD_TIMEOUT)
     data = f.read()
     f.close()
     if not data:
         raise InvalidSourceFile("cannot download defaults file: empty contents")
+    # parse just for validation
     parse_sources_data(data)
     return data
 
@@ -523,11 +530,15 @@ class SourcesListLoader(RosdepLoader):
     """
     SourcesList loader implements the general RosdepLoader API.  This
     implementation is fairly simple as there is only one view the
-    source list loader can create.
+    source list loader can create.  It is also a bit degenerate as it
+    is not capable of mapping resource names to views, thus any
+    resource-name-based API fails or returns nothing interesting.
 
-    This loader will probably not be used directly; instead, it is
-    more useful as a backend loader of higher-level implementations,
-    like the :class:`rosdep2.rospkg_loader.RospkgLoader`.
+    This loader should not be used directly; instead, it is more
+    useful composed with other higher-level implementations, like the
+    :class:`rosdep2.rospkg_loader.RospkgLoader`.  The general intent
+    is to compose it with another loader by making all of the other
+    loader's views depends on all the views in this loader.
     """
 
     ALL_VIEW_KEY = 'sources.list'
@@ -539,8 +550,11 @@ class SourcesListLoader(RosdepLoader):
         self.sources = sources
 
     @staticmethod
-    def create_default(matcher):
-        sources = load_cached_sources_list()
+    def create_default(matcher, sources_cache_dir=None):
+        """
+        :param sources_cache_dir: override location of sources cache
+        """
+        sources = load_cached_sources_list(sources_cache_dir=sources_cache_dir)
         sources = [x for x in sources if matcher.matches(x)]
         return SourcesListLoader(sources)
         
@@ -570,18 +584,14 @@ class SourcesListLoader(RosdepLoader):
 
     def get_view_dependencies(self, view_name):
         # use dependencies to implement precedence
-        if not self.sources:
-            raise rospkg.ResourceNotFound(view_name)
-        if view_name == SourcesListLoader.ALL_VIEW_KEY:
-            return [x.url for x in self.sources]
-        deps = []
-        curr_source = self.sources[0]
-        for source in self.sources:
-            if source.url != view_name:
-                deps.append(source.url)
-            else:
-                break
-        return deps
+        if view_name != SourcesListLoader.ALL_VIEW_KEY:
+            # if the view_name matches one of our sources, return
+            # empty list as none of our sources has deps.
+            if any([x for x in self.sources if view_name == x.url]):
+                return []
+
+        # not one of our views, so it depends on everything we provide
+        return [x.url for x in self.sources]
     
     def get_source(self, view_name):
         matches = [x for x in self.sources if x.url == view_name]
@@ -592,16 +602,15 @@ class SourcesListLoader(RosdepLoader):
 
     def get_rosdeps(self, resource_name, implicit=True):
         """
-        SourceListLoader always returns empty list as no resources have explicit rosdeps.
+        Always raises as SourceListLoader defines no concrete resources with rosdeps.
         
-        :raises: :exc:`rospkg.ResourceNotFound` if *resource_name* cannot be found.
+        :raises: :exc:`rospkg.ResourceNotFound`
         """
         raise rospkg.ResourceNotFound(resource_name)
     
     def get_view_key(self, resource_name):
         """
-        SourceListLoader only understands a single resource and view.
-        It will map that resource to the view.
+        Always raises as SourceListLoader defines no concrete resources with rosdeps.
 
         :returns: Name of view that *resource_name* is in, ``None`` if no associated view.
         :raises: :exc:`rospkg.ResourceNotFound` if *resource_name* cannot be found.
