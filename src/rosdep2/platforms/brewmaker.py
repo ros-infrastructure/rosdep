@@ -10,7 +10,8 @@ except ImportError:
 
 GITHUB_V2_API_REPOS = 'https://github.com/api/v2/json/repos/'
 PATTERN_GITHUB_V2_API_REPOS_SHOW_TAGS = GITHUB_V2_API_REPOS + 'show/%(org_name)s/%(repo_name)s/tags'
-PATTERN_GITHUB_TARBALL_DOWNLOAD = 'https://github.com/%(org_name)s/%(repo_name)s/tarball/%(tag_name)s'
+# include extra filename on the end to help brew with its infererence rules.  Github should ignore them.
+PATTERN_GITHUB_TARBALL_DOWNLOAD = 'https://github.com/%(org_name)s/%(repo_name)s/tarball/%(tag_name)s/%(repo_name)s-%(version)s.tar.gz'
 
 def get_api(api_pattern, org_name, repo_name):
     return api_pattern%locals()
@@ -41,6 +42,7 @@ def compute_tarball_url_for_latest(org_name, repo_name):
     prefix = 'upstream/'
     tags = list_tags(org_name, repo_name, prefix)
     versions = sorted([distutils.version.LooseVersion(t[len(prefix):]) for t in tags])
-    tag_name = 'upstream/%s'%(versions[-1].vstring)
+    version = versions[-1].vstring #for pattern
+    tag_name = 'upstream/%s'%(version)
     return PATTERN_GITHUB_TARBALL_DOWNLOAD%locals()
 
