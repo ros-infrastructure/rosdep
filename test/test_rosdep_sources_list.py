@@ -101,6 +101,13 @@ def test_gbprepo_to_rosdep_data():
         assert False, "should have raised"
     except InvalidData:
         pass
+    # gbp-distro target must be 'all' or a list of strings
+    try:
+        bad_example = {'name': 'common', 'target': [1], url='git://github.com/wg-debs/common_msgs.git'}
+        gbprepo_to_rosdep_data({'release-name': 'foorte', 'gbp-repos': [bad_example]}, targets)
+        assert False, "should have raised"
+    except InvalidData:
+        pass
     
     # make sure our sample files work for the above checks before proceeding to real data
     rosdep_data = gbprepo_to_rosdep_data(simple_gbpdistro, targets)
