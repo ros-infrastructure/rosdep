@@ -29,6 +29,7 @@ import os
 import sys
 import tempfile
 import yaml
+import urllib2
 
 import rospkg.distro
 import rosdep2.sources_list
@@ -46,6 +47,132 @@ def test_parse_sources_data():
     from rosdep2.sources_list import parse_sources_data
     
     parse_sources_data
+
+def test_url_constants():
+    from rosdep2.sources_list import GBP_TARGETS_URL, DEFAULT_SOURCES_LIST_URL, FUERTE_GBPDISTRO_URL
+    for url_name, url in [('GBP_TARGETS_URL', GBP_TARGETS_URL),
+                          ('DEFAULT_SOURCES_LIST_URL', DEFAULT_SOURCES_LIST_URL),
+                          ('FUERTE_GBPDISTRO_URL', FUERTE_GBPDISTRO_URL)]:
+        try:
+            f = urllib2.urlopen(url)
+            f.read()
+            f.close()
+        except:
+            assert False, "URL [%s][%s] failed to download"%(url_name, url)
+
+def test_download_gbpdistro_as_rosdep_data():
+    from rosdep2.sources_list import download_gbpdistro_as_rosdep_data, FUERTE_GBPDISTRO_URL
+    data = download_gbpdistro_as_rosdep_data(FUERTE_GBPDISTRO_URL)
+    # don't go beyond this, this test is just making sure the download
+    # plumbing is correct, not the loader.
+    for k in ['ros', 'catkin', 'genmsg']:
+        assert k in data, data
+    assert data['ros']['ubuntu']
+    
+def test_gbprepo_to_rosdep_data():
+    from rosdep2.sources_list import gbprepo_to_rosdep_data, InvalidData
+    simple_gbpdistro = {'release-name': 'foorte', 'gbp-repos': []}
+    targets = [{'foorte': ['lucid', 'oneiric']}]
+    # test bad data
+    try:
+        gbprepo_to_rosdep_data(simple_gbpdistro, targets[0])
+        assert False, "should have raised"
+    except InvalidData:
+        pass
+    try:
+        gbprepo_to_rosdep_data({'targets': 1, 'gbp-repos': []}, targets)
+        assert False, "should have raised"
+    except InvalidData:
+        pass
+    try:
+        gbprepo_to_rosdep_data([], targets)
+        assert False, "should have raised"
+    except InvalidData:
+        pass
+    # release-name must be in targets
+    try:
+        gbprepo_to_rosdep_data({'release-name': 'barte', 'gbp-repos': []}, targets)
+        assert False, "should have raised"
+    except InvalidData:
+        pass
+    # gbp-distros must be list of dicts
+    try:
+        gbprepo_to_rosdep_data({'release-name': 'foorte', 'gbp-repos': [1]}, targets)
+        assert False, "should have raised"
+    except InvalidData:
+        pass
+    
+    # make sure our sample files work for the above checks before proceeding to real data
+    rosdep_data = gbprepo_to_rosdep_data(simple_gbpdistro, targets)
+    assert rosdep_data is not None
+    assert {} == rosdep_data
+
+    gbpdistro_data = {'release-name': 'foorte',
+                      'gbp-repos': [
+                          dict(name='common_msgs', target='all', url='git://github.com/wg-debs/common_msgs.git'),
+                          dict(name='gazebo', target=['lucid', 'natty'], url='git://github.com/wg-debs/gazebo.git'),
+                          dict(name='foo-bar', target=['precise'], url='git://github.com/wg-debs/gazebo.git'),
+                          ]
+                      }
+    
+    rosdep_data = gbprepo_to_rosdep_data(gbpdistro_data, targets)
+    for k in ['common_msgs', 'gazebo', 'foo-bar']:
+        assert k in rosdep_data
+
+    # all targets and name transform
+    k = 'common_msgs'
+    v = 'ros-foorte-common-msgs'
+    for p in ['lucid', 'oneiric']:
+        rule = rosdep_data[k]['ubuntu'][p]
+        assert rule['apt']['packages'] == [v], rule['apt']['packages']
+    for p in ['maverick', 'natty']:
+        assert p not in rosdep_data[k]['ubuntu']
+    
+    # target overrides
+    k = 'gazebo'
+    v = 'ros-foorte-gazebo'
+    for p in ['lucid', 'natty']:
+        rule = rosdep_data[k]['ubuntu'][p]
+        assert rule['apt']['packages'] == [v], rule['apt']['packages']
+    for p in ['oneiric', 'precise']:
+        assert p not in rosdep_data[k]['ubuntu']
+    
+    # target overrides
+    k = 'foo-bar'
+    v = 'ros-foorte-foo-bar'
+    for p in ['precise']:
+        rule = rosdep_data[k]['ubuntu'][p]
+        assert rule['apt']['packages'] == [v], rule['apt']['packages']
+    for p in ['oneiric', 'natty', 'lucid']:
+        assert p not in rosdep_data[k]['ubuntu']
+    
+def test_CachedDataSource():
+    from rosdep2.sources_list import CachedDataSource, DataSource, TYPE_GBPDISTRO, TYPE_YAML
+    type_ = TYPE_GBPDISTRO
+    url = 'http://fake.willowgarage.com/foo'
+    tags = ['tag1']
+    rosdep_data = {'key': {}}
+    origin = '/tmp/bar'
+    cds = CachedDataSource(type_, url, tags, rosdep_data, origin=origin)
+    assert cds == CachedDataSource(type_, url, tags, rosdep_data, origin=origin)
+    assert cds != CachedDataSource(type_, url, tags, rosdep_data, origin=None)
+    assert cds != CachedDataSource(type_, url, tags, {}, origin=origin)
+    assert cds != CachedDataSource(TYPE_YAML, url, tags, rosdep_data, origin=origin)
+    assert cds != CachedDataSource(type_, 'http://ros.org/foo.yaml', tags, rosdep_data, origin=origin)
+    assert cds != DataSource(type_, url, tags, origin=origin)
+    assert DataSource(type_, url, tags, origin=origin) != cds
+    assert cds.type == type_
+    assert cds.url == url
+    assert cds.origin == origin
+    assert cds.rosdep_data == rosdep_data
+    assert type_ in str(cds)
+    assert type_ in repr(cds)
+    assert url in str(cds)
+    assert url in repr(cds)
+    assert tags[0] in str(cds)
+    assert tags[0] in repr(cds)
+    assert 'key' in str(cds)
+    assert 'key' in repr(cds)    
     
 def test_DataSource():
     from rosdep2.sources_list import DataSource

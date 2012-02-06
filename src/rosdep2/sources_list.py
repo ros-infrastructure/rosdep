@@ -35,10 +35,17 @@ import yaml
 import hashlib
 import urllib2
 
+from rospkg.os_detect import OS_UBUNTU
+from .platforms.debian import APT_INSTALLER
+
 try:
     import urlparse
 except ImportError:
     import urllib.parse as urlparse #py3k
+try:
+    unicode
+except:
+    basestring = unicode = str
     
 import rospkg
 import rospkg.distro
@@ -47,10 +54,13 @@ from .loader import RosdepLoader
 
 # default file to download with 'init' command in order to bootstrap
 # rosdep
-DEFAULT_SOURCES_LIST_URL = 'https://github.com/willowgarage/rosdistro/raw/master/rosdep/sources.list.d/20-default.list'
+DEFAULT_SOURCES_LIST_URL = 'https://raw.github.com/ros/rosdistro/master/rosdep/sources.list.d/20-default.list'
 
 # location of targets file for processing gbpdistro files
-GBP_TARGETS_URL = 'https://github.com/willowgarage/rosdistro/raw/master/targets.yaml'
+GBP_TARGETS_URL = 'https://raw.github.com/ros/rosdistro/master/releases/targets.yaml'
+
+# location of an example gbpdistro file for reference and testing
+FUERTE_GBPDISTRO_URL = 'https://raw.github.com/ros/rosdistro/master/releases/fuerte.yaml'
 
 #seconds to wait before aborting download of rosdep data
 DOWNLOAD_TIMEOUT = 15.0 
@@ -58,6 +68,9 @@ DOWNLOAD_TIMEOUT = 15.0
 SOURCES_LIST_DIR = 'sources.list.d'
 SOURCES_CACHE_DIR = 'sources.cache'
 
+class InvalidData(Exception):
+    pass
+    
 def get_sources_list_dir():
     # base of where we read config files from
     # TODO: windows
@@ -122,7 +135,8 @@ class DataSource(object):
         self.origin = origin
 
     def __eq__(self, other):
-        return self.type == other.type and \
+        return isinstance(other, DataSource) and \
+               self.type == other.type and \
                self.tags == other.tags and \
                self.url == other.url and \
                self.origin == other.origin
@@ -152,15 +166,53 @@ def cache_data_source_loader(sources_cache_dir):
         return CachedDataSource(type_, uri, tags, rosdep_data, origin=filepath)
     return create_model
     
-class CachedDataSource(DataSource):
+class CachedDataSource(object):
 
-    def __init__(self, type_, cache_filename, tags, rosdep_data, origin=None):
-        super(CachedDataSource, self).__init__(type_, cache_filename, tags, origin=origin)
+    def __init__(self, type_, url, tags, rosdep_data, origin=None):
+        """
+        Stores data source and loaded rosdep data for that source.
+
+        NOTE: this is not a subclass of DataSource, though it's API is
+        duck-type compatible with the DataSource API.
+        """
+        self.source = DataSource(type_, url, tags, origin=origin)
         self.rosdep_data = rosdep_data 
     
     def __eq__(self, other):
-        return super(CachedDataSource, self).__eq__(other) and \
+        return self.source == other.source and \
                self.rosdep_data == other.rosdep_data
+
+    def __str__(self):
+        return "%s\n%s"%(self.source, self.rosdep_data)
+
+    def __repr__(self):
+        return repr((self.type, self.url, self.tags, self.rosdep_data, self.origin))
+
+
+    @property
+    def type(self):
+        """
+        :returns: data source type
+        """
+        return self.source.type
+    @property
+    def url(self):
+        """
+        :returns: data source URL
+        """
+        return self.source.url
+    @property
+    def tags(self):
+        """
+        :returns: data source tags
+        """
+        return self.source.tags
+    @property
+    def origin(self):
+        """
+        :returns: data source origin, if set, or ``None``
+        """
+        return self.source.origin
 
 class DataSourceMatcher(object):
     
@@ -178,22 +230,55 @@ class DataSourceMatcher(object):
                  
 def gbprepo_to_rosdep_data(gbpdistro_data, targets_data):
     """
-    :raises: :exc:`TypeError`
-    :raises: :exc:`KeyError`
+    :raises: :exc:`InvalidData`
     """
-    if not type(targets_data) == list:
-        raise TypeError("targets data must be a list")
-    if not type(gbpdistro_data) == dict:
-        raise TypeError("gbpdistro data must be a dictionary")        
-    release_name = gbpdistro_data['release-name']
-    if release_name not in targets_data:
-        raise KeyError(release_name)
-    gbp_repos = gbpdistro_data['gbp-repos']
-    for repo in gbp_repos:
-        assert type(repo) == dict
-        if 'targets' in repo:
-            if repo['targets'] == 'all':
-                targets = targets_data[release_name]
+    # Error reporting for this isn't nearly as good as it could be,
+    # but rushing this implementation a bit.
+    try:
+        if not type(targets_data) == list:
+            raise InvalidData("targets data must be a list")
+        if not type(gbpdistro_data) == dict:
+            raise InvalidData("gbpdistro data must be a dictionary")        
+
+        # compute the default target data for the release_name
+        release_name = gbpdistro_data['release-name']
+        target_data = [t for t in targets_data if release_name in t]
+        if not target_data:
+            raise InvalidData("targets file does not contain information for release [%s]"%(release_name))
+        else:
+            # take the first match
+            target_data = target_data[0][release_name]
+
+        # compute the rosdep data for each repo
+        rosdep_data = {}
+        gbp_repos = gbpdistro_data['gbp-repos']
+        for repo in gbp_repos:
+            if type(repo) != dict:
+                raise InvalidData("invalid repo spec in gbpdistro data: %s"%(str(repo)))
+            rosdep_key = repo['name']
+            rosdep_data[rosdep_key] = {}
+
+            # Do generation for ubuntu
+            rosdep_data[rosdep_key][OS_UBUNTU] = {}
+
+            # - debian package name: underscores must be dashes
+            deb_package_name = 'ros-%s-%s'%(release_name, rosdep_key)
+            deb_package_name = deb_package_name.replace('_', '-')
+
+            repo_targets = repo['target']
+            if repo_targets == 'all':
+                repo_targets = target_data
+
+            for t in repo_targets:
+                if not isinstance(t, basestring):
+                    raise InvalidData("invalid target spec: %s"%(t))
+                rosdep_data[rosdep_key][OS_UBUNTU][t] = {APT_INSTALLER:
+                                                         {'packages': [deb_package_name]}}
+        return rosdep_data
+    except TypeError as e:
+        raise InvalidData("Invalid GBP-distro/targets format: bad type: %s"%(str(e)))
+    except KeyError as e:
+        raise InvalidData("Invalid GBP-distro/targets format: missing key: %s"%(str(e)))
     
 def download_gbpdistro_as_rosdep_data(url):
     # we can convert a gbpdistro file into rosdep data by following a couple rules
