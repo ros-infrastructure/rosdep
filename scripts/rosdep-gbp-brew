@@ -1,0 +1,43 @@
+#!/usr/bin/env python
+
+from __future__ import print_function
+
+import optparse
+import os
+import sys
+
+from rosdep2.platforms.brewmaker import get_org_name, get_repo_name, compute_tarball_url_for_latest
+
+PATTERN_GITHUB_WG_DEBS = 'git@github.com:wg-debs/%(repo_name)s.git'
+
+def usage():
+    print("""Usage: rosdep-gbp-brew <command> <args>
+
+Commands:
+
+rosdep-gbp-brew auto <wg-debs-repo-name>
+rosdep-gbp-brew url <git-url>
+
+Example:
+\trosdep-gbp-brew ros_comm
+""", file=sys.stderr)
+
+def gbp_brew_main(argv):
+    if len(argv) < 2:
+        usage()
+        sys.exit(os.EX_USAGE)
+
+    command = argv[0]
+    if command == 'auto':
+        repo_name = argv[1]
+        url = PATTERN_GITHUB_WG_DEBS%locals()
+    else:
+        url = argv[1]
+
+    org_name, repo_name = get_org_name(url), get_repo_name(url)
+    tarball_url = compute_tarball_url_for_latest(org_name, repo_name)
+    print(tarball_url)
+
+if __name__ == '__main__':
+    gbp_brew_main(sys.argv[1:])
+
