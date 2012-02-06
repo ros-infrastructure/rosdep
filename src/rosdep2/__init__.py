@@ -35,7 +35,7 @@ from __future__ import print_function
 
 from .installers import InstallerContext, Installer, PackageManagerInstaller
 
-from .core import RosdepInternalError, InstallFailed
+from .core import RosdepInternalError, InstallFailed, UnsupportedOs
 from .model import InvalidRosdepData, RosdepDatabase, RosdepDatabaseEntry
 from .lookup import RosdepDefinition, RosdepConflict, RosdepView, RosdepLookup, ResolutionError
 from .loader import RosdepLoader
@@ -72,7 +72,17 @@ def create_default_installer_context(verbose=False):
 
     return context
 
-def get_default_installer(lookup, installer_context=None, verbose=False):
+#TODO: this was partially abstracted from main() for another library,
+# but it turned out to be unnecessary. Not sure it's worth maintaining
+# separately, especially in the top-level module.
+def get_default_installer(installer_context=None, verbose=False):
+    """
+    Based on the active OS and installer context configuration, get
+    the installer to use and the necessary configuration state
+    (installer keys, OS name/version).
+    
+    :returns: installer, installer_keys, default_key, os_name, os_version. 
+    """
     if installer_context is None:
         installer_context = create_default_installer_context(verbose=verbose)
 

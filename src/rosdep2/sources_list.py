@@ -211,8 +211,7 @@ def download_gbpdistro_as_rosdep_data(url):
         gbpdistro_data = yaml.safe_load(text)
         return gbprepo_to_rosdep_data(gbpdistro_data, targets_data)
     except Exception as e:
-        raise SourceListDownloadFailure("Failed to download target platform data for gbpdistro:\n\t%s"%(    
-    pass
+        raise SourceListDownloadFailure("Failed to download target platform data for gbpdistro:\n\t%s"%(str(e)))
 
 def download_rosdep_data(url):
     """

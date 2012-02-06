@@ -188,7 +188,7 @@ class InstallerContext(object):
           is not set.
         """
         # validate, will throw KeyError
-        installer_class = self.get_installer(installer_key)
+        self.get_installer(installer_key)
         if self.verbose:
             print("add installer [%s] to OS [%s]"%(installer_key, os_key))
         if os_key in self.os_installers:
@@ -227,7 +227,7 @@ class InstallerContext(object):
             raise KeyError("installer [%s] is not associated with OS [%s]. call add_os_installer_key() first"%(installer_key, os_key))
 
         # validate, will throw KeyError
-        installer_class = self.get_installer(installer_key)
+        self.get_installer(installer_key)
         if self.verbose:
             print("set default installer [%s] for OS [%s]"%(installer_key, os_key))
         self.default_os_installer[os_key] = installer_key
@@ -263,7 +263,7 @@ class Installer(object):
         :returns: ``True`` if all of the *resolved* items are installed on
           the local system
         """
-        raise NotImplementedError("is_installed")        
+        raise NotImplementedError("is_installed", resolved_item) 
         
     def get_install_command(self, resolved, interactive=True, reinstall=False):
         """
@@ -272,7 +272,7 @@ class Installer(object):
           e.g. Pass through ``-y`` or equivalant to package manager.
         :param reinstall: If `True`, install everything even if already installed
         """
-        raise NotImplementedError("get_package_install_command")
+        raise NotImplementedError("get_package_install_command", resolved, interactive, reinstall)
 
     def get_depends(self, rosdep_args): 
         """ 
@@ -286,7 +286,7 @@ class Installer(object):
         """
         :param rosdep_args_dict: argument dictionary to the rosdep rule for this package manager
         """
-        raise NotImplementedError("Base class resolve")
+        raise NotImplementedError("Base class resolve", rosdep_args_dict)
 
     def unique(self, *resolved_rules):
         """
@@ -303,7 +303,7 @@ class Installer(object):
         :param *resolved_rules: resolved arguments.  Resolved
           arguments must all be from this :class:`Installer` instance.
         """
-        raise NotImplementedError("Base class unique")
+        raise NotImplementedError("Base class unique", resolved_rules)
     
 class PackageManagerInstaller(Installer):
     """
@@ -363,7 +363,7 @@ class PackageManagerInstaller(Installer):
         return not self.get_packages_to_install([resolved_item])
 
     def get_install_command(self, resolved, interactive=True, reinstall=False):
-        raise NotImplementedError('subclasses must implement')
+        raise NotImplementedError('subclasses must implement', resolved, interactive, reinstall)
 
     def get_depends(self, rosdep_args): 
         """ 

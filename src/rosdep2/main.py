@@ -43,15 +43,12 @@ from optparse import OptionParser
 import rospkg
 
 from . import create_default_installer_context, get_default_installer
-from .core import RosdepInternalError, InstallFailed
+from .core import RosdepInternalError, InstallFailed, UnsupportedOs
 from .installers import RosdepInstaller
 from .lookup import RosdepLookup, ResolutionError, RosdepConflict
 from .sources_list import update_sources_list, InvalidSourcesFile, get_sources_cache_dir,\
      download_default_sources_list, get_sources_list_dir
 
-class UnsupportedOs(Exception):
-    pass
-    
 class UsageError(Exception):
     pass
 
@@ -454,7 +451,8 @@ def command_resolve(args, options):
     configure_installer_context_os(installer_context, options)
 
     installer, installer_keys, default_key, \
-            os_name, os_version = get_default_installer(lookup, installer_context=installer_context, verbose=options.verbose)
+            os_name, os_version = get_default_installer(installer_context=installer_context,
+                                                        verbose=options.verbose)
     for rosdep_name in args:
         if len(args) > 1:
             print("#ROSDEP[%s]"%rosdep_name)

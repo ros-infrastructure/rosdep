@@ -404,11 +404,6 @@ class RosdepLookup(object):
             except ResourceNotFound as e:
                 errors[resource_name] = e
 
-        # check for dependencies
-        for installer_key, val in resolutions.items(): #py3k
-            for d in dependencies:
-                self.install_rosdep(d, rdlp, default_yes, execute)
-
         # consolidate resolutions 
         for installer_key, val in resolutions.items(): #py3k
             installer = installer_context.get_installer(installer_key)

@@ -73,7 +73,7 @@ class RosdepLoader:
         :raises: :exc:`InvalidRosdepData`
         :raises: :exc:`rospkg.ResourceNotFound` if view cannot be located
         """
-        raise NotImplementedError()
+        raise NotImplementedError(view_name, rosdep_db, verbose) #pychecker
 
     def get_loadable_resources(self):
         raise NotImplementedError()
@@ -85,7 +85,7 @@ class RosdepLoader:
         """
         :raises: :exc:`rospkg.ResourceNotFound` if *resource_name* cannot be found.
         """
-        raise NotImplementedError()
+        raise NotImplementedError(resource_name, implicit) #pychecker
     
     def get_view_key(self, resource_name):
         """
@@ -96,4 +96,4 @@ class RosdepLoader:
         :returns: Name of view that *resource_name* is in, ``None`` if no associated view.
         :raises: :exc:`rospkg.ResourceNotFound` if *resource_name* cannot be found.
         """
-        raise NotImplementedError() 
+        raise NotImplementedError(resource_name) 

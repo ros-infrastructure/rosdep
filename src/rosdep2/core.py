@@ -45,6 +45,9 @@ def print_bold(msg):
     else:
         print('\033[1m%s\033[0m'%msg)
     
+class UnsupportedOs(Exception):
+    pass
+    
 class RosdepInternalError(Exception):
 
     def __init__(self, e, message=None):
