@@ -27,17 +27,29 @@ Commands
 
   Check if the dependencies of ROS package(s) have been met.
 
-**install <packages>...**
-
-  Install dependencies for specified ROS packages.
-
 **db <packages>...**
 
   Display the dependency database for package(s).
 
+**init**
+
+  Initialize /etc/ros/sources.list.d/ configuration.  May require sudo.
+
+**install <packages>...**
+
+  Install dependencies for specified ROS packages.
+
 **keys <packages>...**
 
   List the rosdep keys that the ROS packages depend on.
+
+**resolve <rosdeps>...**
+
+  Resolve <rosdeps> to system dependencies
+
+**update**
+
+  Update your rosdep database based on your rosdep sources.
 
 **what-needs <rosdeps>...**
 

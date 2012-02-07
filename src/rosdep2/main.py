@@ -68,12 +68,14 @@ rosdep db <packages>...
   on which package(s) you query.
 
 rosdep init
-  initialize rosdep sources.  This command is only necessary on systems
-  without debian-package-based installs.
+  initialize rosdep sources.  May require sudo.
   
 rosdep keys <packages>...
   list the rosdep keys that the packages depend on.
 
+rosdep resolve <rosdeps>
+  resolve <rosdeps> to system dependencies
+  
 rosdep update
   update your rosdep database based on your rosdep sources.
   
