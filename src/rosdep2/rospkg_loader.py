@@ -122,6 +122,7 @@ class RosPkgLoader(RosdepLoader):
         """
         # loading of catkinized ROS packages is currently excluded as
         # they do not have a stack in the install layout.
+        # TODO: stop this exclusion once we get the sources.list infrastructure online
         if not self._loadable_resource_cache:
             loadable_list = self._rospack.list()
             self._loadable_resource_cache = \
@@ -134,7 +135,7 @@ class RosPkgLoader(RosdepLoader):
         
         :raises: :exc:`rospkg.ResourceNotFound` if *resource_name* cannot be found.
         """
-        if resource_name in self._rospack.list():
+        if resource_name in self.get_loadable_resources():
             return self._rospack.get_rosdeps(resource_name, implicit=implicit)
         elif resource_name in self._rosstack.list():
             # stacks currently do not have rosdeps of their own, implicit or otherwise
@@ -150,7 +151,7 @@ class RosPkgLoader(RosdepLoader):
 
         :raises: :exc:`rospkg.ResourceNotFound`
         """
-        if resource_name in self._rospack.list():
+        if resource_name in self.get_loadable_resources():
             # assume it's a package, and get the stack
             return self._rospack.stack_of(resource_name)
         elif resource_name in self._rosstack.list():
