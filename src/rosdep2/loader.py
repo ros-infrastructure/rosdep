@@ -37,7 +37,7 @@ version of rosdep that works against tarballs of released stacks.
 
 import yaml
 
-from .model import RosdepDatabase, InvalidRosdepData
+from .model import RosdepDatabase, InvalidData
 
 ROSDEP_YAML = 'rosdep.yaml'
 
@@ -60,7 +60,7 @@ class RosdepLoader:
         try:
             return yaml.load(yaml_contents)
         except yaml.YAMLError as e:
-            raise InvalidRosdepData("Invalid YAML in [%s]: %s"%(origin, e), origin=origin)
+            raise InvalidData("Invalid YAML in [%s]: %s"%(origin, e), origin=origin)
 
     def load_view(self, view_name, rosdep_db, verbose=False):
         """
@@ -70,7 +70,7 @@ class RosdepLoader:
         :param view_name: name of ROS stack to load, ``str``
         :param rosdep_db: database to load stack data into, :class:`RosdepDatabase`
 
-        :raises: :exc:`InvalidRosdepData`
+        :raises: :exc:`InvalidData`
         :raises: :exc:`rospkg.ResourceNotFound` if view cannot be located
         """
         raise NotImplementedError(view_name, rosdep_db, verbose) #pychecker

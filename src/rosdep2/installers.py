@@ -39,7 +39,7 @@ from collections import defaultdict
 from rospkg.os_detect import OsDetect
 
 from .core import rd_debug, RosdepInternalError, InstallFailed, print_bold
-from .model import InvalidRosdepData
+from .model import InvalidData
 
 # use OsDetect.get_version() for OS version key
 TYPE_VERSION = 'version'
@@ -339,7 +339,7 @@ class PackageManagerInstaller(Installer):
         elif type(rosdep_args) == list:
             packages = rosdep_args
         else:
-            raise InvalidRosdepData("Invalid rosdep args: %s"%(rosdep_args))
+            raise InvalidData("Invalid rosdep args: %s"%(rosdep_args))
         return packages
 
     def unique(self, *resolved_rules):

@@ -25,13 +25,6 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-def test_InvalidRosdepData():
-    from rosdep2.model import InvalidRosdepData
-    try:
-        raise InvalidRosdepData('hi')
-    except InvalidRosdepData as ex:
-        assert 'hi' in str(ex)
-
 def test_RosdepDatabaseEntry():
     # not muich to test with container
     from rosdep2.model import RosdepDatabaseEntry

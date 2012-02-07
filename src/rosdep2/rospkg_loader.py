@@ -39,7 +39,7 @@ import yaml
 
 import rospkg
 
-from .loader import RosdepLoader, InvalidRosdepData, ROSDEP_YAML
+from .loader import RosdepLoader, InvalidData, ROSDEP_YAML
 from .sources_list import SourcesListLoader
 
 class RosPkgLoader(RosdepLoader):
@@ -70,7 +70,7 @@ class RosPkgLoader(RosdepLoader):
           ``(dict, str)``.  Returns ``(None, None)`` if view does not
           have a rosdep YAML.
         
-        :raises: :exc:`InvalidRosdepData`
+        :raises: :exc:`InvalidData`
         :raises: :exc:`rospkg.ResourceNotFound` If view cannot be located
         """
         stack_dir = self._rosstack.get_path(view_name)
@@ -88,7 +88,7 @@ class RosPkgLoader(RosdepLoader):
         view has no rosdep data, it will be initialized with an empty
         data map.
 
-        :raises: :exc:`InvalidRosdepData` if view rosdep.yaml is invalid
+        :raises: :exc:`InvalidData` if view rosdep.yaml is invalid
         :raises: :exc:`rospkg.ResourceNotFound` if view cannot be located
 
         :returns: ``True`` if view was loaded.  ``False`` if view

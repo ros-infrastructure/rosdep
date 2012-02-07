@@ -287,7 +287,7 @@ def test_PackageManagerInstaller():
     except NotImplementedError: pass
 
 def test_PackageManagerInstaller_resolve():
-    from rosdep2.model import InvalidRosdepData
+    from rosdep2.model import InvalidData
     from rosdep2.installers import PackageManagerInstaller
 
     installer = PackageManagerInstaller(detect_fn_all)
@@ -308,7 +308,7 @@ def test_PackageManagerInstaller_resolve():
     try:
         installer.resolve(0)
         assert False, "should have raised"
-    except InvalidRosdepData: pass
+    except InvalidData: pass
 
 def test_PackageManagerInstaller_depends():
     from rosdep2.installers import PackageManagerInstaller

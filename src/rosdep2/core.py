@@ -45,6 +45,15 @@ def print_bold(msg):
     else:
         print('\033[1m%s\033[0m'%msg)
     
+class InvalidData(Exception):
+    """
+    Data is not in valid rosdep format.
+    """
+
+    def __init__(self, message, origin=None):
+        super(InvalidData, self).__init__(message)
+        self.origin = origin
+
 class UnsupportedOs(Exception):
     pass
     

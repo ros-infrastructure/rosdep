@@ -36,6 +36,8 @@ import hashlib
 import urllib2
 
 from rospkg.os_detect import OS_UBUNTU
+
+from .core import InvalidData
 from .platforms.debian import APT_INSTALLER
 
 try:
@@ -68,9 +70,6 @@ DOWNLOAD_TIMEOUT = 15.0
 SOURCES_LIST_DIR = 'sources.list.d'
 SOURCES_CACHE_DIR = 'sources.cache'
 
-class InvalidData(Exception):
-    pass
-    
 def get_sources_list_dir():
     # base of where we read config files from
     # TODO: windows
@@ -232,8 +231,9 @@ def gbprepo_to_rosdep_data(gbpdistro_data, targets_data):
     """
     :raises: :exc:`InvalidData`
     """
-    # Error reporting for this isn't nearly as good as it could be,
-    # but rushing this implementation a bit.
+    # Error reporting for this isn't nearly as good as it could be
+    # (e.g. doesn't separate gbpdistro vs. targets, nor provide
+    # origin), but rushing this implementation a bit.
     try:
         if not type(targets_data) == list:
             raise InvalidData("targets data must be a list")
@@ -566,7 +566,7 @@ class SourcesListLoader(RosdepLoader):
         :param view_name: name of ROS stack to load, ``str``
         :param rosdep_db: database to load stack data into, :class:`RosdepDatabase`
 
-        :raises: :exc:`InvalidRosdepData`
+        :raises: :exc:`InvalidData`
         """
         if rosdep_db.is_loaded(view_name):
             return

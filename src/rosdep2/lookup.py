@@ -40,7 +40,7 @@ from rospkg import RosPack, RosStack, get_ros_home, ResourceNotFound
 from rospkg.os_detect import OsDetect
 
 from .core import RosdepInternalError, rd_debug
-from .model import RosdepDatabase, RosdepDatabaseEntry, InvalidRosdepData
+from .model import RosdepDatabase, RosdepDatabaseEntry, InvalidData
 from .rospkg_loader import RosPkgLoader
 
 from .sources_list import create_default_matcher, SourcesListLoader
@@ -79,13 +79,13 @@ class RosdepDefinition(object):
         :returns: (installer_key, rosdep_args_dict), ``(str, dict)``
 
         :raises: :exc:`ResolutionError` If no rule is available
-        :raises: :exc:`InvalidRosdepData` If rule data is not valid
+        :raises: :exc:`InvalidData` If rule data is not valid
         """
         rosdep_key = self.rosdep_key
         data = self.data
 
         if type(data) != dict:
-            raise InvalidRosdepData("rosdep value for [%s] must be a dictionary"%(self.rosdep_key), origin=self.origin)
+            raise InvalidData("rosdep value for [%s] must be a dictionary"%(self.rosdep_key), origin=self.origin)
         if os_name not in data:
             raise ResolutionError(rosdep_key, data, os_name, os_version, "No definition of [%s] for OS [%s]"%(rosdep_key, os_name))
         data = data[os_name]
@@ -122,7 +122,7 @@ class RosdepDefinition(object):
                                 break
 
         if type(data) not in (dict, list, type('str')):
-            raise InvalidRosdepData("rosdep OS definition for [%s:%s] must be a dictionary, string, or list: %s"%(self.rosdep_key, os_name, data), origin=self.origin)
+            raise InvalidData("rosdep OS definition for [%s:%s] must be a dictionary, string, or list: %s"%(self.rosdep_key, os_name, data), origin=self.origin)
 
         return return_key, data
 
@@ -479,7 +479,7 @@ class RosdepLookup(object):
         """
         Load all available view keys.  In general, this is equivalent
         to loading all stacks on the package path.  If
-        :exc:`InvalidRosdepData` errors occur while loading a view,
+        :exc:`InvalidData` errors occur while loading a view,
         they will be saved in the *errors* field.
 
         :param loader: override self.loader
@@ -490,7 +490,7 @@ class RosdepLookup(object):
                 self._load_view_dependencies(resource_name, loader)
             except ResourceNotFound as e:
                 self.errors.append(e)
-            except InvalidRosdepData as e:
+            except InvalidData as e:
                 self.errors.append(e)
         
     def _load_view_dependencies(self, view_key, loader):
@@ -501,7 +501,7 @@ class RosdepLookup(object):
         :param view_key: name of view to load dependencies for.
         
         :raises: :exc:`rospkg.ResourceNotFound` If view cannot be located
-        :raises: :exc:`InvalidRosdepData` if view's data is invaid
+        :raises: :exc:`InvalidData` if view's data is invaid
         :raises: :exc:`RosdepInternalError`
         """
         rd_debug("_load_view_dependencies[%s]"%(view_key))
@@ -514,7 +514,7 @@ class RosdepLookup(object):
             rd_debug("_load_view_dependencies[%s]: %s"%(view_key, entry.view_dependencies))            
             for d in entry.view_dependencies:
                 self._load_view_dependencies(d, loader)
-        except InvalidRosdepData:
+        except InvalidData:
             # mark view as loaded: as we are caching, the valid
             # behavior is to not attempt loading this view ever
             # again.
@@ -603,7 +603,7 @@ class RosdepLookup(object):
         in the configuration will be loaded into memory.
 
         Error state from single-stack failures
-        (e.g. :exc:`InvalidRosdepData`, :exc:`ResourceNotFound`) are
+        (e.g. :exc:`InvalidData`, :exc:`ResourceNotFound`) are
         not propagated.  Caller must check
         :meth:`RosdepLookup.get_errors` to check for single-stack
         error state.  Error state does not reset -- it accumulates.

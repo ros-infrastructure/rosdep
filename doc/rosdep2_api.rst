@@ -21,7 +21,7 @@ The :mod:`rospkg` library is used for OS detection.
 Exceptions
 ----------
 
-.. autoclass:: InvalidRosdepData
+.. autoclass:: InvalidData
 
 .. autoclass:: RosdepConflict
 

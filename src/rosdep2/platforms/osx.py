@@ -135,7 +135,7 @@ def _validate_homebrew_resolutions(resolutions):
     args = resolutions[0].args
     for r in resolutions:
         if set(r.args) != set(args):
-            raise InvalidRosdepData("conflicting args in homebrew specifications:\n%s"%('\n'.join([str(x) for x in resolutions])))
+            raise InvalidData("conflicting args in homebrew specifications:\n%s"%('\n'.join([str(x) for x in resolutions])))
     else:
         return resolutions[0]
 
@@ -166,10 +166,10 @@ class HomebrewResolution(object):
     def __init__(self, packages, formula_uris, args):
         """
         :param formula_uris: If specified, overrides packages, which will only be used for detection.
-        :raises InvalidRosdepData: if formula_uris are specified and not the same length as packages
+        :raises InvalidData: if formula_uris are specified and not the same length as packages
         """
         if formula_uris and len(packages) != len(formula_uris):
-            raise InvalidRosdepData('When "formula_uris" are specified, they must be the same lengths as "packages": %s vs %s'%(str(packages), str(formula_uris)))
+            raise InvalidData('When "formula_uris" are specified, they must be the same lengths as "packages": %s vs %s'%(str(packages), str(formula_uris)))
         self.packages = packages
         self.formula_uris = formula_uris
         self.args = args

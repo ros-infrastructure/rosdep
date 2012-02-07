@@ -49,7 +49,7 @@ def get_rospkg():
 def test_RosPkgLoader():
     from rosdep2.model import RosdepDatabase
     from rosdep2.rospkg_loader import RosPkgLoader
-    from rosdep2.loader import InvalidRosdepData
+    from rosdep2.loader import InvalidData
     
     # tripwire
     loader = RosPkgLoader()
@@ -76,7 +76,7 @@ def test_RosPkgLoader():
     try:
         loader.load_view('invalid', rosdep_db)
         assert False, "should have raised"
-    except InvalidRosdepData as e:
+    except InvalidData as e:
         pass
 
     # test with complicated ros stack.  

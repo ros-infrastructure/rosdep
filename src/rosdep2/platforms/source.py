@@ -39,7 +39,7 @@ import yaml
 
 from ..core import rd_debug
 from ..installers import Installer, InstallFailed
-from ..model import InvalidRosdepData
+from ..model import InvalidData
 from ..shell_utils import create_tempfile_from_string_and_execute
 
 SOURCE_INSTALLER='source'
@@ -160,13 +160,13 @@ class SourceInstaller(Installer):
     
     def resolve(self, rosdep_args):
         """
-        :raises: :exc:`InvalidRosdepData` If format invalid or unable
+        :raises: :exc:`InvalidData` If format invalid or unable
           to retrieve rdmanifests.
         """
         try:
             url = rosdep_args.get["uri"]
         except KeyError:
-            raise InvalidRosdepData("'uri' key required for source rosdeps") 
+            raise InvalidData("'uri' key required for source rosdeps") 
         alt_url = rosdep_args.get("alternate-uri", None)
         md5sum = rosdep_args.get("md5sum", None)
 
@@ -184,9 +184,9 @@ class SourceInstaller(Installer):
             return resolved
         except DownloadFailed as ex:
             # not sure this should be masked this way
-            raise InvalidRosdepData(str(ex))            
+            raise InvalidData(str(ex))            
         except InvalidRdmanifest as ex:
-            raise InvalidRosdepData(str(ex))
+            raise InvalidData(str(ex))
         
     def is_installed(self, resolved_item):
         return create_tempfile_from_string_and_execute(resolved_item.check_presence_command)

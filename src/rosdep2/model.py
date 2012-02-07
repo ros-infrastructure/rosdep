@@ -38,14 +38,7 @@ combine these rosdep dependency maps and view dependencies together
 into a combined view on which queries can be made.
 """
 
-class InvalidRosdepData(Exception):
-    """
-    Data is not in valid rosdep format.
-    """
-
-    def __init__(self, message, origin=None):
-        super(InvalidRosdepData, self).__init__(message)
-        self.origin = origin
+from .core import InvalidData
 
 class RosdepDatabaseEntry(object):
     """

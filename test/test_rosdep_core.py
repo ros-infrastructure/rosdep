@@ -41,3 +41,11 @@ def test_rd_debug():
     rd_debug('foo')
     os.environ['ROSDEP_DEBUG'] = '1'
     rd_debug('foo')    
+
+def test_InvalidData():
+    from rosdep2.model import InvalidData
+    try:
+        raise InvalidData('hi')
+    except InvalidData as ex:
+        assert 'hi' in str(ex)
+

@@ -63,7 +63,7 @@ FAKE_TINYXML_RULE = """testtinyxml:
       packages: tinyxml-devel"""
 
 def test_RosdepDefinition():
-    from rosdep2.lookup import RosdepDefinition, ResolutionError, InvalidRosdepData
+    from rosdep2.lookup import RosdepDefinition, ResolutionError, InvalidData
     d = dict(a=1, b=2, c=3)
     def1 = RosdepDefinition('d', d)
     assert def1.rosdep_key == 'd'
@@ -78,15 +78,15 @@ def test_RosdepDefinition():
     try:
         RosdepDefinition('dbad', 'foo', 'bad.txt').get_rule_for_platform('ubuntu', 'hardy', ['apt'], 'apt')
         assert False, "should have failed"
-    except InvalidRosdepData: pass
+    except InvalidData: pass
     try:
         RosdepDefinition('dbad', {'ubuntu': 1}, 'bad2.txt').get_rule_for_platform('ubuntu', 'hardy', ['apt'], 'apt')
         assert False, "should have failed"
-    except InvalidRosdepData: pass
+    except InvalidData: pass
     try:
         RosdepDefinition('dbad', {'ubuntu': {'hardy': 1}}, 'bad2.txt').get_rule_for_platform('ubuntu', 'hardy', ['apt'], 'apt')
         assert False, "should have failed"
-    except InvalidRosdepData: pass
+    except InvalidData: pass
 
     #  - test w/valid data
     d2 = yaml.load(FAKE_TINYXML_RULE)['testtinyxml']
