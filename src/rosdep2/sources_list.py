@@ -35,19 +35,13 @@ import yaml
 import hashlib
 import urllib2
 
-from rospkg.os_detect import OS_UBUNTU
-
-from .core import InvalidData
-from .platforms.debian import APT_INSTALLER
+from .core import InvalidData, DownloadFailure
+from .gbpdistro_support import download_gbpdistro_as_rosdep_data
 
 try:
     import urlparse
 except ImportError:
     import urllib.parse as urlparse #py3k
-try:
-    unicode
-except:
-    basestring = unicode = str
     
 import rospkg
 import rospkg.distro
@@ -57,12 +51,6 @@ from .loader import RosdepLoader
 # default file to download with 'init' command in order to bootstrap
 # rosdep
 DEFAULT_SOURCES_LIST_URL = 'https://raw.github.com/ros/rosdistro/master/rosdep/sources.list.d/20-default.list'
-
-# location of targets file for processing gbpdistro files
-GBP_TARGETS_URL = 'https://raw.github.com/ros/rosdistro/master/releases/targets.yaml'
-
-# location of an example gbpdistro file for reference and testing
-FUERTE_GBPDISTRO_URL = 'https://raw.github.com/ros/rosdistro/master/releases/fuerte.yaml'
 
 #seconds to wait before aborting download of rosdep data
 DOWNLOAD_TIMEOUT = 15.0 
@@ -91,17 +79,6 @@ TYPE_YAML = 'yaml'
 # git-buildpackage repo list
 TYPE_GBPDISTRO = 'gbpdistro'
 VALID_TYPES = [TYPE_YAML, TYPE_GBPDISTRO]
-
-class SourceListDownloadFailure(Exception):
-    """
-    Failure downloading sources list data for I/O or other format reasons.
-    """
-    pass
-class InvalidSourcesFile(Exception):
-    """
-    Sources list data is in an invalid format
-    """
-    pass
 
 class DataSource(object):
     
@@ -227,85 +204,9 @@ class DataSourceMatcher(object):
         # all of the rosdep_data_source tags must be in our matcher tags
         return not any(set(rosdep_data_source.tags)-set(self.tags))
                  
-def gbprepo_to_rosdep_data(gbpdistro_data, targets_data):
-    """
-    :raises: :exc:`InvalidData`
-    """
-    # Error reporting for this isn't nearly as good as it could be
-    # (e.g. doesn't separate gbpdistro vs. targets, nor provide
-    # origin), but rushing this implementation a bit.
-    try:
-        if not type(targets_data) == list:
-            raise InvalidData("targets data must be a list")
-        if not type(gbpdistro_data) == dict:
-            raise InvalidData("gbpdistro data must be a dictionary")        
-
-        # compute the default target data for the release_name
-        release_name = gbpdistro_data['release-name']
-        target_data = [t for t in targets_data if release_name in t]
-        if not target_data:
-            raise InvalidData("targets file does not contain information for release [%s]"%(release_name))
-        else:
-            # take the first match
-            target_data = target_data[0][release_name]
-
-        # compute the rosdep data for each repo
-        rosdep_data = {}
-        gbp_repos = gbpdistro_data['gbp-repos']
-        for repo in gbp_repos:
-            if type(repo) != dict:
-                raise InvalidData("invalid repo spec in gbpdistro data: %s"%(str(repo)))
-            rosdep_key = repo['name']
-            rosdep_data[rosdep_key] = {}
-
-            # Do generation for ubuntu
-            rosdep_data[rosdep_key][OS_UBUNTU] = {}
-
-            # - debian package name: underscores must be dashes
-            deb_package_name = 'ros-%s-%s'%(release_name, rosdep_key)
-            deb_package_name = deb_package_name.replace('_', '-')
-
-            repo_targets = repo['target']
-            if repo_targets == 'all':
-                repo_targets = target_data
-
-            for t in repo_targets:
-                if not isinstance(t, basestring):
-                    raise InvalidData("invalid target spec: %s"%(t))
-                rosdep_data[rosdep_key][OS_UBUNTU][t] = {APT_INSTALLER:
-                                                         {'packages': [deb_package_name]}}
-        return rosdep_data
-    except KeyError as e:
-        raise InvalidData("Invalid GBP-distro/targets format: missing key: %s"%(str(e)))
-    
-def download_gbpdistro_as_rosdep_data(gbpdistro_url, targets_url=GBP_TARGETS_URL):
-    """
-    Download gbpdistro file from web and convert format to rosdep distro data.
-    
-    :param gbpdistro_url: url of gbpdistro file, ``str``
-    :param target_url: override URL of platform targets file
-    :raises: :exc:`SourceListDownloadFailure`
-    """
-    # we can convert a gbpdistro file into rosdep data by following a couple rules
-    try:
-        f = urllib2.urlopen(targets_url, timeout=DOWNLOAD_TIMEOUT)
-        text = f.read()
-        f.close()
-        targets_data = yaml.safe_load(text)
-    except Exception as e:
-        raise SourceListDownloadFailure("Failed to download target platform data for gbpdistro:\n\t%s"%(str(e)))
-    try:
-        f = urllib2.urlopen(gbpdistro_url, timeout=DOWNLOAD_TIMEOUT)
-        text = f.read()
-        f.close()
-        gbpdistro_data = yaml.safe_load(text)
-        return gbprepo_to_rosdep_data(gbpdistro_data, targets_data)
-    except Exception as e:
-        raise SourceListDownloadFailure("Failed to download target platform data for gbpdistro:\n\t%s"%(str(e)))
-
 def download_rosdep_data(url):
     """
-    :raises: :exc:`SourceListDownloadFailure` If data cannot be
+    :raises: :exc:`DownloadFailure` If data cannot be
         retrieved (e.g. 404, bad YAML format, server down).
     """
     try:
@@ -314,12 +215,12 @@ def download_rosdep_data(url):
         f.close()
         data = yaml.safe_load(text)
         if type(data) != dict:
-            raise SourceListDownloadFailure('rosdep data from [%s] is not a YAML dictionary'%(url))
+            raise DownloadFailure('rosdep data from [%s] is not a YAML dictionary'%(url))
         return data
     except urllib2.URLError as e:
-        raise SourceListDownloadFailure(str(e))
+        raise DownloadFailure(str(e))
     except yaml.YAMLError as e:
-        raise SourceListDownloadFailure(str(e))
+        raise DownloadFailure(str(e))
     
 def create_default_matcher():
     """
@@ -340,7 +241,7 @@ def download_default_sources_list(url=DEFAULT_SOURCES_LIST_URL):
 
     :param url: override URL of default sources list file
     :return: raw sources list data, ``str``
-    :raises: :exc:`InvalidSourcesFile`
+    :raises: :exc:`InvalidData`
     :raises: :exc:`urllib2.URLError` If data cannot be
         retrieved (e.g. 404, server down).
     """
@@ -371,7 +272,7 @@ def parse_sources_data(data, origin='<string>', model=None):
     :param model: model to load data into.  Defaults to :class:`DataSource`
     
     :returns: List of data sources, [:class:`DataSource`]
-    :raises: :exc:`InvalidSourcesFile`
+    :raises: :exc:`InvalidData`
     """
     if model is None:
         model = DataSource
@@ -384,14 +285,14 @@ def parse_sources_data(data, origin='<string>', model=None):
             continue
         splits = line.split(' ')
         if len(splits) < 2:
-            raise InvalidSourcesFile("In [%s], invalid line:\n%s"%(origin, line))
+            raise InvalidData("invalid line:\n%s"%(line), origin=origin)
         type_ = splits[0]
         url = splits[1]
         tags = splits[2:]
         try:
             sources.append(model(type_, url, tags, origin=origin))
         except ValueError as e:
-            raise InvalidSourcesFile("In [%s], line:\n\t%s\n%s"%(origin, line, e))
+            raise InvalidData("line:\n\t%s\n%s"%(line, e), origin=origin)
     return sources
 
 def parse_sources_file(filepath):
@@ -399,14 +300,14 @@ def parse_sources_file(filepath):
     Parse file on disk
     
     :returns: List of data sources, [:class:`DataSource`]
-    :raises: :exc:`InvalidSourcesFile` If any error occurs reading
+    :raises: :exc:`InvalidData` If any error occurs reading
         file, so an I/O error, non-existent file, or invalid format.
     """
     try:
         with open(filepath, 'r') as f:
             return parse_sources_data(f.read(), origin=filepath)
     except IOError as e:
-        raise InvalidSourcesFile("I/O error reading sources file [%s]: %s"%(filepath, e))
+        raise InvalidData("I/O error reading sources file: %s"%(str(e)), origin=filepath)
 
 def parse_sources_list(sources_list_dir=None):
     """
@@ -415,7 +316,7 @@ def parse_sources_list(sources_list_dir=None):
 
     :returns: List of data sources, [:class:`DataSource`]. If there is
         no sources list dir, this returns an empty list.
-    :raises: :exc:`InvalidSourcesFile`
+    :raises: :exc:`InvalidData`
     :raises: :exc:`OSError` if *sources_list_dir* cannot be read.
     :raises: :exc:`IOError` if *sources_list_dir* cannot be read.
     """
@@ -442,13 +343,13 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
     :param success_handler: fn(DataSource) to call if a particular
         source loads successfully.  This hook is mainly for printing
         errors to console.
-    :param error_handler: fn(DataSource, SourceListDownloadFailure) to call
+    :param error_handler: fn(DataSource, DownloadFailure) to call
         if a particular source fails.  This hook is mainly for
         printing errors to console.
 
     :returns: list of (`DataSource`, cache_file_path) pairs for cache
         files that were updated, ``[str]``
-    :raises: :exc:`InvalidSourcesFile` If any of the sources list files is invalid
+    :raises: :exc:`InvalidData` If any of the sources list files is invalid
     :raises: :exc:`OSError` if *sources_list_dir* cannot be read.
     :raises: :exc:`IOError` If *sources_list_dir* cannot be read or cache data cannot be written
     """
@@ -466,7 +367,7 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
             retval.append((source, write_cache_file(sources_cache_dir, source.url, rosdep_data)))
             if success_handler is not None:
                 success_handler(source)
-        except SourceListDownloadFailure as e:
+        except DownloadFailure as e:
             if error_handler is not None:
                 error_handler(source, e)
 

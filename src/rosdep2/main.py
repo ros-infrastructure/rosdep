@@ -43,10 +43,10 @@ from optparse import OptionParser
 import rospkg
 
 from . import create_default_installer_context, get_default_installer
-from .core import RosdepInternalError, InstallFailed, UnsupportedOs
+from .core import RosdepInternalError, InstallFailed, UnsupportedOs, InvalidData
 from .installers import RosdepInstaller
 from .lookup import RosdepLookup, ResolutionError, RosdepConflict
-from .sources_list import update_sources_list, InvalidSourcesFile, get_sources_cache_dir,\
+from .sources_list import update_sources_list, get_sources_cache_dir,\
      download_default_sources_list, get_sources_list_dir
 
 class UsageError(Exception):
@@ -277,7 +277,7 @@ def command_update(options):
         update_sources_list(success_handler=update_success_handler,
                             error_handler=update_error_handler)
         print("updated cache in %s"%(get_sources_cache_dir()))
-    except InvalidSourcesFile as e:
+    except InvalidData as e:
         print("ERROR: invalid sources list file:\n\t%s"%(e))
     except IOError as e:
         print("ERROR: error loading sources list:\n\t%s"%(e))

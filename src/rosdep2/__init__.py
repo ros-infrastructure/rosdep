@@ -35,8 +35,8 @@ from __future__ import print_function
 
 from .installers import InstallerContext, Installer, PackageManagerInstaller
 
-from .core import RosdepInternalError, InstallFailed, UnsupportedOs
-from .model import InvalidData, RosdepDatabase, RosdepDatabaseEntry
+from .core import RosdepInternalError, InstallFailed, UnsupportedOs, InvalidData, DownloadFailure
+from .model import RosdepDatabase, RosdepDatabaseEntry
 from .lookup import RosdepDefinition, RosdepConflict, RosdepView, RosdepLookup, ResolutionError
 from .loader import RosdepLoader
 from .rospkg_loader import RosPkgLoader

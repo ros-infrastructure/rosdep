@@ -49,10 +49,8 @@ def test_parse_sources_data():
     parse_sources_data
 
 def test_url_constants():
-    from rosdep2.sources_list import GBP_TARGETS_URL, DEFAULT_SOURCES_LIST_URL, FUERTE_GBPDISTRO_URL
-    for url_name, url in [('GBP_TARGETS_URL', GBP_TARGETS_URL),
-                          ('DEFAULT_SOURCES_LIST_URL', DEFAULT_SOURCES_LIST_URL),
-                          ('FUERTE_GBPDISTRO_URL', FUERTE_GBPDISTRO_URL)]:
+    from rosdep2.sources_list import DEFAULT_SOURCES_LIST_URL
+    for url_name, url in [('DEFAULT_SOURCES_LIST_URL', DEFAULT_SOURCES_LIST_URL)]:
         try:
             f = urllib2.urlopen(url)
             f.read()
@@ -69,115 +67,6 @@ def test_download_default_sources_list():
         assert False, "should not have succeeded/valdiated"
     except urllib2.URLError:
         pass
-
-def test_download_gbpdistro_as_rosdep_data():
-    from rosdep2.sources_list import download_gbpdistro_as_rosdep_data, FUERTE_GBPDISTRO_URL, SourceListDownloadFailure, GBP_TARGETS_URL
-    data = download_gbpdistro_as_rosdep_data(FUERTE_GBPDISTRO_URL)
-    # don't go beyond this, this test is just making sure the download
-    # plumbing is correct, not the loader.
-    for k in ['ros', 'catkin', 'genmsg']:
-        assert k in data, data
-    assert data['ros']['ubuntu']
-
-    # try with bad url to trigger exception handling
-    try:
-        # override targets URL with bad URL
-        download_gbpdistro_as_rosdep_data(FUERTE_GBPDISTRO_URL, targets_url='http://bad.ros.org/foo.yaml')
-        assert False, "should have raised"
-    except SourceListDownloadFailure:
-        pass
-    try:
-        # use targets URL, which should have a bad format
-        download_gbpdistro_as_rosdep_data(GBP_TARGETS_URL)
-        assert False, "should have raised"
-    except SourceListDownloadFailure:
-        pass
-    
-def test_gbprepo_to_rosdep_data():
-    from rosdep2.sources_list import gbprepo_to_rosdep_data, InvalidData
-    simple_gbpdistro = {'release-name': 'foorte', 'gbp-repos': []}
-    targets = [{'foorte': ['lucid', 'oneiric']}]
-    # test bad data
-    try:
-        gbprepo_to_rosdep_data(simple_gbpdistro, targets[0])
-        assert False, "should have raised"
-    except InvalidData:
-        pass
-    try:
-        gbprepo_to_rosdep_data({'targets': 1, 'gbp-repos': []}, targets)
-        assert False, "should have raised"
-    except InvalidData:
-        pass
-    try:
-        gbprepo_to_rosdep_data([], targets)
-        assert False, "should have raised"
-    except InvalidData:
-        pass
-    # release-name must be in targets
-    try:
-        gbprepo_to_rosdep_data({'release-name': 'barte', 'gbp-repos': []}, targets)
-        assert False, "should have raised"
-    except InvalidData:
-        pass
-    # gbp-distros must be list of dicts
-    try:
-        gbprepo_to_rosdep_data({'release-name': 'foorte', 'gbp-repos': [1]}, targets)
-        assert False, "should have raised"
-    except InvalidData:
-        pass
-    # gbp-distro target must be 'all' or a list of strings
-    try:
-        bad_example = {'name': 'common',
-                       'target': [1],
-                       'url': 'git://github.com/wg-debs/common_msgs.git'}
-        gbprepo_to_rosdep_data({'release-name': 'foorte', 'gbp-repos': [bad_example]}, targets)
-        assert False, "should have raised"
-    except InvalidData:
-        pass
-    
-    # make sure our sample files work for the above checks before proceeding to real data
-    rosdep_data = gbprepo_to_rosdep_data(simple_gbpdistro, targets)
-    assert rosdep_data is not None
-    assert {} == rosdep_data
-
-    gbpdistro_data = {'release-name': 'foorte',
-                      'gbp-repos': [
-                          dict(name='common_msgs', target='all', url='git://github.com/wg-debs/common_msgs.git'),
-                          dict(name='gazebo', target=['lucid', 'natty'], url='git://github.com/wg-debs/gazebo.git'),
-                          dict(name='foo-bar', target=['precise'], url='git://github.com/wg-debs/gazebo.git'),
-                          ]
-                      }
-    
-    rosdep_data = gbprepo_to_rosdep_data(gbpdistro_data, targets)
-    for k in ['common_msgs', 'gazebo', 'foo-bar']:
-        assert k in rosdep_data
-
-    # all targets and name transform
-    k = 'common_msgs'
-    v = 'ros-foorte-common-msgs'
-    for p in ['lucid', 'oneiric']:
-        rule = rosdep_data[k]['ubuntu'][p]
-        assert rule['apt']['packages'] == [v], rule['apt']['packages']
-    for p in ['maverick', 'natty']:
-        assert p not in rosdep_data[k]['ubuntu']
-    
-    # target overrides
-    k = 'gazebo'
-    v = 'ros-foorte-gazebo'
-    for p in ['lucid', 'natty']:
-        rule = rosdep_data[k]['ubuntu'][p]
-        assert rule['apt']['packages'] == [v], rule['apt']['packages']
-    for p in ['oneiric', 'precise']:
-        assert p not in rosdep_data[k]['ubuntu']
-    
-    # target overrides
-    k = 'foo-bar'
-    v = 'ros-foorte-foo-bar'
-    for p in ['precise']:
-        rule = rosdep_data[k]['ubuntu'][p]
-        assert rule['apt']['packages'] == [v], rule['apt']['packages']
-    for p in ['oneiric', 'natty', 'lucid']:
-        assert p not in rosdep_data[k]['ubuntu']
     
 def test_CachedDataSource():
     from rosdep2.sources_list import CachedDataSource, DataSource, TYPE_GBPDISTRO, TYPE_YAML
@@ -245,7 +134,8 @@ def test_DataSource():
         pass
 
 def test_parse_sources_file():
-    from rosdep2.sources_list import parse_sources_file, InvalidSourcesFile
+    from rosdep2.sources_list import parse_sources_file
+    from rosdep2 import InvalidData
     for f in ['20-default.list', '30-nonexistent.list']:
         path = os.path.join(get_test_dir(), f)
         sources = parse_sources_file(path)
@@ -253,11 +143,12 @@ def test_parse_sources_file():
         assert sources[0].origin == path, sources[0].origin
     try:
         sources = parse_sources_file('bad')
-    except InvalidSourcesFile:
+    except InvalidData:
         pass
     
 def test_parse_sources_list():
-    from rosdep2.sources_list import parse_sources_list, InvalidSourcesFile
+    from rosdep2.sources_list import parse_sources_list
+    from rosdep2 import InvalidData
     # test with non-existent dir, should return with empty list as
     # directory is not required to exist.
     assert [] == parse_sources_list(sources_list_dir='/not/a/real/path')
@@ -287,7 +178,7 @@ def test_write_cache_file():
         assert {'data': 1} == yaml.load(f.read())
     
 def test_update_sources_list():
-    from rosdep2.sources_list import update_sources_list, InvalidSourcesFile, compute_filename_hash
+    from rosdep2.sources_list import update_sources_list, InvalidData, compute_filename_hash
     sources_list_dir=get_test_dir()
     tempdir = tempfile.mkdtemp()
     # use a subdirectory of test dir to make sure rosdep creates the necessary substructure
@@ -375,7 +266,8 @@ def test_DataSourceMatcher():
     assert not matcher.matches(data_source)
 
 def test_download_rosdep_data():
-    from rosdep2.sources_list import download_rosdep_data, SourceListDownloadFailure
+    from rosdep2.sources_list import download_rosdep_data
+    from rosdep2 import DownloadFailure
     url = 'https://raw.github.com/ros/rosdep_rules/master/rosdep.yaml'
     data = download_rosdep_data(url)
     assert 'python' in data #sanity check
@@ -384,7 +276,7 @@ def test_download_rosdep_data():
     try:
         data = download_rosdep_data('http://badhost.willowgarage.com/rosdep.yaml')
         assert False, "should have raised"
-    except SourceListDownloadFailure as e:
+    except DownloadFailure as e:
         pass
     # try to trigger both non-dict clause and YAMLError clause
     for url in [
@@ -394,7 +286,7 @@ def test_download_rosdep_data():
         try:
             data = download_rosdep_data(url)
             assert False, "should have raised"
-        except SourceListDownloadFailure as e:
+        except DownloadFailure as e:
             pass
     
 BADHOSTNAME_URL = 'https://badhostname.willowgarage.com/rosdep.yaml'
@@ -413,7 +305,7 @@ yaml %s
 yaml %s fuerte ubuntu
 """%(GITHUB_URL, GITHUB_FUERTE_URL)
 def test_parse_sources_data():
-    from rosdep2.sources_list import parse_sources_data, TYPE_YAML, InvalidSourcesFile
+    from rosdep2.sources_list import parse_sources_data, TYPE_YAML, InvalidData
     
     retval = parse_sources_data(EXAMPLE_SOURCES_DATA, origin='foo')
     assert len(retval) == 1
@@ -449,7 +341,7 @@ def test_parse_sources_data():
         try:
             parse_sources_data(bad)
             assert False, "should have raised: %s"%(bad)
-        except InvalidSourcesFile as e:
+        except InvalidData as e:
             pass
         
 def test_create_default_matcher():

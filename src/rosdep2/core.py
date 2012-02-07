@@ -69,6 +69,12 @@ class RosdepInternalError(Exception):
     def __str__(self):
         return self.message
         
+class DownloadFailure(Exception):
+    """
+    Failure downloading sources list data for I/O or other format reasons.
+    """
+    pass
+
 class InstallFailed(Exception):
 
     def __init__(self, failures):
