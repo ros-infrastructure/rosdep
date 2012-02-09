@@ -122,7 +122,7 @@ class RosPkgLoader(RosdepLoader):
         """
         'Views' map to ROS stack names.
         """
-        return [self._rosstack.list() + DEFAULT_VIEW_KEY]
+        return self._rosstack.list() + [DEFAULT_VIEW_KEY]
 
     def get_loadable_resources(self):
         """
