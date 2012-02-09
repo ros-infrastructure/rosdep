@@ -177,7 +177,7 @@ class RosdepView(object):
         """
         return self.rosdep_defs.keys()
         
-    def merge(self, update_entry, override=False):
+    def merge(self, update_entry, override=False, verbose=False):
         """
         Merge rosdep database update into main database.  Merge rules
         are first entry to declare a key wins.  There are no
@@ -195,6 +195,8 @@ class RosdepView(object):
             # First rule wins or override, no rule-merging.
             if override or not dep_name in db:
                 db[dep_name] = update_definition
+            elif verbose:
+                print("[%s] ignoring [%s], already loaded"%(update_entry.origin, dep_name))
             
 class RosdepLookup(object):
     """
@@ -490,10 +492,11 @@ class RosdepLookup(object):
         except KeyError as e:
             raise RosdepInternalError(e)
     
-    def create_rosdep_view(self, view_name, view_keys):
+    def create_rosdep_view(self, view_name, view_keys, verbose=False):
         """
         :param view_name: name of view to create
         :param view_keys: order list of view names to merge, first one wins
+        :param verbose: print debugging output
         """
         # Create view and initialize with dbs from all of the
         # dependencies. 
@@ -502,14 +505,16 @@ class RosdepLookup(object):
         db = self.rosdep_db
         for view_key in view_keys:
             db_entry = db.get_view_data(view_key)
-            view.merge(db_entry)
-
+            view.merge(db_entry, verbose=verbose)
+        if verbose:
+            print("Merged views:\n"+"\n".join([" * %s"%view_key for view_key in view_keys]))
+            
         # ~/.ros/rosdep.yaml has precedence
         if self.override_entry is not None:
-            view.merge(self.override_entry, override=True)
+            view.merge(self.override_entry, override=True, verbose=verbose)
         return view
     
-    def get_rosdep_view_for_resource(self, resource_name):
+    def get_rosdep_view_for_resource(self, resource_name, verbose=False):
         """
         Get a :class:`RosdepView` for a specific ROS resource *resource_name*.
         Views can be queries to resolve rosdep keys to
@@ -531,9 +536,9 @@ class RosdepLookup(object):
             #NOTE: this may not be the right behavior and this happens
             #for packages that are not in a stack.
             return None
-        return self.get_rosdep_view(view_key)
+        return self.get_rosdep_view(view_key, verbose=verbose)
         
-    def get_rosdep_view(self, view_key):
+    def get_rosdep_view(self, view_key, verbose=False):
         """
         Get a :class:`RosdepView` associated with *view_key*.  Views
         can be queries to resolve rosdep keys to definitions.
@@ -559,7 +564,7 @@ class RosdepLookup(object):
             # in the future
             raise ResourceNotFound(str(e.args[0]))
         # load views in order
-        view = self.create_rosdep_view(view_key, dependencies + [view_key])
+        view = self.create_rosdep_view(view_key, dependencies + [view_key], verbose=verbose)
         self._view_cache[view_key] = view
         return view
 

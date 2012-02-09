@@ -110,7 +110,9 @@ class RosdepDatabase(object):
           all of view's dependencies have not been properly loaded.
         """
         entry = self.get_view_data(view_name)
-        dependencies = set(entry.view_dependencies)
-        for s in entry.view_dependencies:
-            dependencies.update(self.get_view_dependencies(s))
-        return list(set(dependencies))
+        dependencies = entry.view_dependencies[:]
+        # compute full set of dependencies by iterating over
+        # dependencies in reverse order and prepending.
+        for s in reversed(entry.view_dependencies):
+            dependencies = self.get_view_dependencies(s) + dependencies
+        return dependencies

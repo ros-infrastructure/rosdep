@@ -463,8 +463,9 @@ def command_resolve(args, options):
         if not view_names:
             raise ResolutionError(rosdep_name, None, os_name, os_version, "Could not find definition for rosdep [%s]"%rosdep_name)
         for view_name, origin in view_names:
-            print("#[%s:%s]"%(view_name, origin))
-            view = lookup.get_rosdep_view(view_name)
+            if len(view_names) > 1:
+                print("#[%s]"%(origin))
+            view = lookup.get_rosdep_view(view_name, verbose=options.verbose)
             if view is None:
                 continue
             d = view.lookup(rosdep_name)
