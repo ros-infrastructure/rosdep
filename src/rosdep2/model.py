@@ -115,4 +115,9 @@ class RosdepDatabase(object):
         # dependencies in reverse order and prepending.
         for s in reversed(entry.view_dependencies):
             dependencies = self.get_view_dependencies(s) + dependencies
-        return dependencies
+        # make unique preserving order
+        unique_deps = []
+        for d in dependencies:
+            if not d in unique_deps:
+                unique_deps.append(d)
+        return unique_deps
