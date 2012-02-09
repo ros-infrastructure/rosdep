@@ -42,6 +42,11 @@ import rospkg
 from .loader import RosdepLoader, InvalidData, ROSDEP_YAML
 from .sources_list import SourcesListLoader
 
+# Default view key is the view that packages that are not in stacks
+# see. It is the root of all dependencies.  It is superceded by an
+# explicit underlay_key.
+DEFAULT_VIEW_KEY='*default*'
+
 class RosPkgLoader(RosdepLoader):
     
     def __init__(self, rospack=None, rosstack=None, underlay_key=None):
@@ -57,7 +62,7 @@ class RosPkgLoader(RosdepLoader):
         self._rospack = rospack
         self._rosstack = rosstack
         self._rosdep_yaml_cache = {}
-        self._underlay_key = underlay_key
+        self._underlay_key = underlay_key or DEFAULT_VIEW_KEY
         
         # cache computed list of loadable resources
         self._loadable_resource_cache = None
@@ -96,6 +101,10 @@ class RosPkgLoader(RosdepLoader):
         """
         if rosdep_db.is_loaded(view_name):
             return
+        # DEFAULT_VIEW_KEY is an empty view.
+        if view_name == DEFAULT_VIEW_KEY:
+            return
+
         if verbose:
             print("loading view [%s] with rospkg loader"%(view_name))
         rosdep_data, filename = self._load_view_rosdep_yaml(view_name)
@@ -106,27 +115,22 @@ class RosPkgLoader(RosdepLoader):
         view_dependencies = self._rosstack.get_depends(view_name, implicit=False)
         if verbose:
             print("view [%s]: dependencies are [%s]"%(view_name, ', '.join(view_dependencies)))
-        if self._underlay_key:
-            view_dependencies = [self._underlay_key] + view_dependencies
+        view_dependencies = [self._underlay_key] + view_dependencies
         rosdep_db.set_view_data(view_name, rosdep_data, view_dependencies, filename)
 
     def get_loadable_views(self):
         """
         'Views' map to ROS stack names.
         """
-        return self._rosstack.list()
+        return [self._rosstack.list() + DEFAULT_VIEW_KEY]
 
     def get_loadable_resources(self):
         """
         'Resources' map to ROS packages names.
         """
-        # loading of catkinized ROS packages is currently excluded as
-        # they do not have a stack in the install layout.
-        # TODO: stop this exclusion once we get the sources.list infrastructure online
         if not self._loadable_resource_cache:
             loadable_list = self._rospack.list()
-            self._loadable_resource_cache = \
-                                          [x for x in loadable_list if not self._rospack.get_manifest(x).is_catkin]
+            self._loadable_resource_cache = loadable_list[:]
         return self._loadable_resource_cache
 
     def get_rosdeps(self, resource_name, implicit=True):
@@ -153,7 +157,11 @@ class RosPkgLoader(RosdepLoader):
         """
         if resource_name in self.get_loadable_resources():
             # assume it's a package, and get the stack
-            return self._rospack.stack_of(resource_name)
+            stack_name = self._rospack.stack_of(resource_name)
+            if stack_name is not None:
+                return stack_name
+            else:
+                return self._underlay_key
         elif resource_name in self._rosstack.list():
             return resource_name
         else:

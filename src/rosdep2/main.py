@@ -328,7 +328,7 @@ def command_check(lookup, packages, options):
 
 def error_to_human_readable(error):
     if isinstance(error, rospkg.ResourceNotFound):
-        return "Missing resource [%s]"%(str(error.args[0]))
+        return "Missing resource %s"%(str(error))
     elif isinstance(error, ResolutionError):
         return str(error.args[0])
     else:
