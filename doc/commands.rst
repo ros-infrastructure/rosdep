@@ -84,6 +84,10 @@ Options
 
   Enable verbose output
 
+**--version**
+
+  Print version and exit.
+
 Install Options
 ---------------
 
@@ -102,3 +106,4 @@ Install Options
 **-r**
 
   Continue installing despite errors.
+

@@ -33,6 +33,8 @@ rosdep library and command-line tool
 
 from __future__ import print_function
 
+__version__ = '0.6.0'
+
 from .installers import InstallerContext, Installer, PackageManagerInstaller
 
 from .core import RosdepInternalError, InstallFailed, UnsupportedOs, InvalidData, DownloadFailure

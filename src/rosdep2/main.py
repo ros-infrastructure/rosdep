@@ -43,6 +43,7 @@ from optparse import OptionParser
 import rospkg
 
 from . import create_default_installer_context, get_default_installer
+from . import __version__
 from .core import RosdepInternalError, InstallFailed, UnsupportedOs, InvalidData
 from .installers import RosdepInstaller
 from .lookup import RosdepLookup, ResolutionError, RosdepConflict
@@ -151,6 +152,8 @@ def _rosdep_main(args):
                       metavar="OS_NAME:OS_VERSION", help="Override OS name and version (colon-separated), e.g. ubuntu:lucid")
     parser.add_option("--verbose", "-v", dest="verbose", default=False, 
                       action="store_true", help="verbose display")
+    parser.add_option("--version", dest="print_version", default=False, 
+                      action="store_true", help="print version and exit")
     parser.add_option("--reinstall", dest="reinstall", default=False, 
                       action="store_true", help="(re)install all dependencies, even if already installed")
     parser.add_option("--include_duplicates", "-i", dest="include_duplicates", default=False, 
@@ -165,6 +168,9 @@ def _rosdep_main(args):
                       action="store_true", help="select all packages")
 
     options, args = parser.parse_args(args)
+    if options.print_version:
+        print(__version__)
+        sys.exit(0)
 
     if len(args) == 0:
         parser.error("Please enter a command")
