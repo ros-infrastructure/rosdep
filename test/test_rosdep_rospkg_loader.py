@@ -48,7 +48,7 @@ def get_rospkg():
 
 def test_RosPkgLoader():
     from rosdep2.model import RosdepDatabase
-    from rosdep2.rospkg_loader import RosPkgLoader
+    from rosdep2.rospkg_loader import RosPkgLoader, DEFAULT_VIEW_KEY
     from rosdep2.loader import InvalidData
     
     # tripwire
@@ -70,7 +70,7 @@ def test_RosPkgLoader():
     # test with no rosdep.yaml stack
     loader.load_view('empty', rosdep_db)
     rosdep_db.is_loaded.assert_called_with('empty')
-    rosdep_db.set_view_data.assert_called_with('empty', {}, ['ros'], None)
+    rosdep_db.set_view_data.assert_called_with('empty', {}, [DEFAULT_VIEW_KEY, 'ros'], None)
 
     # test invalid stack
     try:
@@ -85,7 +85,7 @@ def test_RosPkgLoader():
         ros_stack_data = yaml.load(f.read())
     loader.load_view('ros', rosdep_db)
     rosdep_db.is_loaded.assert_called_with('ros')
-    rosdep_db.set_view_data.assert_called_with('ros', ros_stack_data, [], path)
+    rosdep_db.set_view_data.assert_called_with('ros', ros_stack_data, [DEFAULT_VIEW_KEY], path)
 
     # test call on db that is already loaded
     rosdep_db.reset_mock()
@@ -100,7 +100,7 @@ def test_RosPkgLoader():
     # test get_view_key
     from rospkg import ResourceNotFound
     assert loader.get_view_key('stack1_p1') == 'stack1'
-    assert loader.get_view_key('stackless') == None
+    assert loader.get_view_key('stackless') == DEFAULT_VIEW_KEY
     try:
         loader.get_view_key('fake')
         assert False, "should error"

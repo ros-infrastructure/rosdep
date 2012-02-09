@@ -130,20 +130,9 @@ def test_RosdepDefinition():
         str(e)
         
 
-def test_RosdepConflict():
-    from rosdep2.lookup import RosdepConflict, RosdepDefinition
-    def1 = RosdepDefinition(dict(a=1), 'origin1')
-    def2 = RosdepDefinition(dict(b=2), 'origin2')
-    
-    ex = RosdepConflict('foo', def1, def2)
-    str_ex = str(ex)
-    print(str_ex)
-    assert def1.origin in str_ex
-    assert def2.origin in str_ex
-    
 def test_RosdepView_merge():
     from rosdep2.model import RosdepDatabaseEntry
-    from rosdep2.lookup import RosdepView, RosdepConflict
+    from rosdep2.lookup import RosdepView
     
     # rosdep data must be dictionary of dictionaries
     data = dict(a=dict(x=1), b=dict(y=2), c=dict(z=3))
@@ -186,13 +175,13 @@ def test_RosdepView_merge():
 
     # merge different data for 'a'
     d4 = RosdepDatabaseEntry(dict(a=dict(x=2)), [], 'origin4')
-    # - first w/o override, should raise conflict
-    try:
-        view.merge(d4, override=False)
-        assert False, "should have raised RosdepConflict"
-    except RosdepConflict as ex:
-        assert ex.definition1.origin == 'origin'
-        assert ex.definition2.origin == 'origin4' 
+    # - first w/o override, should not bump
+    view.merge(d4, override=False)
+    assert view.lookup('a').data == dict(x=1), view.lookup('a').data
+    assert view.lookup('b').data == dict(y=2)
+    assert view.lookup('c').data == dict(z=3)
+    assert view.lookup('d').data == dict(o=4)
+    assert view.lookup('e').data == dict(p=5)
     
     # - now w/ override
     view.merge(d4, override=True)
@@ -263,11 +252,14 @@ def test_RosdepLookup_create_from_rospkg():
     
 def test_RosdepLookup_get_rosdep_view_for_resource():
     from rosdep2.lookup import RosdepLookup
+    from rosdep2.rospkg_loader import DEFAULT_VIEW_KEY, RosPkgLoader
     rospack, rosstack = get_test_rospkgs()
     ros_home = os.path.join(get_test_tree_dir(), 'fake')
     
     lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack,
                                              ros_home=ros_home, use_underlay=False)
+    # assumption of our tests
+    assert isinstance(lookup.loader, RosPkgLoader)
 
     # depends on nothing
     ros_rosdep_path = os.path.join(rosstack.get_path('ros'), 'rosdep.yaml')
@@ -282,9 +274,8 @@ def test_RosdepLookup_get_rosdep_view_for_resource():
     assert ros_rosdep_path == python.origin
     assert ros_raw['testpython'] == python.data
 
-    # package not in stack
-    assert lookup.get_rosdep_view_for_resource('just_a_package') is None
-
+    # package not in stack, should return 
+    assert lookup.get_rosdep_view_for_resource('just_a_package').name is DEFAULT_VIEW_KEY
     
 def test_RosdepLookup_get_rosdep_view():
     from rosdep2.lookup import RosdepLookup
@@ -452,7 +443,7 @@ def test_RosdepLookup_resolve_errors():
         lookup.resolve('testtinyxml', 'just_a_package', installer_context)
         assert False, "should have raised"
     except ResolutionError as e:
-        assert "does not have a rosdep view" in str(e), str(e)
+        assert "Cannot locate rosdep definition" in str(e), str(e)
 
 def test_RosdepLookup_resolve():
     from rosdep2 import create_default_installer_context

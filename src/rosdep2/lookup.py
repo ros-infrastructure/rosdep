@@ -149,33 +149,6 @@ class ResolutionError(Exception):
 \tOS version : %s
 \tData: %s"""%(self.args[0], self.rosdep_key, self.os_name, self.os_version, pretty_data)
 
-class RosdepConflict(Exception):
-    """
-    Rosdep rules do not have compatbile definitions.
-    """
-
-    def __init__(self, definition_name, definition1, definition2):
-        """
-        :apram definition_name: name of rosdep key that has conflicting definition.
-        :param definition1: Existing rule, :class:`RosdepDefinition`
-        :param definition2: Conflicting rule, :class:`RosdepDefinition`
-        """
-        self.definition_name = definition_name
-        self.definition1 = definition1
-        self.definition2 = definition2
-        
-    def __str__(self):
-        pretty_data1 = yaml.dump(self.definition1.data, default_flow_style=False)
-        pretty_data2 = yaml.dump(self.definition2.data, default_flow_style=False)
-        return """Rules for %s do not match:
-In [%s]
-
-%s 
-
-In [%s]
-
-%s"""%(self.definition_name, self.definition1.origin, pretty_data1, self.definition2.origin, pretty_data2)
-    
 class RosdepView(object):
     """
     View of :class:`RosdepDatabase`.  Unlike :class:`RosdepDatabase`,
@@ -206,29 +179,22 @@ class RosdepView(object):
         
     def merge(self, update_entry, override=False):
         """
-        Merge rosdep database update into main database
+        Merge rosdep database update into main database.  Merge rules
+        are first entry to declare a key wins.  There are no
+        conflicts.  This rule logic is modelled after the apt sources
+        list.
 
-        :raises: :exc:`RosdepConflict`
+        :param override: Ignore first-one-wins rules and instead
+            always use rules from update_entry
         """
         db = self.rosdep_defs
 
         for dep_name, dep_data in update_entry.rosdep_data.items():
             # convert data into RosdepDefinition model
             update_definition = RosdepDefinition(dep_name, dep_data, update_entry.origin)
+            # First rule wins or override, no rule-merging.
             if override or not dep_name in db:
                 db[dep_name] = update_definition
-            else:
-                definition = db[dep_name]
-                curr_data = definition.data
-                # First, check for conflict.  Conflict's are
-                # OS-specific.  We cannot check at a finer granularity
-                # as keys further in the hierarchy are opaque.
-                for k, v in dep_data.items():
-                    if k in curr_data and curr_data[k] != v:
-                        raise RosdepConflict(dep_name, definition, update_definition) 
-                
-                # If no conflict, do an update
-                curr_data.update(dep_data)
             
 class RosdepLookup(object):
     """
@@ -526,7 +492,8 @@ class RosdepLookup(object):
     
     def create_rosdep_view(self, view_name, view_keys):
         """
-        :raises: :exc:`RosdepConflict` If view cannot be created due to conflicting definitions.
+        :param view_name: name of view to create
+        :param view_keys: order list of view names to merge, first one wins
         """
         # Create view and initialize with dbs from all of the
         # dependencies. 

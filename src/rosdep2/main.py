@@ -46,7 +46,7 @@ from . import create_default_installer_context, get_default_installer
 from . import __version__
 from .core import RosdepInternalError, InstallFailed, UnsupportedOs, InvalidData
 from .installers import RosdepInstaller
-from .lookup import RosdepLookup, ResolutionError, RosdepConflict
+from .lookup import RosdepLookup, ResolutionError
 from .sources_list import update_sources_list, get_sources_cache_dir,\
      download_default_sources_list, get_sources_list_dir
 
@@ -120,12 +120,6 @@ Please go to the rosdep page [1] and file a bug report with the message below.
 %s
 """%(e.message), file=sys.stderr)
         sys.exit(1)
-    except RosdepConflict as e:
-        print("""
-ERROR: conflict in rosdep data files
-%s
-"""%(e), file=sys.stderr)
-        sys.exit(1)        
     except ResolutionError as e:
         print("""
 ERROR: %s

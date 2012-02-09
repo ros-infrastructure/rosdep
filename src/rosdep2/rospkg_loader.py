@@ -101,22 +101,22 @@ class RosPkgLoader(RosdepLoader):
         """
         if rosdep_db.is_loaded(view_name):
             return
-        # DEFAULT_VIEW_KEY is an empty view.
-        if view_name == DEFAULT_VIEW_KEY:
-            return
-
         if verbose:
             print("loading view [%s] with rospkg loader"%(view_name))
-        rosdep_data, filename = self._load_view_rosdep_yaml(view_name)
-        if rosdep_data is None:
+        # DEFAULT_VIEW_KEY is an empty view.
+        if view_name == DEFAULT_VIEW_KEY:
+            rosdep_db.set_view_data(view_name, {}, [], '<default>')
+        else:
+            rosdep_data, filename = self._load_view_rosdep_yaml(view_name)
+            if rosdep_data is None:
+                if verbose:
+                    print("view [%s] has no rosdep data"%(view_name))
+                rosdep_data = {}
+            view_dependencies = self._rosstack.get_depends(view_name, implicit=False)
             if verbose:
-                print("view [%s] has no rosdep data"%(view_name))
-            rosdep_data = {}
-        view_dependencies = self._rosstack.get_depends(view_name, implicit=False)
-        if verbose:
-            print("view [%s]: dependencies are [%s]"%(view_name, ', '.join(view_dependencies)))
-        view_dependencies = [self._underlay_key] + view_dependencies
-        rosdep_db.set_view_data(view_name, rosdep_data, view_dependencies, filename)
+                print("view [%s]: dependencies are [%s]"%(view_name, ', '.join(view_dependencies)))
+            view_dependencies = [self._underlay_key] + view_dependencies
+            rosdep_db.set_view_data(view_name, rosdep_data, view_dependencies, filename)
 
     def get_loadable_views(self):
         """
