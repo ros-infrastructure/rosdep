@@ -57,28 +57,26 @@ _usage = """usage: rosdep [options] <command> <args>
 
 Commands:
 
-rosdep check <packages>...
+rosdep check <stacks-and-packages>...
   check if the dependencies of package(s) have been met.
 
-rosdep install <packages>...
+rosdep install <stacks-and-packages>...
   generate a bash script and then execute it.
 
-rosdep db <packages>...
-  generate the dependency database for package(s) and print
-  it to the console (note that the database will change depending
-  on which package(s) you query.
+rosdep db
+  generate the dependency database and print it to the console.
 
 rosdep init
-  initialize rosdep sources.  May require sudo.
+  initialize rosdep sources in /etc/ros/rosdep.  May require sudo.
   
-rosdep keys <packages>...
+rosdep keys <stacks-and-packages>...
   list the rosdep keys that the packages depend on.
 
 rosdep resolve <rosdeps>
   resolve <rosdeps> to system dependencies
   
 rosdep update
-  update your rosdep database based on your rosdep sources.
+  update the local rosdep database based on the rosdep sources.
   
 rosdep what-needs <rosdeps>...
   print a list of packages that declare a rosdep on (at least
@@ -197,7 +195,7 @@ def _rosdep_args_handler(command, parser, options, args):
         return command_handlers[command](args, options)
     
 def _package_args_handler(command, parser, options, args, rospack=None, rosstack=None):
-    # package names as args
+    # package or stack names as args.  have to convert stack names to packages.
     # - overrides to enable testing
     if rospack is None:
         rospack = rospkg.RosPack()
@@ -214,7 +212,8 @@ def _package_args_handler(command, parser, options, args, rospack=None, rosstack
             # let the loader filter the -a. This will take out some
             # packages that are catkinized (for now).
             args = loader.get_loadable_resources()
-    if not args:
+            not_found = []
+    elif not args:
         parser.error("no packages or stacks specified")
 
     val = rospkg.expand_to_packages(args, rospack, rosstack)
@@ -223,7 +222,7 @@ def _package_args_handler(command, parser, options, args, rospack=None, rosstack
     if not_found:
         raise rospkg.ResourceNotFound(not_found[0], rospack.get_ros_paths())
 
-    if not packages:
+    if 0 and not packages: # disable, let individual handlers specify behavior
         # possible with empty stacks
         print("No packages in arguments, aborting")
         return
@@ -380,7 +379,7 @@ def _compute_depdb_output(lookup, packages, options):
             output = output + "<<<< %s -> %s >>>>\n"%(rosdep, resolved)
     return output
     
-def command_db(lookup, resources, options):
+def command_db(lookup, options):
     # exact same setup logic as command_resolve, should possibly combine
     lookup = _get_default_RosdepLookup(verbose=options.verbose)
     installer_context = create_default_installer_context(verbose=options.verbose)
@@ -396,22 +395,18 @@ def command_db(lookup, resources, options):
     print("OS NAME: %s"%os_name)
     print("OS VERSION: %s"%os_version)
     errors = []
-    for resource_name in resources:
-        if len(resources) > 1:
-            print("RESOURCE: %s"%resource_name)
-        print("DB [key -> resolution]")
-        view = lookup.get_rosdep_view_for_resource(resource_name)
-        if view is None:
-            continue
-        for rosdep_name in view.keys():
-            try:
-                d = view.lookup(rosdep_name)
-                inst_key, rule = d.get_rule_for_platform(os_name, os_version, installer_keys, default_key)
-                resolved = installer.resolve(rule)
-                resolved_str = " ".join(resolved)
-                print ("%s -> %s"%(rosdep_name, resolved_str))
-            except ResolutionError as e:
-                errors.append(e)
+    print("DB [key -> resolution]")
+    # db does not leverage the resource-based API
+    view = lookup.get_rosdep_view(DEFAULT_VIEW_KEY, verbose=options.verbose)
+    for rosdep_name in view.keys():
+        try:
+            d = view.lookup(rosdep_name)
+            inst_key, rule = d.get_rule_for_platform(os_name, os_version, installer_keys, default_key)
+            resolved = installer.resolve(rule)
+            resolved_str = " ".join(resolved)
+            print ("%s -> %s"%(rosdep_name, resolved_str))
+        except ResolutionError as e:
+            errors.append(e)
 
     for error in errors:
         print("WARNING: %s"%(error_to_human_readable(error)), file=sys.stderr)
@@ -497,7 +492,7 @@ command_handlers = {
 # commands that accept rosdep names as args
 _command_rosdep_args = ['what-needs', 'what_needs', 'where-defined', 'where_defined', 'resolve']
 # commands that take no args
-_command_no_args = ['update', 'init']
+_command_no_args = ['update', 'init', 'db']
 
 _commands = command_handlers.keys()
 

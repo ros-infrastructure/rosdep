@@ -47,6 +47,16 @@ from .sources_list import SourcesListLoader
 # explicit underlay_key.
 DEFAULT_VIEW_KEY='*default*'
 
+# Implementation details: this API was originally conceived under the
+# rosdep 1 design.  It has since been retrofitted for the rosdep 2
+# design, which means it is a bit overbuilt.  There really is no need
+# for a notion of views for rospkg -- all rospkgs have the same view.
+# It we be nice to refactor this API into something much, much
+# simpler, which would probably involve merging RosPkgLoader and
+# SourcesListLoader.  RosPkgLoader would provide identification of
+# resources and SourcesListLoader would build a *single* view that was
+# no longer resource-dependent.
+
 class RosPkgLoader(RosdepLoader):
     
     def __init__(self, rospack=None, rosstack=None, underlay_key=None):
@@ -62,29 +72,10 @@ class RosPkgLoader(RosdepLoader):
         self._rospack = rospack
         self._rosstack = rosstack
         self._rosdep_yaml_cache = {}
-        self._underlay_key = underlay_key or DEFAULT_VIEW_KEY
+        self._underlay_key = underlay_key
         
         # cache computed list of loadable resources
         self._loadable_resource_cache = None
-        
-    def _load_view_rosdep_yaml(self, view_name):
-        """
-        Load the rosdep.yaml for the view (ROS stack).
-        
-        :returns: parsed YAML data and filename it was loaded from,
-          ``(dict, str)``.  Returns ``(None, None)`` if view does not
-          have a rosdep YAML.
-        
-        :raises: :exc:`InvalidData`
-        :raises: :exc:`rospkg.ResourceNotFound` If view cannot be located
-        """
-        stack_dir = self._rosstack.get_path(view_name)
-        filename = os.path.join(stack_dir, ROSDEP_YAML)
-        if os.path.isfile(filename):
-            with open(filename) as f:
-                return self.load_rosdep_yaml(f.read(), filename), filename
-        else:
-            return None, None
         
     def load_view(self, view_name, rosdep_db, verbose=False):
         """
@@ -101,22 +92,19 @@ class RosPkgLoader(RosdepLoader):
         """
         if rosdep_db.is_loaded(view_name):
             return
+        if not view_name in self.get_loadable_views():
+            raise rospkg.ResourceNotFound(view_name)
+        elif view_name == 'invalid':
+            raise rospkg.ResourceNotFound("FOUND"+ view_name+str(self.get_loadable_views()))
         if verbose:
             print("loading view [%s] with rospkg loader"%(view_name))
-        # DEFAULT_VIEW_KEY is an empty view.
-        if view_name == DEFAULT_VIEW_KEY:
-            rosdep_db.set_view_data(view_name, {}, [], '<default>')
+        # chain into underlay if set
+        if self._underlay_key:
+            view_dependencies = [self._underlay_key]
         else:
-            rosdep_data, filename = self._load_view_rosdep_yaml(view_name)
-            if rosdep_data is None:
-                if verbose:
-                    print("view [%s] has no rosdep data"%(view_name))
-                rosdep_data = {}
-            view_dependencies = self._rosstack.get_depends(view_name, implicit=False)
-            if verbose:
-                print("view [%s]: dependencies are [%s]"%(view_name, ', '.join(view_dependencies)))
-            view_dependencies = [self._underlay_key] + view_dependencies
-            rosdep_db.set_view_data(view_name, rosdep_data, view_dependencies, filename)
+            view_dependencies = []
+        # no rospkg view has actual data
+        rosdep_db.set_view_data(view_name, {}, view_dependencies, '<nodata>')
 
     def get_loadable_views(self):
         """
@@ -149,20 +137,12 @@ class RosPkgLoader(RosdepLoader):
 
     def get_view_key(self, resource_name):
         """
-        Map *resource_name* to a view key.  In rospkg, this maps a ROS
-        package name to a ROS stack name.  If *resource_name* is a ROS
-        stack name, it returns the ROS stack name.
+        Map *resource_name* to a view key.  In rospkg, this maps the
+        DEFAULT_VIEW_KEY if *resource_name* exists.
 
         :raises: :exc:`rospkg.ResourceNotFound`
         """
         if resource_name in self.get_loadable_resources():
-            # assume it's a package, and get the stack
-            stack_name = self._rospack.stack_of(resource_name)
-            if stack_name is not None:
-                return stack_name
-            else:
-                return self._underlay_key
-        elif resource_name in self._rosstack.list():
-            return resource_name
+            return DEFAULT_VIEW_KEY
         else:
             raise rospkg.ResourceNotFound(resource_name)

@@ -25,23 +25,23 @@ documentation.
 Commands
 --------
 
-**check <packages>...**
+**check <stacks-and-packages>...**
 
   Check if the dependencies of ROS package(s) have been met.
 
-**db <packages>...**
+**db**
 
-  Display the dependency database for package(s).
+  Display the local rosdep database.
 
 **init**
 
   Initialize /etc/ros/sources.list.d/ configuration.  May require sudo.
 
-**install <packages>...**
+**install <stacks-and-packages>...**
 
   Install dependencies for specified ROS packages.
 
-**keys <packages>...**
+**keys <stacks-and-packages>...**
 
   List the rosdep keys that the ROS packages depend on.
 
@@ -51,7 +51,7 @@ Commands
 
 **update**
 
-  Update your rosdep database based on your rosdep sources.
+  Update the local rosdep database based on the rosdep sources.
 
 **what-needs <rosdeps>...**
 
@@ -76,7 +76,7 @@ Options
 
 **-a, --all**
 
-  Select all ROS packages.  Only valid for commands that take <packages> as arguments.
+  Select all ROS packages.  Only valid for commands that take <stacks-and-packages> as arguments.
 
 **-h, --help**
 
