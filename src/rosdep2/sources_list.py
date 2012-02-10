@@ -129,12 +129,14 @@ class DataSource(object):
 # create function we can pass in as model to parse_source_data.  The
 # function emulates the CachedDataSource constructor but does the
 # necessary full filepath calculation and loading of data.
-def cache_data_source_loader(sources_cache_dir):
+def cache_data_source_loader(sources_cache_dir, verbose=False):
     def create_model(type_, uri, tags, origin=None):
         # compute the filename has from the URL
         filename = compute_filename_hash(uri)
         filepath = os.path.join(sources_cache_dir, filename)
         if os.path.exists(filepath):
+            if verbose:
+                print("loading cached data source:\n\t%s\n\t%s"%(uri, filepath))
             with open(filepath) as f:
                 rosdep_data = yaml.load(f.read())
         else:
@@ -204,6 +206,20 @@ class DataSourceMatcher(object):
         # all of the rosdep_data_source tags must be in our matcher tags
         return not any(set(rosdep_data_source.tags)-set(self.tags))
                  
+    @staticmethod
+    def create_default():
+        """
+        Create a :class:`DataSourceMatcher` to match the current
+        configuration.
+
+        :returns: :class:`DataSourceMatcher`
+        """
+        distro_name = rospkg.distro.current_distro_codename()
+        os_detect = rospkg.os_detect.OsDetect()
+        os_name, os_version, os_codename = os_detect.detect_os()
+        tags = [distro_name, os_name, os_codename]
+        return DataSourceMatcher(tags)
+
 def download_rosdep_data(url):
     """
     :raises: :exc:`DownloadFailure` If data cannot be
@@ -222,19 +238,6 @@ def download_rosdep_data(url):
     except yaml.YAMLError as e:
         raise DownloadFailure(str(e))
     
-def create_default_matcher():
-    """
-    Create a :class:`DataSourceMatcher` to match the current
-    configuration.
-
-    :returns: :class:`DataSourceMatcher`
-    """
-    distro_name = rospkg.distro.current_distro_codename()
-    os_detect = rospkg.os_detect.OsDetect()
-    os_name, os_version, os_codename = os_detect.detect_os()
-    tags = [distro_name, os_name, os_codename]
-    return DataSourceMatcher(tags)
-
 def download_default_sources_list(url=DEFAULT_SOURCES_LIST_URL):
     """
     Download (and validate) contents of default sources list.
@@ -385,7 +388,7 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
     # mainly for debugging and testing
     return retval
 
-def load_cached_sources_list(sources_cache_dir=None):
+def load_cached_sources_list(sources_cache_dir=None, verbose=False):
     """
     Load cached data based on the sources list.
     
@@ -398,11 +401,13 @@ def load_cached_sources_list(sources_cache_dir=None):
         sources_cache_dir = get_sources_cache_dir()
     cache_index = os.path.join(sources_cache_dir, 'index')
     if not os.path.exists(cache_index):
+        if verbose:
+            print("no cache index present, not loading cached sources")
         return []
     with open(cache_index, 'r') as f:
         cache_data = f.read()
     # the loader does all the work
-    model = cache_data_source_loader(sources_cache_dir)
+    model = cache_data_source_loader(sources_cache_dir, verbose=verbose)
     return parse_sources_data(cache_data, origin=cache_index, model=model)
 
 def compute_filename_hash(filename_key):
@@ -451,12 +456,23 @@ class SourcesListLoader(RosdepLoader):
         self.sources = sources
 
     @staticmethod
-    def create_default(matcher, sources_cache_dir=None):
+    def create_default(matcher=None, sources_cache_dir=None, verbose=False):
         """
+        :param matcher: override DataSourceMatcher.  Defaults to
+            DataSourceMatcher.create_default().
         :param sources_cache_dir: override location of sources cache
         """
-        sources = load_cached_sources_list(sources_cache_dir=sources_cache_dir)
+        if matcher is None:
+            matcher = DataSourceMatcher.create_default()
+        if verbose:
+            print("using matcher with tags [%s]"%(', '.join(matcher.tags)))
+            
+        sources = load_cached_sources_list(sources_cache_dir=sources_cache_dir, verbose=verbose)
+        if verbose:
+            print("loaded %s sources"%(len(sources)))
         sources = [x for x in sources if matcher.matches(x)]
+        if verbose:
+            print("%s sources match current tags"%(len(sources)))
         return SourcesListLoader(sources)
         
     def load_view(self, view_name, rosdep_db, verbose=False):

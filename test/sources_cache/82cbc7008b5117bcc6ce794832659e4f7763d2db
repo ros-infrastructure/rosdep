@@ -1,0 +1,184 @@
+actionlib:
+  ubuntu:
+    lucid:
+      apt:
+        packages: [ros-fuerte-actionlib]
+    oneiric:
+      apt:
+        packages: [ros-fuerte-actionlib]
+catkin:
+  ubuntu:
+    lucid:
+      apt:
+        packages: [ros-fuerte-catkin]
+    oneiric:
+      apt:
+        packages: [ros-fuerte-catkin]
+common_msgs:
+  ubuntu:
+    lucid:
+      apt:
+        packages: [ros-fuerte-common-msgs]
+    oneiric:
+      apt:
+        packages: [ros-fuerte-common-msgs]
+flann:
+  ubuntu:
+    lucid:
+      apt:
+        packages: [ros-fuerte-flann]
+    oneiric:
+      apt:
+        packages: [ros-fuerte-flann]
+gencpp:
+  ubuntu:
+    lucid:
+      apt:
+        packages: [ros-fuerte-gencpp]
+    oneiric:
+      apt:
+        packages: [ros-fuerte-gencpp]
+genlisp:
+  ubuntu:
+    lucid:
+      apt:
+        packages: [ros-fuerte-genlisp]
+    oneiric:
+      apt:
+        packages: [ros-fuerte-genlisp]
+genmsg:
+  ubuntu:
+    lucid:
+      apt:
+        packages: [ros-fuerte-genmsg]
+    oneiric:
+      apt:
+        packages: [ros-fuerte-genmsg]
+genpy:
+  ubuntu:
+    lucid:
+      apt:
+        packages: [ros-fuerte-genpy]
+    oneiric:
+      apt:
+        packages: [ros-fuerte-genpy]
+langs:
+  ubuntu:
+    lucid:
+      apt:
+        packages: [ros-fuerte-langs]
+    oneiric:
+      apt:
+        packages: [ros-fuerte-langs]
+octomap:
+  ubuntu:
+    lucid:
+      apt:
+        packages: [ros-fuerte-octomap]
+    oneiric:
+      apt:
+        packages: [ros-fuerte-octomap]
+ompl:
+  ubuntu:
+    lucid:
+      apt:
+        packages: [ros-fuerte-ompl]
+    oneiric:
+      apt:
+        packages: [ros-fuerte-ompl]
+opencv2:
+  ubuntu:
+    lucid:
+      apt:
+        packages: [ros-fuerte-opencv2]
+    oneiric:
+      apt:
+        packages: [ros-fuerte-opencv2]
+pcl:
+  ubuntu:
+    lucid:
+      apt:
+        packages: [ros-fuerte-pcl]
+    oneiric:
+      apt:
+        packages: [ros-fuerte-pcl]
+ros:
+  ubuntu:
+    lucid:
+      apt:
+        packages: [ros-fuerte-ros]
+    oneiric:
+      apt:
+        packages: [ros-fuerte-ros]
+ros_comm:
+  ubuntu:
+    lucid:
+      apt:
+        packages: [ros-fuerte-ros-comm]
+    oneiric:
+      apt:
+        packages: [ros-fuerte-ros-comm]
+ros_tutorials:
+  ubuntu:
+    lucid:
+      apt:
+        packages: [ros-fuerte-ros-tutorials]
+    oneiric:
+      apt:
+        packages: [ros-fuerte-ros-tutorials]
+roscpp_core:
+  ubuntu:
+    lucid:
+      apt:
+        packages: [ros-fuerte-roscpp-core]
+    oneiric:
+      apt:
+        packages: [ros-fuerte-roscpp-core]
+rospack:
+  ubuntu:
+    lucid:
+      apt:
+        packages: [ros-fuerte-rospack]
+    oneiric:
+      apt:
+        packages: [ros-fuerte-rospack]
+rospkg:
+  ubuntu:
+    lucid:
+      apt:
+        packages: [ros-fuerte-rospkg]
+    oneiric:
+      apt:
+        packages: [ros-fuerte-rospkg]
+rx:
+  ubuntu:
+    lucid:
+      apt:
+        packages: [ros-fuerte-rx]
+    oneiric:
+      apt:
+        packages: [ros-fuerte-rx]
+sbpl:
+  ubuntu:
+    lucid:
+      apt:
+        packages: [ros-fuerte-sbpl]
+    oneiric:
+      apt:
+        packages: [ros-fuerte-sbpl]
+std_msgs:
+  ubuntu:
+    lucid:
+      apt:
+        packages: [ros-fuerte-std-msgs]
+    oneiric:
+      apt:
+        packages: [ros-fuerte-std-msgs]
+swig-wx:
+  ubuntu:
+    lucid:
+      apt:
+        packages: [ros-fuerte-swig-wx]
+    oneiric:
+      apt:
+        packages: [ros-fuerte-swig-wx]

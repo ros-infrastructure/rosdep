@@ -1,0 +1,20 @@
+eigen:
+  gentoo: '>=dev-cpp/eigen-3'
+  ubuntu:
+    apt:
+      packages: [libeigen3-dev]
+testlibtool:
+  arch: libtool
+  debian: {lenny: libtool libltdl3-dev, squeeze: libtool libltdl-dev}
+  fedora: libtool libtool-ltdl-devel
+  freebsd: libtool
+  gentoo: sys-devel/libtool
+  opensuse: libtool libltdl3
+  rhel: libtool libtool-ltdl-devel
+  ubuntu:
+    apt:
+      packages: [libtool, libltdl-dev]
+testtinyxml:
+  debian: libtinyxml-dev
+  fedora: tinyxml-devel
+  ubuntu: libtinyxml-dev

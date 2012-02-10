@@ -36,17 +36,14 @@ import yaml
 
 from collections import defaultdict
 
-from rospkg import RosPack, RosStack, get_ros_home, ResourceNotFound
+from rospkg import RosPack, RosStack, ResourceNotFound
 from rospkg.os_detect import OsDetect
 
 from .core import RosdepInternalError, rd_debug
 from .model import RosdepDatabase, RosdepDatabaseEntry, InvalidData
 from .rospkg_loader import RosPkgLoader
 
-from .sources_list import create_default_matcher, SourcesListLoader
-
-# key for representing .ros/rosdep.yaml override entry
-OVERRIDE_ENTRY = '.ros'
+from .sources_list import DataSourceMatcher, SourcesListLoader
 
 class RosdepDefinition(object):
     """
@@ -66,7 +63,6 @@ class RosdepDefinition(object):
         self.rosdep_key = rosdep_key
         self.data = data
         self.origin = origin
-
 
     def get_rule_for_platform(self, os_name, os_version, installer_keys, default_installer_key):
         """
@@ -91,9 +87,9 @@ class RosdepDefinition(object):
         data = data[os_name]
         return_key = default_installer_key
         
-        # REP 111: "rosdep first interprets the key as a
+        # REP 111: rosdep first interprets the key as a
         # PACKAGE_MANAGER. If this test fails, it will be interpreted
-        # as an OS_VERSION."
+        # as an OS_VERSION_CODENAME.
         if type(data) == dict:
             for installer_key in installer_keys:
                 if installer_key in data:
@@ -208,13 +204,11 @@ class RosdepLookup(object):
     has already been loaded.
     """
     
-    def __init__(self, rosdep_db, loader, override_entry=None):
+    def __init__(self, rosdep_db, loader):
         """
         :param loader: Loader to use for loading rosdep data by stack
           name, ``RosdepLoader``
         :param rosdep_db: Database to load definitions into, :class:`RosdepDatabase`
-        :param override_entry: (optional) provide a database entry
-          that overrides all other entries, :class:`RosdepDatabaseEntry`
         """
         self.rosdep_db = rosdep_db
         self.loader = loader
@@ -222,9 +216,6 @@ class RosdepLookup(object):
         self._view_cache = {} # {str: {RosdepView}}
         self._resolve_cache = {} # {str : (os_name, os_version, installer_key, resolution, dependencies)}
         
-        # ROS_HOME/rosdep.yaml can override 
-        self.override_entry  = override_entry
-
         # some APIs that deal with the entire environment save errors
         # in to self.errors instead of raising them in order to be
         # robust to single-stack faults.
@@ -267,8 +258,8 @@ class RosdepLookup(object):
         return [k for k in self.loader.get_loadable_resources() if rosdep_name in self.get_rosdeps(k, implicit=False)]
 
     @staticmethod
-    def create_from_rospkg(rospack=None, rosstack=None, ros_home=None,
-                           sources_matcher=None, use_underlay=True,
+    def create_from_rospkg(rospack=None, rosstack=None, 
+                           sources_loader=None, 
                            verbose=False):
         """
         Create :class:`RosdepLookup` based on current ROS package
@@ -278,63 +269,37 @@ class RosdepLookup(object):
           instance used to crawl ROS packages.
         :param rosstack: (optional) Override :class:`rospkg.RosStack`
           instance used to crawl ROS stacks.
-        :param ros_home: (optional) Override ROS_HOME.
-        :param use_underlay: (optional) Disable the source.list underlay
-        :param sources_matcher: (optional) Override matcher used to
-            determine which sources.list entries are
-            loadable. :class:`DataSourceMatcher`
+        :param sources_loader: (optional) Override SourcesLoader used
+            for managing sources.list data sources.
         """
         # initialize the loader
         if rospack is None:
             rospack = RosPack()
         if rosstack is None:
             rosstack = RosStack()
-        if ros_home is None:
-            ros_home = get_ros_home()
-        if sources_matcher is None:
-            sources_matcher = create_default_matcher()
+        if sources_loader is None:
+            sources_loader = SourcesListLoader.create_default(verbose=verbose)
 
         rosdep_db = RosdepDatabase()
 
-        if use_underlay:
-            # Use underlay to initialize rosdep_db.  Underlay has no
-            # notion of specific resources, and its view keys are just the
-            # individual sources it can load from.  Unlike RosPkgLoader,
-            # SourcesListLoader cannot do delayed evaluation of OS setting
-            # due to matcher.
-            if verbose:
-                print("using matcher with tags [%s]"%(', '.join(sources_matcher.tags)))
-            underlay_loader = SourcesListLoader.create_default(sources_matcher)
-            underlay_key = SourcesListLoader.ALL_VIEW_KEY
-        else:
-            underlay_key = underlay_loader = None
+        # Use sources list to initialize rosdep_db.  Underlay has no
+        # notion of specific resources, and its view keys are just the
+        # individual sources it can load from.  SourcesListLoader
+        # cannot do delayed evaluation of OS setting due to matcher.
+        underlay_key = SourcesListLoader.ALL_VIEW_KEY
             
         # Create the rospkg loader on top of the underlay
         loader = RosPkgLoader(rospack=rospack, rosstack=rosstack,
                               underlay_key=underlay_key)
 
-        # TODO: (kwc) I really want to nix this feature. It creates
-        # extra special codepaths and isn't as important now that the
-        # underlay feature exists.
-        
-        # Load ros_home/rosdep.yaml, if present.  It will be used to
-        # override individual stack views.
-        override_entry = None
-        path = os.path.join(ros_home, "rosdep.yaml")
-        if os.path.exists(path):
-            with open(path, 'r') as f:
-                data = loader.load_rosdep_yaml(f.read(), path)
-            override_entry = RosdepDatabaseEntry(data, [], path)
-
         # create our actual instance
-        lookup = RosdepLookup(rosdep_db, loader, override_entry=override_entry)
+        lookup = RosdepLookup(rosdep_db, loader)
 
         # load in the underlay
-        if use_underlay:
-            lookup._load_all_views(loader=underlay_loader)
-            # use dependencies to implement precedence
-            view_dependencies = underlay_loader.get_loadable_views()
-            rosdep_db.set_view_data(underlay_key, {}, view_dependencies, underlay_key)
+        lookup._load_all_views(loader=sources_loader)
+        # use dependencies to implement precedence
+        view_dependencies = sources_loader.get_loadable_views()
+        rosdep_db.set_view_data(underlay_key, {}, view_dependencies, underlay_key)
 
         return lookup
 
@@ -405,6 +370,7 @@ class RosdepLookup(object):
         if view is None:
             raise ResolutionError(rosdep_key, None, os_name, os_version, "[%s] does not have a rosdep view"%(resource_name))   
         try:
+            #print("KEYS", view.rosdep_defs.keys())
             definition = view.lookup(rosdep_key)
         except KeyError:
             rd_debug(view)
@@ -508,10 +474,6 @@ class RosdepLookup(object):
             view.merge(db_entry, verbose=verbose)
         if verbose:
             print("Merged views:\n"+"\n".join([" * %s"%view_key for view_key in view_keys]))
-            
-        # ~/.ros/rosdep.yaml has precedence
-        if self.override_entry is not None:
-            view.merge(self.override_entry, override=True, verbose=verbose)
         return view
     
     def get_rosdep_view_for_resource(self, resource_name, verbose=False):
@@ -594,12 +556,5 @@ class RosdepLookup(object):
             # not much abstraction in the entry object
             if rosdep_name in entry.rosdep_data:
                 retval.append((view_name, entry.origin))
-
-        if self.override_entry is not None and \
-               rosdep_name in self.override_entry.rosdep_data:
-            retval.append((OVERRIDE_ENTRY, self.override_entry.origin))
-        else:
-            # for branch coverage verification
-            pass
             
         return retval

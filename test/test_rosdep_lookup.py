@@ -39,6 +39,21 @@ def get_test_dir():
 def get_test_tree_dir():
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'tree'))
 
+def get_cache_dir():
+    p = os.path.join(get_test_dir(), 'sources_cache')
+    assert os.path.isdir(p)
+    return p
+
+def create_test_SourcesListLoader():
+    from rosdep2.sources_list import SourcesListLoader
+    return SourcesListLoader.create_default(sources_cache_dir=get_cache_dir(), verbose=True)
+    
+def get_cache_raw():
+    cache_rosdep_path = os.path.join(get_cache_dir(), '288ecc0d5cdbd1a206f12437ba667867c7c9950d')
+    with open(cache_rosdep_path) as f:
+        cache_raw = yaml.load(f.read())
+    return cache_raw
+
 def get_test_rospkgs():
     test_dir = get_test_tree_dir()
     ros_root = os.path.join(test_dir, 'ros')
@@ -198,10 +213,10 @@ def test_RosdepLookup_get_rosdeps():
     from rosdep2.loader import RosdepLoader
     from rosdep2.lookup import RosdepLookup
     rospack, rosstack = get_test_rospkgs()
-    ros_home = os.path.join(get_test_tree_dir(), 'fake')
     
+    sources_loader = create_test_SourcesListLoader()
     lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rospack,
-                                             ros_home=ros_home, use_underlay=False)
+                                             sources_loader=sources_loader)
     assert lookup.get_loader() is not None
     assert isinstance(lookup.get_loader(), RosdepLoader)
     print(lookup.get_rosdeps('empty_package'))
@@ -224,10 +239,10 @@ def test_RosdepLookup_get_rosdeps():
 def test_RosdepLookup_get_resources_that_need():
     from rosdep2.lookup import RosdepLookup
     rospack, rosstack = get_test_rospkgs()
-    ros_home = os.path.join(get_test_tree_dir(), 'fake')
     
+    sources_loader = create_test_SourcesListLoader()
     lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rospack,
-                                             ros_home=ros_home, use_underlay=False)
+                                             sources_loader=sources_loader)
 
     assert lookup.get_resources_that_need('fake') ==  []
     assert set(lookup.get_resources_that_need('stack1_dep1')) ==  set(['stack1_p1', 'stack1_p2'])
@@ -237,7 +252,6 @@ def test_RosdepLookup_get_resources_that_need():
 def test_RosdepLookup_create_from_rospkg():
     from rosdep2.lookup import RosdepLookup
     rospack, rosstack = get_test_rospkgs()
-    ros_home = os.path.join(get_test_tree_dir(), 'fake')
 
     # these are just tripwire, can't actually test as it depends on external env
     lookup = RosdepLookup.create_from_rospkg()
@@ -249,30 +263,29 @@ def test_RosdepLookup_create_from_rospkg():
     assert rospack == lookup.loader._rospack
     assert rosstack == lookup.loader._rosstack
     
-    
 def test_RosdepLookup_get_rosdep_view_for_resource():
     from rosdep2.lookup import RosdepLookup
     from rosdep2.rospkg_loader import DEFAULT_VIEW_KEY, RosPkgLoader
     rospack, rosstack = get_test_rospkgs()
-    ros_home = os.path.join(get_test_tree_dir(), 'fake')
     
+    sources_loader = create_test_SourcesListLoader()
     lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack,
-                                             ros_home=ros_home, use_underlay=False)
+                                             sources_loader=sources_loader)
     # assumption of our tests
     assert isinstance(lookup.loader, RosPkgLoader)
 
     # depends on nothing
-    ros_rosdep_path = os.path.join(rosstack.get_path('ros'), 'rosdep.yaml')
-    with open(ros_rosdep_path) as f:
-        ros_raw = yaml.load(f.read())
+    cache_rosdep_path = os.path.join(get_cache_path(), '288ecc0d5cdbd1a206f12437ba667867c7c9950d')
+    with open(cache_rosdep_path) as f:
+        cache_raw = yaml.load(f.read())
     # - first pass: no cache
     ros_view = lookup.get_rosdep_view_for_resource('roscpp_fake')
     libtool = ros_view.lookup('testlibtool')
     assert ros_rosdep_path == libtool.origin
-    assert ros_raw['testlibtool'] == libtool.data
+    assert cache_raw['testlibtool'] == libtool.data
     python = ros_view.lookup('testpython')
     assert ros_rosdep_path == python.origin
-    assert ros_raw['testpython'] == python.data
+    assert cache_raw['testpython'] == python.data
 
     # package not in stack, should return 
     assert lookup.get_rosdep_view_for_resource('just_a_package').name is DEFAULT_VIEW_KEY
@@ -280,29 +293,27 @@ def test_RosdepLookup_get_rosdep_view_for_resource():
 def test_RosdepLookup_get_rosdep_view():
     from rosdep2.lookup import RosdepLookup
     rospack, rosstack = get_test_rospkgs()
-    ros_home = os.path.join(get_test_tree_dir(), 'fake')
     
+    sources_loader = create_test_SourcesListLoader()
     lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack,
-                                             ros_home=ros_home, use_underlay=False)
+                                             sources_loader=sources_loader)
 
     # depends on nothing
-    ros_rosdep_path = os.path.join(rosstack.get_path('ros'), 'rosdep.yaml')
-    with open(ros_rosdep_path) as f:
-        ros_raw = yaml.load(f.read())
+    cache_raw = get_cache_raw()
     # - first pass: no cache
     ros_view = lookup.get_rosdep_view('ros')
     libtool = ros_view.lookup('testlibtool')
     assert ros_rosdep_path == libtool.origin
-    assert ros_raw['testlibtool'] == libtool.data
+    assert cache_raw['testlibtool'] == libtool.data
     python = ros_view.lookup('testpython')
     assert ros_rosdep_path == python.origin
-    assert ros_raw['testpython'] == python.data
+    assert cache_raw['testpython'] == python.data
 
     # - second pass: with cache
     ros_view = lookup.get_rosdep_view('ros')
     libtool = ros_view.lookup('testlibtool')
     assert ros_rosdep_path == libtool.origin
-    assert ros_raw['testlibtool'] == libtool.data
+    assert cache_raw['testlibtool'] == libtool.data
     
     # depends on ros
     stack1_view = lookup.get_rosdep_view('stack1')
@@ -319,49 +330,18 @@ def test_RosdepLookup_get_rosdep_view():
     # - make sure ros data is available 
     libtool = stack1_view.lookup('testlibtool')
     assert ros_rosdep_path == libtool.origin
-    assert ros_raw['testlibtool'] == libtool.data
+    assert cache_raw['testlibtool'] == libtool.data
     python = stack1_view.lookup('testpython')
     assert ros_rosdep_path == python.origin
-    assert ros_raw['testpython'] == python.data
-
-def test_RosdepLookup_ros_home_override():
-    from rosdep2.lookup import RosdepLookup, OVERRIDE_ENTRY
-    rospack, rosstack = get_test_rospkgs()
-    ros_home = os.path.join(get_test_dir(), 'ros_home')
-    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack,
-                                             ros_home=ros_home, use_underlay=False)
-
-    ros_home_path = os.path.join(ros_home, 'rosdep.yaml')
-    with open(ros_home_path) as f:
-        ros_raw = yaml.load(f.read())
-
-    # low-level test: make sure entry was initialized
-    assert lookup.override_entry is not None
-    assert lookup.override_entry.origin == ros_home_path
-    assert 'testatlas' in lookup.override_entry.rosdep_data
-
-    # make sure it surfaces in relevant APIs
-    # - get_views_that_define
-    val = lookup.get_views_that_define('testatlas')
-    assert len(val) == 1, val
-    assert val[0] == (OVERRIDE_ENTRY, ros_home_path)
-
-    # - get_rosdep_view
-    ros_view = lookup.get_rosdep_view('ros')
-    atlas = ros_view.lookup('testatlas')
-    assert ros_home_path == atlas.origin
-    assert ros_raw['testatlas'] == atlas.data
-
-    #TODO: resolve_definition
-
+    assert cache_raw['testpython'] == python.data
     
 def test_RosdepLookup_get_errors():
     from rosdep2.lookup import RosdepLookup
     rospack, rosstack = get_test_rospkgs()
     tree_dir = get_test_tree_dir()
-    ros_home = os.path.join(tree_dir, 'fake')
+    sources_loader = create_test_SourcesListLoader()
     lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack,
-                                             ros_home=ros_home, use_underlay=False)
+                                             sources_loader=sources_loader)
 
     # shouldn't be any errors (yet)
     assert lookup.get_errors() == []
@@ -378,33 +358,29 @@ def test_RosdepLookup_get_views_that_define():
     from rosdep2.lookup import RosdepLookup
     rospack, rosstack = get_test_rospkgs()
     tree_dir = get_test_tree_dir()
-    ros_home = os.path.join(tree_dir, 'fake')
+    sources_loader = create_test_SourcesListLoader()
     lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack,
-                                             ros_home=ros_home, use_underlay=False)
+                                             sources_loader=sources_loader)
+
+    val = lookup.get_views_that_define('testboost')
+    assert len(val) == 1
+    entry = val[0]
+    url = 'https://github.com/ros/rosdistro/raw/master/rosdep/base.yaml'
+    assert entry == (url, url), entry
 
     val = lookup.get_views_that_define('testpython')
     assert len(val) == 1
     entry = val[0]
-    assert entry == ('ros', os.path.join(rospack.get_ros_paths()[0], 'rosdep.yaml')), entry
-
-    # look for multiply defined
-    vals = lookup.get_views_that_define('twin')
-    assert len(vals) == 2
-
-    stack_names = [entry[0] for entry in vals]
-    assert set(stack_names) == set(['twin1', 'twin2'])
-
-    origins = [entry[1] for entry in vals]
-    origins_actual = [os.path.join(tree_dir, 'stacks', 'twin1', 'rosdep.yaml'), os.path.join(tree_dir, 'stacks', 'twin2', 'rosdep.yaml')]
-    assert set(origins) == set(origins_actual)
+    url = 'https://github.com/ros/rosdistro/raw/master/rosdep/python.yaml'
+    assert entry == (url, url), entry
     
 def test_RosdepLookup_resolve_all_errors():
     from rosdep2.installers import InstallerContext
     from rosdep2.lookup import RosdepLookup, ResolutionError
     rospack, rosstack = get_test_rospkgs()
-    ros_home = os.path.join(get_test_tree_dir(), 'fake')
+    sources_loader = create_test_SourcesListLoader()
     lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack,
-                                             ros_home=ros_home, use_underlay=False)
+                                             sources_loader=sources_loader)
     # the installer context has nothing in it, lookups will fail
     installer_context = InstallerContext()
     installer_context.set_os_override('ubuntu', 'lucid')
@@ -419,10 +395,10 @@ def test_RosdepLookup_resolve_errors():
     from rosdep2.installers import InstallerContext
     from rosdep2.lookup import RosdepLookup, ResolutionError
     rospack, rosstack = get_test_rospkgs()
-    ros_home = os.path.join(get_test_tree_dir(), 'fake')
     
+    sources_loader = create_test_SourcesListLoader()
     lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack,
-                                             ros_home=ros_home, use_underlay=False)
+                                             sources_loader=sources_loader)
     # the installer context has nothing in it, lookups will fail
     installer_context = InstallerContext()
     installer_context.set_os_override('ubuntu', 'lucid')
@@ -449,17 +425,12 @@ def test_RosdepLookup_resolve():
     from rosdep2 import create_default_installer_context
     from rosdep2.lookup import RosdepLookup
     rospack, rosstack = get_test_rospkgs()
-    ros_home = os.path.join(get_test_tree_dir(), 'fake')
     
+    sources_loader = create_test_SourcesListLoader()
     lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack,
-                                             ros_home=ros_home, use_underlay=False)
+                                             sources_loader=sources_loader)
     installer_context = create_default_installer_context()
     installer_context.set_os_override('ubuntu', 'lucid')
-
-    # depends on nothing
-    ros_rosdep_path = os.path.join(rosstack.get_path('ros'), 'rosdep.yaml')
-    with open(ros_rosdep_path) as f:
-        ros_raw = yaml.load(f.read())
 
     # repeat for caching
     for count in xrange(0, 2):
@@ -478,56 +449,23 @@ def test_RosdepLookup_resolve():
         assert set(['libtool', 'libltdl-dev']) == set(resolution)
         assert [] == dependencies
 
-        installer_key, resolution, dependencies = lookup.resolve('stack1_dep2', 'stack1_p1', installer_context)
-        assert 'apt' == installer_key
-        assert ['dep2-ubuntu'] == resolution
-        assert [] == dependencies
-
-        installer_key, resolution, dependencies = lookup.resolve('twin', 'twin1', installer_context)
-        assert 'apt' == installer_key
-        assert ['twin1-value'] == resolution
-        assert [] == dependencies
-
-        installer_key, resolution, dependencies = lookup.resolve('twin', 'twin2', installer_context)
-        assert 'apt' == installer_key
-        assert ['twin2-value'] == resolution, resolution
-        assert [] == dependencies
-
-        #TODO: test dependencies
-
 
 def test_RosdepLookup_resolve_all():
     from rosdep2 import create_default_installer_context
     from rosdep2.lookup import RosdepLookup
     rospack, rosstack = get_test_rospkgs()
-    ros_home = os.path.join(get_test_tree_dir(), 'fake')
     
+    sources_loader = create_test_SourcesListLoader()
     lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack,
-                                             ros_home=ros_home, use_underlay=False)
+                                             sources_loader=sources_loader)
     installer_context = create_default_installer_context()
     installer_context.set_os_override('ubuntu', 'lucid')
 
-    # depends on nothing
-    ros_rosdep_path = os.path.join(rosstack.get_path('ros'), 'rosdep.yaml')
-    with open(ros_rosdep_path) as f:
-        ros_raw = yaml.load(f.read())
-
     # repeat for caching
+    lookup.verbose = True
     for count in xrange(0, 2):
         resolutions, errors = lookup.resolve_all(['rospack_fake', 'roscpp_fake'], installer_context)
         assert not errors, errors
         assert 'apt' in resolutions
         assert set(resolutions['apt']) == set(['libtinyxml-dev', 'libboost1.40-all-dev', 'libtool', 'libltdl-dev']), set(resolutions['apt'])
         
-        # twin1/2 conflict on a key, so this makes sure we keep the views separate
-        resolutions, errors = lookup.resolve_all(['twin1', 'twin2'], installer_context)
-        assert not errors
-        assert 'apt' in resolutions, resolutions
-        assert set(resolutions['apt']) == set(['twin1-value', 'twin2-value'])
-
-        resolutions, errors = lookup.resolve_all(['stack1_p1', 'stack1_p2'], installer_context)
-        assert not errors
-        assert 'apt' in resolutions
-        assert set(resolutions['apt']) == set(["dep1-ubuntu", "dep2-ubuntu", "p1dep1-ubuntu", "p1dep2-ubuntu", "p2dep1-ubuntu"]), set(resolutions['apt'])
-
-

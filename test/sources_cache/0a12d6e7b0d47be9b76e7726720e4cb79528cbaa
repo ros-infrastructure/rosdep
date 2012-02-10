@@ -1,0 +1,206 @@
+boost:
+  arch: boost
+  cygwin: libboost-devel libboost1.40
+  debian: {lenny: "if [ ! -f /opt/ros/lib/libboost_date_time-gcc43-mt*-1_37.a ] ;\
+      \ then\n  mkdir -p ~/ros/ros-deps\n  cd ~/ros/ros-deps\n  wget --tries=10 http://pr.willowgarage.com/downloads/boost_1_37_0.tar.gz\n\
+      \  tar xzf boost_1_37_0.tar.gz\n  cd boost_1_37_0\n  ./configure --prefix=/opt/ros\n\
+      \  make\n  sudo make install\nfi\n", squeeze: libboost1.42-all-dev}
+  fedora: boost-devel
+  freebsd: boost-python-libs
+  gentoo: dev-libs/boost
+  macports: boost
+  opensuse: boost-devel
+  osxbrew:
+    homebrew:
+      packages: [boost]
+  rhel: boost-devel
+  ubuntu:
+    lucid:
+      apt:
+        packages: [libboost1.40-all-dev]
+    maverick:
+      apt:
+        packages: [libboost1.42-all-dev]
+    natty:
+      apt:
+        packages: [libboost1.42-all-dev]
+    oneiric:
+      apt:
+        packages: [libboost1.46-all-dev]
+bzip2:
+  arch: bzip2
+  cygwin: bzip2
+  debian: libbz2-dev
+  fedora: bzip2-devel
+  freebsd: bzip2
+  gentoo: app-arch/bzip2
+  macports: bzip2
+  opensuse: libbz2-devel
+  osxbrew:
+    homebrew: {packages: ''}
+  rhel: bzip2-devel
+  ubuntu: libbz2-dev
+checkinstall:
+  debian:
+    apt:
+      packages: [checkinstall]
+  osxbrew:
+    homebrew: {packages: ''}
+  ubuntu:
+    apt:
+      packages: [checkinstall]
+cmake: {ubuntu: cmake}
+cppunit:
+  arch: cppunit
+  debian: libcppunit-dev
+  fedora: cppunit-devel
+  freebsd: cppunit
+  gentoo: dev-util/cppunit
+  macports: cppunit
+  opensuse: libcppunit-devel
+  osxbrew:
+    homebrew:
+      args: [--universal]
+      packages: [cppunit]
+  rhel: cppunit-devel
+  ubuntu: libcppunit-dev
+curl:
+  arch: curl
+  debian: libcurl4-openssl-dev
+  fedora: libcurl-devel
+  freebsd: curl
+  gentoo: net-misc/curl
+  macports: curl
+  opensuse: libcurl-devel
+  osxbrew:
+    homebrew: {packages: ''}
+  ubuntu: libcurl4-openssl-dev
+doxygen:
+  arch: doxygen
+  debian: doxygen
+  fedora: doxygen
+  freebsd: doxygen
+  gentoo: app-doc/doxygen
+  macports: doxygen
+  osxbrew:
+    lion:
+      homebrew:
+        packages: [doxygen]
+  rhel: doxygen
+  ubuntu: doxygen
+eigen:
+  debian:
+    source: {md5sum: 941db2fbb09d80c28426d335022fad95, uri: 'https://kforge.ros.org/rosrelease/viewvc/sourcedeps/eigen/eigen-3.0.1-1.rdmanifest'}
+  gentoo: '>=dev-cpp/eigen-3'
+  osxbrew:
+    homebrew:
+      packages: [eigen]
+  ubuntu:
+    apt:
+      packages: [libeigen3-dev]
+epydoc:
+  debian: python-epydoc
+  fedora: epydoc
+  freebsd: epydoc
+  gentoo: dev-python/epydoc
+  macports: py26-epydoc
+  osxbrew:
+    lion:
+      pip:
+        packages: [epydoc]
+  ubuntu: python-epydoc
+festival: {arch: festival festival-kallpc16k, debian: festival festvox-kallpc16k,
+  ubuntu: festival festvox-kallpc16k}
+ffmpeg:
+  arch: ffmpeg
+  debian: libavcodec-dev libavformat-dev libavutil-dev libswscale-dev
+  gentoo: ffmpeg
+  macports: ffmpeg
+  osxbrew:
+    homebrew:
+      packages: [ffmpeg]
+  ubuntu: libavcodec-dev libavformat-dev libavutil-dev libswscale-dev
+fltk:
+  arch: fltk
+  debian: libfltk1.1-dev
+  fedora: fltk-devel
+  freebsd: fltk
+  gentoo: =x11-libs/fltk-1*
+  macports: fltk
+  opensuse: fltk-devel
+  osxbrew:
+    homebrew:
+      packages: [fltk]
+  ubuntu: libfltk1.1-dev
+gfortran:
+  osxbrew:
+    homebrew:
+      packages: [gfortran]
+git:
+  debian: git-core
+  fedora: git
+  freebsd: git
+  gentoo: dev-vcs/git
+  macports: git-core
+  opensuse: git-core
+  osxbrew:
+    homebrew:
+      packages: [git]
+  ubuntu: git-core
+graphicsmagick:
+  arch: graphicsmagick
+  debian: libgraphicsmagick++1-dev
+  gentoo: imagemagick
+  macports: GraphicsMagick
+  osxbrew:
+    homebrew:
+      packages: [graphicsmagick]
+  ubuntu: libgraphicsmagick++1-dev
+graphviz:
+  arch: graphviz
+  debian: graphviz
+  fedora: graphviz
+  freebsd: graphviz
+  gentoo: media-gfx/graphviz
+  macports: graphviz
+  opensuse: graphviz
+  osxbrew:
+    homebrew:
+      options: []
+      packages: [graphviz]
+  rhel: graphviz
+  ubuntu: graphviz
+gtest:
+  debian: libgtest-dev
+  fedora: gtest-devel
+  freebsd: googletest
+  gentoo: dev-util/gtest
+  macports: google-test
+  opensuse: gtest-devel
+  osxbrew:
+    homebrew:
+      options: [--universal]
+      packages: [gtest]
+  ubuntu: libgtest-dev
+testlibtool:
+  arch: libtool
+  debian: {lenny: libtool libltdl3-dev, squeeze: libtool libltdl-dev}
+  fedora: libtool libtool-ltdl-devel
+  freebsd: libtool
+  gentoo: sys-devel/libtool
+  macports: libtool
+  opensuse: libtool libltdl3
+  osxbrew:
+    homebrew: {packages: ''}
+  rhel: libtool libtool-ltdl-devel
+  ubuntu:
+    apt:
+      packages: [libtool, libltdl-dev]
+testtinyxml:
+  debian: libtinyxml-dev
+  fedora: tinyxml-devel
+  osxbrew:
+    homebrew:
+      formula_uri: https://kforge.ros.org/rososx/homebrew/file/tip/electric/tinyxml.rb
+      packages: [tinyxml]
+  ubuntu: libtinyxml-dev
