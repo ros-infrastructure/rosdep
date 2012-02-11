@@ -35,6 +35,15 @@ from rospkg import RosPack, RosStack
 def get_test_dir():
     return os.path.abspath(os.path.dirname(__file__))
 
+def get_cache_dir():
+    p = os.path.join(get_test_dir(), 'sources_cache')
+    assert os.path.isdir(p)
+    return p
+
+def create_test_SourcesListLoader():
+    from rosdep2.sources_list import SourcesListLoader
+    return SourcesListLoader.create_default(sources_cache_dir=get_cache_dir(), verbose=True)
+
 def get_test_tree_dir():
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'tree'))
 
@@ -376,13 +385,13 @@ def test_RosdepInstaller_get_uninstalled():
     
     from rosdep2.lookup import RosdepLookup
     rospack, rosstack = get_test_rospkgs()
-    ros_home = os.path.join(get_test_tree_dir(), 'fake')
     
     # create our test fixture.  use most of the default toolchain, but
     # replace the apt installer with one that we can have more fun
     # with.  we will do all tests with ubuntu lucid keys -- other
     # tests should cover different resolution cases.
-    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack, ros_home=ros_home)
+    sources_loader = create_test_SourcesListLoader()
+    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack, sources_loader=sources_loader)
     context = create_default_installer_context()
     context.set_os_override('ubuntu', 'lucid')
     installer = RosdepInstaller(context, lookup)
@@ -394,14 +403,12 @@ def test_RosdepInstaller_get_uninstalled():
     for verbose in [True, False]:
         tests = [['roscpp_fake'], ['roscpp_fake', 'rospack_fake'], ['empty_package'],
                  ['roscpp_fake', 'rospack_fake', 'empty_package'],
-                 ['stack1_p1'],
-                 ['stack1_p1', 'stack1_p2'],
-                 ['roscpp_fake', 'rospack_fake', 'stack1_p1', 'stack1_p2'],
+                 ['roscpp_fake', 'rospack_fake'],
                  ]
         for test in tests:
             uninstalled, errors = installer.get_uninstalled(test, verbose)
             assert not uninstalled, uninstalled
-            assert not errors
+            assert not errors, errors
 
     # in this second test, detect_fn detects nothing as installed
     fake_apt = get_fake_apt(lambda x: [])
@@ -422,24 +429,6 @@ def test_RosdepInstaller_get_uninstalled():
         uninstalled, errors = installer.get_uninstalled(['rospack_fake'], verbose)
         assert uninstalled.keys() == [APT_INSTALLER]
         assert uninstalled[APT_INSTALLER] == expected, uninstalled
-        assert not errors
-
-        expected = set(['dep1-ubuntu', 'p1dep1-ubuntu', 'p1dep2-ubuntu'])
-        uninstalled, errors = installer.get_uninstalled(['stack1_p1'], verbose)
-        assert uninstalled.keys() == [APT_INSTALLER]
-        assert set(uninstalled[APT_INSTALLER]) == expected, uninstalled
-        assert not errors
-
-        expected = set(['p1dep1-ubuntu', 'p1dep2-ubuntu','dep1-ubuntu', 'dep2-ubuntu', 'p2dep1-ubuntu'])
-        uninstalled, errors = installer.get_uninstalled(['stack1_p2'], verbose)
-        assert uninstalled.keys() == [APT_INSTALLER]
-        assert set(uninstalled[APT_INSTALLER]) == expected, uninstalled
-        assert not errors
-
-        expected = set(['p1dep1-ubuntu', 'p1dep2-ubuntu','dep1-ubuntu', 'dep2-ubuntu', 'p2dep1-ubuntu'])
-        uninstalled, errors = installer.get_uninstalled(['stack1_p1', 'stack1_p2'], verbose)
-        assert uninstalled.keys() == [APT_INSTALLER]
-        assert set(uninstalled[APT_INSTALLER]) == expected, uninstalled
         assert not errors
 
 def get_fake_apt(detect_fn):
@@ -465,10 +454,10 @@ def test_RosdepInstaller_get_uninstalled_unconfigured():
     
     from rosdep2.lookup import RosdepLookup
     rospack, rosstack = get_test_rospkgs()
-    ros_home = os.path.join(get_test_tree_dir(), 'fake')
     
+    sources_loader = create_test_SourcesListLoader()
     # create our test fixture.  we want to setup a fixture that cannot resolve the rosdep data in order to test error conditions
-    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack, ros_home=ros_home)
+    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack, sources_loader=sources_loader)
     context = create_default_installer_context()
     context.set_os_override('ubuntu', 'lucid')
     installer = RosdepInstaller(context, lookup)
