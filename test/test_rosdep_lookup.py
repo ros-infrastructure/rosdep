@@ -412,12 +412,6 @@ def test_RosdepLookup_resolve_errors():
     except ResolutionError as e:
         assert "Cannot locate rosdep definition" in str(e), str(e)
 
-    try:
-        lookup.resolve('testtinyxml', 'just_a_package', installer_context)
-        assert False, "should have raised"
-    except ResolutionError as e:
-        assert "Cannot locate rosdep definition" in str(e), str(e)
-
 def test_RosdepLookup_resolve():
     from rosdep2 import create_default_installer_context
     from rosdep2.lookup import RosdepLookup
