@@ -285,14 +285,15 @@ def test_RosdepLookup_get_rosdep_view_for_resource():
 
     # depends on nothing
     cache_raw = get_cache_raw()
+    py_cache_raw = get_cache_raw_python()
     # - first pass: no cache
     ros_view = lookup.get_rosdep_view_for_resource('roscpp_fake')
     libtool = ros_view.lookup('testlibtool')
     assert BASE_URL == libtool.origin
     assert cache_raw['testlibtool'] == libtool.data
     python = ros_view.lookup('testpython')
-    assert ros_rosdep_path == python.origin
-    assert cache_raw['testpython'] == python.data
+    assert PYTHON_URL == python.origin
+    assert py_cache_raw['testpython'] == python.data
 
     # package not in stack, should return 
     assert lookup.get_rosdep_view_for_resource('just_a_package').name is DEFAULT_VIEW_KEY
