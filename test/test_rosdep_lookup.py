@@ -33,6 +33,9 @@ import yaml
 
 from rospkg import RosPack, RosStack, ResourceNotFound
 
+BASE_URL = 'https://github.com/ros/rosdistro/raw/master/rosdep/base.yaml'
+PYTHON_URL = 'https://github.com/ros/rosdistro/raw/master/rosdep/python.yaml'
+
 def get_test_dir():
     return os.path.abspath(os.path.dirname(__file__))
 
@@ -49,7 +52,13 @@ def create_test_SourcesListLoader():
     return SourcesListLoader.create_default(sources_cache_dir=get_cache_dir(), verbose=True)
     
 def get_cache_raw():
-    cache_rosdep_path = os.path.join(get_cache_dir(), '288ecc0d5cdbd1a206f12437ba667867c7c9950d')
+    cache_rosdep_path = os.path.join(get_cache_dir(), '0a12d6e7b0d47be9b76e7726720e4cb79528cbaa')
+    with open(cache_rosdep_path) as f:
+        cache_raw = yaml.load(f.read())
+    return cache_raw
+
+def get_cache_raw_python():
+    cache_rosdep_path = os.path.join(get_cache_dir(), 'f6f4ef95664e373cd4754501337fa217f5b55d91')
     with open(cache_rosdep_path) as f:
         cache_raw = yaml.load(f.read())
     return cache_raw
@@ -275,13 +284,11 @@ def test_RosdepLookup_get_rosdep_view_for_resource():
     assert isinstance(lookup.loader, RosPkgLoader)
 
     # depends on nothing
-    cache_rosdep_path = os.path.join(get_cache_path(), '288ecc0d5cdbd1a206f12437ba667867c7c9950d')
-    with open(cache_rosdep_path) as f:
-        cache_raw = yaml.load(f.read())
+    cache_raw = get_cache_raw()
     # - first pass: no cache
     ros_view = lookup.get_rosdep_view_for_resource('roscpp_fake')
     libtool = ros_view.lookup('testlibtool')
-    assert ros_rosdep_path == libtool.origin
+    assert BASE_URL == libtool.origin
     assert cache_raw['testlibtool'] == libtool.data
     python = ros_view.lookup('testpython')
     assert ros_rosdep_path == python.origin
@@ -300,40 +307,33 @@ def test_RosdepLookup_get_rosdep_view():
 
     # depends on nothing
     cache_raw = get_cache_raw()
+    py_cache_raw = get_cache_raw_python()
     # - first pass: no cache
     ros_view = lookup.get_rosdep_view('ros')
     libtool = ros_view.lookup('testlibtool')
-    assert ros_rosdep_path == libtool.origin
+    assert BASE_URL == libtool.origin
     assert cache_raw['testlibtool'] == libtool.data
     python = ros_view.lookup('testpython')
-    assert ros_rosdep_path == python.origin
-    assert cache_raw['testpython'] == python.data
+    assert PYTHON_URL == python.origin
+    assert py_cache_raw['testpython'] == python.data, python.data
 
     # - second pass: with cache
     ros_view = lookup.get_rosdep_view('ros')
     libtool = ros_view.lookup('testlibtool')
-    assert ros_rosdep_path == libtool.origin
+    assert BASE_URL == libtool.origin
     assert cache_raw['testlibtool'] == libtool.data
     
     # depends on ros
     stack1_view = lookup.get_rosdep_view('stack1')
     stack1_rosdep_path = os.path.join(rosstack.get_path('stack1'), 'rosdep.yaml')
     
-    # - make sure a couple of deps made it
-    s1d1 = stack1_view.lookup('stack1_dep1')
-    assert s1d1.origin == stack1_rosdep_path
-    assert s1d1.data == dict(ubuntu='dep1-ubuntu', debian='dep1-debian')
-    s1p2d1 = stack1_view.lookup('stack1_p2_dep1')
-    assert s1p2d1.origin == stack1_rosdep_path
-    assert s1p2d1.data == dict(ubuntu='p2dep1-ubuntu', debian='p2dep1-debian'), s1p2d1.data
-
     # - make sure ros data is available 
     libtool = stack1_view.lookup('testlibtool')
-    assert ros_rosdep_path == libtool.origin
+    assert BASE_URL == libtool.origin
     assert cache_raw['testlibtool'] == libtool.data
     python = stack1_view.lookup('testpython')
-    assert ros_rosdep_path == python.origin
-    assert cache_raw['testpython'] == python.data
+    assert PYTHON_URL == python.origin
+    assert py_cache_raw['testpython'] == python.data
     
 def test_RosdepLookup_get_errors():
     from rosdep2.lookup import RosdepLookup
@@ -365,14 +365,12 @@ def test_RosdepLookup_get_views_that_define():
     val = lookup.get_views_that_define('testboost')
     assert len(val) == 1
     entry = val[0]
-    url = 'https://github.com/ros/rosdistro/raw/master/rosdep/base.yaml'
-    assert entry == (url, url), entry
+    assert entry == (BASE_URL, BASE_URL), entry
 
     val = lookup.get_views_that_define('testpython')
     assert len(val) == 1
     entry = val[0]
-    url = 'https://github.com/ros/rosdistro/raw/master/rosdep/python.yaml'
-    assert entry == (url, url), entry
+    assert entry == (PYTHON_URL, PYTHON_URL), entry
     
 def test_RosdepLookup_resolve_all_errors():
     from rosdep2.installers import InstallerContext
