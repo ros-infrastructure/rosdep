@@ -7,15 +7,13 @@ from rospkg.os_detect import OS_UBUNTU
 
 from .core import InvalidData, DownloadFailure
 from .platforms.debian import APT_INSTALLER
+from .rep3 import download_targets_data
 
 #py3k
 try:
     unicode
 except:
     basestring = unicode = str
-
-# location of targets file for processing gbpdistro files
-GBP_TARGETS_URL = 'https://raw.github.com/ros/rosdistro/master/releases/targets.yaml'
 
 # location of an example gbpdistro file for reference and testing
 FUERTE_GBPDISTRO_URL = 'https://raw.github.com/ros/rosdistro/master/releases/fuerte.yaml'
@@ -31,19 +29,18 @@ def gbprepo_to_rosdep_data(gbpdistro_data, targets_data):
     # (e.g. doesn't separate gbpdistro vs. targets, nor provide
     # origin), but rushing this implementation a bit.
     try:
-        if not type(targets_data) == list:
-            raise InvalidData("targets data must be a list")
+        if not type(targets_data) == dict:
+            raise InvalidData("targets data must be a dict")
         if not type(gbpdistro_data) == dict:
             raise InvalidData("gbpdistro data must be a dictionary")        
 
         # compute the default target data for the release_name
         release_name = gbpdistro_data['release-name']
-        target_data = [t for t in targets_data if release_name in t]
-        if not target_data:
+        if not release_name in targets_data:
             raise InvalidData("targets file does not contain information for release [%s]"%(release_name))
         else:
             # take the first match
-            target_data = target_data[0][release_name]
+            target_data = targets_data[release_name]
 
         # compute the rosdep data for each repo
         rosdep_data = {}
@@ -74,22 +71,17 @@ def gbprepo_to_rosdep_data(gbpdistro_data, targets_data):
     except KeyError as e:
         raise InvalidData("Invalid GBP-distro/targets format: missing key: %s"%(str(e)))
     
-def download_gbpdistro_as_rosdep_data(gbpdistro_url, targets_url=GBP_TARGETS_URL):
+def download_gbpdistro_as_rosdep_data(gbpdistro_url, targets_url=None):
     """
     Download gbpdistro file from web and convert format to rosdep distro data.
     
     :param gbpdistro_url: url of gbpdistro file, ``str``
     :param target_url: override URL of platform targets file
     :raises: :exc:`DownloadFailure`
+    :raises: :exc:`InvalidData` If targets file does not pass cursory validation checks.
     """
     # we can convert a gbpdistro file into rosdep data by following a couple rules
-    try:
-        f = urllib2.urlopen(targets_url, timeout=DOWNLOAD_TIMEOUT)
-        text = f.read()
-        f.close()
-        targets_data = yaml.safe_load(text)
-    except Exception as e:
-        raise DownloadFailure("Failed to download target platform data for gbpdistro:\n\t%s"%(str(e)))
+    targets_data = download_targets_data(targets_url=targets_url)
     try:
         f = urllib2.urlopen(gbpdistro_url, timeout=DOWNLOAD_TIMEOUT)
         text = f.read()

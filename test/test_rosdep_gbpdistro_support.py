@@ -38,8 +38,8 @@ def get_test_dir():
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'sources.list.d'))
 
 def test_url_constants():
-    from rosdep2.gbpdistro_support import GBP_TARGETS_URL, FUERTE_GBPDISTRO_URL
-    for url_name, url in [('GBP_TARGETS_URL', GBP_TARGETS_URL),
+    from rosdep2.gbpdistro_support import FUERTE_GBPDISTRO_URL
+    for url_name, url in [
                           ('FUERTE_GBPDISTRO_URL', FUERTE_GBPDISTRO_URL)]:
         try:
             f = urllib2.urlopen(url)
@@ -49,7 +49,8 @@ def test_url_constants():
             assert False, "URL [%s][%s] failed to download"%(url_name, url)
 
 def test_download_gbpdistro_as_rosdep_data():
-    from rosdep2.gbpdistro_support import download_gbpdistro_as_rosdep_data, FUERTE_GBPDISTRO_URL, GBP_TARGETS_URL
+    from rosdep2.gbpdistro_support import download_gbpdistro_as_rosdep_data, FUERTE_GBPDISTRO_URL
+    from rosdep2.rep3 import REP3_TARGETS_URL
     from rosdep2 import DownloadFailure
     data = download_gbpdistro_as_rosdep_data(FUERTE_GBPDISTRO_URL)
     # don't go beyond this, this test is just making sure the download
@@ -67,7 +68,7 @@ def test_download_gbpdistro_as_rosdep_data():
         pass
     try:
         # use targets URL, which should have a bad format
-        download_gbpdistro_as_rosdep_data(GBP_TARGETS_URL)
+        download_gbpdistro_as_rosdep_data(REP3_TARGETS_URL)
         assert False, "should have raised"
     except DownloadFailure:
         pass
@@ -76,10 +77,10 @@ def test_gbprepo_to_rosdep_data():
     from rosdep2.gbpdistro_support import gbprepo_to_rosdep_data
     from rosdep2 import InvalidData
     simple_gbpdistro = {'release-name': 'foorte', 'gbp-repos': []}
-    targets = [{'foorte': ['lucid', 'oneiric']}]
+    targets = {'foorte': ['lucid', 'oneiric']}
     # test bad data
     try:
-        gbprepo_to_rosdep_data(simple_gbpdistro, targets[0])
+        gbprepo_to_rosdep_data(simple_gbpdistro, [targets])
         assert False, "should have raised"
     except InvalidData:
         pass
