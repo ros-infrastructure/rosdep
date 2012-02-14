@@ -47,8 +47,9 @@ from . import __version__
 from .core import RosdepInternalError, InstallFailed, UnsupportedOs, InvalidData
 from .installers import RosdepInstaller
 from .lookup import RosdepLookup, ResolutionError
+from .rospkg_loader import DEFAULT_VIEW_KEY
 from .sources_list import update_sources_list, get_sources_cache_dir,\
-     download_default_sources_list, get_sources_list_dir
+     download_default_sources_list, get_sources_list_dir, SourcesListLoader
 
 class UsageError(Exception):
     pass
@@ -87,9 +88,15 @@ rosdep where-defined <rosdeps>...
   one of) <rosdeps>
 """
 
-def _get_default_RosdepLookup(verbose=False):
-    lookup = RosdepLookup.create_from_rospkg()
-    lookup.verbose = verbose
+def _get_default_RosdepLookup(options):
+    """
+    Helper routine for converting command-line options into
+    appropriate RosdepLookup instance.
+    """
+    sources_loader = SourcesListLoader.create_default(sources_cache_dir=options.sources_cache_dir,
+                                                      verbose=options.verbose)
+    lookup = RosdepLookup.create_from_rospkg(sources_loader=sources_loader)
+    lookup.verbose = options.verbose
     return lookup
 
 def rosdep_main(args=None):
@@ -139,17 +146,20 @@ Please go to the rosdep page [1] and file a bug report with the stack trace belo
         sys.exit(1)
         
 def _rosdep_main(args):
+    # sources cache dir is our local database.  
+    default_sources_cache = get_sources_cache_dir()
+
     parser = OptionParser(usage=_usage, prog='rosdep')
     parser.add_option("--os", dest="os_override", default=None, 
                       metavar="OS_NAME:OS_VERSION", help="Override OS name and version (colon-separated), e.g. ubuntu:lucid")
+    parser.add_option("-c", "--sources-cache-dir", dest="sources_cache_dir", default=default_sources_cache,
+                      metavar='SOURCES_CACHE_DIR', help="Override %s"%(default_sources_cache))
     parser.add_option("--verbose", "-v", dest="verbose", default=False, 
                       action="store_true", help="verbose display")
     parser.add_option("--version", dest="print_version", default=False, 
                       action="store_true", help="print version and exit")
     parser.add_option("--reinstall", dest="reinstall", default=False, 
                       action="store_true", help="(re)install all dependencies, even if already installed")
-    parser.add_option("--include_duplicates", "-i", dest="include_duplicates", default=False, 
-                      action="store_true", help="do not deduplicate")
     parser.add_option("--default-yes", "-y", dest="default_yes", default=False, 
                       action="store_true", help="Tell the package manager to default to y or fail when installing")
     parser.add_option("--simulate", "-s", dest="simulate", default=False, 
@@ -194,15 +204,12 @@ def _rosdep_args_handler(command, parser, options, args):
     else:
         return command_handlers[command](args, options)
     
-def _package_args_handler(command, parser, options, args, rospack=None, rosstack=None):
+def _package_args_handler(command, parser, options, args):
     # package or stack names as args.  have to convert stack names to packages.
     # - overrides to enable testing
-    if rospack is None:
-        rospack = rospkg.RosPack()
-    if rosstack is None:
-        rosstack = rospkg.RosStack()
-    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack)
-    lookup.verbose = options.verbose
+    rospack = rospkg.RosPack()
+    rosstack = rospkg.RosStack()
+    lookup = _get_default_RosdepLookup(options)
     loader = lookup.get_loader()
     
     if options.rosdep_all:
@@ -282,7 +289,7 @@ def command_update(options):
         print("ERROR: error loading sources list:\n\t%s"%(e))
     
 def command_keys(lookup, packages, options):
-    lookup = _get_default_RosdepLookup(verbose=options.verbose)
+    lookup = _get_default_RosdepLookup(options)
     rosdep_keys = []
     for package_name in packages:
         rosdep_keys.extend(lookup.get_rosdeps(package_name, implicit=True))
@@ -379,9 +386,9 @@ def _compute_depdb_output(lookup, packages, options):
             output = output + "<<<< %s -> %s >>>>\n"%(rosdep, resolved)
     return output
     
-def command_db(lookup, options):
+def command_db(options):
     # exact same setup logic as command_resolve, should possibly combine
-    lookup = _get_default_RosdepLookup(verbose=options.verbose)
+    lookup = _get_default_RosdepLookup(options)
     installer_context = create_default_installer_context(verbose=options.verbose)
     configure_installer_context_os(installer_context, options)
     os_name, os_version = installer_context.get_os_name_and_version()
@@ -419,7 +426,7 @@ def _print_lookup_errors(lookup):
             print("WARNING: %s"%(str(error)), file=sys.stderr)
             
 def command_what_needs(args, options):
-    lookup = _get_default_RosdepLookup(verbose=options.verbose)
+    lookup = _get_default_RosdepLookup(options)
     packages = []
     for rosdep_name in args:
         packages.extend(lookup.get_resources_that_need(rosdep_name))
@@ -428,7 +435,7 @@ def command_what_needs(args, options):
     print('\n'.join(set(packages)))
     
 def command_where_defined(args, options):
-    lookup = _get_default_RosdepLookup(verbose=options.verbose)
+    lookup = _get_default_RosdepLookup(options)
     locations = []
     for rosdep_name in args:
         locations.extend(lookup.get_views_that_define(rosdep_name))
@@ -443,7 +450,7 @@ def command_where_defined(args, options):
         sys.exit(1)
 
 def command_resolve(args, options):
-    lookup = _get_default_RosdepLookup(verbose=options.verbose)
+    lookup = _get_default_RosdepLookup(options)
     installer_context = create_default_installer_context(verbose=options.verbose)
     configure_installer_context_os(installer_context, options)
 

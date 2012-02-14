@@ -70,9 +70,9 @@ Options
 
   Override OS name and version (colon-separated), e.g. ubuntu:lucid
   
-**-i, --include_duplicates**
+**-c SOURCES_CACHE_DIR, --sources-cache-dir=SOURCES_CACHE_DIR**
 
-  Do not deduplicate
+  Override default sources cache directory (local rosdep database).
 
 **-a, --all**
 

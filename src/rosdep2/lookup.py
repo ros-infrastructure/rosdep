@@ -192,7 +192,7 @@ class RosdepView(object):
             if override or not dep_name in db:
                 db[dep_name] = update_definition
             elif verbose:
-                print("[%s] ignoring [%s], already loaded"%(update_entry.origin, dep_name))
+                print("[%s] ignoring [%s], already loaded"%(update_entry.origin, dep_name), file=sys.stderr)
             
 class RosdepLookup(object):
     """
@@ -319,7 +319,7 @@ class RosdepLookup(object):
             try:
                 rosdep_keys = self.get_rosdeps(resource_name, implicit=True)
                 if self.verbose:
-                    print("resolve_all: resource [%s] requires rosdep keys [%s]"%(resource_name, ', '.join(rosdep_keys)))
+                    print("resolve_all: resource [%s] requires rosdep keys [%s]"%(resource_name, ', '.join(rosdep_keys)), file=sys.stderr)
                 for rosdep_key in rosdep_keys:
                     try:
                         installer_key, resolution, dependencies = \
@@ -473,7 +473,7 @@ class RosdepLookup(object):
             db_entry = db.get_view_data(view_key)
             view.merge(db_entry, verbose=verbose)
         if verbose:
-            print("Merged views:\n"+"\n".join([" * %s"%view_key for view_key in view_keys]))
+            print("Merged views:\n"+"\n".join([" * %s"%view_key for view_key in view_keys]), file=sys.stderr)
         return view
     
     def get_rosdep_view_for_resource(self, resource_name, verbose=False):

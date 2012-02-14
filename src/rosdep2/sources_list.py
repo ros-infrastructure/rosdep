@@ -136,7 +136,7 @@ def cache_data_source_loader(sources_cache_dir, verbose=False):
         filepath = os.path.join(sources_cache_dir, filename)
         if os.path.exists(filepath):
             if verbose:
-                print("loading cached data source:\n\t%s\n\t%s"%(uri, filepath))
+                print("loading cached data source:\n\t%s\n\t%s"%(uri, filepath), file=sys.stderr)
             with open(filepath) as f:
                 rosdep_data = yaml.load(f.read())
         else:
@@ -402,7 +402,7 @@ def load_cached_sources_list(sources_cache_dir=None, verbose=False):
     cache_index = os.path.join(sources_cache_dir, 'index')
     if not os.path.exists(cache_index):
         if verbose:
-            print("no cache index present, not loading cached sources")
+            print("no cache index present, not loading cached sources", file=sys.stderr)
         return []
     with open(cache_index, 'r') as f:
         cache_data = f.read()
@@ -465,14 +465,14 @@ class SourcesListLoader(RosdepLoader):
         if matcher is None:
             matcher = DataSourceMatcher.create_default()
         if verbose:
-            print("using matcher with tags [%s]"%(', '.join(matcher.tags)))
+            print("using matcher with tags [%s]"%(', '.join(matcher.tags)), file=sys.stderr)
             
         sources = load_cached_sources_list(sources_cache_dir=sources_cache_dir, verbose=verbose)
         if verbose:
-            print("loaded %s sources"%(len(sources)))
+            print("loaded %s sources"%(len(sources)), file=sys.stderr)
         sources = [x for x in sources if matcher.matches(x)]
         if verbose:
-            print("%s sources match current tags"%(len(sources)))
+            print("%s sources match current tags"%(len(sources)), file=sys.stderr)
         return SourcesListLoader(sources)
         
     def load_view(self, view_name, rosdep_db, verbose=False):
@@ -489,7 +489,7 @@ class SourcesListLoader(RosdepLoader):
             return
         source = self.get_source(view_name)
         if verbose:
-            print("loading view [%s] with sources.list loader"%(view_name))
+            print("loading view [%s] with sources.list loader"%(view_name), file=sys.stderr)
         view_dependencies = self.get_view_dependencies(view_name)
         rosdep_db.set_view_data(view_name, source.rosdep_data, view_dependencies, view_name)
 
