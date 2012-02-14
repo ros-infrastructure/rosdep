@@ -272,7 +272,7 @@ def test_download_rosdep_data():
     from rosdep2 import DownloadFailure
     url = GITHUB_BASE_URL
     data = download_rosdep_data(url)
-    assert 'python' in data #sanity check
+    assert 'boost' in data #sanity check
 
     # try with a bad URL
     try:
