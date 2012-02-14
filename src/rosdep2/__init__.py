@@ -33,7 +33,7 @@ rosdep library and command-line tool
 
 from __future__ import print_function
 
-__version__ = '0.7.2'
+__version__ = '0.8.0'
 
 from .installers import InstallerContext, Installer, PackageManagerInstaller
 
