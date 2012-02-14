@@ -1,4 +1,4 @@
-from rosdep2.catkin_support import get_apt_installer, get_catkin_view, resolve_for_apt
+from rosdep2.catkin_support import get_apt_installer, get_catkin_view, resolve_for_apt, ValidationFailed
 
 def test_workflow():
     try:
