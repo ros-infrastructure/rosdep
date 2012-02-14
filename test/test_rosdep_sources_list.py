@@ -34,6 +34,8 @@ import urllib2
 import rospkg.distro
 import rosdep2.sources_list
 
+GITHUB_BASE_URL = 'https://raw.github.com/ros/rosdistro/master/rosdep/base.yaml'
+
 def get_test_dir():
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'sources.list.d'))
 
@@ -268,7 +270,7 @@ def test_DataSourceMatcher():
 def test_download_rosdep_data():
     from rosdep2.sources_list import download_rosdep_data
     from rosdep2 import DownloadFailure
-    url = 'https://raw.github.com/ros/rosdep_rules/master/rosdep.yaml'
+    url = GITHUB_BASE_URL
     data = download_rosdep_data(url)
     assert 'python' in data #sanity check
 
