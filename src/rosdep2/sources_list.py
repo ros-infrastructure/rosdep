@@ -217,7 +217,7 @@ class DataSourceMatcher(object):
         distro_name = rospkg.distro.current_distro_codename()
         os_detect = rospkg.os_detect.OsDetect()
         os_name, os_version, os_codename = os_detect.detect_os()
-        tags = [distro_name, os_name, os_codename]
+        tags = [t for t in (distro_name, os_name, os_codename) if t]
         return DataSourceMatcher(tags)
 
 def download_rosdep_data(url):
