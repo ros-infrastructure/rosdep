@@ -1,6 +1,8 @@
 rosdep command reference
 ========================
 
+.. _rosdep_usage:
+
 Synopsis
 --------
 
@@ -14,8 +16,6 @@ OS-independent manner.  For example, what Debian packages do you need
 in order to get the OpenGL headers on Ubuntu? How about OS X? Fedora?
 rosdep can answer this question for your platform and install the
 necessary package(s).
-
-For more information on rosdep, see http://ros.org/wiki/rosdep.
 
 Run ``rosdep -h`` or ``rosdep <command> -h`` to access the built-in tool
 documentation.

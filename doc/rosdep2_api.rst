@@ -1,7 +1,11 @@
+.. _python_api:
+
 rosdep2 Python API
 ==================
 
 .. module:: rosdep2
+
+**Experimental**: the rosdep2 Python library is still unstable.
 
 The :mod:`rosdep` Python module supports both the `rosdep`
 command-line tool as well as libraries that wish to use rosdep data
@@ -14,6 +18,9 @@ generally extend the :class:`PackageManagerInstaller` implementation.
 
 The :mod:`rospkg` library is used for OS detection.
 
+Please consult the :ref:`Developers Guide <dev_guide>` for more
+information on developing with the Python API.
+
 
 .. contents:: Table of Contents
    :depth: 2
@@ -22,8 +29,6 @@ Exceptions
 ----------
 
 .. autoclass:: InvalidData
-
-.. autoclass:: RosdepConflict
 
 Database Model
 --------------
@@ -68,7 +73,7 @@ Installers
    :members:
 
 Indices and tables
-==================
+------------------
 
 * :ref:`genindex`
 * :ref:`modindex`

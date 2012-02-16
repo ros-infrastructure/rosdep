@@ -37,7 +37,7 @@ source_suffix = '.rst'
 #source_encoding = 'utf-8-sig'
 
 # The master toctree document.
-master_doc = 'index'
+master_doc = 'contents'
 
 # General information about the project.
 project = u'rosdep'
@@ -91,7 +91,9 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'haiku'
+html_theme = 'ros-theme'
+html_logo = 'ros.png'
+html_theme_path = [os.path.join(os.path.expanduser('~'), 'sphinx'), 'themes']
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -136,6 +138,7 @@ html_static_path = ['_static']
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
 #html_additional_pages = {}
+html_additional_pages = {'index': 'index.html'}
 
 # If false, no module index is generated.
 #html_domain_indices = True
@@ -178,7 +181,7 @@ htmlhelp_basename = 'rosdepdoc'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'rosdep.tex', u'rosdep Documentation',
+  ('rosdep.tex', u'rosdep Documentation',
    u'Tully Foote, Ken Conley', 'manual'),
 ]
 

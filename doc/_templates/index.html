@@ -1,0 +1,51 @@
+{% extends "layout.html" %}
+{% set title = 'ROS packages' %}
+{% block body %}
+  <h1>Welcome</h1>
+
+  <p>
+    rosdep is a command-line tool for installing system dependencies.
+
+    For *end-users*, rosdep helps you install system dependencies for
+    software that you are building from source.
+    
+    For *developers*, rosdep simplifies the problem of installing
+    system dependencies on different platforms.  Instead of having to
+    figure out which debian package on Ubuntu Oneiric contains Boost,
+    you can just specify a dependency on 'boost'.
+
+    rosdep is supported on a variety of platforms/package managers:
+
+    <ul>
+    <li>Ubuntu (apt)</li>
+    <li>Debian (apt)</li>
+    <li>OS X (Homebrew)</li>
+    <li>Red Hat Enterprise Linux (rpm/experimental)</li>
+    <li>Arch (pacman/experimental)</li>
+    <li>Gentoo (equery/experimental)</li>
+    <li>Cygwin (experimental)</li>
+    </ul>
+    
+  </p>
+  <h2>Documentation</h2>
+
+  <table class="contentstable" align="center" style="margin-left: 30px"><tr>
+    <td width="50%">
+      <p class="biglink"><a class="biglink" href="{{ pathto("overview") }}">Overview</a><br/>
+         <span class="linkdescr">Installing and using rosdep</span></p>
+      <p class="biglink"><a class="biglink" href="{{ pathto("commands") }}">Command-line reference</a><br/>
+         <span class="linkdescr">rosdep command usage</span></p>
+
+
+    </td><td width="50%">
+
+      <p class="biglink"><a class="biglink" href="{{ pathto("rosdep_yaml_format") }}">Rosdep YAML format</a><br/>
+         <span class="linkdescr">Specification of the rosdep.yaml file formats</span></p>
+
+      <p class="biglink"><a class="biglink" href="{{ pathto("developers_guide") }}">Developers Guide</a><br/>
+         <span class="linkdescr">How to contribute new OS/package managers to rosdep</span></p>
+    </td></tr>
+  </table>
+
+{% endblock %}
+
