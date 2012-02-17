@@ -6,7 +6,8 @@ Contents
 
    overview
    commands
-   developers_guide
-   rosdep2_api
+   contributing_rules
    rosdep_yaml_format
    sources_list
+   developers_guide
+   rosdep2_api

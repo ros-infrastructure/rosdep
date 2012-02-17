@@ -1,3 +1,5 @@
+.. _rosdep_yaml:
+
 rosdep YAML format
 ''''''''''''''''''
 
