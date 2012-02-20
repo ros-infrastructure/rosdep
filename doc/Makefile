@@ -130,6 +130,6 @@ doctest:
 	      "results in $(BUILDDIR)/doctest/output.txt."
 
 upload: html
-	scp -r _build/html/ wgs32.willowgarage.com:/var/www/www.ros.org/html/doc/api/rosdep/
+	scp -r _build/html/ wgs32.willowgarage.com:/var/www/www.ros.org/html/doc/api/rosdep2/
 
 
