@@ -28,6 +28,18 @@
 #
 # Author Murph Finnicum/murph@murph.cc
 
+### A word on atoms ###
+# We'll be using 'atoms' instead of 'packages' for the majority of the gentoo installer.
+# Atoms can specify a package version (either exactly, or min/max version), flags it has 
+# to be built with, and even repositories it has to come from
+# 
+# Here are some valid atoms and their meanings:
+# sed // A package named 'sed'
+# sys-apps/sed // sed from the category 'sys-apps'. There can be collisions otherwise.
+# sys-apps/sed::gentoo // sed from the category 'sys-apps' and the repository 'gentoo' (the default).
+# >=sys-apps/sed-4 // sed of at least version 4
+# sed[static,-nls] // sed built the static USE flag and withou the nls one
+
 import os
 
 from rospkg.os_detect import OS_GENTOO
@@ -49,17 +61,13 @@ def register_platforms(context):
     context.add_os_installer_key(OS_GENTOO, SOURCE_INSTALLER)
     context.set_default_os_installer_key(OS_GENTOO, PORTAGE_INSTALLER)
 
-# Determine whether package p with USE flags u needs to be installed
-def portage_detect_single(package, use_flags, exec_fn = read_stdout ):
+# Determine whether an atom is already satisfied
+def portage_detect_single(atom, exec_fn = read_stdout ):
     """ 
-    Check if a given package is installed with satisfactory use_flags
+    Check if a given atom is installed.
     
     :param exec_fn: function to execute Popen and read stdout (for testing)
     """
-
-    atom = package
-    if use_flags:
-        atom = atom + "[" + ",".join(use_flags) + "]"
 
     std_out = exec_fn(['portageq', 'match', '/', atom])
 
@@ -67,18 +75,19 @@ def portage_detect_single(package, use_flags, exec_fn = read_stdout ):
     # Also, todo, figure out if just returning true if two packages are returned is cool..
     return len(std_out) >= 1
 
-def portage_detect(packages, use_flags, exec_fn = read_stdout):
+def portage_detect(atoms, exec_fn = read_stdout):
     """
-    Given a list of packages, return the list of installed packages.
+    Given a list of atoms, return a list of which are already installed.
 
     :param exec_fn: function to execute Popen and read stdout (for testing)
     """
 
     # This is for testing, to make sure they're always checked in the same order
-    if isinstance(packages, ListType):
-        packages.sort()
+    # TODO: make testing better to not need this
+    if isinstance(atoms, ListType):
+        atoms.sort()
     
-    return [p for p in packages if portage_detect_single(p, use_flags, exec_fn)]
+    return [a for a in atoms if portage_detect_single(a, exec_fn)]
 
 # Check portage and needed tools for existence and compatibility
 def portage_available():
@@ -102,49 +111,13 @@ class PortageInstaller(PackageManagerInstaller):
         
         
     def get_install_command(self, resolved, interactive=True, reinstall=False):
-        packages = self.get_packages_to_install(resolved, reinstall=reinstall)      
+        atoms = self.get_packages_to_install(resolved, reinstall=reinstall)      
 
-        #TODO: interactive
-        if not packages:
+        if not atoms:
             return []
         elif interactive:
-            return [['sudo', 'emerge', '-a', p] for p in packages]
+            return [['sudo', 'emerge', '-a', atom] for atom in atoms]
         else:
-            return [['sudo', 'emerge', p] for p in packages]
+            return [['sudo', 'emerge', atom] for atom in atoms]
 
 
-    def resolve_use_flags(self, rosdep_args): 
-        """ 
-        :returns: list of use flags that are required
-        """
-
-        if type(rosdep_args) == dict:
-            use_flags = rosdep_args.get("use", None)
-
-            if type(use_flags) == type("string"):
-                use_flags = [use_flags]
-            elif type(use_flags) == type([]):
-                use_flags = use_flags
-            elif type(use_flags) == type(None):
-                use_flags = use_flags
-            else:
-                print("Invalid 'use' argument in rosdep file.")
-                use_flags = None
-                raise InvalidData("Invalid 'use' in rosdep args: %s"%(rosdep_args))
-        else:
-            use_flags = None;
-
-        self.use_flags = use_flags
-        
-
-    def resolve(self, rosdep_args):
-        self.resolve_use_flags(rosdep_args)
-        return PackageManagerInstaller.resolve(self, rosdep_args)
-
-    def get_packages_to_install(self, resolved, reinstall=False):
-        if reinstall:
-            return resolved
-        if not resolved:
-            return []
-        else:
-            return list(set(resolved) - set(self.detect_fn(resolved, self.use_flags)))

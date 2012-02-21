@@ -90,79 +90,66 @@ def test_portage_detect():
     m = Mock()
     m.return_value = []
 
-    val = portage_detect([], [], exec_fn=m)
+    val = portage_detect([], exec_fn=m)
     assert val == [], val
     
     # Test checking for a package that we do not have installed
     m = Mock(return_value = [])
-    val = portage_detect(['tinyxml'], ['stl'], exec_fn=m)
+    val = portage_detect(['tinyxml[stl]'], exec_fn=m)
     assert val == [], "Result was actually: %s" % val
     m.assert_called_with(['portageq', 'match', '/', 'tinyxml[stl]'])
 
     # Test checking for a package that we do have installed
     m = Mock(return_value = ['dev-libs/tinyxml-2.6.2-r1'])
-    val = portage_detect(['tinyxml'], ['stl'], exec_fn=m)
-    assert val == ['tinyxml'], "Result was actually: %s" % val
+    val = portage_detect(['tinyxml[stl]'], exec_fn=m)
+    assert val == ['tinyxml[stl]'], "Result was actually: %s" % val
     m.assert_called_with(['portageq', 'match', '/', 'tinyxml[stl]'])
     
     # Test checking for two packages that we have installed
     m = Mock(side_effect = [['sys-devel/gcc-4.5.3-r2'], ['dev-libs/tinyxml-2.6.2-r1']])
-    val = portage_detect(['tinyxml', 'gcc'], ['stl'], exec_fn=m)
-    assert val == ['gcc', 'tinyxml'], "Result was actually: %s" % val
+    val = portage_detect(['tinyxml[stl]', 'gcc'], exec_fn=m)
+    assert val == ['gcc', 'tinyxml[stl]'], "Result was actually: %s" % val
     m.assert_any_call(['portageq', 'match', '/', 'tinyxml[stl]'])   
-    m.assert_any_call(['portageq', 'match', '/', 'gcc[stl]'])
+    m.assert_any_call(['portageq', 'match', '/', 'gcc'])
     
     # Test checking for two missing packages
     m = Mock(side_effect = [[],[]])
 
-    val = portage_detect(['tinyxml', 'gcc'], ['stl'], exec_fn=m)
+    val = portage_detect(['tinyxml[stl]', 'gcc'], exec_fn=m)
     assert val == [], "Result was actually: %s" % val
     m.assert_any_call(['portageq', 'match', '/', 'tinyxml[stl]'])   
-    m.assert_any_call(['portageq', 'match', '/', 'gcc[stl]'])
+    m.assert_any_call(['portageq', 'match', '/', 'gcc'])
 
     # Test checking for one missing, one installed package
     m = Mock(side_effect = [['sys-devel/gcc-4.5.3-r2'], []])
 
-    val = portage_detect(['tinyxml', 'gcc'], ['stl'], exec_fn=m)
+    val = portage_detect(['tinyxml[stl]', 'gcc'], exec_fn=m)
     assert val == ['gcc'], "Result was actually: %s" % val
     m.assert_any_call(['portageq', 'match', '/', 'tinyxml[stl]'])   
-    m.assert_any_call(['portageq', 'match', '/', 'gcc[stl]'])
+    m.assert_any_call(['portageq', 'match', '/', 'gcc'])
 
     # Test checking for one installed, one missing package (reverse order)
     m = Mock(side_effect = [[], ['dev-libs/tinyxml-2.6.2-r1']])
 
-    val = portage_detect(['tinyxml', 'gcc'], ['stl'], exec_fn=m)
-    assert val == ['tinyxml'], "Result was actually: %s" % val
+    val = portage_detect(['tinyxml[stl]', 'gcc'], exec_fn=m)
+    assert val == ['tinyxml[stl]'], "Result was actually: %s" % val
     m.assert_any_call(['portageq', 'match', '/', 'tinyxml[stl]'])   
-    m.assert_any_call(['portageq', 'match', '/', 'gcc[stl]'])
+    m.assert_any_call(['portageq', 'match', '/', 'gcc'])
 
     # Test duplicates (requesting the same package twice)
     #TODO what's the desired behavior here
     m = Mock(side_effect = [['dev-libs/tinyxml-2.6.2-r1'],['dev-libs/tinyxml-2.6.2-r1']])
 
-    val = portage_detect(['tinyxml', 'tinyxml'], ['stl'], exec_fn=m)
-    assert val == ['tinyxml','tinyxml'], "Result was actually: %s" % val
+    val = portage_detect(['tinyxml[stl]', 'tinyxml[stl]'], exec_fn=m)
+    assert val == ['tinyxml[stl]','tinyxml[stl]'], "Result was actually: %s" % val
     m.assert_any_call(['portageq', 'match', '/', 'tinyxml[stl]'])   
     # and a second of the same, but any_call won't show that.
 
     # Test packages with multiple slot
     m = Mock(side_effect = [['dev-lang/python-2.7.2-r3','dev-lang/python-3.2.2']])
-    val = portage_detect(['python'], [], exec_fn=m)
+    val = portage_detect(['python'], exec_fn=m)
     assert val == ['python'], "Result was actually: %s" % val
     m.assert_any_call(['portageq', 'match', '/', 'python'])   
-
-def test_get_packages_to_install():
-    # Okay, this test is pretty meaningless.
-    # TODO make them better, or (very likely) remove them as how we handle USE will change.
-
-    from rosdep2.platforms.gentoo import PortageInstaller
-    
-    installer = PortageInstaller()
-    val = installer.get_packages_to_install(['a','b'], True)
-    assert val == ['a','b']
-    
-    val = installer.get_packages_to_install(None)
-    assert val == []
 
 def test_PortageInstaller():
     from rosdep2.platforms.gentoo import PortageInstaller
@@ -184,35 +171,6 @@ def test_PortageInstaller():
                     ['sudo', 'emerge', '-a', 'b']]
         val = installer.get_install_command(['whatever'], interactive=True)
         assert val == expected, val
-        
-        # Test the use flags resolver
-        # Because we can accept them in several forms from the rosdep.yaml file
-        installer.resolve_use_flags({'use': "stl"})
-        assert installer.use_flags == ['stl']
-
-        installer.resolve_use_flags({'use': ['a','b','c']})
-        assert installer.use_flags == ['a','b','c']
-        
-        installer.resolve_use_flags({'use': None})
-        assert installer.use_flags == None
-
-        # Test something invalid just because
-        good = False
-        try:
-            installer.resolve_use_flags({'use': 42})
-            assert installer.use_flags == None
-        except InvalidData:
-            good = True
-
-        assert good
-
-        # Test a rosdep with no args, basically just shouldn't throw an exception
-        installer.resolve_use_flags(None)
-
-        #Test our resolve function
-        val = installer.resolve({'packages': 'tinyxml', 'use': 'stl'})
-        assert installer.use_flags == ['stl']
-        assert val == ['tinyxml']
         
     try:
         test()
