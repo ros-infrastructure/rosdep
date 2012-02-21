@@ -126,13 +126,13 @@ class MintOsDetect(OsDetect):
     Special Mint OS detector that overrides version number information.
     """
 
-    version_map = {'11':'11.04',
+    version_map = {'14':'12.10',
+                   '13':'12.04',
+                   '12':'11.10',
+                   '11':'11.04',
                    '10':'10.10',
                    '9':'10.04',
-                   '8':'9.10', 
-                   '7':'9.04',
-                   '6':'8.10',
-                   '5':'8.04'}
+                   }
 
     def __init__(self, base_detector):
         self._detector = base_detector

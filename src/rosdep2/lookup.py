@@ -183,6 +183,8 @@ class RosdepView(object):
         :param override: Ignore first-one-wins rules and instead
             always use rules from update_entry
         """
+        if verbose:
+            print("view[%s]: merging from cache of [%s]"%(self.name, update_entry.origin))
         db = self.rosdep_defs
 
         for dep_name, dep_data in update_entry.rosdep_data.items():
@@ -465,7 +467,7 @@ class RosdepLookup(object):
         :param verbose: print debugging output
         """
         # Create view and initialize with dbs from all of the
-        # dependencies. 
+        # dependencies.
         view = RosdepView(view_name)
 
         db = self.rosdep_db
@@ -473,7 +475,7 @@ class RosdepLookup(object):
             db_entry = db.get_view_data(view_key)
             view.merge(db_entry, verbose=verbose)
         if verbose:
-            print("Merged views:\n"+"\n".join([" * %s"%view_key for view_key in view_keys]), file=sys.stderr)
+            print("View [%s], merged views:\n"%(view_name)+"\n".join([" * %s"%view_key for view_key in view_keys]), file=sys.stderr)
         return view
     
     def get_rosdep_view_for_resource(self, resource_name, verbose=False):

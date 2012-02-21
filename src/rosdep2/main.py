@@ -369,7 +369,7 @@ def command_install(lookup, packages, options):
         raise RosdepInternalError(e)
     except InstallFailed as e:
         print("ERROR: the following rosdeps failed to install", file=sys.stderr)
-        print('\n'.join(["  [%s]: %s"%f for f in e.failures]), file=sys.stderr)
+        print('\n'.join(["  %s"%f for f in e.failures]), file=sys.stderr)
         return 1
 
 def _compute_depdb_output(lookup, packages, options):
@@ -460,21 +460,15 @@ def command_resolve(args, options):
     for rosdep_name in args:
         if len(args) > 1:
             print("#ROSDEP[%s]"%rosdep_name)
-        view_names = lookup.get_views_that_define(rosdep_name)
-        
-        if not view_names:
-            raise ResolutionError(rosdep_name, None, os_name, os_version, "Could not find definition for rosdep [%s]"%rosdep_name)
-        for view_name, origin in view_names:
-            if len(view_names) > 1:
-                print("#[%s]"%(origin))
-            view = lookup.get_rosdep_view(view_name, verbose=options.verbose)
-            if view is None:
-                continue
-            d = view.lookup(rosdep_name)
-            _, rule = d.get_rule_for_platform(os_name, os_version, installer_keys, default_key)
 
-            resolved = installer.resolve(rule)
-            print (" ".join(resolved))
+        view = lookup.get_rosdep_view(DEFAULT_VIEW_KEY, verbose=options.verbose)
+        d = view.lookup(rosdep_name)
+        rule_installer, rule = d.get_rule_for_platform(os_name, os_version, installer_keys, default_key)
+
+        installer = installer_context.get_installer(rule_installer)
+        resolved = installer.resolve(rule)
+        print("#%s"%(rule_installer))
+        print (" ".join(resolved))
 
     for error in lookup.get_errors():
         print("WARNING: %s"%(error_to_human_readable(error)), file=sys.stderr)
