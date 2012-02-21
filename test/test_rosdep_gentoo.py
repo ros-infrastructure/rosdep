@@ -25,47 +25,195 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-# Author Ken Conley/kwc@willowgarage.com
+# Author Ken Conley/kwc@willowgarage.com, Murph Finnicum/murph@murph.cc
 
 import os
 import traceback
 from mock import Mock, patch
+from rosdep2.model import InvalidData
 
 def get_test_dir():
     # not used yet
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'gentoo'))
 
 from rospkg.os_detect import OsDetect, OS_GENTOO
-def test_equery_available():
-    # not sure this test is right, but provides some basic tripwire for now.
-    from rosdep2.platforms.gentoo import equery_available
-    if OsDetect().get_name() != OS_GENTOO:
-        assert not equery_available(), "equery should not be available"
-    else:
-        assert equery_available(), "equery should be available"
-        
-def test_EqueryInstaller():
-    from rosdep2.platforms.gentoo import EqueryInstaller, equery_available
 
-    @patch.object(EqueryInstaller, 'get_packages_to_install')
+def test_portage_available():
+    from rosdep2.platforms.gentoo import portage_available
+
+    original_exists = os.path.exists
+
+    path_overrides = {}
+    def mock_path(path):
+        if path in path_overrides:
+            return path_overrides[path]
+        else: 
+            return original_exists(path)
+
+    m = Mock(side_effect=mock_path)
+    os.path.exists = m
+
+    #Test with portageq missing
+    m.reset_mock()
+    path_overrides = {}
+    path_overrides['/usr/bin/portageq'] = False
+    path_overrides['/usr/bin/emerge'] = True
+
+    val = portage_available()
+    assert val==False, "Portage should not be available without portageq"
+
+    #Test with emerge missing
+    m.reset_mock()
+    path_overrides = {}
+    path_overrides['/usr/bin/portageq'] = True
+    path_overrides['/usr/bin/emerge'] = False
+
+    val = portage_available()
+    assert val==False, "Portage should not be available without emerge"
+
+    # Test with nothing missing
+    m.reset_mock()
+    path_overrides = {}
+    path_overrides['/usr/bin/portageq'] = True
+    path_overrides['/usr/bin/emerge'] = True
+
+    val = portage_available()
+    assert val==True, "Portage should be available"
+    
+    os.path.exists = original_exists
+
+# This actually tests portage_detect_single and portage_detect
+
+def test_portage_detect():
+    from rosdep2.platforms.gentoo import portage_detect
+
+    m = Mock()
+    m.return_value = []
+
+    val = portage_detect([], [], exec_fn=m)
+    assert val == [], val
+    
+    # Test checking for a package that we do not have installed
+    m = Mock(return_value = [])
+    val = portage_detect(['tinyxml'], ['stl'], exec_fn=m)
+    assert val == [], "Result was actually: %s" % val
+    m.assert_called_with(['portageq', 'match', '/', 'tinyxml[stl]'])
+
+    # Test checking for a package that we do have installed
+    m = Mock(return_value = ['dev-libs/tinyxml-2.6.2-r1'])
+    val = portage_detect(['tinyxml'], ['stl'], exec_fn=m)
+    assert val == ['tinyxml'], "Result was actually: %s" % val
+    m.assert_called_with(['portageq', 'match', '/', 'tinyxml[stl]'])
+    
+    # Test checking for two packages that we have installed
+    m = Mock(side_effect = [['sys-devel/gcc-4.5.3-r2'], ['dev-libs/tinyxml-2.6.2-r1']])
+    val = portage_detect(['tinyxml', 'gcc'], ['stl'], exec_fn=m)
+    assert val == ['gcc', 'tinyxml'], "Result was actually: %s" % val
+    m.assert_any_call(['portageq', 'match', '/', 'tinyxml[stl]'])   
+    m.assert_any_call(['portageq', 'match', '/', 'gcc[stl]'])
+    
+    # Test checking for two missing packages
+    m = Mock(side_effect = [[],[]])
+
+    val = portage_detect(['tinyxml', 'gcc'], ['stl'], exec_fn=m)
+    assert val == [], "Result was actually: %s" % val
+    m.assert_any_call(['portageq', 'match', '/', 'tinyxml[stl]'])   
+    m.assert_any_call(['portageq', 'match', '/', 'gcc[stl]'])
+
+    # Test checking for one missing, one installed package
+    m = Mock(side_effect = [['sys-devel/gcc-4.5.3-r2'], []])
+
+    val = portage_detect(['tinyxml', 'gcc'], ['stl'], exec_fn=m)
+    assert val == ['gcc'], "Result was actually: %s" % val
+    m.assert_any_call(['portageq', 'match', '/', 'tinyxml[stl]'])   
+    m.assert_any_call(['portageq', 'match', '/', 'gcc[stl]'])
+
+    # Test checking for one installed, one missing package (reverse order)
+    m = Mock(side_effect = [[], ['dev-libs/tinyxml-2.6.2-r1']])
+
+    val = portage_detect(['tinyxml', 'gcc'], ['stl'], exec_fn=m)
+    assert val == ['tinyxml'], "Result was actually: %s" % val
+    m.assert_any_call(['portageq', 'match', '/', 'tinyxml[stl]'])   
+    m.assert_any_call(['portageq', 'match', '/', 'gcc[stl]'])
+
+    # Test duplicates (requesting the same package twice)
+    #TODO what's the desired behavior here
+    m = Mock(side_effect = [['dev-libs/tinyxml-2.6.2-r1'],['dev-libs/tinyxml-2.6.2-r1']])
+
+    val = portage_detect(['tinyxml', 'tinyxml'], ['stl'], exec_fn=m)
+    assert val == ['tinyxml','tinyxml'], "Result was actually: %s" % val
+    m.assert_any_call(['portageq', 'match', '/', 'tinyxml[stl]'])   
+    # and a second of the same, but any_call won't show that.
+
+    # Test packages with multiple slot
+    m = Mock(side_effect = [['dev-lang/python-2.7.2-r3','dev-lang/python-3.2.2']])
+    val = portage_detect(['python'], [], exec_fn=m)
+    assert val == ['python'], "Result was actually: %s" % val
+    m.assert_any_call(['portageq', 'match', '/', 'python'])   
+
+def test_get_packages_to_install():
+    # Okay, this test is pretty meaningless.
+    # TODO make them better, or (very likely) remove them as how we handle USE will change.
+
+    from rosdep2.platforms.gentoo import PortageInstaller
+    
+    installer = PortageInstaller()
+    val = installer.get_packages_to_install(['a','b'], True)
+    assert val == ['a','b']
+    
+    val = installer.get_packages_to_install(None)
+    assert val == []
+
+def test_PortageInstaller():
+    from rosdep2.platforms.gentoo import PortageInstaller
+
+    @patch.object(PortageInstaller, 'get_packages_to_install')
     def test(mock_method):
-        installer = EqueryInstaller()
+        installer = PortageInstaller()
         mock_method.return_value = []
         assert [] == installer.get_install_command(['fake'])
 
-        # no interactive option with YUM
         mock_method.return_value = ['a', 'b']
-
-        if equery_available():
-            expected = [['sudo', 'emerge', 'a'],
-                        ['sudo', 'emerge', 'b']]
-        else:
-            expected = [['sudo', 'emerge', '-u', 'a'],
-                        ['sudo', 'emerge', '-u', 'b']]
+        
+        expected = [['sudo', 'emerge', 'a'],
+                    ['sudo', 'emerge', 'b']]
         val = installer.get_install_command(['whatever'], interactive=False)
         assert val == expected, val
+
+        expected = [['sudo', 'emerge', '-a', 'a'],
+                    ['sudo', 'emerge', '-a', 'b']]
         val = installer.get_install_command(['whatever'], interactive=True)
         assert val == expected, val
+        
+        # Test the use flags resolver
+        # Because we can accept them in several forms from the rosdep.yaml file
+        installer.resolve_use_flags({'use': "stl"})
+        assert installer.use_flags == ['stl']
+
+        installer.resolve_use_flags({'use': ['a','b','c']})
+        assert installer.use_flags == ['a','b','c']
+        
+        installer.resolve_use_flags({'use': None})
+        assert installer.use_flags == None
+
+        # Test something invalid just because
+        good = False
+        try:
+            installer.resolve_use_flags({'use': 42})
+            assert installer.use_flags == None
+        except InvalidData:
+            good = True
+
+        assert good
+
+        # Test a rosdep with no args, basically just shouldn't throw an exception
+        installer.resolve_use_flags(None)
+
+        #Test our resolve function
+        val = installer.resolve({'packages': 'tinyxml', 'use': 'stl'})
+        assert installer.use_flags == ['stl']
+        assert val == ['tinyxml']
+        
     try:
         test()
     except AssertionError:
