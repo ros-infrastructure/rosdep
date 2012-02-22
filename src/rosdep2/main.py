@@ -49,7 +49,8 @@ from .installers import RosdepInstaller
 from .lookup import RosdepLookup, ResolutionError
 from .rospkg_loader import DEFAULT_VIEW_KEY
 from .sources_list import update_sources_list, get_sources_cache_dir,\
-     download_default_sources_list, get_sources_list_dir, SourcesListLoader
+     download_default_sources_list, SourcesListLoader,CACHE_INDEX,\
+     get_sources_list_dir, get_default_sources_list_file
 
 class UsageError(Exception):
     pass
@@ -110,7 +111,7 @@ def rosdep_main(args=None):
         print("""
 ERROR: Rosdep cannot find all required resources to answer your query
 %s
-"""%(error_to_human_readable(e)))
+"""%(error_to_human_readable(e)), file=sys.stderr)
         sys.exit(1)
     except UsageError as e:
         print(_usage, file=sys.stderr)
@@ -145,6 +146,29 @@ Please go to the rosdep page [1] and file a bug report with the stack trace belo
 """%(e, traceback.format_exc(e)), file=sys.stderr)
         sys.exit(1)
         
+def check_for_sources_list_init(sources_cache_dir):
+    """
+    Check to see if sources list and cache are present. If not, tell user
+    """
+    commands = []
+    filelist = [f for f in os.listdir(get_sources_list_dir()) if f.endswith('.list')]    
+    if not filelist:
+        commands = ['sudo rosdep init', 'rosdep update']
+    else:
+        filename = os.path.join(sources_cache_dir, CACHE_INDEX)
+        if not os.path.exists(filename):
+            commands = ['rosdep update']
+    if commands:
+        commands = '\n'.join(["    %s"%c for c in commands])
+        print("""
+ERROR: your rosdep installation has not been initialized yet.  Please run:
+        
+%s
+"""%(commands), file=sys.stderr)
+        sys.exit(1)
+    else:
+        return True
+    
 def _rosdep_main(args):
     # sources cache dir is our local database.  
     default_sources_cache = get_sources_cache_dir()
@@ -181,6 +205,8 @@ def _rosdep_main(args):
         parser.error("Unsupported command %s."%command)
     args = args[1:]
 
+    if not command in ['init', 'update']:
+        check_for_sources_list_init(options.sources_cache_dir)
     if command in _command_rosdep_args:
         return _rosdep_args_handler(command, parser, options, args)
     elif command in _command_no_args:
@@ -258,35 +284,40 @@ def command_init(options):
     try:
         if not os.path.exists(path):
             os.makedirs(path)
-        path = os.path.join(path, '20-default.list')
+        path = get_default_sources_list_file()
         if os.path.exists(path):
             print("ERROR: default sources list file already exists:\n\t%s\nPlease delete if you wish to re-initialize"%(path))
-            sys.exit(1)
+            return 1
         with open(path, 'w') as f:
             f.write(data)
         print("Wrote %s"%(path))
-        print("Recommended: please run 'rosdep update' now")
+        print("Recommended: please run\n\n\trosdep update\n")
     except IOError as e:
         print("ERROR: cannot create %s:\n\t%s"%(path, e), file=sys.stderr)
-        sys.exit(2)        
+        return 2
     except OSError as e:
         print("ERROR: cannot create %s:\n\t%s\nPerhaps you need to run 'sudo rosdep init' instead"%(path, e), file=sys.stderr)
-        sys.exit(3)
+        return 3
     
 def command_update(options):
     def update_success_handler(data_source):
         print("Hit %s"%(data_source.url))
     def update_error_handler(data_source, exc):
         print("ERROR: unable to process source [%s]:\n\t%s"%(data_source.url, exc), file=sys.stderr)
+    sources_list_dir = get_sources_list_dir()
+    filelist = [f for f in os.listdir(sources_list_dir) if f.endswith('.list')]    
+    if not filelist:
+        print("ERROR: no data sources in %s\n\nPlease initialize your rosdep with\n\n\tsudo rosdep init\n"%sources_list_dir, file=sys.stderr)
+        return 1
     try:
-        print("reading in sources list data from %s"%(get_sources_list_dir()))
+        print("reading in sources list data from %s"%(sources_list_dir))
         update_sources_list(success_handler=update_success_handler,
                             error_handler=update_error_handler)
         print("updated cache in %s"%(get_sources_cache_dir()))
     except InvalidData as e:
-        print("ERROR: invalid sources list file:\n\t%s"%(e))
+        print("ERROR: invalid sources list file:\n\t%s"%(e), file=sys.stderr)
     except IOError as e:
-        print("ERROR: error loading sources list:\n\t%s"%(e))
+        print("ERROR: error loading sources list:\n\t%s"%(e), file=sys.stderr)
     
 def command_keys(lookup, packages, options):
     lookup = _get_default_RosdepLookup(options)
@@ -447,7 +478,7 @@ def command_where_defined(args, options):
             print(origin)
     else:
         print("ERROR: cannot find definition(s) for [%s]"%(', '.join(args)), file=sys.stderr)
-        sys.exit(1)
+        return 1
 
 def command_resolve(args, options):
     lookup = _get_default_RosdepLookup(options)
@@ -457,12 +488,17 @@ def command_resolve(args, options):
     installer, installer_keys, default_key, \
             os_name, os_version = get_default_installer(installer_context=installer_context,
                                                         verbose=options.verbose)
+    invalid_key_errors = []
     for rosdep_name in args:
         if len(args) > 1:
             print("#ROSDEP[%s]"%rosdep_name)
 
         view = lookup.get_rosdep_view(DEFAULT_VIEW_KEY, verbose=options.verbose)
-        d = view.lookup(rosdep_name)
+        try:
+            d = view.lookup(rosdep_name)
+        except KeyError as e:
+            invalid_key_errors.append(e)
+            continue
         rule_installer, rule = d.get_rule_for_platform(os_name, os_version, installer_keys, default_key)
 
         installer = installer_context.get_installer(rule_installer)
@@ -470,8 +506,14 @@ def command_resolve(args, options):
         print("#%s"%(rule_installer))
         print (" ".join(resolved))
 
+    for error in invalid_key_errors:
+        print("ERROR: no rosdep rule for %s"%(error), file=sys.stderr)        
+
     for error in lookup.get_errors():
         print("WARNING: %s"%(error_to_human_readable(error)), file=sys.stderr)
+
+    if invalid_key_errors:
+        return 1 # error exit code
 
 command_handlers = {
     'db': command_db,
