@@ -25,51 +25,99 @@
 # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
+#
+# Author Murph Finnicum/murph@murph.cc
+
+### A word on atoms ###
+# We'll be using 'atoms' instead of 'packages' for the majority of the gentoo installer.
+# Atoms can specify a package version (either exactly, or min/max version), flags it has 
+# to be built with, and even repositories it has to come from
+# 
+# Here are some valid atoms and their meanings:
+# sed // A package named 'sed'
+# sys-apps/sed // sed from the category 'sys-apps'. There can be collisions otherwise.
+# sys-apps/sed::gentoo // sed from the category 'sys-apps' and the repository 'gentoo' (the default).
+# >=sys-apps/sed-4 // sed of at least version 4
+# sed[static,-nls] // sed built the static USE flag and withou the nls one
 
 import os
 
 from rospkg.os_detect import OS_GENTOO
 
 from .source import SOURCE_INSTALLER
+from ..model import InvalidData
 from ..installers import PackageManagerInstaller
 from ..shell_utils import create_tempfile_from_string_and_execute, read_stdout
 
-EQUERY_INSTALLER = 'equery'
+from types import ListType
+
+PORTAGE_INSTALLER = 'portage'
 
 def register_installers(context):
-    context.set_installer(EQUERY_INSTALLER, EqueryInstaller())
+    context.set_installer(PORTAGE_INSTALLER, PortageInstaller())
 
 def register_platforms(context):
-    context.add_os_installer_key(OS_GENTOO, EQUERY_INSTALLER)
+    context.add_os_installer_key(OS_GENTOO, PORTAGE_INSTALLER)
     context.add_os_installer_key(OS_GENTOO, SOURCE_INSTALLER)
-    context.set_default_os_installer_key(OS_GENTOO, EQUERY_INSTALLER)
+    context.set_default_os_installer_key(OS_GENTOO, PORTAGE_INSTALLER)
 
-# Determine whether package p needs to be installed
-def equery_detect_single(p):
-    std_out = read_stdout(['equery', '-q', 'l', p])
-    return std_out.count("") == 1
+# Determine whether an atom is already satisfied
+def portage_detect_single(atom, exec_fn = read_stdout ):
+    """ 
+    Check if a given atom is installed.
+    
+    :param exec_fn: function to execute Popen and read stdout (for testing)
+    """
 
-def equery_detect(packages):
-    return [p for p in packages if equery_detect_single(p)]
+    std_out = exec_fn(['portageq', 'match', '/', atom])
 
-# Check equery for existence and compatibility (gentoolkit 0.3)
-def equery_available():
-    if not os.path.exists("/usr/bin/equery"):
+    # TODO consdier checking the name of the package returned
+    # Also, todo, figure out if just returning true if two packages are returned is cool..
+    return len(std_out) >= 1
+
+def portage_detect(atoms, exec_fn = read_stdout):
+    """
+    Given a list of atoms, return a list of which are already installed.
+
+    :param exec_fn: function to execute Popen and read stdout (for testing)
+    """
+
+    # This is for testing, to make sure they're always checked in the same order
+    # TODO: make testing better to not need this
+    if isinstance(atoms, ListType):
+        atoms.sort()
+    
+    return [a for a in atoms if portage_detect_single(a, exec_fn)]
+
+# Check portage and needed tools for existence and compatibility
+def portage_available():
+    if not os.path.exists("/usr/bin/portageq"):
         return False
-    std_out = read_stdout(['equery', '-V'])
-    return "0.3." == stdout[8:12]
 
-class EqueryInstaller(PackageManagerInstaller):
+    if not os.path.exists("/usr/bin/emerge"):
+        return False
+
+    # We only use standard, defined portage features.
+    # They work in all released versions of portage, and should work in
+    # future versionf for a long time to come.
+    # but .. TODO: Check versions
+
+    return True
+
+class PortageInstaller(PackageManagerInstaller):
 
     def __init__(self):
-        super(EqueryInstaller, self).__init__(equery_detect)
+        super(PortageInstaller, self).__init__(portage_detect)
+        
         
     def get_install_command(self, resolved, interactive=True, reinstall=False):
-        packages = self.get_packages_to_install(resolved, reinstall=reinstall)        
-        #TODO: interactive
-        if not packages:
+        atoms = self.get_packages_to_install(resolved, reinstall=reinstall)      
+
+        if not atoms:
             return []
-        elif equery_available():
-            return [['sudo', 'emerge', p] for p in packages]
+        elif interactive:
+            return [['sudo', 'emerge', '-a', atom] for atom in atoms]
         else:
-            return [['sudo', 'emerge', '-u', p] for p in packages]
+            return [['sudo', 'emerge', atom] for atom in atoms]
+
+
