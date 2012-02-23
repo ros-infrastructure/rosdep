@@ -30,6 +30,7 @@ import sys
 import cStringIO
 
 import rospkg
+import rospkg.os_detect
 
 import unittest
 
@@ -104,8 +105,10 @@ class TestRosdepMain(unittest.TestCase):
             assert stdout.getvalue().strip() == "All system dependencies have been satisified", stdout.getvalue()
             assert not stderr.getvalue(), stderr.getvalue()
         try:
+            osd = rospkg.os_detect.OsDetect()
+            override = "%s:%s"%(osd.get_name(), osd.get_codename())
             with fakeout() as b:
-                rosdep_main(['check', 'python_dep', '--os', 'ubuntu:lucid']+cmd_extras)
+                rosdep_main(['check', 'python_dep', '--os', override]+cmd_extras)
                 stdout, stderr = b
                 assert stdout.getvalue().strip() == "All system dependencies have been satisified"
                 assert not stderr.getvalue(), stderr.getvalue()
@@ -145,7 +148,7 @@ class TestRosdepMain(unittest.TestCase):
                 assert "All required rosdeps installed" in stdout.getvalue(), stdout.getvalue()
                 assert not stderr.getvalue(), stderr.getvalue()
         except SystemExit:
-            assert False, "system exit occurred"
+            assert False, "system exit occurred: "+b[1].getvalue()
         try:
             rosdep_main(['check', 'nonexistent'])
             assert False, "system exit should have occurred"
@@ -158,7 +161,8 @@ class TestRosdepMain(unittest.TestCase):
             expected = GITHUB_PYTHON_URL 
             for command in (['where_defined', 'testpython'], ['where_defined', 'testpython']):
                 with fakeout() as b:
-                    rosdep_main(command + ['-c', sources_cache])
+                    # set os to ubuntu so this test works on different platforms
+                    rosdep_main(command + ['-c', sources_cache, '--os=ubuntu:lucid'])
                     stdout, stderr = b
                     output = stdout.getvalue().strip()
                     assert output == expected, output

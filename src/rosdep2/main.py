@@ -148,16 +148,23 @@ Please go to the rosdep page [1] and file a bug report with the stack trace belo
         
 def check_for_sources_list_init(sources_cache_dir):
     """
-    Check to see if sources list and cache are present. If not, tell user
+    Check to see if sources list and cache are present.
+    *sources_cache_dir* alone is enough to pass as the user has the
+    option of passing in a cache dir.
+    
+    If check fails, tell user how to resolve and sys exit.
     """
     commands = []
+    filename = os.path.join(sources_cache_dir, CACHE_INDEX)
+    if os.path.exists(filename):
+        return
+    else:
+        commands.append('rosdep update')
+
     filelist = [f for f in os.listdir(get_sources_list_dir()) if f.endswith('.list')]    
     if not filelist:
-        commands = ['sudo rosdep init', 'rosdep update']
-    else:
-        filename = os.path.join(sources_cache_dir, CACHE_INDEX)
-        if not os.path.exists(filename):
-            commands = ['rosdep update']
+        commands.insert(0, 'sudo rosdep init')
+
     if commands:
         commands = '\n'.join(["    %s"%c for c in commands])
         print("""

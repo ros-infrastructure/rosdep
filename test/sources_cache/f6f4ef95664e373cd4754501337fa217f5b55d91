@@ -17,6 +17,9 @@ testpython:
   opensuse: python-devel
   rhel: python-devel
   ubuntu: python-dev
+  osx:
+    homebrew:
+      packages: []
 python-empy: {ubuntu: python-empy}
 python-gtk2:
   arch: pygtk
