@@ -30,7 +30,7 @@
 
 import os
 
-from rospkg.os_detect import OsDetect, OsDetector, OS_DEBIAN, OS_UBUNTU, OS_MINT
+from rospkg.os_detect import OsDetect, OsDetector, OS_DEBIAN, OS_UBUNTU
 
 from .pip import PIP_INSTALLER
 from .source import SOURCE_INSTALLER
@@ -46,7 +46,6 @@ def register_installers(context):
 def register_platforms(context):
     register_debian(context)
     register_ubuntu(context)
-    register_mint(context)
     
 def register_debian(context):
     context.add_os_installer_key(OS_DEBIAN, APT_INSTALLER)
@@ -62,18 +61,6 @@ def register_ubuntu(context):
     context.set_default_os_installer_key(OS_UBUNTU, APT_INSTALLER)
     context.set_os_version_type(OS_UBUNTU, TYPE_CODENAME)
 
-def register_mint(context):
-    # override mint detector with different version info
-    os_detect = context.get_os_detect()
-    old_detector = os_detect.get_detector(OS_MINT)
-    os_detect.add_detector(OS_MINT, MintOsDetect(old_detector))
-    
-    context.add_os_installer_key(OS_MINT, APT_INSTALLER)
-    context.add_os_installer_key(OS_MINT, PIP_INSTALLER)
-    context.add_os_installer_key(OS_MINT, SOURCE_INSTALLER)
-    context.set_default_os_installer_key(OS_MINT, APT_INSTALLER)
-    context.set_os_version_type(OS_MINT, TYPE_VERSION)    
-    
 def dpkg_detect(pkgs, exec_fn=None):
     """ 
     Given a list of package, return the list of installed packages.
@@ -120,30 +107,3 @@ class AptInstaller(PackageManagerInstaller):
             return [['sudo', 'apt-get', 'install', '-y', p] for p in packages]
         else:
             return [['sudo', 'apt-get', 'install', p] for p in packages]
-
-class MintOsDetect(OsDetect):
-    """
-    Special Mint OS detector that overrides version number information.
-    """
-
-    version_map = {'14':'12.10',
-                   '13':'12.04',
-                   '12':'11.10',
-                   '11':'11.04',
-                   '10':'10.10',
-                   '9':'10.04',
-                   }
-
-    def __init__(self, base_detector):
-        self._detector = base_detector
-    
-    def is_os(self):
-        return self._detector.is_os()
-        
-    def get_codename(self):
-        return self._detector.get_codename()
-    
-    def get_version(self):
-        # remap version
-        return self.version_map[self._detector.get_version()]
-    

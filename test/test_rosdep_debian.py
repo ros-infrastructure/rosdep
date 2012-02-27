@@ -81,19 +81,3 @@ def test_AptInstaller():
         traceback.print_exc()
         raise
     
-class FakeDetector:
-    def __init__(self, version):
-        self.version = version
-    def get_codename(self):
-        return 'codename'
-    def is_os(self):
-        return True
-    def get_version(self):
-        return self.version
-
-def test_MintOsDetect():
-    from rosdep2.platforms.debian import MintOsDetect
-    d = MintOsDetect(FakeDetector('11'))
-    assert d.is_os()
-    assert 'codename' == d.get_codename()
-    assert '11.04' == d.get_version()
