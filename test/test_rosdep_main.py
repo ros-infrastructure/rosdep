@@ -82,11 +82,13 @@ class TestRosdepMain(unittest.TestCase):
             os.environ['ROS_PACKAGE_PATH'] = self.old_rpp
 
     def test_bad_commands(self):
+        sources_cache = get_cache_dir()
+        cmd_extras = ['-c', sources_cache]
         for commands in [[], ['fake', 'something'], ['check'], ['install', '-a', 'rospack_fake'],
                          ['check', 'rospack_fake', '--os', 'ubuntulucid'],
                          ]:
             try:
-                rosdep_main(commands)
+                rosdep_main(commands+cmd_extras)
                 assert False, "system exit should have occurred"
             except SystemExit:
                 pass
@@ -118,7 +120,7 @@ class TestRosdepMain(unittest.TestCase):
         # this used to abort, but now rosdep assumes validity for even empty stack args
         try:
             with fakeout() as b:
-                rosdep_main(['check', 'packageless'])
+                rosdep_main(['check', 'packageless']+cmd_extras)
                 stdout, stderr = b
                 assert stdout.getvalue().strip() == "All system dependencies have been satisified"
                 assert not stderr.getvalue(), stderr.getvalue()
@@ -126,7 +128,7 @@ class TestRosdepMain(unittest.TestCase):
             assert False, "system exit occurred"
 
         try:
-            rosdep_main(['check', 'nonexistent'])
+            rosdep_main(['check', 'nonexistent']+cmd_extras)
             assert False, "system exit should have occurred"
         except SystemExit:
             pass
@@ -199,13 +201,13 @@ class TestRosdepMain(unittest.TestCase):
                 assert stdout.getvalue().strip() == "testtinyxml", stdout.getvalue()
                 assert not stderr.getvalue(), stderr.getvalue()
             with fakeout() as b:
-                rosdep_main(['keys', 'rospack_fake', '--os', 'ubuntu:lucid', '--verbose'])
+                rosdep_main(['keys', 'rospack_fake', '--os', 'ubuntu:lucid', '--verbose']+cmd_extras)
                 stdout, stderr = b
                 assert stdout.getvalue().strip() == "testtinyxml", stdout.getvalue()
         except SystemExit:
             assert False, "system exit occurred"
         try:
-            rosdep_main(['keys', 'nonexistent'])
+            rosdep_main(['keys', 'nonexistent']+cmd_extras)
             assert False, "system exit should have occurred"
         except SystemExit:
             pass
