@@ -33,15 +33,27 @@ rosdep library and command-line tool
 
 from __future__ import print_function
 
-__version__ = '0.8.1'
+__version__ = '0.8.2'
 
-from .installers import InstallerContext, Installer, PackageManagerInstaller
+import sys
 
-from .core import RosdepInternalError, InstallFailed, UnsupportedOs, InvalidData, DownloadFailure
-from .model import RosdepDatabase, RosdepDatabaseEntry
-from .lookup import RosdepDefinition, RosdepView, RosdepLookup, ResolutionError
-from .loader import RosdepLoader
-from .rospkg_loader import RosPkgLoader
+try:
+    from .installers import InstallerContext, Installer, PackageManagerInstaller
+    from .core import RosdepInternalError, InstallFailed, UnsupportedOs, InvalidData, DownloadFailure
+    from .model import RosdepDatabase, RosdepDatabaseEntry
+    from .lookup import RosdepDefinition, RosdepView, RosdepLookup, ResolutionError
+    from .loader import RosdepLoader
+except ImportError:
+    # soft-fail if rospkg not available.  Need this backoff behavior
+    # in order to support setting __version__ in the module.
+    print("failed to load symbols, rosdep will not function properly", file=sys.stderr)
+
+# don't let import error take down code as when attempting to compute version number
+try:
+    from .rospkg_loader import RosPkgLoader
+except ImportError:
+    print("Cannot import rospkg, rosdep will not function properly", file=sys.stderr)
+
 
 def create_default_installer_context(verbose=False):
     from .platforms import arch
