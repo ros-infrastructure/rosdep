@@ -20,7 +20,7 @@ from __future__ import print_function
 import os
 import sys
 
-from subprocess import Popen, CalledProcessError
+from subprocess import Popen, PIPE, CalledProcessError
 
 from . import create_default_installer_context
 from .platforms.debian import APT_INSTALLER
@@ -37,7 +37,7 @@ def call(command, pipe=None):
     Copy of call() function from catkin-generate-debian to mimic output
     """
     working_dir = '.'
-    print('+ cd %s && ' % working_dir + ' '.join(command))
+    #print('+ cd %s && ' % working_dir + ' '.join(command))
     process = Popen(command, stdout=pipe, stderr=pipe, cwd=working_dir)
     output, unused_err = process.communicate()
     retcode = process.poll()
@@ -83,7 +83,7 @@ def get_catkin_view(rosdistro_name, os_name, os_version):
 \tsudo rosdep init
 """)
     # may want to make the update optional
-    call(('rosdep', 'update'))
+    call(('rosdep', 'update'), pipe=PIPE)
 
     sources_matcher = DataSourceMatcher([rosdistro_name, os_name, os_version])
     sources_loader = SourcesListLoader.create_default(matcher=sources_matcher)
