@@ -213,16 +213,21 @@ class DataSourceMatcher(object):
         return not any(set(rosdep_data_source.tags)-set(self.tags))
                  
     @staticmethod
-    def create_default():
+    def create_default(os_override=None):
         """
         Create a :class:`DataSourceMatcher` to match the current
         configuration.
 
+        :param os_override: (os_name, os_codename) tuple to override
+            OS detection
         :returns: :class:`DataSourceMatcher`
         """
         distro_name = rospkg.distro.current_distro_codename()
-        os_detect = rospkg.os_detect.OsDetect()
-        os_name, os_version, os_codename = os_detect.detect_os()
+        if os_override is None:
+            os_detect = rospkg.os_detect.OsDetect()
+            os_name, os_version, os_codename = os_detect.detect_os()
+        else:
+            os_name, os_codename = os_override
         tags = [t for t in (distro_name, os_name, os_codename) if t]
         return DataSourceMatcher(tags)
 
@@ -462,14 +467,14 @@ class SourcesListLoader(RosdepLoader):
         self.sources = sources
 
     @staticmethod
-    def create_default(matcher=None, sources_cache_dir=None, verbose=False):
+    def create_default(matcher=None, sources_cache_dir=None, os_override=None, verbose=False):
         """
         :param matcher: override DataSourceMatcher.  Defaults to
             DataSourceMatcher.create_default().
         :param sources_cache_dir: override location of sources cache
         """
         if matcher is None:
-            matcher = DataSourceMatcher.create_default()
+            matcher = DataSourceMatcher.create_default(os_override=os_override)
         if verbose:
             print("using matcher with tags [%s]"%(', '.join(matcher.tags)), file=sys.stderr)
             

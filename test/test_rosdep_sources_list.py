@@ -365,7 +365,18 @@ def test_DataSourceMatcher_create_default():
     distro_data_source = rosdep2.sources_list.DataSource('yaml', 'http://fake/url', [distro_name])
     assert matcher.matches(distro_data_source)
 
-
+    # test matcher with os override
+    matcher = rosdep2.sources_list.DataSourceMatcher.create_default(os_override=('fubuntu', 'flucid'))
+    assert not matcher.matches(os_data_source)
+    data_source = rosdep2.sources_list.DataSource('yaml', 'http://fake/url', ['fubuntu'])
+    assert matcher.matches(data_source)    
+    data_source = rosdep2.sources_list.DataSource('yaml', 'http://fake/url', ['flucid'])
+    assert matcher.matches(data_source)    
+    data_source = rosdep2.sources_list.DataSource('yaml', 'http://fake/url', ['flucid', 'fubuntu'])
+    assert matcher.matches(data_source)    
+    data_source = rosdep2.sources_list.DataSource('yaml', 'http://fake/url', ['kubuntu', 'lucid'])
+    assert not matcher.matches(data_source)    
+    
 def test_SourcesListLoader_create_default():
     from rosdep2.sources_list import update_sources_list, SourcesListLoader, DataSourceMatcher
     # create temp dir for holding sources cache

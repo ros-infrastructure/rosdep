@@ -94,7 +94,9 @@ def _get_default_RosdepLookup(options):
     Helper routine for converting command-line options into
     appropriate RosdepLookup instance.
     """
+    os_override = convert_os_override_option(options.os_override)
     sources_loader = SourcesListLoader.create_default(sources_cache_dir=options.sources_cache_dir,
+                                                      os_override=os_override,
                                                       verbose=options.verbose)
     lookup = RosdepLookup.create_from_rospkg(sources_loader=sources_loader)
     lookup.verbose = options.verbose
@@ -269,20 +271,32 @@ def _package_args_handler(command, parser, options, args):
 
     return command_handlers[command](lookup, packages, options)
 
+def convert_os_override_option(options_os_override):
+    """
+    Convert os_override option flag to ``(os_name, os_version)`` tuple, or
+    ``None`` if not set
+
+    :returns: ``(os_name, os_version)`` tuple if option is set, ``None`` otherwise
+    :raises: :exc:`UsageError` if option is not set properly
+    """
+    if not options_os_override:
+        return None
+    val = options_os_override
+    if not ':' in val:
+        raise UsageError("OS override must be colon-separated OS_NAME:OS_VERSION, e.g. ubuntu:maverick")
+    os_name = val[:val.find(':')]
+    os_version = val[val.find(':')+1:]
+    return os_name, os_version
+    
 def configure_installer_context_os(installer_context, options):
     """
     Override the OS detector in *installer_context* if necessary.
 
     :raises: :exc:`UsageError` If user input options incorrectly
     """
-    if not options.os_override:
-        return
-    val = options.os_override
-    if not ':' in val:
-        raise UsageError("OS override must be colon-separated OS_NAME:OS_VERSION, e.g. ubuntu:maverick")
-    os_name = val[:val.find(':')]
-    os_version = val[val.find(':')+1:]
-    installer_context.set_os_override(os_name, os_version)
+    os_override = convert_os_override_option(options.os_override)
+    if os_override is not None:
+        installer_context.set_os_override(*os_override)
     
 def command_init(options):
     data = download_default_sources_list()
