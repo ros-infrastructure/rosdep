@@ -279,13 +279,14 @@ def test_download_rdmanifest():
 
     
 def test_install_from_file():
-    f = os.path.join(d, 'noop-not-installed.rdmanifest')
+    from rosdep2.platforms.source import install_from_file
+    f = os.path.join(get_test_dir(), 'noop-not-installed.rdmanifest')
     install_from_file(f)
 
 def test_install_source():
     from rosdep2.platforms.source import install_source, SourceInstall
     resolved = SourceInstall()
-    resolved.tarball = 'https://kforge.ros.org/rosrelease/rosdep/raw-file/908818f28156/test/source/foo.tar.gz'
+    resolved.tarball = 'https://kforge.ros.org/rosrelease/rosdep/raw-file/tip/test/source/foo.tar.gz'
     resolved.tarball_md5sum = 'fd34dc39f8f192b97fcc191fe0a6befc'
     resolved.install_command = """#!/bin/sh
 exit 0

@@ -242,9 +242,10 @@ def install_source(resolved):
                 filename = f[0]
                 hash2 = get_file_hash(filename)
                 if resolved.tarball_md5sum != hash2:
-                    raise InstallFailed("md5sum check on %s and %s failed.  Expected %s got %s and %s"%(resolved.tarball, resolved.alternate_tarball, resolved.tarball_md5sum, hash1, hash2))
+                    failure = (SOURCE_INSTALLER, "md5sum check on %s and %s failed.  Expected %s got %s and %s"%(resolved.tarball, resolved.alternate_tarball, resolved.tarball_md5sum, hash1, hash2))
+                    raise InstallFailed(failure=failure)
             else:
-                raise InstallFailed("md5sum check on %s failed.  Expected %s got %s "%(resolved.tarball, resolved.tarball_md5sum, hash1))
+                raise InstallFailed((SOURCE_INSTALLER, "md5sum check on %s failed.  Expected %s got %s "%(resolved.tarball, resolved.tarball_md5sum, hash1)))
     else:
         rd_debug("No md5sum defined for tarball, not checking.")
 
@@ -259,7 +260,7 @@ def install_source(resolved):
         if success:
             rd_debug("successfully executed script")
         else:
-            raise InstallFailed("installation script returned with error code")
+            raise InstallFailed((SOURCE_INSTALLER, "installation script returned with error code"))
 
     finally:
         rd_debug("cleaning up tmpdir [%s]"%(tempdir))

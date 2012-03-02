@@ -475,7 +475,7 @@ class RosdepInstaller(object):
                     #accumulate errors
                     failures.extend(e.failures)
         if failures:
-            raise InstallFailed(failures)
+            raise InstallFailed(failures=failures)
 
     def install_resolved(self, installer_key, resolved, simulate=False, interactive=True,
                          reinstall=False, continue_on_error=False, verbose=False):
@@ -523,7 +523,7 @@ class RosdepInstaller(object):
             if result != 0:
                 failures.append((installer_key, 'command [%s] failed'%(' '.join(sub_command))) )
                 if not continue_on_error:
-                    raise InstallFailed(failures)
+                    raise InstallFailed(failures=failures)
 
         # test installation of each
         for r in resolved:
@@ -531,6 +531,6 @@ class RosdepInstaller(object):
                 failures.append((installer_key, "Failed to detect successful installation of [%s]"%(r)))
         # finalize result
         if failures:
-            raise InstallFailed(failures)
+            raise InstallFailed(failures=failures)
         elif verbose:
             print("#successfully installed")

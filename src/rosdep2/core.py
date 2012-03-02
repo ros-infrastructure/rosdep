@@ -77,8 +77,19 @@ class DownloadFailure(Exception):
 
 class InstallFailed(Exception):
 
-    def __init__(self, failures):
+    def __init__(self, failure=None, failures=None):
         """
+        One of failure/failures must be set.
+        
+        :param failure: single (installer_key, message) tuple.  
         :param failures: list of (installer_key, message) tuples
         """
-        self.failures = failures
+        if failures is not None:
+            self.failures = failures
+        elif not failure:
+            raise ValueError("failure is None")
+        else:
+            self.failures = [failure]
+    
+    def __str__(self):
+        return '\n'.join(['%s: %s'%(key, message) for (key, message) in self.failures])
