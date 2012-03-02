@@ -69,9 +69,10 @@ def _sub_fetch_file(url, md5sum=None):
     try:
         fh = urllib2.urlopen(url)
         contents = fh.read()
-        filehash =  hashlib.md5(contents).hexdigest()
-        if md5sum and filehash != md5sum:
-            raise DownloadFailed("md5sum didn't match for %s.  Expected %s got %s"%(url, md5sum, filehash))
+        if md5sum is not None:
+            filehash =  hashlib.md5(contents).hexdigest()
+            if md5sum and filehash != md5sum:
+                raise DownloadFailed("md5sum didn't match for %s.  Expected %s got %s"%(url, md5sum, filehash))
     except urllib2.URLError as ex:
         raise DownloadFailed(str(ex))
 
@@ -84,7 +85,13 @@ def get_file_hash(filename):
             md5.update(chunk)
     return md5.hexdigest()
 
-def fetch_file(url, md5sum):
+def fetch_file(url, md5sum=None):
+    """
+    Download file.  Optionally validate with md5sum
+
+    :param url: URL to download
+    :param md5sum: Expected MD5 sum of contents
+    """
     error = contents = ''
     try:
         contents = _sub_fetch_file(url, md5sum)
@@ -104,6 +111,9 @@ def load_rdmanifest(contents):
     
 def download_rdmanifest(url, md5sum, alt_url=None):
     """
+    :param url: URL to download rdmanifest from
+    :param md5sum: MD5 sum for validating url download, or None
+
     :returns: (contents of rdmanifest, download_url).  download_url is
       either *url* or *alt_url* and indicates which of the locations
       contents was generated from.
@@ -221,7 +231,7 @@ def install_from_file(rdmanifest_file):
     install_source(SourceInstall.from_manifest(manifest, rdmanifest_file))
     
 def install_from_url(rdmanifest_url):
-    manifest, download_url = download_rdmanifest(url, md5sum, alt_url)
+    manifest, download_url = download_rdmanifest(rdmanifest_url, None, None)
     install_source(SourceInstall.from_manifest(manifest, download_url))
 
 def install_source(resolved):
@@ -233,8 +243,11 @@ def install_source(resolved):
     rd_debug("created tmpdir [%s]"%(tempdir))
 
     rd_debug("Fetching tarball %s"%resolved.tarball)
-    f = urllib.urlretrieve(resolved.tarball)
-    filename = f[0]
+
+    # compute desired download path
+    filename = os.path.join(tempdir, os.path.basename(resolved.tarball))
+    f = urllib.urlretrieve(resolved.tarball, filename)
+    assert f[0] == filename
 
     if resolved.tarball_md5sum:
         rd_debug("checking md5sum on tarball")
@@ -254,10 +267,14 @@ def install_source(resolved):
         rd_debug("No md5sum defined for tarball, not checking.")
 
     try:
-        rd_debug("Extracting tarball")
-        tarf = tarfile.open(filename)
-        tarf.extractall(tempdir)
-
+        # This is a bit hacky.  Basically, don't unpack dmg files as
+        # we are currently using source rosdeps for Nvidia Cg.
+        if not filename.endswith('.dmg'):
+            rd_debug("Extracting tarball")
+            tarf = tarfile.open(filename)
+            tarf.extractall(tempdir)
+        else:
+            rd_debug("Bypassing tarball extraction as it is a dmg")            
         rd_debug("Running installation script")
         success = create_tempfile_from_string_and_execute(resolved.install_command, os.path.join(tempdir, resolved.exec_path))
 
