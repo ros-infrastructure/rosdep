@@ -525,7 +525,7 @@ def command_resolve(args, options):
         installer = installer_context.get_installer(rule_installer)
         resolved = installer.resolve(rule)
         print("#%s"%(rule_installer))
-        print (" ".join(resolved))
+        print (" ".join([str(r) for r in resolved]))
 
     for error in invalid_key_errors:
         print("ERROR: no rosdep rule for %s"%(error), file=sys.stderr)        

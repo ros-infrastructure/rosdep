@@ -152,6 +152,9 @@ class SourceInstall(object):
         r.alternate_tarball = manifest.get("alternate-uri")
         r.tarball_md5sum = manifest.get("md5sum")
         return r
+
+    def __str__(self):
+        return "source: %s"%(self.manifest_url)
     
 def is_source_installed(source_item, exec_fn=None):
     return create_tempfile_from_string_and_execute(source_item.check_presence_command, exec_fn=exec_fn)
@@ -169,6 +172,7 @@ class SourceInstaller(PackageManagerInstaller):
         """
         :raises: :exc:`InvalidData` If format invalid or unable
           to retrieve rdmanifests.
+        :returns: [SourceInstall] instances.
         """
         try:
             url = rosdep_args["uri"]
@@ -188,7 +192,7 @@ class SourceInstaller(PackageManagerInstaller):
             manifest, download_url = download_rdmanifest(url, md5sum, alt_url)
             resolved = SourceInstall.from_manifest(manifest, download_url)
             self._rdmanifest_cache[download_url] = resolved
-            return resolved
+            return [resolved]
         except DownloadFailed as ex:
             # not sure this should be masked this way
             raise InvalidData(str(ex))            

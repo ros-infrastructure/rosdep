@@ -201,6 +201,8 @@ def test_SourceInstaller_resolve():
         pass
     resolved = installer.resolve(dict(uri=url, md5sum=md5sum_good))
         
+    assert type(resolved) == list
+
     assert resolved.install_command == rep122_install_command
     assert resolved.check_presence_command == rep122_check_presence_command
 

@@ -285,6 +285,7 @@ class Installer(object):
     def resolve(self, rosdep_args_dict):
         """
         :param rosdep_args_dict: argument dictionary to the rosdep rule for this package manager
+        :returns: [resolutions].  resolved objects should be printable to a user, but are otherwise opaque.
         """
         raise NotImplementedError("Base class resolve", rosdep_args_dict)
 
@@ -320,7 +321,7 @@ class PackageManagerInstaller(Installer):
 
     def __init__(self, detect_fn, supports_depends=False):
         """
-        @param supports_depends:
+        :param supports_depends: package manager supports dependency key
         """
         self.detect_fn = detect_fn
         self.supports_depends = supports_depends
