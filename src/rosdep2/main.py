@@ -421,7 +421,7 @@ def command_install(lookup, packages, options):
         raise RosdepInternalError(e)
     except InstallFailed as e:
         print("ERROR: the following rosdeps failed to install", file=sys.stderr)
-        print('\n'.join(["  %s"%f for f in e.failures]), file=sys.stderr)
+        print('\n'.join(["  %s: %s"%(k, m) for k,m in e.failures]), file=sys.stderr)
         return 1
 
 def _compute_depdb_output(lookup, packages, options):

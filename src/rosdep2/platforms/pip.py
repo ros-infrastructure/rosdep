@@ -47,6 +47,7 @@ def register_installers(context):
 def is_pip_installed():
     try:
         subprocess.Popen(['pip'], stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+        return True
     except OSError:
         return False
 
