@@ -38,7 +38,7 @@ import hashlib
 import yaml
 
 from ..core import rd_debug
-from ..installers import Installer, InstallFailed
+from ..installers import PackageManagerInstaller, InstallFailed
 from ..model import InvalidData
 from ..shell_utils import create_tempfile_from_string_and_execute
 
@@ -153,9 +153,16 @@ class SourceInstall(object):
         r.tarball_md5sum = manifest.get("md5sum")
         return r
     
-class SourceInstaller(Installer):
+def is_source_installed(source_item, exec_fn=None):
+    return create_tempfile_from_string_and_execute(source_item.check_presence_command, exec_fn=exec_fn)
+            
+def source_detect(pkgs, exec_fn=None):
+    return [x for x in pkgs if is_source_installed(x, exec_fn=exec_fn)]
+
+class SourceInstaller(PackageManagerInstaller):
 
     def __init__(self):
+        super(SourceInstaller, self).__init__(source_detect, supports_depends=True)
         self._rdmanifest_cache = {}
     
     def resolve(self, rosdep_args):
@@ -164,7 +171,7 @@ class SourceInstaller(Installer):
           to retrieve rdmanifests.
         """
         try:
-            url = rosdep_args.get["uri"]
+            url = rosdep_args["uri"]
         except KeyError:
             raise InvalidData("'uri' key required for source rosdeps") 
         alt_url = rosdep_args.get("alternate-uri", None)
@@ -187,9 +194,6 @@ class SourceInstaller(Installer):
             raise InvalidData(str(ex))            
         except InvalidRdmanifest as ex:
             raise InvalidData(str(ex))
-        
-    def is_installed(self, resolved_item):
-        return create_tempfile_from_string_and_execute(resolved_item.check_presence_command)
 
     def get_install_command(self, resolved, interactive=True, reinstall=False):
         # Instead of attempting to describe the source-install steps

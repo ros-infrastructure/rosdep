@@ -51,9 +51,10 @@ def read_stdout(cmd):
     else:
         return std_out    
 
-def create_tempfile_from_string_and_execute(string_script, path=None):
+def create_tempfile_from_string_and_execute(string_script, path=None, exec_fn=None):
     """
     :param path: (optional) path to temp directory, or ``None`` to use default temp directory, ``str``
+    :param exec_fn: override subprocess.call with alternate executor (for testing)
     """
     if path is None:
         path = tempfile.gettempdir()
@@ -66,7 +67,10 @@ def create_tempfile_from_string_and_execute(string_script, path=None):
         print("Executing script below with cwd=%s\n{{{\n%s\n}}}\n"%(path, string_script))
         try:
             os.chmod(fh.name, 0700)
-            result = subprocess.call(fh.name, cwd=path)
+            if exec_fn is None:
+                result = subprocess.call(fh.name, cwd=path)
+            else:
+                result = exec_fn(fh.name, cwd=path)                
         except OSError as ex:
             print("Execution failed with OSError: %s"%(ex))
     finally:

@@ -32,6 +32,25 @@ import traceback
 import yaml
 from mock import Mock, patch
 
+rep122_install_command = """#!/bin/bash
+set -o errexit
+mkdir -p build
+cd build
+cmake ..
+make
+echo "About to run checkinstall make install"
+sudo checkinstall -y --nodoc --pkgname=yaml-cpp-sourcedep make install
+"""
+
+rep122_check_presence_command = """#!/bin/bash
+dpkg-query -W -f='${Package} ${Status}\\n' yaml-cpp-sourcedep | awk '{\\
+if ($4 =="installed")
+  exit 0
+else
+  print "yaml-cpp-sourcedep not installed"
+  exit 1}'
+"""
+
 def get_test_dir():
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'source'))
 
@@ -42,26 +61,10 @@ def _subtest_rep112_rdmanifest(resolved):
 
     assert resolved.manifest == manifest
     assert resolved.manifest_url == path
-    assert resolved.install_command == """#!/bin/bash
-set -o errexit
-mkdir -p build
-cd build
-cmake ..
-make
-echo "About to run checkinstall make install"
-sudo checkinstall -y --nodoc --pkgname=yaml-cpp-sourcedep make install
-""", resolved.install_command
-    expected = """#!/bin/bash
-dpkg-query -W -f='${Package} ${Status}\\n' yaml-cpp-sourcedep | awk '{\\
-if ($4 =="installed")
-  exit 0
-else
-  print "yaml-cpp-sourcedep not installed"
-  exit 1}'
-"""
-    assert resolved.check_presence_command == expected, "\n[%s]\n[%s]"%(resolved.check_presence_command, expected)
+    assert resolved.install_command == rep122_install_command
+    assert resolved.check_presence_command == rep122_check_presence_command
 
-    assert len(resolved.check_presence_command) == len(expected), "%s %s"%(len(resolved.check_presence_command), len(expected))
+    assert len(resolved.check_presence_command) == len(rep122_check_presence_command), "%s %s"%(len(resolved.check_presence_command), len(rep122_check_presence_command))
 
     assert resolved.exec_path == 'yaml-cpp-0.2.5'
     assert resolved.tarball == 'https://kforge.ros.org/rosrelease/viewvc/sourcedeps/yaml-cpp/yaml-cpp-0.2.5.tar.gz'
@@ -127,21 +130,85 @@ def test_SourceInstall():
     assert resolved.alternate_tarball is None
     assert resolved.tarball_md5sum is None
 
-def test_SourceInstaller():
-    from rosdep2.platforms.source import SourceInstaller, InvalidRdmanifest
+def test_is_installed():
+    from rosdep2.platforms.source import SourceInstaller, SourceInstall
+    resolved = SourceInstall()
+    resolved.check_presence_command = """#!/bin/bash
+exit 0
+"""
+    installer = SourceInstaller()
+    assert installer.is_installed(resolved)
+    
+def test_source_detect():
+    from rosdep2.platforms.source import source_detect, SourceInstall
+    resolved = SourceInstall()
+    resolved.check_presence_command = """#!/bin/bash
+exit 0
+"""
+    assert [] == source_detect([])
+    assert [resolved] == source_detect([resolved])
+
+    def yes(*args, **kwds): return 0
+    def no(*args, **kwds): return 1
+
+    resolved = [SourceInstall(), SourceInstall(), SourceInstall(), SourceInstall()]
+    for r in resolved:
+        r.check_presence_command = ''
+    
+    retval = source_detect(resolved, exec_fn=yes)
+    assert resolved == retval, retval
+    assert [] == source_detect(resolved, exec_fn=no)
+    
+def test_SourceInstaller_get_install_command():
+    from rosdep2.platforms.source import SourceInstaller, SourceInstall
+    installer = SourceInstaller()
+
+    resolved = SourceInstall()
+    resolved.manifest_url = 'http://fake/foo'
+    resolved.check_presence_command = """#!/bin/bash
+exit 1
+"""
+    commands = installer.get_install_command([resolved])
+    assert len(commands) == 1
+    assert commands[0] == ['rosdep-source', 'install', 'http://fake/foo']
+
+    resolved = SourceInstall()
+    resolved.manifest_url = 'http://fake/foo'
+    resolved.check_presence_command = """#!/bin/bash
+exit 0
+"""
+    commands = installer.get_install_command([resolved])
+    assert not(commands)
+    
+def test_SourceInstaller_resolve():
+    from rosdep2.platforms.source import SourceInstaller, InvalidData
     test_dir = get_test_dir()
 
-    rosdep_args = {
-        'uri': 'todo',
-        'md5sum': 'todo',
-        }
-    # TODO: download rep 112 rdmanifest from URL
-    if 0:
-        resolved = installer.resolve(rosdep_args)
-        _subtest_rep112_rdmanifest(resolved)
-        # test again to activate caching
-        resolved = installer.resolve(rosdep_args)
-        _subtest_rep112_rdmanifest(resolved)
+    url = 'https://kforge.ros.org/rosrelease/rosdep/raw-file/908818f28156/test/source/rep112-example.rdmanifest'
+    md5sum_good = 'af0dc0e2d0c0c3181dd7670c4147f155'
+    md5sum_bad = 'fake'
+
+    installer = SourceInstaller()
+    try:
+        installer.resolve({})
+        assert False, "should have raised"
+    except InvalidData:
+        pass
+    try:
+        installer.resolve(dict(uri=url, md5sum=md5sum_bad))
+        assert False, "should have raised"
+    except InvalidData:
+        pass
+    resolved = installer.resolve(dict(uri=url, md5sum=md5sum_good))
+        
+    assert resolved.install_command == rep122_install_command
+    assert resolved.check_presence_command == rep122_check_presence_command
+
+    # test again to activate caching
+    resolved = installer.resolve(dict(uri=url, md5sum=md5sum_good))
+    assert resolved.install_command == rep122_install_command
+    assert resolved.check_presence_command == rep122_check_presence_command
+
         
 def test_load_rdmanifest():
     from rosdep2.platforms.source import load_rdmanifest, InvalidRdmanifest
@@ -155,7 +222,6 @@ def test_load_rdmanifest():
     except InvalidRdmanifest as e:
         pass
     
-
 REP112_MD5SUM = 'af0dc0e2d0c0c3181dd7670c4147f155'
 def test_get_file_hash():
     from rosdep2.platforms.source import get_file_hash
@@ -212,3 +278,17 @@ def test_download_rdmanifest():
         pass
 
     
+def test_install_from_file():
+    f = os.path.join(d, 'noop-not-installed.rdmanifest')
+    install_from_file(f)
+
+def test_install_source():
+    from rosdep2.platforms.source import install_source, SourceInstall
+    resolved = SourceInstall()
+    resolved.tarball = 'https://kforge.ros.org/rosrelease/rosdep/raw-file/908818f28156/test/source/foo.tar.gz'
+    resolved.tarball_md5sum = 'fd34dc39f8f192b97fcc191fe0a6befc'
+    resolved.install_command = """#!/bin/sh
+exit 0
+"""
+    resolved.exec_path = ''
+    install_source(resolved)
