@@ -201,6 +201,8 @@ def _rosdep_main(args):
                       action="store_true", help="Continue installing despite errors.")
     parser.add_option("-a", "--all", dest="rosdep_all", default=False, 
                       action="store_true", help="select all packages")
+    parser.add_option("-R", dest="recursive", default=False, 
+                      action="store_true", help="Install implicit/recursive dependencies.  Only valid with 'install' command.")
 
     options, args = parser.parse_args(args)
     if options.print_version:
@@ -400,9 +402,9 @@ def command_install(lookup, packages, options):
     if options.reinstall:
         if options.verbose:
             print("reinstall is true, resolving all dependencies")
-        uninstalled, errors = lookup.resolve_all(packages, installer_context)
+        uninstalled, errors = lookup.resolve_all(packages, installer_context, implicit=options.recursive)
     else:
-        uninstalled, errors = installer.get_uninstalled(packages, verbose=options.verbose)
+        uninstalled, errors = installer.get_uninstalled(packages, implicit=options.recursive, verbose=options.verbose)
         
     if options.verbose:
         print("uninstalled dependencies are: [%s]"%(', '.join(uninstalled.keys())))

@@ -107,3 +107,7 @@ Install Options
 
   Continue installing despite errors.
 
+**-R**
+
+  Install implicit/recursive dependencies.
+

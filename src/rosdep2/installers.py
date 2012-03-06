@@ -382,7 +382,7 @@ class RosdepInstaller(object):
         self.installer_context = installer_context
         self.lookup = lookup
         
-    def get_uninstalled(self, resources, verbose=False):
+    def get_uninstalled(self, resources, implicit=False, verbose=False):
         """
         Get list of system dependencies that have not been installed
         as well as a list of errors from performing the resolution.
@@ -390,6 +390,8 @@ class RosdepInstaller(object):
         optimizations in checking install state.
 
         :param resources: List of resource names (e.g. ROS package names), ``[str]]``
+        :param implicit: Install implicit (recursive) dependencies of
+            resources.  Default ``False``.
 
         :returns: (uninstalled, errors), ``({str: [opaque]}, {str: ResolutionError})``.
           Uninstalled is a dictionary with the installer_key as the key.
@@ -401,7 +403,7 @@ class RosdepInstaller(object):
         # resolutions have been unique()d
         if verbose:
             print("resolving for resources [%s]"%(', '.join(resources)))
-        resolutions, errors = self.lookup.resolve_all(resources, installer_context)
+        resolutions, errors = self.lookup.resolve_all(resources, installer_context, implicit=implicit)
         
         # for each installer, figure out what is left to install
         uninstalled = {}

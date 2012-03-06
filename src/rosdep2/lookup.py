@@ -305,12 +305,15 @@ class RosdepLookup(object):
 
         return lookup
 
-    def resolve_all(self, resources, installer_context):
+    def resolve_all(self, resources, installer_context, implicit=False):
         """
         Resolve all the rosdep dependencies for *resources* using *installer_context*.
 
         :param resources: list of resources (e.g. packages), ``[str]]``
         :param installer_context: :class:`InstallerContext`
+        :param implicit: Install implicit (recursive) dependencies of
+            resources.  Default ``False``.
+        
         :returns: (resolutions, errors), ``({str: opaque}, {str: ResolutionError})``.  resolutions maps the installer keys
           to resolved objects.  Resolved objects are opaque but can be passed into the associated installer for processing.
           errors maps package names to an :exc:`ResolutionError` or :exc:`KeyError` exception.
@@ -319,7 +322,7 @@ class RosdepLookup(object):
         errors = {}
         for resource_name in resources:
             try:
-                rosdep_keys = self.get_rosdeps(resource_name, implicit=True)
+                rosdep_keys = self.get_rosdeps(resource_name, implicit=implicit)
                 if self.verbose:
                     print("resolve_all: resource [%s] requires rosdep keys [%s]"%(resource_name, ', '.join(rosdep_keys)), file=sys.stderr)
                 for rosdep_key in rosdep_keys:
