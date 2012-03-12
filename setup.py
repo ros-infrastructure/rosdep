@@ -1,4 +1,4 @@
-from distutils.core import setup
+from setuptools import setup
 
 import sys
 sys.path.insert(0, 'src')
@@ -10,6 +10,7 @@ setup(name='rosdep',
       packages=['rosdep2', 'rosdep2.platforms'],
       package_dir = {'':'src'},
 #      data_files=[('man/man1', ['doc/man/rosdep.1'])],
+      install_requires = ['rospkg'],
       scripts = [
         'scripts/rosdep',
         'scripts/rosdep-gbp-brew',
