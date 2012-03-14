@@ -10,7 +10,7 @@ rosdep2 is available using pip or easy_install::
 
 or::
 
-    sudo easy_install -U rosdep
+    sudo easy_install -U rosdep rospkg
 
 
 
