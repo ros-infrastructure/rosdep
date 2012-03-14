@@ -28,7 +28,6 @@
 
 # Author Tully Foote/tfoote@willowgarage.com
 
-import os
 import subprocess
 
 from ..installers import PackageManagerInstaller

@@ -30,14 +30,12 @@
 # Modified for FreeBSD by Rene Ladan rene@freebsd.org
 
 import os
-import sys
 import subprocess
 
 from rospkg.os_detect import OS_FREEBSD
 
 from .source import SOURCE_INSTALLER
 from ..installers import Installer
-from ..shell_utils import read_stdout
 
 PKG_ADD_INSTALLER = 'pkg_add'
 

@@ -8,6 +8,8 @@ try:
 except ImportError:
     import urllib.parse as urlparse #py3k
 
+#TODO: Delete this module.  This is a temporary experiment
+
 GITHUB_V2_API_REPOS = 'https://github.com/api/v2/json/repos/'
 PATTERN_GITHUB_V2_API_REPOS_SHOW_TAGS = GITHUB_V2_API_REPOS + 'show/%(org_name)s/%(repo_name)s/tags'
 # include extra filename on the end to help brew with its infererence rules.  Github should ignore them.

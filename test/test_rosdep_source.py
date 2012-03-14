@@ -28,9 +28,7 @@
 # Author Ken Conley/kwc@willowgarage.com
 
 import os
-import traceback
 import yaml
-from mock import Mock, patch
 
 rep122_install_command = """#!/bin/bash
 set -o errexit

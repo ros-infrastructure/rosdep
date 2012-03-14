@@ -30,16 +30,14 @@
 from __future__ import print_function
 
 import os
-import sys
 import urllib
 import urllib2
 import hashlib
 
 import yaml
 
-from ..core import rd_debug
+from ..core import rd_debug, InvalidData
 from ..installers import PackageManagerInstaller, InstallFailed
-from ..model import InvalidData
 from ..shell_utils import create_tempfile_from_string_and_execute
 
 SOURCE_INSTALLER='source'

@@ -29,7 +29,7 @@
 
 import os
 import traceback
-from mock import Mock, patch
+from mock import patch
 
 def get_test_dir():
     # not used yet

@@ -28,7 +28,6 @@
 from __future__ import print_function
 
 import os
-import sys
 import yaml
 
 from rospkg import RosPack, RosStack, ResourceNotFound

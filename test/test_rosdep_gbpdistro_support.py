@@ -26,13 +26,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import os
-import sys
-import tempfile
-import yaml
 import urllib2
-
-import rospkg.distro
-import rosdep2.sources_list
 
 def get_test_dir():
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'sources.list.d'))
