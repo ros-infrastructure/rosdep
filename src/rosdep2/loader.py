@@ -37,7 +37,7 @@ version of rosdep that works against tarballs of released stacks.
 
 import yaml
 
-from .model import RosdepDatabase, InvalidData
+from .core import InvalidData
 
 ROSDEP_YAML = 'rosdep.yaml'
 

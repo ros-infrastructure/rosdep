@@ -43,7 +43,7 @@ def test_rd_debug():
     rd_debug('foo')    
 
 def test_InvalidData():
-    from rosdep2.model import InvalidData
+    from rosdep2.core import InvalidData
     try:
         raise InvalidData('hi')
     except InvalidData as ex:

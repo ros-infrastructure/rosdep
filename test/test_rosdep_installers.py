@@ -28,7 +28,6 @@
 from __future__ import print_function
 
 import os
-import sys
 
 from rospkg import RosPack, RosStack
 
@@ -296,7 +295,7 @@ def test_PackageManagerInstaller():
     except NotImplementedError: pass
 
 def test_PackageManagerInstaller_resolve():
-    from rosdep2.model import InvalidData
+    from rosdep2 import InvalidData
     from rosdep2.installers import PackageManagerInstaller
 
     installer = PackageManagerInstaller(detect_fn_all)

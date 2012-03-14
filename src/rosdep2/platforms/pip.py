@@ -30,12 +30,10 @@
 
 from __future__ import print_function
 
-import os
-import sys
 import subprocess
 
 from ..core import InstallFailed
-from ..installers import PackageManagerInstaller, Installer
+from ..installers import PackageManagerInstaller
 from ..shell_utils import read_stdout
 
 # pip package manager key

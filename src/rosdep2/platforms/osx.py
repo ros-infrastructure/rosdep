@@ -28,7 +28,6 @@
 
 # Author Tully Foote/tfoote@willowgarage.com, Ken Conley
 
-import os
 import subprocess
 
 from rospkg.os_detect import OS_OSX
@@ -36,8 +35,8 @@ from rospkg.os_detect import OS_OSX
 from ..core import InstallFailed
 from .pip import PIP_INSTALLER
 from .source import SOURCE_INSTALLER
-from ..installers import Installer, PackageManagerInstaller, TYPE_CODENAME
-from ..shell_utils import create_tempfile_from_string_and_execute, read_stdout
+from ..installers import PackageManagerInstaller, TYPE_CODENAME
+from ..shell_utils import read_stdout
 
 # add additional os names for brew, macports (TODO)
 OSXBREW_OS_NAME = 'osxbrew'

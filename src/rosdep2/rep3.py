@@ -25,12 +25,10 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import os
-import sys
 import urllib2
 import yaml
 
-from .core import InvalidData, DownloadFailure
+from .core import DownloadFailure
 
 # location of targets file for processing gbpdistro files
 REP3_TARGETS_URL = 'https://raw.github.com/ros/rosdistro/master/releases/targets.yaml'

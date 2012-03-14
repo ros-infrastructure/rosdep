@@ -30,16 +30,12 @@
 
 from __future__ import print_function
 
-import os
-import sys
 import subprocess
 import traceback
 
-from collections import defaultdict
 from rospkg.os_detect import OsDetect
 
-from .core import rd_debug, RosdepInternalError, InstallFailed, print_bold
-from .model import InvalidData
+from .core import rd_debug, RosdepInternalError, InstallFailed, print_bold, InvalidData
 
 # use OsDetect.get_version() for OS version key
 TYPE_VERSION = 'version'

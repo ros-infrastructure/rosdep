@@ -32,8 +32,7 @@ import subprocess
 from rospkg.os_detect import OS_OPENSUSE
 
 from .source import SOURCE_INSTALLER
-from ..installers import Installer, PackageManagerInstaller
-from ..shell_utils import read_stdout
+from ..installers import PackageManagerInstaller
 
 # zypper package manager key
 ZYPPER_INSTALLER='zypper'

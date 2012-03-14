@@ -30,17 +30,13 @@
 
 from __future__ import print_function
 
-import os
-import subprocess
-
 from rospkg.os_detect import OS_CYGWIN
 
 from .source import SOURCE_INSTALLER
 
-from ..installers import Installer, PackageManagerInstaller
+from ..installers import PackageManagerInstaller
 from ..shell_utils import read_stdout
 
-OS_CYGWIN = 'cygwin'
 APT_CYG_INSTALLER = 'apt-cyg'
 
 def register_installers(context):

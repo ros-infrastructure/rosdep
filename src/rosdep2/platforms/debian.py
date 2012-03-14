@@ -28,14 +28,12 @@
 
 # Author Tully Foote, Ken Conley
 
-import os
-
-from rospkg.os_detect import OsDetect, OsDetector, OS_DEBIAN, OS_UBUNTU
+from rospkg.os_detect import OS_DEBIAN, OS_UBUNTU
 
 from .pip import PIP_INSTALLER
 from .source import SOURCE_INSTALLER
-from ..installers import PackageManagerInstaller, TYPE_CODENAME, TYPE_VERSION
-from ..shell_utils import create_tempfile_from_string_and_execute, read_stdout
+from ..installers import PackageManagerInstaller, TYPE_CODENAME
+from ..shell_utils import read_stdout
 
 # apt package manager key
 APT_INSTALLER='apt'

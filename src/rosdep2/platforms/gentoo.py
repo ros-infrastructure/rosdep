@@ -45,9 +45,8 @@ import os
 from rospkg.os_detect import OS_GENTOO
 
 from .source import SOURCE_INSTALLER
-from ..model import InvalidData
 from ..installers import PackageManagerInstaller
-from ..shell_utils import create_tempfile_from_string_and_execute, read_stdout
+from ..shell_utils import read_stdout
 
 from types import ListType
 

@@ -29,21 +29,18 @@
 
 from __future__ import print_function
 
-import os
 import sys
-import traceback
 import yaml
 
 from collections import defaultdict
 
 from rospkg import RosPack, RosStack, ResourceNotFound
-from rospkg.os_detect import OsDetect
 
-from .core import RosdepInternalError, rd_debug
-from .model import RosdepDatabase, RosdepDatabaseEntry, InvalidData
+from .core import RosdepInternalError, InvalidData, rd_debug
+from .model import RosdepDatabase
 from .rospkg_loader import RosPkgLoader
 
-from .sources_list import DataSourceMatcher, SourcesListLoader
+from .sources_list import SourcesListLoader
 
 class RosdepDefinition(object):
     """

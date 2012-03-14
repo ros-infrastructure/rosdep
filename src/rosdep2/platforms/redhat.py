@@ -28,7 +28,6 @@
 
 # Author Tully Foote/tfoote@willowgarage.com
 
-import os
 import subprocess
 
 from rospkg.os_detect import OS_RHEL, OS_FEDORA

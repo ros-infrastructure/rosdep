@@ -38,8 +38,6 @@ combine these rosdep dependency maps and view dependencies together
 into a combined view on which queries can be made.
 """
 
-from .core import InvalidData
-
 class RosdepDatabaseEntry(object):
     """
     Stores rosdep data and metadata for a single view.

@@ -33,8 +33,6 @@ import os
 import sys
 import subprocess
 import tempfile
-import urllib2
-import hashlib
 
 from .core import rd_debug
 

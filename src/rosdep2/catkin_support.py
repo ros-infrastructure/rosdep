@@ -18,7 +18,6 @@ Workflow::
 from __future__ import print_function
 
 import os
-import sys
 
 from subprocess import Popen, PIPE, CalledProcessError
 
