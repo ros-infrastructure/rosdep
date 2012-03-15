@@ -469,8 +469,12 @@ def command_db(options):
         except ResolutionError as e:
             errors.append(e)
 
-    for error in errors:
-        print("WARNING: %s"%(error_to_human_readable(error)), file=sys.stderr)
+    #TODO: add command-line option for users to be able to see this.
+    #This is useful for platform bringup, but useless for most users
+    #as the rosdep db contains numerous, platform-specific keys.
+    if 0: 
+        for error in errors:
+            print("WARNING: %s"%(error_to_human_readable(error)), file=sys.stderr)
 
 def _print_lookup_errors(lookup):
     for error in lookup.get_errors():
