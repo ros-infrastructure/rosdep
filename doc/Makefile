@@ -130,6 +130,7 @@ doctest:
 	      "results in $(BUILDDIR)/doctest/output.txt."
 
 upload: html
-	scp -r _build/html/ wgs32.willowgarage.com:/var/www/www.ros.org/html/doc/api/rosdep2/
-
+	# set write permission for group so that everybody can overwrite existing files on the webserver
+	chmod -R g+w _build/html/
+	scp -pr _build/html/ wgs32.willowgarage.com:/var/www/www.ros.org/html/doc/api/rosdep2
 

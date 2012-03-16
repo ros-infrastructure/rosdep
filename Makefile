@@ -40,3 +40,4 @@ testsetup:
 
 test: testsetup
 	nosetests --with-coverage --cover-package=rosdep2 --with-xunit test
+

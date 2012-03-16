@@ -37,6 +37,7 @@ from __future__ import print_function
 import os
 import sys
 import traceback
+import urllib2
 
 from optparse import OptionParser
 
@@ -50,7 +51,8 @@ from .lookup import RosdepLookup, ResolutionError
 from .rospkg_loader import DEFAULT_VIEW_KEY
 from .sources_list import update_sources_list, get_sources_cache_dir,\
      download_default_sources_list, SourcesListLoader,CACHE_INDEX,\
-     get_sources_list_dir, get_default_sources_list_file
+     get_sources_list_dir, get_default_sources_list_file,\
+     DEFAULT_SOURCES_LIST_URL
 
 class UsageError(Exception):
     pass
@@ -301,7 +303,11 @@ def configure_installer_context_os(installer_context, options):
         installer_context.set_os_override(*os_override)
     
 def command_init(options):
-    data = download_default_sources_list()
+    try:
+        data = download_default_sources_list()
+    except urllib2.URLError as e:
+        print("ERROR: cannot download default sources list from:\n%s\nWebsite may be down."%(DEFAULT_SOURCES_LIST_URL))
+        return 4
     # reuse path variable for error message
     path = get_sources_list_dir()
     try:
