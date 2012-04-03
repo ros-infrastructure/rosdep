@@ -165,9 +165,13 @@ def check_for_sources_list_init(sources_cache_dir):
     else:
         commands.append('rosdep update')
 
-    filelist = [f for f in os.listdir(get_sources_list_dir()) if f.endswith('.list')]    
-    if not filelist:
+    sources_list_dir = get_sources_list_dir()
+    if not os.path.exists(sources_list_dir):
         commands.insert(0, 'sudo rosdep init')
+    else:
+        filelist = [f for f in os.listdir(sources_list_dir) if f.endswith('.list')]    
+        if not filelist:
+            commands.insert(0, 'sudo rosdep init')
 
     if commands:
         commands = '\n'.join(["    %s"%c for c in commands])
