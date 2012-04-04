@@ -45,7 +45,7 @@ def register_platforms(context):
     context.set_default_os_installer_key(ARCH_OS_NAME, PACMAN_INSTALLER)
 
 def pacman_detect_single(p):
-    return subprocess.call(['pacman', '-Q', p], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    
+    return not subprocess.call(['pacman', '-Q', p], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    
 
 def pacman_detect(packages):
     return [p for p in packages if pacman_detect_single(p)]
