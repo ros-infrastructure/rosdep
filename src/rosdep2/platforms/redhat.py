@@ -56,7 +56,19 @@ def register_rhel(context):
     context.set_default_os_installer_key(OS_RHEL, YUM_INSTALLER)
 
 def rpm_detect(packages):
-    return subprocess.call(['rpm', '-q', packages], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    
+    ret_list = []
+    #cmd = ['rpm', '-q', '--qf ""']  # suppress output for installed packages
+    cmd = ['rpm', '-q', '--qf', '%{NAME}\n']  # output: "pkg_name" for installed, error text for not installed packages
+    cmd.extend(pkgs)
+
+    pop = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    (std_out, std_err) = pop.communicate()
+    out_lines = std_out.split('\n')
+    for line in out_lines:
+        # if there is no space, it's not an error text -> it's installed
+        if line and ' ' not in line:
+            ret_list.append(line)
+    return ret_list
 
 class YumInstaller(PackageManagerInstaller):
     """
