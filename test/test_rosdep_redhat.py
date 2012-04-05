@@ -35,6 +35,15 @@ def get_test_dir():
     # not used yet
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'redhat'))
 
+def test_rpm_detect():
+    from rosdep2.platforms.redhat import rpm_detect
+
+    val = rpm_detect([])
+    assert val == [], val
+
+    val = rpm_detect(['tinyxml-dev'])
+    assert val == [], val
+
 def test_YumInstaller():
     from rosdep2.platforms.redhat import YumInstaller
 
@@ -59,4 +68,3 @@ def test_YumInstaller():
     except AssertionError:
         traceback.print_exc()
         raise
-    
