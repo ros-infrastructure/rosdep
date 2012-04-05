@@ -25,6 +25,13 @@ Bug reports and feature requests
 - `Submit a bug report <https://code.ros.org/trac/ros/newticket?component=rospkg&type=defect&&rospkg>`_
 - `Submit a feature request <https://code.ros.org/trac/ros/newticket?component=rospkg&type=enhancement&rospkg>`_
 
+Getting the code
+----------------
+
+The rosdep codebase is hosted on GitHub.  To get started contributing patches, please create a fork:
+
+https://github.com/ros/rosdep
+
 Supporting a new OS/package manager
 -----------------------------------
 
