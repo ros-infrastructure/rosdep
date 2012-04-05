@@ -59,7 +59,7 @@ def rpm_detect(packages):
     ret_list = []
     #cmd = ['rpm', '-q', '--qf ""']  # suppress output for installed packages
     cmd = ['rpm', '-q', '--qf', '%{NAME}\n']  # output: "pkg_name" for installed, error text for not installed packages
-    cmd.extend(pkgs)
+    cmd.extend(packages)
 
     pop = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     (std_out, std_err) = pop.communicate()
