@@ -1,0 +1,12 @@
+*.orig
+*.swp
+*.pyc
+*.DS_Store
+*~
+*.log
+.coverage
+nosetests.xml
+target
+build
+dist
+src/rosdep.egg-info
