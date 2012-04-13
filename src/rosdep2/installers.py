@@ -402,8 +402,10 @@ class RosdepInstaller(object):
         resolutions, errors = self.lookup.resolve_all(resources, installer_context, implicit=implicit)
         
         # for each installer, figure out what is left to install
-        uninstalled = {}
-        for installer_key, resolved in resolutions.items(): #py3k
+        uninstalled = []
+        if resolutions == []:
+            return uninstalled, errors
+        for installer_key, resolved in resolutions: #py3k
             if verbose:
                 print("resolution: %s [%s]"%(installer_key, ', '.join(resolved)))
             try:
@@ -418,7 +420,7 @@ class RosdepInstaller(object):
 
             # only create key if there is something to do
             if packages_to_install:
-                uninstalled[installer_key] = packages_to_install
+                uninstalled.append((installer_key, packages_to_install))
             if verbose:
                 print("uninstalled: [%s]"%(', '.join(packages_to_install)))
         
@@ -459,8 +461,17 @@ class RosdepInstaller(object):
             print("install options: reinstall[%s] simulate[%s] interactive[%s]"%(reinstall, simulate, interactive))
             print("install: uninstalled keys are %s"%(', '.join(uninstalled.keys())))
         
+        # Squish resolved's by installer_key
+        previous_installer_key = None
+        squashed_uninstalled = []
+        for installer_key, resolved in uninstalled:
+            if previous_installer_key != installer_key:
+                squashed_uninstalled.append((installer_key, []))
+                previous_installer_key = installer_key
+            squashed_uninstalled[-1][1].extend(resolved)
+
         failures = []
-        for installer_key, resolved in uninstalled.items(): #py3k:
+        for installer_key, resolved in squashed_uninstalled: #py3k:
             if verbose:
                 print("processing rosdeps for installer [%s]"%(installer_key))
             try:

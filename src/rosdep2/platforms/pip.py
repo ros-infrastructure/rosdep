@@ -63,7 +63,7 @@ def pip_detect(pkgs, exec_fn=None):
     for pkg in pkg_list:
         pkg_row = pkg.split("==")
         if pkg_row[0] in pkgs:
-            ret_list.append( pkg_row[0])
+            ret_list.append(pkg_row[0])
     return ret_list
 
 class PipInstaller(PackageManagerInstaller):
