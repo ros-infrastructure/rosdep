@@ -417,7 +417,7 @@ def command_install(lookup, packages, options):
         uninstalled, errors = installer.get_uninstalled(packages, implicit=options.recursive, verbose=options.verbose)
         
     if options.verbose:
-        print("uninstalled dependencies are: [%s]"%(', '.join(uninstalled.keys())))
+        print("uninstalled dependencies are: [%s]"%(', '.join([', '.join(pkg) for pkg in [v for k,v in uninstalled]])))
         
     if errors:
         print("ERROR: the following packages/stacks could not have their rosdep keys resolved\nto system dependencies:", file=sys.stderr)

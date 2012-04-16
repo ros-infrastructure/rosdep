@@ -32,13 +32,13 @@ from __future__ import print_function
 from collections import defaultdict
 
 class Resolution(dict):
-    """docstring for Resolution"""
-    def __init__(self):
-        super(Resolution, self).__init__()
-        self['installer_key'] = None
-        self['install_keys'] = []
-        self['dependencies'] = []
-        self['is_root'] = True
+	"""docstring for Resolution"""
+	def __init__(self):
+		super(Resolution, self).__init__()
+		self['installer_key'] = None
+		self['install_keys'] = []
+		self['dependencies'] = []
+		self['is_root'] = True
 
 class DependencyGraph(defaultdict):
 	"""asfd"""
@@ -71,12 +71,20 @@ class DependencyGraph(defaultdict):
 		for rosdep_key in self:
 			if self[rosdep_key]['is_root']:
 				uninstalled.extend(self._get_ordered_uninstalled(rosdep_key))
-		# Make the list unique
+		# Make the list unique and remove empty entries
 		result = []
 		for item in uninstalled:
-			if item not in result:
+			if item not in result and item[1] != []:
 				result.append(item)
-		return result
+		# Squash the results by installer_key
+		squashed_result = []
+		previous_installer_key = None
+		for installer_key, resolved in result:
+			if previous_installer_key != installer_key:
+				squashed_result.append((installer_key, []))
+				previous_installer_key = installer_key
+			squashed_result[-1][1].extend(resolved)
+		return squashed_result
 
 	def _get_ordered_uninstalled(self, key):
 		uninstalled = []
