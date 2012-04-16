@@ -130,7 +130,11 @@ class HomebrewInstaller(PackageManagerInstaller):
         packages = self.get_packages_to_install(resolved, reinstall=reinstall)
         # interactive switch doesn't matter
         if reinstall:
-            return [['brew', 'install', '--force', p] for p in packages]
+            commands = []
+            for p in packages:
+                commands.append(['brew', 'uninstall', '--force', p])
+                commands.append(['brew', 'install', p])
+            return commands
         else:
             return [['brew', 'install', p] for p in packages]
 
