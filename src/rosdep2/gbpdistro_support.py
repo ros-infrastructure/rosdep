@@ -2,9 +2,11 @@ import urllib2
 import yaml
 
 from rospkg.os_detect import OS_UBUNTU
+from rospkg.os_detect import OS_OSX
 
 from .core import InvalidData, DownloadFailure
 from .platforms.debian import APT_INSTALLER
+from .platforms.osx import BREW_INSTALLER
 from .rep3 import download_targets_data
 
 #py3k
@@ -51,6 +53,9 @@ def gbprepo_to_rosdep_data(gbpdistro_data, targets_data):
 
             # Do generation for ubuntu
             rosdep_data[rosdep_key][OS_UBUNTU] = {}
+            # Do generation for empty OS X entries
+            homebrew_name = 'ros/%s/%s'%(release_name, rosdep_key)
+            rosdep_data[rosdep_key][OS_OSX] = {BREW_INSTALLER: {'packages': [homebrew_name]}}
 
             # - debian package name: underscores must be dashes
             deb_package_name = 'ros-%s-%s'%(release_name, rosdep_key)
