@@ -39,6 +39,7 @@ from rospkg import RosPack, RosStack, ResourceNotFound
 from .core import RosdepInternalError, InvalidData, rd_debug
 from .model import RosdepDatabase
 from .rospkg_loader import RosPkgLoader
+from .dependency_graph import DependencyGraph
 
 from .sources_list import SourcesListLoader
 
@@ -311,11 +312,12 @@ class RosdepLookup(object):
         :param implicit: Install implicit (recursive) dependencies of
             resources.  Default ``False``.
         
-        :returns: (resolutions, errors), ``({str: opaque}, {str: ResolutionError})``.  resolutions maps the installer keys
-          to resolved objects.  Resolved objects are opaque but can be passed into the associated installer for processing.
-          errors maps package names to an :exc:`ResolutionError` or :exc:`KeyError` exception.
+        :returns: (resolutions, errors), ``([(str, [str])], {str: ResolutionError})``.  resolutions provides 
+        an ordered list of resolution tuples.  A resolution tuple's first element is the installer 
+        key (e.g.: apt or homebrew) and the second element is a list of install keys for that 
+        installer (e.g.: boost or ros-fuerte-ros_comm). errors maps package names to 
+        an :exc:`ResolutionError` or :exc:`KeyError` exception.
         """
-        from dependency_graph import DependencyGraph
         resolutions = DependencyGraph()
         errors = {}
         for resource_name in resources:
@@ -346,7 +348,7 @@ class RosdepLookup(object):
                 errors[resource_name] = e
 
         try:
-            resolutions = resolutions.get_ordered_uninstalled()
+            resolutions = resolutions.get_ordered_dependency_list()
         except AssertionError as e:
             errors['CyclicDependencyGraph'] = e
             resolutions = []

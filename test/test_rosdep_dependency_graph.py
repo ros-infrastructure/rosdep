@@ -40,7 +40,7 @@ def test_DependencyGraph_Linear():
 	dg['C']['installer_key'] = 'c_installer'
 	dg['C']['install_keys'] = ['c']
 	dg['C']['dependencies'] = []
-	result = dg.get_ordered_uninstalled()
+	result = dg.get_ordered_dependency_list()
 	expected = [('c_installer', ['c']), ('b_installer', ['b']), ('a_installer', ['a'])]
 	assert result == expected, "Results did not match expectations: %s == %s"%(str(result),str(expected))
 
@@ -58,7 +58,7 @@ def test_DependencyGraph_Cycle():
 	dg['C']['install_keys'] = ['c']
 	dg['C']['dependencies'] = ['A']
 	try:
-		result = dg.get_ordered_uninstalled()
+		result = dg.get_ordered_dependency_list()
 		assert False, "Doesn't fail, it should fail with an AssertionError because of the cycle."
 	except AssertionError as e:
 		if not str(e).startswith("A cycle in the dependency graph occurred with key"):
@@ -83,7 +83,7 @@ def test_DependencyGraph_Short_Cycle():
 	dg['D']['install_keys'] = ['d']
 	dg['D']['dependencies'] = ['B']
 	try:
-		result = dg.get_ordered_uninstalled()
+		result = dg.get_ordered_dependency_list()
 		assert False, "Doesn't fail, it should fail with an AssertionError because of the cycle."
 	except AssertionError as e:
 		if not str(e).startswith("A cycle in the dependency graph occurred with key"):
@@ -102,7 +102,7 @@ def test_DependencyGraph_Invalid_Key():
 	dg['B']['install_keys'] = ['b']
 	dg['B']['dependencies'] = ['C']
 	try:
-		result = dg.get_ordered_uninstalled()
+		result = dg.get_ordered_dependency_list()
 		assert False, "Doesn't fail, it should fail with an KeyError because of the invalid rosdep key."
 	except KeyError as e:
 		if not str(e).endswith("does not exist in the dictionary of resolutions.'"):
@@ -121,7 +121,7 @@ def test_DependencyGraph_Invalid_Key2():
 	dg['C']['install_keys'] = ['c']
 	dg['C']['dependencies'] = []
 	try:
-		result = dg.get_ordered_uninstalled()
+		result = dg.get_ordered_dependency_list()
 		assert False, "Doesn't fail, it should fail with an KeyError because of the invalid rosdep key."
 	except KeyError as e:
 		if not str(e).endswith("does not exist in the dictionary of resolutions.'"):
@@ -145,7 +145,7 @@ def test_DependencyGraph_Multi_Root():
 	dg['D']['installer_key'] = 'd_installer'
 	dg['D']['install_keys'] = ['d']
 	dg['D']['dependencies'] = ['C']
-	result = dg.get_ordered_uninstalled()
+	result = dg.get_ordered_dependency_list()
 	# TODO: The expected might also have a different order, for example it might be:
 	# [('c_installer', ['c']), ('d_installer', ['d']), ('b_installer', ['b']), ('a_installer', ['a'])]
 	# But that wont invalidate the order from a dependency graph stand point
@@ -162,7 +162,7 @@ def test_DependencyGraph_Realworld():
 	dg['pkg-config']['installer_key'] = 'homebrew'
 	dg['pkg-config']['install_keys'] = ['pkg-config']
 	dg['pkg-config']['dependencies'] = []
-	result = dg.get_ordered_uninstalled()
+	result = dg.get_ordered_dependency_list()
 	expected = [('homebrew', ['pkg-config']), ('pip', ['matplotlib'])]
 	assert result == expected, "Results did not match expectations: %s == %s"%(str(result),str(expected))
 
