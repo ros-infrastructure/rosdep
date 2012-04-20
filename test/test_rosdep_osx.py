@@ -86,8 +86,10 @@ def test_HomebrewInstaller():
             val = installer.get_install_command(['whatever'], interactive=interactive)
             
         assert val == expected, val
-        expected = [['brew', 'install', '--force', 'subversion'],
-                    ['brew', 'install', '--force', 'bazaar']]
+        expected = [['brew', 'uninstall', '--force', 'subversion'],
+                    ['brew', 'install', 'subversion'],
+                    ['brew', 'uninstall', '--force', 'bazaar'],
+                    ['brew', 'install', 'bazaar']]
         val = installer.get_install_command(['whatever'], reinstall=True)
         assert val == expected, val
     try:
