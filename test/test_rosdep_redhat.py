@@ -29,7 +29,7 @@
 
 import os
 import traceback
-from mock import patch
+from mock import patch, Mock
 
 def get_test_dir():
     # not used yet
@@ -38,10 +38,13 @@ def get_test_dir():
 def test_rpm_detect():
     from rosdep2.platforms.redhat import rpm_detect
 
-    val = rpm_detect([])
+    m = Mock()
+    m.return_value = ''
+
+    val = rpm_detect([], exec_fn=m)
     assert val == [], val
 
-    val = rpm_detect(['tinyxml-dev'])
+    val = rpm_detect(['tinyxml-dev'], exec_fn=m)
     assert val == [], val
 
 def test_YumInstaller():
