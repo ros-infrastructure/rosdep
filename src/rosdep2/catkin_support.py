@@ -78,16 +78,19 @@ def resolve_for_apt(rosdep_key, view, installer, os_name, os_version):
     assert inst_key == APT_INSTALLER
     return installer.resolve(rule)
 
-def resolve_for_osx(rosdep_key, view):
+def resolve_for_osx(rosdep_key, view, os_name, os_version):
     """
     Resolve rosdep key to brew and pip dependencies.
     
+    :param rosdep_key: rosdep key that needs to be resolved
+    :param view: RosdepView that is used to lookup the rosdep_key
     :param os_name: OS name, e.g. 'osx'
+    :param os_version: OS version, e.g. 'lion'
 
     :raises: :exc:`rosdep2.ResolutionError`
     """
     d = view.lookup(rosdep_key)
-    inst_key, rule = d.get_rule_for_platform('osx', 'lion', [BREW_INSTALLER, PIP_INSTALLER], BREW_INSTALLER)    
+    inst_key, rule = d.get_rule_for_platform(os_name, os_version, [BREW_INSTALLER, PIP_INSTALLER], BREW_INSTALLER)    
     return inst_key, rule
 
 def get_catkin_view(rosdistro_name, os_name, os_version):
