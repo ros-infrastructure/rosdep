@@ -23,6 +23,8 @@ from subprocess import Popen, PIPE, CalledProcessError
 
 from . import create_default_installer_context
 from .platforms.debian import APT_INSTALLER
+from .platforms.osx import BREW_INSTALLER
+from .platforms.pip import PIP_INSTALLER
 from .rep3 import download_targets_data
 from .sources_list import get_sources_list_dir, DataSourceMatcher, SourcesListLoader
 from .lookup import RosdepLookup
@@ -59,6 +61,10 @@ def get_apt_installer():
     installer_context = create_default_installer_context()
     return installer_context.get_installer(APT_INSTALLER)
 
+def get_brew_installer():
+    installer_context = create_default_installer_context()
+    return installer_context.get_installer(BREW_INSTALLER)
+
 def resolve_for_apt(rosdep_key, view, installer, os_name, os_version):
     """
     Resolve rosdep key to apt dependencies.
@@ -71,6 +77,18 @@ def resolve_for_apt(rosdep_key, view, installer, os_name, os_version):
     inst_key, rule = d.get_rule_for_platform(os_name, os_version, [APT_INSTALLER], APT_INSTALLER)    
     assert inst_key == APT_INSTALLER
     return installer.resolve(rule)
+
+def resolve_for_osx(rosdep_key, view):
+    """
+    Resolve rosdep key to brew and pip dependencies.
+    
+    :param os_name: OS name, e.g. 'osx'
+
+    :raises: :exc:`rosdep2.ResolutionError`
+    """
+    d = view.lookup(rosdep_key)
+    inst_key, rule = d.get_rule_for_platform('osx', 'lion', [BREW_INSTALLER, PIP_INSTALLER], BREW_INSTALLER)    
+    return inst_key, rule
 
 def get_catkin_view(rosdistro_name, os_name, os_version):
     """
