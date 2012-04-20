@@ -112,9 +112,12 @@ def brew_detect(formulas, exec_fn=None):
     ret_list = []
     std_out = exec_fn(['brew', 'list'])
     # preserve order
+    clean_formulas = []
+    for f in formulas:
+        clean_formulas.append(f.split('/')[-1])
     for f in std_out.split():
-        if f in formulas:
-            ret_list.append(f)
+        if f in clean_formulas:
+            ret_list.append(formulas[clean_formulas.index(f)])
     return ret_list
 
 class HomebrewInstaller(PackageManagerInstaller):
