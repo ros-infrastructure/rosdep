@@ -502,7 +502,6 @@ class RosdepInstaller(object):
             return
 
         if simulate:
-            line = 80*'='
             print("#[%s] Installation commands:"%(installer_key))
             for sub_command in command:
                 print('  '+' '.join(sub_command))

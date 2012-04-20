@@ -28,6 +28,8 @@
 from __future__ import print_function
 
 import os
+import sys
+import cStringIO
 
 from rospkg import RosPack, RosStack
 
@@ -503,3 +505,49 @@ def test_RosdepInstaller_get_uninstalled_unconfigured():
         assert False, "should have raised"
     except RosdepInternalError:
         pass
+
+
+from contextlib import contextmanager
+@contextmanager
+def fakeout():
+    realstdout = sys.stdout
+    realstderr = sys.stderr
+    fakestdout = cStringIO.StringIO()
+    fakestderr = cStringIO.StringIO()
+    sys.stdout = fakestdout
+    sys.stderr = fakestderr
+    yield fakestdout, fakestderr
+    sys.stdout = realstdout
+    sys.stderr = realstderr
+
+def test_RosdepInstaller_install_resolved():
+    from rosdep2 import create_default_installer_context
+    from rosdep2.lookup import RosdepLookup
+    from rosdep2.installers import RosdepInstaller
+    from rosdep2.platforms.debian import APT_INSTALLER
+    
+    from rosdep2.lookup import RosdepLookup
+    rospack, rosstack = get_test_rospkgs()
+    
+    # create our test fixture.  use most of the default toolchain, but
+    # replace the apt installer with one that we can have more fun
+    # with.  we will do all tests with ubuntu lucid keys -- other
+    # tests should cover different resolution cases.
+    sources_loader = create_test_SourcesListLoader()
+    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack, sources_loader=sources_loader)
+    context = create_default_installer_context()
+    context.set_os_override('ubuntu', 'lucid')
+    installer = RosdepInstaller(context, lookup)
+    
+    with fakeout() as (stdout, stderr):
+        installer.install_resolved(APT_INSTALLER, [], simulate=True, verbose=False)
+    with fakeout() as (stdout, stderr):
+        installer.install_resolved(APT_INSTALLER, [], simulate=True, verbose=True)
+    assert stdout.getvalue().strip() == '#No packages to install'
+    with fakeout() as (stdout, stderr):            
+        installer.install_resolved(APT_INSTALLER, ['rosdep-fake1', 'rosdep-fake2'], simulate=True, verbose=True)
+    stdout_lines = [x.strip() for x in stdout.getvalue().split('\n') if x.strip()]
+    assert stdout_lines == ['#[apt] Installation commands:',
+                            'sudo apt-get install rosdep-fake1',
+                            'sudo apt-get install rosdep-fake2',
+                            ], ("%s: %s"%(stdout.getvalue(), stdout_lines))
