@@ -371,9 +371,9 @@ def command_check(lookup, packages, options):
     uninstalled, errors = installer.get_uninstalled(packages, verbose=verbose)
 
     # pretty print the result
-    if [r for r in uninstalled.values() if r]:
+    if [v for k, v in uninstalled if v]:
         print("System dependencies have not been satisified:")
-        for installer_key, resolved in uninstalled.items():
+        for installer_key, resolved in uninstalled:
             if resolved:
                 for r in resolved:
                     print("%s\t%s"%(installer_key, r))
@@ -417,7 +417,7 @@ def command_install(lookup, packages, options):
         uninstalled, errors = installer.get_uninstalled(packages, implicit=options.recursive, verbose=options.verbose)
         
     if options.verbose:
-        print("uninstalled dependencies are: [%s]"%(', '.join(uninstalled.keys())))
+        print("uninstalled dependencies are: [%s]"%(', '.join([', '.join(pkg) for pkg in [v for k,v in uninstalled]])))
         
     if errors:
         print("ERROR: the following packages/stacks could not have their rosdep keys resolved\nto system dependencies:", file=sys.stderr)
