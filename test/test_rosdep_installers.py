@@ -422,14 +422,24 @@ def test_RosdepInstaller_get_uninstalled():
 
         expected = set(['libltdl-dev', 'libboost1.40-all-dev', 'libtool'])
         uninstalled, errors = installer.get_uninstalled(['roscpp_fake'], verbose)
-        assert uninstalled.keys() == [APT_INSTALLER]
-        assert set(uninstalled[APT_INSTALLER]) == expected
+        keys, values = zip(*uninstalled)
+        apt_uninstalled = []
+        for k, v in uninstalled:
+            if k == APT_INSTALLER:
+                apt_uninstalled.extend(v)
+        assert list(set(keys)) == [APT_INSTALLER]
+        assert set(apt_uninstalled) == expected
         assert not errors
 
         expected = ['libtinyxml-dev']
         uninstalled, errors = installer.get_uninstalled(['rospack_fake'], verbose)
-        assert uninstalled.keys() == [APT_INSTALLER]
-        assert uninstalled[APT_INSTALLER] == expected, uninstalled
+        keys, values = zip(*uninstalled)
+        apt_uninstalled = []
+        for k, v in uninstalled:
+            if k == APT_INSTALLER:
+                apt_uninstalled.extend(v)
+        assert list(set(keys)) == [APT_INSTALLER]
+        assert apt_uninstalled == expected, uninstalled
         assert not errors
 
 def get_fake_apt(detect_fn):
@@ -497,7 +507,7 @@ def test_RosdepInstaller_get_uninstalled_unconfigured():
     # annoying mock to test generally impossible error condition
     from mock import Mock
     lookup = Mock(spec=RosdepLookup)
-    lookup.resolve_all.return_value = ({'bad-key': ['stuff']}, [])
+    lookup.resolve_all.return_value = ([('bad-key', ['stuff'])], [])
     
     installer = RosdepInstaller(context, lookup)
     try:

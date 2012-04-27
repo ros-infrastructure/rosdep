@@ -39,6 +39,7 @@ from rospkg import RosPack, RosStack, ResourceNotFound
 from .core import RosdepInternalError, InvalidData, rd_debug
 from .model import RosdepDatabase
 from .rospkg_loader import RosPkgLoader
+from .dependency_graph import DependencyGraph
 
 from .sources_list import SourcesListLoader
 
@@ -306,16 +307,18 @@ class RosdepLookup(object):
         """
         Resolve all the rosdep dependencies for *resources* using *installer_context*.
 
-        :param resources: list of resources (e.g. packages), ``[str]]``
+        :param resources: list of resources (e.g. packages), ``[str]``
         :param installer_context: :class:`InstallerContext`
         :param implicit: Install implicit (recursive) dependencies of
             resources.  Default ``False``.
         
-        :returns: (resolutions, errors), ``({str: opaque}, {str: ResolutionError})``.  resolutions maps the installer keys
-          to resolved objects.  Resolved objects are opaque but can be passed into the associated installer for processing.
-          errors maps package names to an :exc:`ResolutionError` or :exc:`KeyError` exception.
+        :returns: (resolutions, errors), ``([(str, [str])], {str: ResolutionError})``.  resolutions provides 
+        an ordered list of resolution tuples.  A resolution tuple's first element is the installer 
+        key (e.g.: apt or homebrew) and the second element is a list of install keys for that 
+        installer (e.g.: boost or ros-fuerte-ros_comm). errors maps package names to 
+        an :exc:`ResolutionError` or :exc:`KeyError` exception.
         """
-        resolutions = defaultdict(list)
+        resolutions = DependencyGraph()
         errors = {}
         for resource_name in resources:
             try:
@@ -323,26 +326,35 @@ class RosdepLookup(object):
                 if self.verbose:
                     print("resolve_all: resource [%s] requires rosdep keys [%s]"%(resource_name, ', '.join(rosdep_keys)), file=sys.stderr)
                 for rosdep_key in rosdep_keys:
+                    from copy import copy
                     try:
                         installer_key, resolution, dependencies = \
                                        self.resolve(rosdep_key, resource_name, installer_context)
-                        resolutions[installer_key].append(resolution)
+                        resolutions[rosdep_key]['installer_key'] = copy(installer_key)
+                        resolutions[rosdep_key]['install_keys'] = list(resolution)
+                        resolutions[rosdep_key]['dependencies'] = list(dependencies)
                         while dependencies:
                             depend_rosdep_key = dependencies.pop()
                             installer_key, resolution, more_dependencies = \
                                            self.resolve(depend_rosdep_key, resource_name, installer_context)
                             dependencies.extend(more_dependencies)
-                            resolutions[installer_key].append(resolution)
+                            resolutions[depend_rosdep_key]['installer_key'] = copy(installer_key)
+                            resolutions[depend_rosdep_key]['install_keys'] = list(resolution)
+                            resolutions[depend_rosdep_key]['dependencies'] = list(more_dependencies)
 
                     except ResolutionError as e:
                         errors[resource_name] = e
             except ResourceNotFound as e:
                 errors[resource_name] = e
 
-        # consolidate resolutions 
-        for installer_key, val in resolutions.items(): #py3k
-            installer = installer_context.get_installer(installer_key)
-            resolutions[installer_key] = installer.unique(*val)
+        try:
+            resolutions = resolutions.get_ordered_dependency_list()
+        except AssertionError as e:
+            errors['CyclicDependencyGraph'] = e
+            resolutions = []
+        except KeyError as e:
+            errors['InvalidRosdepKey'] = e
+            resolutions = []
 
         return resolutions, errors
 

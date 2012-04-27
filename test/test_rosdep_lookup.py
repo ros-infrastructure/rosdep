@@ -456,6 +456,11 @@ def test_RosdepLookup_resolve_all():
     for count in xrange(0, 2):
         resolutions, errors = lookup.resolve_all(['rospack_fake', 'roscpp_fake'], installer_context)
         assert not errors, errors
-        assert 'apt' in resolutions
-        assert set(resolutions['apt']) == set(['libtinyxml-dev', 'libboost1.40-all-dev', 'libtool', 'libltdl-dev']), set(resolutions['apt'])
+        installer_keys, resolveds = zip(*resolutions)
+        assert 'apt' in installer_keys
+        apt_resolutions = []
+        for k, v in resolutions:
+            if k == 'apt':
+                apt_resolutions.extend(v)
+        assert set(apt_resolutions) == set(['libtinyxml-dev', 'libboost1.40-all-dev', 'libtool', 'libltdl-dev']), set(apt_resolutions)
         

@@ -400,10 +400,12 @@ class RosdepInstaller(object):
         if verbose:
             print("resolving for resources [%s]"%(', '.join(resources)))
         resolutions, errors = self.lookup.resolve_all(resources, installer_context, implicit=implicit)
-        
+
         # for each installer, figure out what is left to install
-        uninstalled = {}
-        for installer_key, resolved in resolutions.items(): #py3k
+        uninstalled = []
+        if resolutions == []:
+            return uninstalled, errors
+        for installer_key, resolved in resolutions: #py3k
             if verbose:
                 print("resolution: %s [%s]"%(installer_key, ', '.join(resolved)))
             try:
@@ -418,7 +420,7 @@ class RosdepInstaller(object):
 
             # only create key if there is something to do
             if packages_to_install:
-                uninstalled[installer_key] = packages_to_install
+                uninstalled.append((installer_key, packages_to_install))
             if verbose:
                 print("uninstalled: [%s]"%(', '.join(packages_to_install)))
         
@@ -457,12 +459,19 @@ class RosdepInstaller(object):
         """
         if verbose:
             print("install options: reinstall[%s] simulate[%s] interactive[%s]"%(reinstall, simulate, interactive))
-            print("install: uninstalled keys are %s"%(', '.join(uninstalled.keys())))
-        
+            print("install: uninstalled keys are %s"%(', '.join([', '.join(pkg) for pkg in [v for k,v in uninstalled]])))
+
+        # Squash uninstalled again, in case some dependencies were already installed
+        squashed_uninstalled = []
+        previous_installer_key = None
+        for installer_key, resolved in uninstalled:
+            if previous_installer_key != installer_key:
+                squashed_uninstalled.append((installer_key, []))
+                previous_installer_key = installer_key
+            squashed_uninstalled[-1][1].extend(resolved)
+
         failures = []
-        for installer_key, resolved in uninstalled.items(): #py3k:
-            if verbose:
-                print("processing rosdeps for installer [%s]"%(installer_key))
+        for installer_key, resolved in squashed_uninstalled:
             try:
                 self.install_resolved(installer_key, resolved, simulate=simulate,
                                       interactive=interactive, reinstall=reinstall, continue_on_error=continue_on_error,
