@@ -313,34 +313,39 @@ class RosdepLookup(object):
             resources.  Default ``False``.
         
         :returns: (resolutions, errors), ``([(str, [str])], {str: ResolutionError})``.  resolutions provides 
-        an ordered list of resolution tuples.  A resolution tuple's first element is the installer 
-        key (e.g.: apt or homebrew) and the second element is a list of install keys for that 
-        installer (e.g.: boost or ros-fuerte-ros_comm). errors maps package names to 
-        an :exc:`ResolutionError` or :exc:`KeyError` exception.
+          an ordered list of resolution tuples.  A resolution tuple's first element is the installer 
+          key (e.g.: apt or homebrew) and the second element is a list of opaque resolution values for that 
+          installer. errors maps package names to an :exc:`ResolutionError` or :exc:`KeyError` exception.
+
+        :raises: :exc:`RosdepInternalError` if unexpected error in constructing dependency graph
+        :raises: :exc:`InvalidData` if a cycle occurs in constructing dependency graph
         """
-        resolutions = DependencyGraph()
+        depend_graph = DependencyGraph()
         errors = {}
+        # TODO: resolutions dictionary should be replaced with resolution model instead of mapping (undefined) keys.
         for resource_name in resources:
             try:
                 rosdep_keys = self.get_rosdeps(resource_name, implicit=implicit)
                 if self.verbose:
                     print("resolve_all: resource [%s] requires rosdep keys [%s]"%(resource_name, ', '.join(rosdep_keys)), file=sys.stderr)
                 for rosdep_key in rosdep_keys:
-                    from copy import copy
                     try:
                         installer_key, resolution, dependencies = \
                                        self.resolve(rosdep_key, resource_name, installer_context)
-                        resolutions[rosdep_key]['installer_key'] = copy(installer_key)
-                        resolutions[rosdep_key]['install_keys'] = list(resolution)
-                        resolutions[rosdep_key]['dependencies'] = list(dependencies)
+                        depend_graph[rosdep_key]['installer_key'] = installer_key
+                        depend_graph[rosdep_key]['install_keys'] = list(resolution)
+                        depend_graph[rosdep_key]['dependencies'] = list(dependencies)
                         while dependencies:
                             depend_rosdep_key = dependencies.pop()
+                            # prevent infinite loop
+                            if depend_rosdep_key in depend_graph:
+                                continue
                             installer_key, resolution, more_dependencies = \
                                            self.resolve(depend_rosdep_key, resource_name, installer_context)
                             dependencies.extend(more_dependencies)
-                            resolutions[depend_rosdep_key]['installer_key'] = copy(installer_key)
-                            resolutions[depend_rosdep_key]['install_keys'] = list(resolution)
-                            resolutions[depend_rosdep_key]['dependencies'] = list(more_dependencies)
+                            depend_graph[depend_rosdep_key]['installer_key'] = installer_key
+                            depend_graph[depend_rosdep_key]['install_keys'] = list(resolution)
+                            depend_graph[depend_rosdep_key]['dependencies'] = list(more_dependencies)
 
                     except ResolutionError as e:
                         errors[resource_name] = e
@@ -348,15 +353,15 @@ class RosdepLookup(object):
                 errors[resource_name] = e
 
         try:
-            resolutions = resolutions.get_ordered_dependency_list()
+            # TODO: I really don't like AssertionErrors here; this should be modeled as 'CyclicGraphError' 
+            # or something more explicit. No need to continue if this API errors.
+            resolutions_flat = depend_graph.get_ordered_dependency_list()
         except AssertionError as e:
-            errors['CyclicDependencyGraph'] = e
-            resolutions = []
+            raise InvalidData("cycle in dependency graph detected: %s"%(e))
         except KeyError as e:
-            errors['InvalidRosdepKey'] = e
-            resolutions = []
+            raise RosdepInternalError(e)
 
-        return resolutions, errors
+        return resolutions_flat, errors
 
     def resolve(self, rosdep_key, resource_name, installer_context):
         """

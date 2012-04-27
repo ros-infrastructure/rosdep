@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # Copyright (c) 2009, Willow Garage, Inc.
 # All rights reserved.
 # 
@@ -435,8 +434,8 @@ class RosdepInstaller(object):
 
         :param uninstalled: uninstalled value from
           :meth:`RosdepInstaller.get_uninstalled`.  Value is a
-          dictionary mapping installer key to a opaque resolution
-          list, ``{str: [opaque]}``
+          dictionary mapping installer key to a dictionary with resolution
+          data, ``{str: {str: vals}}``
         :param interactive: If ``False``, suppress
           interactive prompts (e.g. by passing '-y' to ``apt``).
         :param simulate: If ``False`` simulate installation
