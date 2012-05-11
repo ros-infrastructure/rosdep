@@ -63,7 +63,7 @@ def is_port_installed():
     except OSError:
         return False
     
-def port_detect(packages, exec_fn=None):
+def port_detect(pkgs, exec_fn=None):
     ret_list = []
     if not is_port_installed():
         return ret_list
