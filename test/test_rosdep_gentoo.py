@@ -31,11 +31,20 @@ import os
 import traceback
 from mock import Mock, patch
 
+import rospkg.os_detect
+
+def is_gentoo():
+    return rospkg.os_detect.Gentoo().is_os()
+
 def get_test_dir():
     # not used yet
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'gentoo'))
 
+# Requires 2.7 @unittest.skipIf(not rospkg.os_detect.Gentoo().is_os(), "not running Gentoo")
 def test_portage_available():
+    if not is_gentoo():
+        print "Skipping not Gentoo"
+        return 
     from rosdep2.platforms.gentoo import portage_available
 
     original_exists = os.path.exists
@@ -82,6 +91,10 @@ def test_portage_available():
 # This actually tests portage_detect_single and portage_detect
 
 def test_portage_detect():
+    if not is_gentoo():
+        print "Skipping not Gentoo"
+        return 
+
     from rosdep2.platforms.gentoo import portage_detect
 
     m = Mock()
@@ -149,6 +162,10 @@ def test_portage_detect():
     m.assert_any_call(['portageq', 'match', '/', 'python'])   
 
 def test_PortageInstaller():
+    if not is_gentoo():
+        print "Skipping not Gentoo"
+        return 
+
     from rosdep2.platforms.gentoo import PortageInstaller
 
     @patch.object(PortageInstaller, 'get_packages_to_install')
