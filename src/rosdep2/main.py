@@ -207,8 +207,8 @@ def _rosdep_main(args):
                       action="store_true", help="Continue installing despite errors.")
     parser.add_option("-a", "--all", dest="rosdep_all", default=False, 
                       action="store_true", help="select all packages")
-    parser.add_option("-R", dest="recursive", default=False, 
-                      action="store_true", help="Install implicit/recursive dependencies.  Only valid with 'install' command.")
+    parser.add_option("-n", dest="recursive", default=True, 
+                      action="store_false", help="Do not consider implicit/recursive dependencies.  Only valid with 'keys', 'check', and 'install' commands.")
 
     options, args = parser.parse_args(args)
     if options.print_version:
@@ -356,7 +356,7 @@ def command_keys(lookup, packages, options):
     lookup = _get_default_RosdepLookup(options)
     rosdep_keys = []
     for package_name in packages:
-        rosdep_keys.extend(lookup.get_rosdeps(package_name, implicit=True))
+        rosdep_keys.extend(lookup.get_rosdeps(package_name, implicit=options.recursive))
 
     _print_lookup_errors(lookup)
     print('\n'.join(set(rosdep_keys)))
@@ -368,7 +368,7 @@ def command_check(lookup, packages, options):
     configure_installer_context_os(installer_context, options)
     installer = RosdepInstaller(installer_context, lookup)
 
-    uninstalled, errors = installer.get_uninstalled(packages, verbose=verbose)
+    uninstalled, errors = installer.get_uninstalled(packages, implicit=options.recursive, verbose=verbose)
 
     # pretty print the result
     if [v for k, v in uninstalled if v]:
