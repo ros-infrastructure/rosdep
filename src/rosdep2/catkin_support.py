@@ -9,9 +9,9 @@ exceptions.
 
 Workflow::
 
-    installer = get_apt_installer()
+    installer = get_installer(APT_INSTALLER)
     view = get_catkin_view(rosdistro_name, 'ubuntu', 'lucid')
-    resolve_for_apt(rosdep_key, view, installer, 'ubuntu', 'lucid')
+    resolve_for_x(rosdep_key, view, installer, 'ubuntu', 'lucid')
 
 """
 
@@ -57,41 +57,32 @@ def get_ubuntu_targets(rosdistro):
     targets_data = download_targets_data()
     return targets_data[rosdistro]
 
-def get_apt_installer():
-    installer_context = create_default_installer_context()
-    return installer_context.get_installer(APT_INSTALLER)
+def get_installer(installer_name):
+    """ Expected installers APT_INSTALLER, YUM_INSTALLER, ..."""
 
-def get_brew_installer():
     installer_context = create_default_installer_context()
-    return installer_context.get_installer(BREW_INSTALLER)
+    return installer_context.get_installer(installer_name)
 
-def resolve_for_apt(rosdep_key, view, installer, os_name, os_version):
+default_installers = {
+    'debian': [APT_INSTALLER],
+    'osx': [BREW_INSTALLER, PIP_INSTALLER],
+    'ubuntu': [APT_INSTALLER],
+    'fedora': [YUM_INSTALLER],
+    }
+
+
+def resolve_for_x(rosdep_key, view, installer, os_name, os_version):
     """
-    Resolve rosdep key to apt dependencies.
+    Resolve rosdep key to dependencies.
     
     :param os_name: OS name, e.g. 'ubuntu'
 
     :raises: :exc:`rosdep2.ResolutionError`
     """
     d = view.lookup(rosdep_key)
-    inst_key, rule = d.get_rule_for_platform(os_name, os_version, [APT_INSTALLER], APT_INSTALLER)    
+    inst_key, rule = d.get_rule_for_platform(os_name, os_version, default_installers[os_name], APT_INSTALLER)
     assert inst_key == APT_INSTALLER
     return installer.resolve(rule)
-
-def resolve_for_osx(rosdep_key, view, os_name, os_version):
-    """
-    Resolve rosdep key to brew and pip dependencies.
-    
-    :param rosdep_key: rosdep key that needs to be resolved
-    :param view: RosdepView that is used to lookup the rosdep_key
-    :param os_name: OS name, e.g. 'osx'
-    :param os_version: OS version, e.g. 'lion'
-
-    :raises: :exc:`rosdep2.ResolutionError`
-    """
-    d = view.lookup(rosdep_key)
-    inst_key, rule = d.get_rule_for_platform(os_name, os_version, [BREW_INSTALLER, PIP_INSTALLER], BREW_INSTALLER)    
-    return inst_key, rule
 
 def get_catkin_view(rosdistro_name, os_name, os_version):
     """
