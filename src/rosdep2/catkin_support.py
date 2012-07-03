@@ -11,7 +11,7 @@ Workflow::
 
     installer = get_installer(APT_INSTALLER)
     view = get_catkin_view(rosdistro_name, 'ubuntu', 'lucid')
-    resolve_for_x(rosdep_key, view, installer, 'ubuntu', 'lucid')
+    resolve_for_os(rosdep_key, view, installer, 'ubuntu', 'lucid')
 
 """
 
@@ -71,7 +71,7 @@ default_installers = {
     }
 
 
-def resolve_for_x(rosdep_key, view, installer, os_name, os_version):
+def resolve_for_os(rosdep_key, view, installer, os_name, os_version):
     """
     Resolve rosdep key to dependencies.
     
