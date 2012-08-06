@@ -1,17 +1,22 @@
-.PHONY: all setup clean_dist distro clean install dsc source_deb upload
+.PHONY: all setup clean_dist distro clean install deb_dist upload-packages upload-building upload testsetup test
 
 NAME='rosdep'
 VERSION=`python setup.py -V`
 
+OUTPUT_DIR=deb_dist
+
 all:
 	echo "noop for debbuild"
+
+setup:
+	echo "building version ${VERSION}"
 
 clean_dist:
 	-rm -f MANIFEST
 	-rm -rf dist
 	-rm -rf deb_dist
 
-distro: clean_dist
+distro: setup clean_dist
 	python setup.py sdist
 
 push: distro
@@ -24,16 +29,19 @@ clean: clean_dist
 install: distro
 	sudo checkinstall python setup.py install
 
-dsc: distro
-	python setup.py --command-packages=stdeb.command sdist_dsc
+deb_dist: distro
+	python setup.py --command-packages=stdeb.command bdist_deb
 
-source_deb: dsc
-	# need to convert unstable to each distro and repeat
-	cd deb_dist/${NAME}-${VERSION} && dpkg-buildpackage -sa -k84C5CECD
 
-binary_deb: dsc
-	# need to convert unstable to each distro and repeat
-	cd deb_dist/${NAME}-${VERSION} && dpkg-buildpackage -sa -k84C5CECD
+upload-packages: deb_dist
+	dput -u -c dput.cf all-shadow ${OUTPUT_DIR}/${NAME}_${VERSION}-1_amd64.changes 
+	dput -u -c dput.cf all-shadow-fixed ${OUTPUT_DIR}/${NAME}_${VERSION}-1_amd64.changes 
+	dput -u -c dput.cf all-ros ${OUTPUT_DIR}/${NAME}_${VERSION}-1_amd64.changes 
+
+upload-building: deb_dist
+	dput -u -c dput.cf all-building ${OUTPUT_DIR}/${NAME}_${VERSION}-1_amd64.changes 
+
+upload: upload-building upload-packages
 
 testsetup:
 	echo "running rosdep tests"
