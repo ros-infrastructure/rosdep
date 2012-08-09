@@ -25,6 +25,7 @@ from . import create_default_installer_context
 from .platforms.debian import APT_INSTALLER
 from .platforms.osx import BREW_INSTALLER
 from .platforms.pip import PIP_INSTALLER
+from .platforms.redhat import YUM_INSTALLER
 from .rep3 import download_targets_data
 from .sources_list import get_sources_list_dir, DataSourceMatcher, SourcesListLoader
 from .lookup import RosdepLookup
