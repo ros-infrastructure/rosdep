@@ -1,4 +1,7 @@
-from rosdep2.catkin_support import get_installer, get_catkin_view, resolve_for_apt, ValidationFailed
+from rosdep2.catkin_support import get_installer, get_catkin_view, ValidationFailed, resolve_for_os
+
+from rosdep2.platforms.debian import APT_INSTALLER
+
 
 def test_workflow():
     try:
