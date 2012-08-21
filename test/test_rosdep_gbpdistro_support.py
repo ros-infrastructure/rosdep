@@ -70,7 +70,7 @@ def test_download_gbpdistro_as_rosdep_data():
 def test_gbprepo_to_rosdep_data():
     from rosdep2.gbpdistro_support import gbprepo_to_rosdep_data
     from rosdep2 import InvalidData
-    simple_gbpdistro = {'release-name': 'foorte', 'gbp-repos': []}
+    simple_gbpdistro = {'release-name': 'foorte', 'repositories': [], 'type': 'gbp'}
     targets = {'foorte': ['lucid', 'oneiric']}
     # test bad data
     try:
@@ -79,7 +79,7 @@ def test_gbprepo_to_rosdep_data():
     except InvalidData:
         pass
     try:
-        gbprepo_to_rosdep_data({'targets': 1, 'gbp-repos': []}, targets)
+        gbprepo_to_rosdep_data({'targets': 1, 'repositories': [], 'type': 'gbp'}, targets)
         assert False, "should have raised"
     except InvalidData:
         pass
@@ -90,13 +90,13 @@ def test_gbprepo_to_rosdep_data():
         pass
     # release-name must be in targets
     try:
-        gbprepo_to_rosdep_data({'release-name': 'barte', 'gbp-repos': []}, targets)
+        gbprepo_to_rosdep_data({'release-name': 'barte', 'repositories': [], 'type': 'gbp'}, targets)
         assert False, "should have raised"
     except InvalidData:
         pass
     # gbp-distros must be list of dicts
     try:
-        gbprepo_to_rosdep_data({'release-name': 'foorte', 'gbp-repos': [1]}, targets)
+        gbprepo_to_rosdep_data({'release-name': 'foorte', 'repositories': [1], 'type': 'gbp'}, targets)
         assert False, "should have raised"
     except InvalidData:
         pass
@@ -105,7 +105,7 @@ def test_gbprepo_to_rosdep_data():
         bad_example = {'name': 'common',
                        'target': [1],
                        'url': 'git://github.com/wg-debs/common_msgs.git'}
-        gbprepo_to_rosdep_data({'release-name': 'foorte', 'gbp-repos': [bad_example]}, targets)
+        gbprepo_to_rosdep_data({'release-name': 'foorte', 'repositories': [bad_example], 'type': 'gbp'}, targets)
         assert False, "should have raised"
     except InvalidData:
         pass
@@ -116,11 +116,12 @@ def test_gbprepo_to_rosdep_data():
     assert {} == rosdep_data
 
     gbpdistro_data = {'release-name': 'foorte',
-                      'gbp-repos': [
+                      'repositories': [
                           dict(name='common_msgs', target='all', url='git://github.com/wg-debs/common_msgs.git'),
                           dict(name='gazebo', target=['lucid', 'natty'], url='git://github.com/wg-debs/gazebo.git'),
                           dict(name='foo-bar', target=['precise'], url='git://github.com/wg-debs/gazebo.git'),
-                          ]
+                          ],
+                      'type': 'gbp',
                       }
     
     rosdep_data = gbprepo_to_rosdep_data(gbpdistro_data, targets)

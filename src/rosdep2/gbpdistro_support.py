@@ -32,7 +32,9 @@ def gbprepo_to_rosdep_data(gbpdistro_data, targets_data):
         if not type(targets_data) == dict:
             raise InvalidData("targets data must be a dict")
         if not type(gbpdistro_data) == dict:
-            raise InvalidData("gbpdistro data must be a dictionary")        
+            raise InvalidData("gbpdistro data must be a dictionary")
+        if gbpdistro_data['type'] != 'gbp':
+            raise InvalidData('gbpdistro must be of type "gbp"')
 
         # compute the default target data for the release_name
         release_name = gbpdistro_data['release-name']
@@ -44,11 +46,10 @@ def gbprepo_to_rosdep_data(gbpdistro_data, targets_data):
 
         # compute the rosdep data for each repo
         rosdep_data = {}
-        gbp_repos = gbpdistro_data['gbp-repos']
-        for repo in gbp_repos:
+        gbp_repos = gbpdistro_data['repositories']
+        for rosdep_key, repo in gbp_repos.items():
             if type(repo) != dict:
                 raise InvalidData("invalid repo spec in gbpdistro data: %s"%(str(repo)))
-            rosdep_key = repo['name']
             rosdep_data[rosdep_key] = {}
 
             # Do generation for ubuntu
@@ -61,7 +62,7 @@ def gbprepo_to_rosdep_data(gbpdistro_data, targets_data):
             deb_package_name = 'ros-%s-%s'%(release_name, rosdep_key)
             deb_package_name = deb_package_name.replace('_', '-')
 
-            repo_targets = repo['target']
+            repo_targets = repo['target'] if 'target' in repo else 'all'
             if repo_targets == 'all':
                 repo_targets = target_data
 
