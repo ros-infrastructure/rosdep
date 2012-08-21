@@ -1,5 +1,7 @@
 import urllib2
 import yaml
+import urlparse
+import os.path
 
 from rospkg.os_detect import OS_UBUNTU
 from rospkg.os_detect import OS_OSX
@@ -21,7 +23,18 @@ FUERTE_GBPDISTRO_URL = 'https://raw.github.com/ros/rosdistro/master/releases/fue
 #seconds to wait before aborting download of gbpdistro data
 DOWNLOAD_TIMEOUT = 15.0 
 
-def gbprepo_to_rosdep_data(gbpdistro_data, targets_data):
+def get_owner_name(url):
+    parsed = urlparse.urlparse(url)
+    org_name = os.path.dirname(parsed.path).split('/')
+    if '' in org_name:
+        org_name.remove('')
+
+    org_name = org_name[0]
+    if org_name.startswith('git@github.com:'):
+        org_name = org_name[len('git@github.com:'):]
+    return org_name
+
+def gbprepo_to_rosdep_data(gbpdistro_data, targets_data, url):
     """
     :raises: :exc:`InvalidData`
     """
@@ -55,7 +68,7 @@ def gbprepo_to_rosdep_data(gbpdistro_data, targets_data):
             # Do generation for ubuntu
             rosdep_data[rosdep_key][OS_UBUNTU] = {}
             # Do generation for empty OS X entries
-            homebrew_name = 'ros/%s/%s'%(release_name, rosdep_key)
+            homebrew_name = '%s/%s/%s'%(get_owner_name(url), release_name, rosdep_key)
             rosdep_data[rosdep_key][OS_OSX] = {BREW_INSTALLER: {'packages': [homebrew_name]}}
 
             # - debian package name: underscores must be dashes
@@ -91,7 +104,7 @@ def download_gbpdistro_as_rosdep_data(gbpdistro_url, targets_url=None):
         text = f.read()
         f.close()
         gbpdistro_data = yaml.safe_load(text)
-        return gbprepo_to_rosdep_data(gbpdistro_data, targets_data)
+        return gbprepo_to_rosdep_data(gbpdistro_data, targets_data, gbpdistro_url)
     except Exception as e:
         raise DownloadFailure("Failed to download target platform data for gbpdistro:\n\t%s"%(str(e)))
 
