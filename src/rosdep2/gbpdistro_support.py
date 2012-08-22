@@ -18,23 +18,36 @@ except:
     basestring = unicode = str
 
 # location of an example gbpdistro file for reference and testing
-FUERTE_GBPDISTRO_URL = 'https://raw.github.com/ros/rosdistro/master/releases/fuerte.yaml'
+FUERTE_GBPDISTRO_URL = 'https://raw.github.com/ros/rosdistro/' \
+                     + 'master/releases/fuerte.yaml'
 
 #seconds to wait before aborting download of gbpdistro data
-DOWNLOAD_TIMEOUT = 15.0 
+DOWNLOAD_TIMEOUT = 15.0
+
 
 def get_owner_name(url):
-    parsed = urlparse.urlparse(url)
-    org_name = os.path.dirname(parsed.path).split('/')
-    if '' in org_name:
-        org_name.remove('')
+    """
+    Given a gbpdistro url, returns the name of the github user in the url.
 
-    org_name = org_name[0]
-    if org_name.startswith('git@github.com:'):
-        org_name = org_name[len('git@github.com:'):]
-    return org_name
+    If the url is not a valid github url it returns the default `ros`.
 
-def gbprepo_to_rosdep_data(gbpdistro_data, targets_data, url):
+    This information is used to set the homebrew tap name, see:
+    https://github.com/ros/rosdep/pull/17
+
+    :returns: The github account in the given gbpdistro url
+    """
+    result = 'ros'
+    try:
+        parsed = urlparse.urlparse(url)
+        if parsed.netloc == 'github.com':
+            result = parsed.path.split('/')[1]
+    except Exception:
+        pass
+    return result
+
+
+# For compatability url defaults to ''
+def gbprepo_to_rosdep_data(gbpdistro_data, targets_data, url=''):
     """
     :raises: :exc:`InvalidData`
     """
@@ -52,7 +65,8 @@ def gbprepo_to_rosdep_data(gbpdistro_data, targets_data, url):
         # compute the default target data for the release_name
         release_name = gbpdistro_data['release-name']
         if not release_name in targets_data:
-            raise InvalidData("targets file does not contain information for release [%s]"%(release_name))
+            raise InvalidData("targets file does not contain information "
+                            + "for release [%s]" % (release_name))
         else:
             # take the first match
             target_data = targets_data[release_name]
@@ -60,19 +74,27 @@ def gbprepo_to_rosdep_data(gbpdistro_data, targets_data, url):
         # compute the rosdep data for each repo
         rosdep_data = {}
         gbp_repos = gbpdistro_data['repositories']
+        # Ensure gbp_repos is a dict
+        if type(gbp_repos) != dict:
+            raise InvalidData("invalid repo spec in gbpdistro data: "
+                            + "Invalid repositories entry, must be dict.")
         for rosdep_key, repo in gbp_repos.items():
             if type(repo) != dict:
-                raise InvalidData("invalid repo spec in gbpdistro data: %s"%(str(repo)))
+                raise InvalidData("invalid repo spec in gbpdistro data: "
+                                + str(repo))
             rosdep_data[rosdep_key] = {}
 
             # Do generation for ubuntu
             rosdep_data[rosdep_key][OS_UBUNTU] = {}
             # Do generation for empty OS X entries
-            homebrew_name = '%s/%s/%s'%(get_owner_name(url), release_name, rosdep_key)
-            rosdep_data[rosdep_key][OS_OSX] = {BREW_INSTALLER: {'packages': [homebrew_name]}}
+            homebrew_name = '%s/%s/%s' % (get_owner_name(url),
+                                          release_name, rosdep_key)
+            rosdep_data[rosdep_key][OS_OSX] = {
+                BREW_INSTALLER: {'packages': [homebrew_name]}
+            }
 
             # - debian package name: underscores must be dashes
-            deb_package_name = 'ros-%s-%s'%(release_name, rosdep_key)
+            deb_package_name = 'ros-%s-%s' % (release_name, rosdep_key)
             deb_package_name = deb_package_name.replace('_', '-')
 
             repo_targets = repo['target'] if 'target' in repo else 'all'
@@ -81,30 +103,38 @@ def gbprepo_to_rosdep_data(gbpdistro_data, targets_data, url):
 
             for t in repo_targets:
                 if not isinstance(t, basestring):
-                    raise InvalidData("invalid target spec: %s"%(t))
-                rosdep_data[rosdep_key][OS_UBUNTU][t] = {APT_INSTALLER:
-                                                         {'packages': [deb_package_name]}}
+                    raise InvalidData("invalid target spec: %s" % (t))
+                rosdep_data[rosdep_key][OS_UBUNTU][t] = {
+                    APT_INSTALLER: {'packages': [deb_package_name]}
+                }
         return rosdep_data
     except KeyError as e:
-        raise InvalidData("Invalid GBP-distro/targets format: missing key: %s"%(str(e)))
-    
+        raise InvalidData("Invalid GBP-distro/targets format: missing key: "
+                        + str(e))
+
+
 def download_gbpdistro_as_rosdep_data(gbpdistro_url, targets_url=None):
     """
     Download gbpdistro file from web and convert format to rosdep distro data.
-    
+
     :param gbpdistro_url: url of gbpdistro file, ``str``
     :param target_url: override URL of platform targets file
     :raises: :exc:`DownloadFailure`
-    :raises: :exc:`InvalidData` If targets file does not pass cursory validation checks.
+    :raises: :exc:`InvalidData` If targets file does not pass cursory
+     validation checks.
     """
-    # we can convert a gbpdistro file into rosdep data by following a couple rules
+    # we can convert a gbpdistro file into rosdep data by following a
+    # couple rules
     targets_data = download_targets_data(targets_url=targets_url)
     try:
         f = urllib2.urlopen(gbpdistro_url, timeout=DOWNLOAD_TIMEOUT)
         text = f.read()
         f.close()
         gbpdistro_data = yaml.safe_load(text)
-        return gbprepo_to_rosdep_data(gbpdistro_data, targets_data, gbpdistro_url)
+        print("REMOVE MEMEMEMMEMEM: " + gbpdistro_url)
+        return gbprepo_to_rosdep_data(gbpdistro_data,
+                                      targets_data,
+                                      gbpdistro_url)
     except Exception as e:
-        raise DownloadFailure("Failed to download target platform data for gbpdistro:\n\t%s"%(str(e)))
-
+        raise DownloadFailure("Failed to download target platform data "
+                            + "for gbpdistro:\n\t" + str(e))

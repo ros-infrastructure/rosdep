@@ -154,4 +154,17 @@ def test_gbprepo_to_rosdep_data():
         assert rule['apt']['packages'] == [v], rule['apt']['packages']
     for p in ['oneiric', 'natty', 'lucid']:
         assert p not in rosdep_data[k]['ubuntu']
-    
+
+
+def test_get_owner_name_homebrew():
+    from rosdep2.gbpdistro_support import get_owner_name
+    empty_url = ''
+    assert get_owner_name(empty_url) == 'ros', 'url: ' + empty_url
+    https_test_url = 'https://github.com/' \
+                    + 'ros/rosdistro/raw/master/releases/fuerte.yaml'
+    assert get_owner_name(https_test_url) == 'ros', 'url: ' + https_test_url
+    user_test_url = 'https://github.com/' \
+                    + 'zklapow/rosdistro/raw/master/releases/fuerte.yaml'
+    assert get_owner_name(user_test_url) == 'zklapow', 'url: ' + user_test_url
+    non_github_url = 'https://ros.org/files/releases/fuerte.yaml'
+    assert get_owner_name(non_github_url) == 'ros', 'url: ' + non_github_url
