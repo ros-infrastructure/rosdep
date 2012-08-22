@@ -1,9 +1,9 @@
 # Copyright (c) 2012, Willow Garage, Inc.
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 #     * Redistributions of source code must retain the above copyright
 #       notice, this list of conditions and the following disclaimer.
 #     * Redistributions in binary form must reproduce the above copyright
@@ -12,7 +12,7 @@
 #     * Neither the name of the Willow Garage, Inc. nor the names of its
 #       contributors may be used to endorse or promote products derived from
 #       this software without specific prior written permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -28,8 +28,11 @@
 import os
 import urllib2
 
+
 def get_test_dir():
-    return os.path.abspath(os.path.join(os.path.dirname(__file__), 'sources.list.d'))
+    return os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                        'sources.list.d'))
+
 
 def test_url_constants():
     from rosdep2.gbpdistro_support import FUERTE_GBPDISTRO_URL
@@ -40,10 +43,12 @@ def test_url_constants():
             f.read()
             f.close()
         except:
-            assert False, "URL [%s][%s] failed to download"%(url_name, url)
+            assert False, "URL [%s][%s] failed to download" % (url_name, url)
+
 
 def test_download_gbpdistro_as_rosdep_data():
-    from rosdep2.gbpdistro_support import download_gbpdistro_as_rosdep_data, FUERTE_GBPDISTRO_URL
+    from rosdep2.gbpdistro_support import download_gbpdistro_as_rosdep_data
+    from rosdep2.gbpdistro_support import FUERTE_GBPDISTRO_URL
     from rosdep2.rep3 import REP3_TARGETS_URL
     from rosdep2 import DownloadFailure
     data = download_gbpdistro_as_rosdep_data(FUERTE_GBPDISTRO_URL)
@@ -56,7 +61,8 @@ def test_download_gbpdistro_as_rosdep_data():
     # try with bad url to trigger exception handling
     try:
         # override targets URL with bad URL
-        download_gbpdistro_as_rosdep_data(FUERTE_GBPDISTRO_URL, targets_url='http://bad.ros.org/foo.yaml')
+        download_gbpdistro_as_rosdep_data(FUERTE_GBPDISTRO_URL,
+            targets_url='http://bad.ros.org/foo.yaml')
         assert False, "should have raised"
     except DownloadFailure:
         pass
@@ -66,11 +72,14 @@ def test_download_gbpdistro_as_rosdep_data():
         assert False, "should have raised"
     except DownloadFailure:
         pass
-    
+
+
 def test_gbprepo_to_rosdep_data():
     from rosdep2.gbpdistro_support import gbprepo_to_rosdep_data
     from rosdep2 import InvalidData
-    simple_gbpdistro = {'release-name': 'foorte', 'repositories': [], 'type': 'gbp'}
+    simple_gbpdistro = {'release-name': 'foorte',
+                        'repositories': {},
+                        'type': 'gbp'}
     targets = {'foorte': ['lucid', 'oneiric']}
     # test bad data
     try:
@@ -79,7 +88,10 @@ def test_gbprepo_to_rosdep_data():
     except InvalidData:
         pass
     try:
-        gbprepo_to_rosdep_data({'targets': 1, 'repositories': [], 'type': 'gbp'}, targets)
+        gbprepo_to_rosdep_data({
+            'targets': 1,
+            'repositories': [],
+            'type': 'gbp'}, targets)
         assert False, "should have raised"
     except InvalidData:
         pass
@@ -90,13 +102,19 @@ def test_gbprepo_to_rosdep_data():
         pass
     # release-name must be in targets
     try:
-        gbprepo_to_rosdep_data({'release-name': 'barte', 'repositories': [], 'type': 'gbp'}, targets)
+        gbprepo_to_rosdep_data({
+            'release-name': 'barte',
+            'repositories': [],
+            'type': 'gbp'}, targets)
         assert False, "should have raised"
     except InvalidData:
         pass
     # gbp-distros must be list of dicts
     try:
-        gbprepo_to_rosdep_data({'release-name': 'foorte', 'repositories': [1], 'type': 'gbp'}, targets)
+        gbprepo_to_rosdep_data({
+            'release-name': 'foorte',
+            'repositories': [1],
+            'type': 'gbp'}, targets)
         assert False, "should have raised"
     except InvalidData:
         pass
@@ -105,25 +123,35 @@ def test_gbprepo_to_rosdep_data():
         bad_example = {'name': 'common',
                        'target': [1],
                        'url': 'git://github.com/wg-debs/common_msgs.git'}
-        gbprepo_to_rosdep_data({'release-name': 'foorte', 'repositories': [bad_example], 'type': 'gbp'}, targets)
+        gbprepo_to_rosdep_data({
+            'release-name': 'foorte',
+            'repositories': [bad_example],
+            'type': 'gbp'}, targets)
         assert False, "should have raised"
     except InvalidData:
         pass
-    
-    # make sure our sample files work for the above checks before proceeding to real data
+
+    # make sure our sample files work for the above checks before
+    # proceeding to real data
     rosdep_data = gbprepo_to_rosdep_data(simple_gbpdistro, targets)
     assert rosdep_data is not None
     assert {} == rosdep_data
 
     gbpdistro_data = {'release-name': 'foorte',
-                      'repositories': [
-                          dict(name='common_msgs', target='all', url='git://github.com/wg-debs/common_msgs.git'),
-                          dict(name='gazebo', target=['lucid', 'natty'], url='git://github.com/wg-debs/gazebo.git'),
-                          dict(name='foo-bar', target=['precise'], url='git://github.com/wg-debs/gazebo.git'),
-                          ],
+                      'repositories': {
+                          'common_msgs': dict(
+                               target='all',
+                               url='git://github.com/wg-debs/common_msgs.git'),
+                          'gazebo': dict(
+                               target=['lucid', 'natty'],
+                               url='git://github.com/wg-debs/gazebo.git'),
+                          'foo-bar': dict(
+                               target=['precise'],
+                               url='git://github.com/wg-debs/gazebo.git'),
+                          },
                       'type': 'gbp',
                       }
-    
+
     rosdep_data = gbprepo_to_rosdep_data(gbpdistro_data, targets)
     for k in ['common_msgs', 'gazebo', 'foo-bar']:
         assert k in rosdep_data
@@ -136,7 +164,7 @@ def test_gbprepo_to_rosdep_data():
         assert rule['apt']['packages'] == [v], rule['apt']['packages']
     for p in ['maverick', 'natty']:
         assert p not in rosdep_data[k]['ubuntu']
-    
+
     # target overrides
     k = 'gazebo'
     v = 'ros-foorte-gazebo'
@@ -145,7 +173,7 @@ def test_gbprepo_to_rosdep_data():
         assert rule['apt']['packages'] == [v], rule['apt']['packages']
     for p in ['oneiric', 'precise']:
         assert p not in rosdep_data[k]['ubuntu']
-    
+
     # target overrides
     k = 'foo-bar'
     v = 'ros-foorte-foo-bar'
