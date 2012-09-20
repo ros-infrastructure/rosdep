@@ -141,13 +141,16 @@ def test_gbprepo_to_rosdep_data():
                       'repositories': {
                           'common_msgs': dict(
                                target='all',
-                               url='git://github.com/wg-debs/common_msgs.git'),
+                               url='git://github.com/wg-debs/common_msgs.git',
+                               packages={ 'foo': 'subdir/foo', 'bar': 'subdir/bar' }),
                           'gazebo': dict(
                                target=['lucid', 'natty'],
-                               url='git://github.com/wg-debs/gazebo.git'),
+                               url='git://github.com/wg-debs/gazebo.git',
+                               packages={ 'baz': None }),
                           'foo-bar': dict(
                                target=['precise'],
-                               url='git://github.com/wg-debs/gazebo.git'),
+                               url='git://github.com/wg-debs/gazebo.git',
+                               packages={ 'foo-bar': None }),
                           },
                       'type': 'gbp',
                       }
@@ -157,31 +160,34 @@ def test_gbprepo_to_rosdep_data():
         assert k in rosdep_data
 
     # all targets and name transform
-    k = 'common_msgs'
+    # These are from the 'common_msgs' repo above.
     v = 'ros-foorte-common-msgs'
-    for p in ['lucid', 'oneiric']:
-        rule = rosdep_data[k]['ubuntu'][p]
-        assert rule['apt']['packages'] == [v], rule['apt']['packages']
-    for p in ['maverick', 'natty']:
-        assert p not in rosdep_data[k]['ubuntu']
+    for pkg in ['foo', 'bar']:
+        for p in ['lucid', 'oneiric']:
+            rule = rosdep_data[pkg]['ubuntu'][p]
+            assert rule['apt']['packages'] == [v], rule['apt']['packages']
+        for p in ['maverick', 'natty']:
+            assert p not in rosdep_data[k]['ubuntu']
 
     # target overrides
-    k = 'gazebo'
+    # These are from the 'gazebo' repo above.
     v = 'ros-foorte-gazebo'
-    for p in ['lucid', 'natty']:
-        rule = rosdep_data[k]['ubuntu'][p]
-        assert rule['apt']['packages'] == [v], rule['apt']['packages']
-    for p in ['oneiric', 'precise']:
-        assert p not in rosdep_data[k]['ubuntu']
+    for pkg in ['baz']:
+        for p in ['lucid', 'natty']:
+            rule = rosdep_data[pkg]['ubuntu'][p]
+            assert rule['apt']['packages'] == [v], rule['apt']['packages']
+        for p in ['oneiric', 'precise']:
+            assert p not in rosdep_data[k]['ubuntu']
 
     # target overrides
-    k = 'foo-bar'
+    # These are from the 'foo-bar' repo above.
     v = 'ros-foorte-foo-bar'
-    for p in ['precise']:
-        rule = rosdep_data[k]['ubuntu'][p]
-        assert rule['apt']['packages'] == [v], rule['apt']['packages']
-    for p in ['oneiric', 'natty', 'lucid']:
-        assert p not in rosdep_data[k]['ubuntu']
+    for pkg in ['foo-bar']:
+        for p in ['precise']:
+            rule = rosdep_data[pkg]['ubuntu'][p]
+            assert rule['apt']['packages'] == [v], rule['apt']['packages']
+        for p in ['oneiric', 'natty', 'lucid']:
+            assert p not in rosdep_data[k]['ubuntu']
 
 
 def test_get_owner_name_homebrew():
@@ -196,7 +202,4 @@ def test_get_owner_name_homebrew():
     assert get_owner_name(user_test_url) == 'zklapow', 'url: ' + user_test_url
     non_github_url = 'https://ros.org/files/releases/fuerte.yaml'
     assert get_owner_name(non_github_url) == 'ros', 'url: ' + non_github_url
-
-def test_package_list():
-
 

@@ -83,6 +83,7 @@ def gbprepo_to_rosdep_data(gbpdistro_data, targets_data, url=''):
                                 + str(repo))
             rosdep_data[rosdep_key] = {}
 
+            # for pkg in repo['packages']: indent the rest of the lines here.
             # Do generation for ubuntu
             rosdep_data[rosdep_key][OS_UBUNTU] = {}
             # Do generation for empty OS X entries
@@ -103,6 +104,7 @@ def gbprepo_to_rosdep_data(gbpdistro_data, targets_data, url=''):
             for t in repo_targets:
                 if not isinstance(t, basestring):
                     raise InvalidData("invalid target spec: %s" % (t))
+                # rosdep_data[pkg][OS_UBUNTU][t] = {
                 rosdep_data[rosdep_key][OS_UBUNTU][t] = {
                     APT_INSTALLER: {'packages': [deb_package_name]}
                 }
