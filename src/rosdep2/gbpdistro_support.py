@@ -81,33 +81,35 @@ def gbprepo_to_rosdep_data(gbpdistro_data, targets_data, url=''):
             if type(repo) != dict:
                 raise InvalidData("invalid repo spec in gbpdistro data: "
                                 + str(repo))
-            rosdep_data[rosdep_key] = {}
 
-            # for pkg in repo['packages']: indent the rest of the lines here.
-            # Do generation for ubuntu
-            rosdep_data[rosdep_key][OS_UBUNTU] = {}
-            # Do generation for empty OS X entries
-            homebrew_name = '%s/%s/%s' % (get_owner_name(url),
-                                          release_name, rosdep_key)
-            rosdep_data[rosdep_key][OS_OSX] = {
-                BREW_INSTALLER: {'packages': [homebrew_name]}
-            }
+            for pkg, _ in repo.get('packages', {rosdep_key: None}).items():
+                rosdep_data[pkg] = {}
 
-            # - debian package name: underscores must be dashes
-            deb_package_name = 'ros-%s-%s' % (release_name, rosdep_key)
-            deb_package_name = deb_package_name.replace('_', '-')
-
-            repo_targets = repo['target'] if 'target' in repo else 'all'
-            if repo_targets == 'all':
-                repo_targets = target_data
-
-            for t in repo_targets:
-                if not isinstance(t, basestring):
-                    raise InvalidData("invalid target spec: %s" % (t))
-                # rosdep_data[pkg][OS_UBUNTU][t] = {
-                rosdep_data[rosdep_key][OS_UBUNTU][t] = {
-                    APT_INSTALLER: {'packages': [deb_package_name]}
+                # for pkg in repo['packages']: indent the rest of the lines here.
+                # Do generation for ubuntu
+                rosdep_data[pkg][OS_UBUNTU] = {}
+                # Do generation for empty OS X entries
+                homebrew_name = '%s/%s/%s' % (get_owner_name(url),
+                                              release_name, rosdep_key)
+                rosdep_data[pkg][OS_OSX] = {
+                    BREW_INSTALLER: {'packages': [homebrew_name]}
                 }
+
+                # - debian package name: underscores must be dashes
+                deb_package_name = 'ros-%s-%s' % (release_name, rosdep_key)
+                deb_package_name = deb_package_name.replace('_', '-')
+
+                repo_targets = repo['target'] if 'target' in repo else 'all'
+                if repo_targets == 'all':
+                    repo_targets = target_data
+
+                for t in repo_targets:
+                    if not isinstance(t, basestring):
+                        raise InvalidData("invalid target spec: %s" % (t))
+                    # rosdep_data[pkg][OS_UBUNTU][t] = {
+                    rosdep_data[pkg][OS_UBUNTU][t] = {
+                        APT_INSTALLER: {'packages': [deb_package_name]}
+                    }
         return rosdep_data
     except KeyError as e:
         raise InvalidData("Invalid GBP-distro/targets format: missing key: "
