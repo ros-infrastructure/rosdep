@@ -1,7 +1,6 @@
 import urllib2
 import yaml
 import urlparse
-import os.path
 
 from rospkg.os_detect import OS_UBUNTU
 from rospkg.os_detect import OS_OSX
