@@ -82,7 +82,7 @@ def gbprepo_to_rosdep_data(gbpdistro_data, targets_data, url=''):
                 raise InvalidData("invalid repo spec in gbpdistro data: "
                                 + str(repo))
 
-            for pkg, _ in repo.get('packages', {rosdep_key: None}).items():
+            for pkg in repo.get('packages', {rosdep_key: None}):
                 rosdep_data[pkg] = {}
 
                 # for pkg in repo['packages']: indent the rest of the lines here.
