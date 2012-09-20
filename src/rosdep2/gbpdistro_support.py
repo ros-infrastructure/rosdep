@@ -76,8 +76,8 @@ def gbprepo_to_rosdep_data(gbpdistro_data, targets_data, url=''):
         gbp_repos = gbpdistro_data['repositories']
         # Ensure gbp_repos is a dict
         if type(gbp_repos) != dict:
-            raise InvalidData("invalid repo spec in gbpdistro data: "
-                            + "Invalid repositories entry, must be dict.")
+            raise InvalidData("invalid repo spec in gbpdistro data: " + str(gbp_repos)
+                            + ". Invalid repositories entry, must be dict.")
         for rosdep_key, repo in gbp_repos.items():
             if type(repo) != dict:
                 raise InvalidData("invalid repo spec in gbpdistro data: "
