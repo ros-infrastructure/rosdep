@@ -74,7 +74,7 @@ def test_download_gbpdistro_as_rosdep_data():
         pass
 
 
-def test_gbprepo_to_rosdep_data():
+def test_gbprepo_to_rosdep_data_on_bad_inputs():
     from rosdep2.gbpdistro_support import gbprepo_to_rosdep_data
     from rosdep2 import InvalidData
     simple_gbpdistro = {'release-name': 'foorte',
@@ -131,6 +131,13 @@ def test_gbprepo_to_rosdep_data():
     except InvalidData:
         pass
 
+
+def test_gbprepo_to_rosdep_data_on_ok_input():
+    from rosdep2.gbpdistro_support import gbprepo_to_rosdep_data
+    simple_gbpdistro = {'release-name': 'foorte',
+                        'repositories': {},
+                        'type': 'gbp'}
+    targets = {'foorte': ['lucid', 'oneiric']}
     # make sure our sample files work for the above checks before
     # proceeding to real data
     rosdep_data = gbprepo_to_rosdep_data(simple_gbpdistro, targets)
@@ -145,8 +152,7 @@ def test_gbprepo_to_rosdep_data():
                                packages={ 'foo': 'subdir/foo', 'bar': 'subdir/bar' }),
                           'gazebo': dict(
                                target=['lucid', 'natty'],
-                               url='git://github.com/wg-debs/gazebo.git',
-                               packages={ 'baz': None }),
+                               url='git://github.com/wg-debs/gazebo.git'),
                           'foo-bar': dict(
                                target=['precise'],
                                url='git://github.com/wg-debs/gazebo.git',
@@ -170,14 +176,13 @@ def test_gbprepo_to_rosdep_data():
             assert p not in rosdep_data[k]['ubuntu']
 
     # target overrides
-    # These are from the 'gazebo' repo above.
+    k = 'gazebo'
     v = 'ros-foorte-gazebo'
-    for pkg in ['baz']:
-        for p in ['lucid', 'natty']:
-            rule = rosdep_data[pkg]['ubuntu'][p]
-            assert rule['apt']['packages'] == [v], rule['apt']['packages']
-        for p in ['oneiric', 'precise']:
-            assert p not in rosdep_data[k]['ubuntu']
+    for p in ['lucid', 'natty']:
+        rule = rosdep_data[k]['ubuntu'][p]
+        assert rule['apt']['packages'] == [v], rule['apt']['packages']
+    for p in ['oneiric', 'precise']:
+        assert p not in rosdep_data[k]['ubuntu']
 
     # target overrides
     # These are from the 'foo-bar' repo above.
