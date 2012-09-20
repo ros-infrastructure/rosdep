@@ -131,7 +131,6 @@ def download_gbpdistro_as_rosdep_data(gbpdistro_url, targets_url=None):
         text = f.read()
         f.close()
         gbpdistro_data = yaml.safe_load(text)
-        print("REMOVE MEMEMEMMEMEM: " + gbpdistro_url)
         return gbprepo_to_rosdep_data(gbpdistro_data,
                                       targets_data,
                                       gbpdistro_url)
