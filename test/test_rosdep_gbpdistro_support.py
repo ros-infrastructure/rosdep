@@ -162,8 +162,8 @@ def test_gbprepo_to_rosdep_data_on_ok_input():
                       }
 
     rosdep_data = gbprepo_to_rosdep_data(gbpdistro_data, targets)
-    for k in ['common_msgs', 'gazebo', 'foo-bar']:
-        assert k in rosdep_data
+    for k in ['foo', 'bar', 'gazebo', 'foo-bar']:
+        assert k in rosdep_data, k
 
     # all targets and name transform
     # These are from the 'common_msgs' repo above.
@@ -176,13 +176,13 @@ def test_gbprepo_to_rosdep_data_on_ok_input():
             assert p not in rosdep_data[k]['ubuntu']
 
     # target overrides
-    k = 'gazebo'
+    pkg = 'gazebo'
     v = 'ros-foorte-gazebo'
     for p in ['lucid', 'natty']:
-        rule = rosdep_data[k]['ubuntu'][p]
+        rule = rosdep_data[pkg]['ubuntu'][p]
         assert rule['apt']['packages'] == [v], rule['apt']['packages']
     for p in ['oneiric', 'precise']:
-        assert p not in rosdep_data[k]['ubuntu']
+        assert p not in rosdep_data[pkg]['ubuntu']
 
     # target overrides
     # These are from the 'foo-bar' repo above.
@@ -192,7 +192,7 @@ def test_gbprepo_to_rosdep_data_on_ok_input():
             rule = rosdep_data[pkg]['ubuntu'][p]
             assert rule['apt']['packages'] == [v], rule['apt']['packages']
         for p in ['oneiric', 'natty', 'lucid']:
-            assert p not in rosdep_data[k]['ubuntu']
+            assert p not in rosdep_data[pkg]['ubuntu']
 
 
 def test_get_owner_name_homebrew():
