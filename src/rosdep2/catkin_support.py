@@ -85,7 +85,12 @@ def resolve_for_os(rosdep_key, view, installer, os_name, os_version):
     assert inst_key == APT_INSTALLER
     return installer.resolve(rule)
 
-def get_catkin_view(rosdistro_name, os_name, os_version):
+
+def update_rosdep():
+    call(('rosdep', 'update'), pipe=PIPE)
+
+
+def get_catkin_view(rosdistro_name, os_name, os_version, update=True):
     """
     :raises: :exc:`ValidationFailed`
     """
@@ -94,8 +99,9 @@ def get_catkin_view(rosdistro_name, os_name, os_version):
         raise ValidationFailed("""rosdep database is not initialized, please run:
 \tsudo rosdep init
 """)
-    # may want to make the update optional
-    call(('rosdep', 'update'), pipe=PIPE)
+
+    if update:
+        update_rosdep()
 
     sources_matcher = DataSourceMatcher([rosdistro_name, os_name, os_version])
     sources_loader = SourcesListLoader.create_default(matcher=sources_matcher)
