@@ -167,11 +167,12 @@ def test_gbprepo_to_rosdep_data_on_ok_input():
 
     # all targets and name transform
     # These are from the 'common_msgs' repo above.
-    v = 'ros-foorte-common-msgs'
-    for pkg in ['foo', 'bar']:
+    pkgs = ['foo', 'bar']
+    v = 'ros-foorte-%s'
+    for pkg in pkgs:
         for p in ['lucid', 'oneiric']:
             rule = rosdep_data[pkg]['ubuntu'][p]
-            assert rule['apt']['packages'] == [v], rule['apt']['packages']
+            assert rule['apt']['packages'] == [v % pkg], rule['apt']['packages']
         for p in ['maverick', 'natty']:
             assert p not in rosdep_data[k]['ubuntu']
 

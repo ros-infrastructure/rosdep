@@ -96,7 +96,7 @@ def gbprepo_to_rosdep_data(gbpdistro_data, targets_data, url=''):
                 }
 
                 # - debian package name: underscores must be dashes
-                deb_package_name = 'ros-%s-%s' % (release_name, rosdep_key)
+                deb_package_name = 'ros-%s-%s' % (release_name, pkg)
                 deb_package_name = deb_package_name.replace('_', '-')
 
                 repo_targets = repo['target'] if 'target' in repo else 'all'
