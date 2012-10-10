@@ -151,7 +151,26 @@ def test_RosdepDefinition():
         assert e.os_version == 'fakeversion'
         # tripwire
         str(e)
-        
+
+    # test reverse merging OS things (first is default)
+    definition = RosdepDefinition('test', {'debian': 'libtest-dev'}, 'fake-1.txt')
+    # rule should work as expected before reverse-merge
+    val = definition.get_rule_for_platform('debian', 'sid', ['apt', 'source', 'pip'], 'apt')
+    assert val == ('apt', 'libtest-dev'), val
+    try:
+        val = definition.get_rule_for_platform('ubuntu', 'precise', ['apt', 'source', 'pip'], 'apt')
+        assert False, "should have failed"
+    except ResolutionError as e:
+        assert e.rosdep_key == 'test'
+        assert e.os_name == 'ubuntu'
+        assert e.os_version == 'precise'
+        # tripwire?
+        str(e)
+    definition.reverse_merge({'ubuntu': {'precise': {'apt': 'ros-fuerte-test'}}}, 'fake-gbp.yaml')
+    val = definition.get_rule_for_platform('ubuntu', 'precise', ['apt', 'source', 'pip'], 'apt')
+    assert val == ('apt', 'ros-fuerte-test'), val
+    val = definition.get_rule_for_platform('debian', 'sid', ['apt', 'source', 'pip'], 'apt')
+    assert val == ('apt', 'libtest-dev'), val
 
 def test_RosdepView_merge():
     from rosdep2.model import RosdepDatabaseEntry
