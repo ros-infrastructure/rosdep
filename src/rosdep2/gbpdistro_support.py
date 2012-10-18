@@ -110,6 +110,8 @@ def gbprepo_to_rosdep_data(gbpdistro_data, targets_data, url=''):
                     rosdep_data[pkg][OS_UBUNTU][t] = {
                         APT_INSTALLER: {'packages': [deb_package_name]}
                     }
+
+                rosdep_data[pkg]['_is_ros'] = True
         return rosdep_data
     except KeyError as e:
         raise InvalidData("Invalid GBP-distro/targets format: missing key: "
