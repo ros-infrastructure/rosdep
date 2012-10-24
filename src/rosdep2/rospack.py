@@ -34,9 +34,15 @@ is a ROSpackage or a system dependency
 
 from __future__ import print_function
 
+import subprocess
+
 from .main import _get_default_RosdepLookup
 from .rospkg_loader import DEFAULT_VIEW_KEY
 from .sources_list import get_sources_cache_dir
+
+
+def call_pkg_config(option, pkg_name):
+    return subprocess.check_output(['pkg-config', option, pkg_name])
 
 
 def init_rospack_interface():
