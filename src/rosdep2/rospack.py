@@ -42,7 +42,8 @@ from .sources_list import get_sources_cache_dir
 
 
 def call_pkg_config(option, pkg_name):
-    return subprocess.check_output(['pkg-config', option, pkg_name])
+    value = subprocess.check_output(['pkg-config', option, pkg_name])
+    return value.strip()
 
 
 def init_rospack_interface():
