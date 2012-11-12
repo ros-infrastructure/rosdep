@@ -56,6 +56,10 @@ def init_rospack_interface():
     return lookup.get_rosdep_view(DEFAULT_VIEW_KEY)
 
 
+def is_view_empty(view):
+    return len(view.rosdep_defs) == 0
+
+
 def is_ros_package(view, rosdep_name):
     return _ros_flag(view, rosdep_name, True)
 
