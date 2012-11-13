@@ -20,14 +20,21 @@ cd ..
 cd devel
 cmake ../src > /dev/null
 cd ../src
-git clone git://github.com/ros-drivers/joystick_drivers.git > /dev/null
+git clone -b groovy-devel git://github.com/ros-drivers/joystick_drivers.git > /dev/null
 '''
             run_script('commands.bash', script)
             source('ws/devel/develspace/setup.sh')
             lookup = make_lookup()
             keys = rdmain.get_keys(lookup, ['spacenav_node'], recursive=True)
-            self.assertEqual('libspnav-dev libx11-dev spacenavd'.split(),
-                             sorted(keys))
+            expected = '''
+                geometry_msgs
+                libspnav-dev
+                libx11-dev
+                roscpp
+                sensor_msgs
+                spacenavd
+            '''.split()
+            self.assertEqual(expected, sorted(keys))
         finally:
             sp.call(['rm', '-rf', d])
 
