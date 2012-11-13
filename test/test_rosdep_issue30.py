@@ -59,6 +59,7 @@ def run_script(filename, contents):
     p.wait()
     return p.stdout.read()
 
+# http://pythonwise.blogspot.com/2010/04/sourcing-shell-script.html
 def source(script):
     """
     Sources a shell script at a given path, updating the environment.
