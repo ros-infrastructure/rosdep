@@ -354,13 +354,16 @@ def command_update(options):
     
 def command_keys(lookup, packages, options):
     lookup = _get_default_RosdepLookup(options)
+    rosdep_keys = get_keys(lookup, packages, options.recursive)
+    _print_lookup_errors(lookup)
+    print('\n'.join(rosdep_keys))
+
+def get_keys(lookup, packages, recursive):
     rosdep_keys = []
     for package_name in packages:
-        deps = lookup.get_rosdeps(package_name, implicit=options.recursive)
+        deps = lookup.get_rosdeps(package_name, implicit=recursive)
         rosdep_keys.extend(deps)
-
-    _print_lookup_errors(lookup)
-    print('\n'.join(set(rosdep_keys)))
+    return set(rosdep_keys)
 
 def command_check(lookup, packages, options):
     verbose = options.verbose
