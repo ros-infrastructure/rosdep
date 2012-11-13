@@ -13,17 +13,17 @@ class Issue30TestCase(unittest.TestCase):
             script = '''#!/bin/bash
 mkdir ws
 mkdir ws/src
-mkdir ws/devel
+mkdir ws/build
 cd ws/src
 catkin_init_workspace > /dev/null
 cd ..
-cd devel
+cd build
 cmake ../src > /dev/null
 cd ../src
 git clone -b groovy-devel git://github.com/ros-drivers/joystick_drivers.git > /dev/null
 '''
             run_script('commands.bash', script)
-            source('ws/devel/develspace/setup.sh')
+            source('ws/build/devel/setup.sh')
             lookup = make_lookup()
             keys = rdmain.get_keys(lookup, ['spacenav_node'], recursive=True)
             expected = '''
