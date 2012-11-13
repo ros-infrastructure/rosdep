@@ -8,5 +8,6 @@
 nosetests.xml
 target
 build
+deb_dist
 dist
 src/rosdep.egg-info

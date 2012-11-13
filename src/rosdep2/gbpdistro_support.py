@@ -82,7 +82,7 @@ def gbprepo_to_rosdep_data(gbpdistro_data, targets_data, url=''):
                 raise InvalidData("invalid repo spec in gbpdistro data: "
                                 + str(repo))
 
-            for pkg, _ in repo.get('packages', {rosdep_key: None}).items():
+            for pkg in repo.get('packages', {rosdep_key: None}):
                 rosdep_data[pkg] = {}
 
                 # for pkg in repo['packages']: indent the rest of the lines here.
@@ -96,7 +96,7 @@ def gbprepo_to_rosdep_data(gbpdistro_data, targets_data, url=''):
                 }
 
                 # - debian package name: underscores must be dashes
-                deb_package_name = 'ros-%s-%s' % (release_name, rosdep_key)
+                deb_package_name = 'ros-%s-%s' % (release_name, pkg)
                 deb_package_name = deb_package_name.replace('_', '-')
 
                 repo_targets = repo['target'] if 'target' in repo else 'all'
@@ -110,6 +110,8 @@ def gbprepo_to_rosdep_data(gbpdistro_data, targets_data, url=''):
                     rosdep_data[pkg][OS_UBUNTU][t] = {
                         APT_INSTALLER: {'packages': [deb_package_name]}
                     }
+
+                rosdep_data[pkg]['_is_ros'] = True
         return rosdep_data
     except KeyError as e:
         raise InvalidData("Invalid GBP-distro/targets format: missing key: "

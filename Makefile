@@ -30,7 +30,7 @@ install: distro
 	sudo checkinstall python setup.py install
 
 deb_dist: distro
-	python setup.py --command-packages=stdeb.command bdist_deb
+	python setup.py --command-packages=stdeb.command sdist_dsc --workaround-548392=False bdist_deb
 
 
 upload-packages: deb_dist
