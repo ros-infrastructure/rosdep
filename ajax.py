@@ -5,13 +5,14 @@ import datetime
 import os
 import yaml
 from prerelease_website.rosinstall_gen.distro import generate_rosinstall
+from prerelease_website.rosinstall_gen.old_distro import generate_dry_rosinstall
 
 import logging
 logger = logging.getLogger('submit_jobs')
 
 @dajaxice_register
-def get_rosinstall_ajax(request, distro, packages):
-    logger.info("Got distro %s, packages %s" % (distro, packages))
+def get_rosinstall_ajax(request, distro, packages, dry):
+    logger.info("Got distro %s, packages %s, dry %s" % (distro, packages, dry))
     timestr = datetime.datetime.now().strftime("%Y%m%d-%H%M%S%f")
     filename = '%s.rosinstall' % '_'.join(packages)
     relative_dir = os.path.join('rosinstalls', timestr)
@@ -22,7 +23,12 @@ def get_rosinstall_ajax(request, distro, packages):
     except:
         pass
 
-    rosinstall = generate_rosinstall(distro, packages)
+    if dry:
+        logger.info("Calling dry")
+        rosinstall = generate_dry_rosinstall(distro, packages[0])
+    else:
+        logger.info("Calling wet")
+        rosinstall = generate_rosinstall(distro, packages)
 
     with open(path, 'w+') as f:
         f.write(rosinstall)
