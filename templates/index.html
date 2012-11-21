@@ -1,8 +1,25 @@
-<html>
-  <head>
-    <title>Rosinstall generation</title>
-  </head>
-  <body>
-    Please wait while we generate a rosinstall file for
-  </body>
-</html>
+{% extends "base.html" %}
+{% block title %}Rosinstall Generation{% endblock %}
+{% block js %}
+<script src="/static/rosinstall_gen/js/ajax_functions.js" type="text/javascript" charset="utf-8"></script>
+<script type="text/javascript">
+	$(window).load(function()
+	{
+		var package_list = []
+	{% for pkg in packages %}
+		package_list.push('{{pkg}}');
+	{% endfor %}
+		get_rosinstall('{{distro}}', package_list);
+	});
+</script>
+{% endblock %}
+{% block content %}
+<center>
+   <div id="status">
+       <img src="/static/images/spinner.gif" /><br><br>
+       <span style="font-size:11px;">
+         Please wait while we generate a rosinstall file for {{distro}} {{packages}}, this may take some time.
+       </span>
+   </div>
+</center>
+{% endblock %}

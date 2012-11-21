@@ -7,4 +7,6 @@ logger = logging.getLogger('submit_jobs')
 def index(request, distro, packages):
     logger.info('Distro: %s' % distro)
     logger.info('Packages: %s' % packages.split(','))
-    return render_to_response('index.html', {})
+    return render_to_response('index.html', {'distro': distro, 'packages':
+                                             packages.split(',')},
+                                             context_instance=RequestContext(request))
