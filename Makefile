@@ -3,7 +3,7 @@
 NAME='rosdep'
 VERSION=`python setup.py -V`
 
-USERNAME ?= ($shell whoami)
+USERNAME ?= $(shell whoami)
 
 OUTPUT_DIR=deb_dist
 
