@@ -1,21 +1,25 @@
 import urllib2
-import os
-import subprocess
 import sys
-import fnmatch
 import yaml
-import threading
 import time
 from Queue import Queue
 from threading import Thread
+import rospkg.distro as rosdistro
 
 import logging
 logger = logging.getLogger('submit_jobs')
 
 #Generates a rosinstall file for a package and it's dependences
-def generate_rosinstall(distro_name, packages):
+def generate_rosinstall(distro_name, packages, check_variants=True):
     packages = packages if type(packages) == list else [packages]
     distro = RosDistro(distro_name, prefetch_dependencies=False, prefetch_upstream=False)
+    dry_distro = rosdistro.load_distro(rosdistro.distro_uri(distro_name))
+
+    #First, we want to check if there is a dry variant that has been requested
+    if check_variants and len(packages) == 1 and packages[0] in dry_distro.variants:
+        all_packages = dry_distro.variants[packages[0]].get_stack_names()
+        packages = [p for p in all_packages if p in distro.packages]
+
     deps = distro.depends(packages, ['build', 'run'])
 
     rosinstall = ""
