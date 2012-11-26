@@ -19,7 +19,7 @@ def generate_rosinstall(distro_name, packages, check_variants=True):
     if check_variants and len(packages) == 1 and packages[0] in dry_distro.variants:
         logger.info("Found variant %s" % packages[0])
         all_packages = dry_distro.variants[packages[0]].get_stack_names()
-        packages = [p for p in all_packages if p in distro.packages]
+        packages = list(set([p for p in all_packages if p in distro.packages]))
         logger.info("Building rosinstall for wet packages: %s" % packages)
 
     deps = distro.depends(packages, ['build', 'run'])
