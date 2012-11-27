@@ -26,7 +26,7 @@ def generate_rosinstall(distro_name, packages, check_variants=True):
 
     rosinstall = ""
     for p in list(set(deps + packages)):
-        rosinstall += distro.packages[p].get_rosinstall_release()
+        rosinstall += distro.packages[p].get_rosinstall_release_tar()
     return rosinstall
 
 ## {{{ http://code.activestate.com/recipes/577187/ (r9)
@@ -274,6 +274,16 @@ class RosDistroPackage:
         if not self.depends1:
             self.depends1 = "Failure"
             raise BuildException("Failed to get package.xml at %s"%url)
+
+    def get_rosinstall_release_tar(self, version=None):
+        if not version:
+            version = self.version
+        url = self.url
+        url = url.replace('.git', '/archive/release/%s/%s.tar.gz' % (self.name, version))
+        url = url.replace('git://', 'https://')
+        folder_name = "%s-release-release-%s-%s" % (self.repo, self.name, version)
+        return yaml.safe_dump([{'tar': {'local-name': self.name, 'uri': url, 'version': folder_name}}],
+                              default_style=False)
 
     def get_rosinstall_release(self, version=None):
         if not version:
