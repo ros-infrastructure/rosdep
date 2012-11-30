@@ -1,20 +1,3 @@
-"""
-Helper routines for catkin.  These are distributed inside of rosdep2
-to protect catkin against future rosdep2 API updatese.  These helper
-routines are assumed to run in an interactive mode with an end-user
-and thus return end-user oriented error messages.
-
-Errors are returned as arguments to raised :exc:`ValidationFailed`
-exceptions.
-
-Workflow::
-
-    installer = get_installer(APT_INSTALLER)
-    view = get_catkin_view(rosdistro_name, 'ubuntu', 'lucid')
-    resolve_for_os(rosdep_key, view, installer, 'ubuntu', 'lucid')
-
-"""
-
 from __future__ import print_function
 
 import os

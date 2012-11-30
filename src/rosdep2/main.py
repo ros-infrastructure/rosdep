@@ -55,6 +55,8 @@ from .sources_list import update_sources_list, get_sources_cache_dir,\
      DEFAULT_SOURCES_LIST_URL
 
 from catkin_packages import find_catkin_packages_in
+from catkin_packages import set_workspace_packages
+from catkin_packages import get_workspace_packages
 
 
 class UsageError(Exception):
@@ -212,6 +214,13 @@ def _rosdep_main(args):
                       action="store_true", help="select all packages")
     parser.add_option("-n", dest="recursive", default=True, 
                       action="store_false", help="Do not consider implicit/recursive dependencies.  Only valid with 'keys', 'check', and 'install' commands.")
+    parser.add_option("--ignore-packages-from-source", "--ignore-src", "-i",
+                      dest='ignore_src', default=False, action="store_true",
+                      help="Affects the 'check' and 'install' verbs. If "
+                           "specified then rosdep will not install keys "
+                           "that are found to be catkin packages anywhere in "
+                           "the ROS_PACKAGE_PATH or in any of the directories "
+                           "given by the --from-paths option.")
     parser.add_option("--from-paths", dest='from_paths',
                       default=False, action="store_true",
                       help="Affects the 'check', 'keys', and 'install' verbs. "
@@ -277,6 +286,8 @@ def _package_args_handler(command, parser, options, args):
     not_found = []
     if options.from_paths:
         for path in args:
+            if options.verbose:
+                print("Using argument '{0}' as a path to search.".format(path))
             if not os.path.exists(path):
                 print("given path '{0}' does not exist".format(path))
                 return 1
@@ -297,6 +308,18 @@ def _package_args_handler(command, parser, options, args):
         not_found = val[1]
     if not_found:
         raise rospkg.ResourceNotFound(not_found[0], rospack.get_ros_paths())
+
+    # Handle the --ignore-src option
+    if command in ['install', 'check'] and options.ignore_src:
+        if options.verbose:
+            print("Searching ROS_PACKAGE_PATH for "
+                  "sources: " + str(os.environ['ROS_PACKAGE_PATH'].split(':')))
+        ws_pkgs = get_workspace_packages()
+        for path in os.environ['ROS_PACKAGE_PATH'].split(':'):
+            path = os.path.abspath(path.strip())
+            pkgs = find_catkin_packages_in(path, options.verbose)
+            ws_pkgs.extend(pkgs)
+        set_workspace_packages(ws_pkgs)
 
     lookup = _get_default_RosdepLookup(options)
 
