@@ -54,6 +54,9 @@ from .sources_list import update_sources_list, get_sources_cache_dir,\
      get_sources_list_dir, get_default_sources_list_file,\
      DEFAULT_SOURCES_LIST_URL
 
+from catkin_packages import find_catkin_packages_in
+
+
 class UsageError(Exception):
     pass
 
@@ -209,6 +212,12 @@ def _rosdep_main(args):
                       action="store_true", help="select all packages")
     parser.add_option("-n", dest="recursive", default=True, 
                       action="store_false", help="Do not consider implicit/recursive dependencies.  Only valid with 'keys', 'check', and 'install' commands.")
+    parser.add_option("--from-paths", dest='from_paths',
+                      default=False, action="store_true",
+                      help="Affects the 'check', 'keys', and 'install' verbs. "
+                           "If specified the arugments to those verbs will be "
+                           "considered paths to be searched, acting on all "
+                           "catkin packages found there in.")
 
     options, args = parser.parse_args(args)
     if options.print_version:
@@ -246,33 +255,52 @@ def _rosdep_args_handler(command, parser, options, args):
         parser.error("Please enter arguments for '%s'"%command)
     else:
         return command_handlers[command](args, options)
-    
+
+
 def _package_args_handler(command, parser, options, args):
-    # package or stack names as args.  have to convert stack names to packages.
-    # - overrides to enable testing
-    rospack = rospkg.RosPack()
-    rosstack = rospkg.RosStack()
-    lookup = _get_default_RosdepLookup(options)
-    loader = lookup.get_loader()
-    
     if options.rosdep_all:
         if args:
             parser.error("cannot specify additional arguments with -a")
         else:
             # let the loader filter the -a. This will take out some
             # packages that are catkinized (for now).
+            lookup = _get_default_RosdepLookup(options)
+            loader = lookup.get_loader()
             args = loader.get_loadable_resources()
             not_found = []
     elif not args:
         parser.error("no packages or stacks specified")
 
-    val = rospkg.expand_to_packages(args, rospack, rosstack)
-    packages = val[0]
-    not_found = val[1]
+    # package or stack names as args.  have to convert stack names to packages.
+    # - overrides to enable testing
+    packages = []
+    not_found = []
+    if options.from_paths:
+        for path in args:
+            if not os.path.exists(path):
+                print("given path '{0}' does not exist".format(path))
+                return 1
+            path = os.path.abspath(path)
+            if 'ROS_PACKAGE_PATH' not in os.environ:
+                os.environ['ROS_PACKAGE_PATH'] = '{0}'.format(path)
+            else:
+                os.environ['ROS_PACKAGE_PATH'] += ':{0}'.format(path)
+            pkgs = find_catkin_packages_in(path, options.verbose)
+            packages.extend(pkgs)
+        # Make packages list unique
+        packages = list(set(packages))
+    else:
+        rospack = rospkg.RosPack()
+        rosstack = rospkg.RosStack()
+        val = rospkg.expand_to_packages(args, rospack, rosstack)
+        packages = val[0]
+        not_found = val[1]
     if not_found:
         raise rospkg.ResourceNotFound(not_found[0], rospack.get_ros_paths())
 
-    if 0 and not packages: # disable, let individual handlers specify behavior
+    lookup = _get_default_RosdepLookup(options)
+
+    if 0 and not packages:  # disable, let individual handlers specify behavior
         # possible with empty stacks
         print("No packages in arguments, aborting")
         return

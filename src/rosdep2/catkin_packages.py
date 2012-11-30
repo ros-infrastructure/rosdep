@@ -64,7 +64,7 @@ def find_catkin_packages_in(path, verbose=False):
 
 def set_workspace_packages(packages):
     global _catkin_workspace_packages
-    _catkin_workspace_packages = list(packages)
+    _catkin_workspace_packages = list(packages or [])
 
 
 def get_workspace_packages():
