@@ -43,6 +43,8 @@ from .dependency_graph import DependencyGraph
 
 from .sources_list import SourcesListLoader
 
+from . import catkin_packages
+
 class RosdepDefinition(object):
     """
     Single rosdep dependency definition.  This data is stored as the
@@ -193,7 +195,25 @@ class RosdepView(object):
                 db[dep_name] = update_definition
             elif verbose:
                 print("[%s] ignoring [%s], already loaded"%(update_entry.origin, dep_name), file=sys.stderr)
-            
+
+
+def prune_catkin_packages(rosdep_keys, verbose=False):
+    workspace_pkgs = catkin_packages.get_workspace_packages()
+    if not workspace_pkgs:
+        return rosdep_keys
+    for i, rosdep_key in reversed(list(enumerate(rosdep_keys))):
+        if rosdep_key in workspace_pkgs:
+            # If workspace packages listed (--catkin-workspace)
+            # and if the rosdep_key is a package in that
+            # workspace, then skip it rather than resolve it
+            if verbose:
+                print("rosdep key '{0}'".format(rosdep_key) + \
+                      " is in the catkin workspace, skipping.",
+                      file=sys.stderr)
+            del rosdep_keys[i]
+    return rosdep_keys
+
+
 class RosdepLookup(object):
     """
     Lookup rosdep definitions.  Provides API for most
@@ -328,6 +348,7 @@ class RosdepLookup(object):
                 rosdep_keys = self.get_rosdeps(resource_name, implicit=implicit)
                 if self.verbose:
                     print("resolve_all: resource [%s] requires rosdep keys [%s]"%(resource_name, ', '.join(rosdep_keys)), file=sys.stderr)
+                rosdep_keys = prune_catkin_packages(rosdep_keys, self.verbose)
                 for rosdep_key in rosdep_keys:
                     try:
                         installer_key, resolution, dependencies = \
