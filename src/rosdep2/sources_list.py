@@ -106,7 +106,7 @@ class DataSource(object):
         if not type_ in VALID_TYPES:
             raise ValueError("type must be one of [%s]"%(','.join(VALID_TYPES)))
         parsed = urlparse.urlparse(url)
-        if not parsed.scheme or not parsed.netloc or parsed.path in ('', '/'):
+        if not parsed.scheme or (parsed.scheme != 'file' and not parsed.netloc) or parsed.path in ('', '/'):
             raise ValueError("url must be a fully-specified URL with scheme, hostname, and path: %s"%(str(url)))
         if not type(tags) == list:
             raise ValueError("tags must be a list: %s"%(str(tags)))
