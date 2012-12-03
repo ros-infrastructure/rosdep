@@ -227,6 +227,10 @@ def _rosdep_main(args):
                            "If specified the arugments to those verbs will be "
                            "considered paths to be searched, acting on all "
                            "catkin packages found there in.")
+    parser.add_option("--rosdistro", dest='ros_distro', default=None,
+                      help="Explicitly sets the ROS distro to use, overriding "
+                           "the normal method of detecting the ROS distro "
+                           "using the ROS_DISTRO environment variable.")
 
     options, args = parser.parse_args(args)
     if options.print_version:
@@ -239,6 +243,9 @@ def _rosdep_main(args):
     if not command in _commands:
         parser.error("Unsupported command %s."%command)
     args = args[1:]
+
+    if options.ros_distro:
+        os.environ['ROS_DISTRO'] = options.ros_distro
 
     if not command in ['init', 'update']:
         check_for_sources_list_init(options.sources_cache_dir)
