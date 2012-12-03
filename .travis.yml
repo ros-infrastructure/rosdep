@@ -12,6 +12,3 @@ script:
   - nosetests --with-coverage --cover-package=rosdep2 --with-xunit test
 notifications:
   email: false
-matrix:
-  allow_failures:
-    - python: "3.2"

@@ -107,7 +107,7 @@ class RosPkgLoader(RosdepLoader):
         """
         'Views' map to ROS stack names.
         """
-        return self._rosstack.list() + [DEFAULT_VIEW_KEY]
+        return list(self._rosstack.list() or []) + [DEFAULT_VIEW_KEY]
 
     def get_loadable_resources(self):
         """
@@ -115,7 +115,7 @@ class RosPkgLoader(RosdepLoader):
         """
         if not self._loadable_resource_cache:
             loadable_list = self._rospack.list()
-            self._loadable_resource_cache = loadable_list[:]
+            self._loadable_resource_cache = list(loadable_list)
         return self._loadable_resource_cache
 
     def get_rosdeps(self, resource_name, implicit=True):

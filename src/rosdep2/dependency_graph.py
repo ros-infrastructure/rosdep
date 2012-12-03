@@ -87,7 +87,7 @@ class DependencyGraph(defaultdict):
             # Ensure all dependencies have definitions
             # i.e.: Ensure we aren't pointing to invalid rosdep keys
             for dependency in self[rosdep_key]['dependencies']:
-                if not self.has_key(dependency):
+                if dependency not in self:
                     raise KeyError("Invalid Graph Structure: rosdep key `%s` does not exist in the dictionary of resolutions."%dependency)
                 self[dependency]['is_root'] = False
         # Check each entry for cyclical dependencies

@@ -92,7 +92,7 @@ class RosdepDatabase(object):
         """
         :returns: list of view names that are loaded into this database.
         """
-        return self._rosdep_db.keys()
+        return list(self._rosdep_db.keys())
     
     def get_view_data(self, view_name):
         """

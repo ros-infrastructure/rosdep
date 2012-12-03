@@ -2,7 +2,7 @@ uri: 'https://kforge.ros.org/rosrelease/viewvc/sourcedeps/yaml-cpp/yaml-cpp-0.2.
 md5sum: b17dc36055cd2259c88b2602601415d9
 install-script: |
   #!/bin/bash
-  echo "noop"
+  true
 check-presence-script: |
   #!/bin/bash
   exit 1

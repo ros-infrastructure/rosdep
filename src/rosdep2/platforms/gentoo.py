@@ -48,8 +48,6 @@ from .source import SOURCE_INSTALLER
 from ..installers import PackageManagerInstaller
 from ..shell_utils import read_stdout
 
-from types import ListType
-
 PORTAGE_INSTALLER = 'portage'
 
 def register_installers(context):
@@ -83,7 +81,7 @@ def portage_detect(atoms, exec_fn = read_stdout):
 
     # This is for testing, to make sure they're always checked in the same order
     # TODO: make testing better to not need this
-    if isinstance(atoms, ListType):
+    if isinstance(atoms, list):
         atoms.sort()
     
     return [a for a in atoms if portage_detect_single(a, exec_fn)]

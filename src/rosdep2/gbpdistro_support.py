@@ -1,6 +1,11 @@
-import urllib2
+try:
+    from urllib.request import urlopen
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
+    from urllib2 import urlopen
+
 import yaml
-import urlparse
 
 from rospkg.os_detect import OS_UBUNTU
 from rospkg.os_detect import OS_OSX
@@ -37,7 +42,7 @@ def get_owner_name(url):
     """
     result = 'ros'
     try:
-        parsed = urlparse.urlparse(url)
+        parsed = urlparse(url)
         if parsed.netloc == 'github.com':
             result = parsed.path.split('/')[1]
     except Exception:
@@ -132,7 +137,7 @@ def download_gbpdistro_as_rosdep_data(gbpdistro_url, targets_url=None):
     # couple rules
     targets_data = download_targets_data(targets_url=targets_url)
     try:
-        f = urllib2.urlopen(gbpdistro_url, timeout=DOWNLOAD_TIMEOUT)
+        f = urlopen(gbpdistro_url, timeout=DOWNLOAD_TIMEOUT)
         text = f.read()
         f.close()
         gbpdistro_data = yaml.safe_load(text)
