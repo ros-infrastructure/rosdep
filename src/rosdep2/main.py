@@ -324,8 +324,9 @@ def _package_args_handler(command, parser, options, args):
         ws_pkgs = get_workspace_packages()
         for path in os.environ['ROS_PACKAGE_PATH'].split(':'):
             path = os.path.abspath(path.strip())
-            pkgs = find_catkin_packages_in(path, options.verbose)
-            ws_pkgs.extend(pkgs)
+            if os.path.exists(path):
+                pkgs = find_catkin_packages_in(path, options.verbose)
+                ws_pkgs.extend(pkgs)
         set_workspace_packages(ws_pkgs)
 
     lookup = _get_default_RosdepLookup(options)
