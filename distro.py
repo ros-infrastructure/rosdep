@@ -24,7 +24,7 @@ def generate_rosinstall(distro_name, packages, check_variants=True):
         logger.info("Building rosinstall for wet packages: %s" % packages)
 
     deps = distro.get_depends(packages)
-    deps = list(set(deps['build'] + deps['run']))
+    deps = list(set(deps['build'] + deps['run'] + deps['buildtool']))
 
     rosinstall = distro.get_rosinstall(list(set(deps + packages)), source='tar')
 
