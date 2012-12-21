@@ -25,7 +25,8 @@ def generate_rosinstall(distro_name, packages, check_variants=True):
 
     deps = distro.get_depends(packages)
     deps = list(set(deps['build'] + deps['run'] + deps['buildtool']))
+    distro_pkgs = [p for p in list(set(deps + packages)) if p in distro.get_packages()]
 
-    rosinstall = distro.get_rosinstall(list(set(deps + packages)), source='tar')
+    rosinstall = distro.get_rosinstall(distro_pkgs, source='tar')
 
     return rosinstall
