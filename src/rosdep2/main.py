@@ -327,6 +327,8 @@ def _package_args_handler(command, parser, options, args):
             if os.path.exists(path):
                 pkgs = find_catkin_packages_in(path, options.verbose)
                 ws_pkgs.extend(pkgs)
+            elif options.verbose:
+                print("Skipping non-existent path " + path)
         set_workspace_packages(ws_pkgs)
 
     lookup = _get_default_RosdepLookup(options)
