@@ -492,7 +492,10 @@ def command_install(lookup, packages, options):
         print("ERROR: the following packages/stacks could not have their rosdep keys resolved\nto system dependencies:", file=sys.stderr)
         for rosdep_key, error in errors.iteritems():
             print("%s: %s"%(rosdep_key, error_to_human_readable(error)), file=sys.stderr)
-        return 1
+        if options.robust:
+            print("Continuing to install resolvable dependencies...")
+        else:
+            return 1
     try:
         installer.install(uninstalled, **install_options)
         if not options.simulate:
