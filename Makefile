@@ -3,6 +3,8 @@
 NAME='rosdep'
 VERSION=`python setup.py -V`
 
+USERNAME ?= $(shell whoami)
+
 OUTPUT_DIR=deb_dist
 
 all:
@@ -21,7 +23,7 @@ distro: setup clean_dist
 
 push: distro
 	python setup.py sdist register upload
-	scp dist/${NAME}-${VERSION}.tar.gz ipr:/var/www/pr.willowgarage.com/html/downloads/${NAME}
+	scp dist/${NAME}-${VERSION}.tar.gz ${USERNAME}@ipr:/var/www/pr.willowgarage.com/html/downloads/${NAME}
 
 clean: clean_dist
 	echo "clean"
@@ -30,7 +32,7 @@ install: distro
 	sudo checkinstall python setup.py install
 
 deb_dist: distro
-	python setup.py --command-packages=stdeb.command bdist_deb
+	python setup.py --command-packages=stdeb.command sdist_dsc --workaround-548392=False bdist_deb
 
 
 upload-packages: deb_dist

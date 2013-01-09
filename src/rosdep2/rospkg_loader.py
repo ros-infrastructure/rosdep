@@ -34,13 +34,10 @@ filesystem.
 
 from __future__ import print_function
 
-import os
-import yaml
-
+import catkin_pkg.package
 import rospkg
 
-from .loader import RosdepLoader, InvalidData, ROSDEP_YAML
-from .sources_list import SourcesListLoader
+from .loader import RosdepLoader
 
 # Default view key is the view that packages that are not in stacks
 # see. It is the root of all dependencies.  It is superceded by an
@@ -128,7 +125,14 @@ class RosPkgLoader(RosdepLoader):
         :raises: :exc:`rospkg.ResourceNotFound` if *resource_name* cannot be found.
         """
         if resource_name in self.get_loadable_resources():
-            return self._rospack.get_rosdeps(resource_name, implicit=implicit)
+            m = self._rospack.get_manifest(resource_name)
+            if m.is_catkin:
+                path = self._rospack.get_path(resource_name)
+                pkg = catkin_pkg.package.parse_package(path)
+                deps = pkg.build_depends + pkg.buildtool_depends + pkg.run_depends
+                return [d.name for d in deps]
+            else:
+                return self._rospack.get_rosdeps(resource_name, implicit=implicit)
         elif resource_name in self._rosstack.list():
             # stacks currently do not have rosdeps of their own, implicit or otherwise
             return []

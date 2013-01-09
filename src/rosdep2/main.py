@@ -54,6 +54,11 @@ from .sources_list import update_sources_list, get_sources_cache_dir,\
      get_sources_list_dir, get_default_sources_list_file,\
      DEFAULT_SOURCES_LIST_URL
 
+from catkin_packages import find_catkin_packages_in
+from catkin_packages import set_workspace_packages
+from catkin_packages import get_workspace_packages
+
+
 class UsageError(Exception):
     pass
 
@@ -209,6 +214,23 @@ def _rosdep_main(args):
                       action="store_true", help="select all packages")
     parser.add_option("-n", dest="recursive", default=True, 
                       action="store_false", help="Do not consider implicit/recursive dependencies.  Only valid with 'keys', 'check', and 'install' commands.")
+    parser.add_option("--ignore-packages-from-source", "--ignore-src", "-i",
+                      dest='ignore_src', default=False, action="store_true",
+                      help="Affects the 'check' and 'install' verbs. If "
+                           "specified then rosdep will not install keys "
+                           "that are found to be catkin packages anywhere in "
+                           "the ROS_PACKAGE_PATH or in any of the directories "
+                           "given by the --from-paths option.")
+    parser.add_option("--from-paths", dest='from_paths',
+                      default=False, action="store_true",
+                      help="Affects the 'check', 'keys', and 'install' verbs. "
+                           "If specified the arugments to those verbs will be "
+                           "considered paths to be searched, acting on all "
+                           "catkin packages found there in.")
+    parser.add_option("--rosdistro", dest='ros_distro', default=None,
+                      help="Explicitly sets the ROS distro to use, overriding "
+                           "the normal method of detecting the ROS distro "
+                           "using the ROS_DISTRO environment variable.")
 
     options, args = parser.parse_args(args)
     if options.print_version:
@@ -221,6 +243,9 @@ def _rosdep_main(args):
     if not command in _commands:
         parser.error("Unsupported command %s."%command)
     args = args[1:]
+
+    if options.ros_distro:
+        os.environ['ROS_DISTRO'] = options.ros_distro
 
     if not command in ['init', 'update']:
         check_for_sources_list_init(options.sources_cache_dir)
@@ -246,33 +271,67 @@ def _rosdep_args_handler(command, parser, options, args):
         parser.error("Please enter arguments for '%s'"%command)
     else:
         return command_handlers[command](args, options)
-    
+
+
 def _package_args_handler(command, parser, options, args):
-    # package or stack names as args.  have to convert stack names to packages.
-    # - overrides to enable testing
-    rospack = rospkg.RosPack()
-    rosstack = rospkg.RosStack()
-    lookup = _get_default_RosdepLookup(options)
-    loader = lookup.get_loader()
-    
     if options.rosdep_all:
         if args:
             parser.error("cannot specify additional arguments with -a")
         else:
             # let the loader filter the -a. This will take out some
             # packages that are catkinized (for now).
+            lookup = _get_default_RosdepLookup(options)
+            loader = lookup.get_loader()
             args = loader.get_loadable_resources()
             not_found = []
     elif not args:
         parser.error("no packages or stacks specified")
 
-    val = rospkg.expand_to_packages(args, rospack, rosstack)
-    packages = val[0]
-    not_found = val[1]
+    # package or stack names as args.  have to convert stack names to packages.
+    # - overrides to enable testing
+    packages = []
+    not_found = []
+    if options.from_paths:
+        for path in args:
+            if options.verbose:
+                print("Using argument '{0}' as a path to search.".format(path))
+            if not os.path.exists(path):
+                print("given path '{0}' does not exist".format(path))
+                return 1
+            path = os.path.abspath(path)
+            if 'ROS_PACKAGE_PATH' not in os.environ:
+                os.environ['ROS_PACKAGE_PATH'] = '{0}'.format(path)
+            else:
+                os.environ['ROS_PACKAGE_PATH'] += ':{0}'.format(path)
+            pkgs = find_catkin_packages_in(path, options.verbose)
+            packages.extend(pkgs)
+        # Make packages list unique
+        packages = list(set(packages))
+    else:
+        rospack = rospkg.RosPack()
+        rosstack = rospkg.RosStack()
+        val = rospkg.expand_to_packages(args, rospack, rosstack)
+        packages = val[0]
+        not_found = val[1]
     if not_found:
         raise rospkg.ResourceNotFound(not_found[0], rospack.get_ros_paths())
 
-    if 0 and not packages: # disable, let individual handlers specify behavior
+    # Handle the --ignore-src option
+    if command in ['install', 'check'] and options.ignore_src:
+        if options.verbose:
+            print("Searching ROS_PACKAGE_PATH for "
+                  "sources: " + str(os.environ['ROS_PACKAGE_PATH'].split(':')))
+        ws_pkgs = get_workspace_packages()
+        for path in os.environ['ROS_PACKAGE_PATH'].split(':'):
+            path = os.path.abspath(path.strip())
+            if os.path.exists(path):
+                pkgs = find_catkin_packages_in(path, options.verbose)
+                ws_pkgs.extend(pkgs)
+        set_workspace_packages(ws_pkgs)
+
+    lookup = _get_default_RosdepLookup(options)
+
+    if 0 and not packages:  # disable, let individual handlers specify behavior
         # possible with empty stacks
         print("No packages in arguments, aborting")
         return
@@ -354,12 +413,16 @@ def command_update(options):
     
 def command_keys(lookup, packages, options):
     lookup = _get_default_RosdepLookup(options)
+    rosdep_keys = get_keys(lookup, packages, options.recursive)
+    _print_lookup_errors(lookup)
+    print('\n'.join(rosdep_keys))
+
+def get_keys(lookup, packages, recursive):
     rosdep_keys = []
     for package_name in packages:
-        rosdep_keys.extend(lookup.get_rosdeps(package_name, implicit=options.recursive))
-
-    _print_lookup_errors(lookup)
-    print('\n'.join(set(rosdep_keys)))
+        deps = lookup.get_rosdeps(package_name, implicit=recursive)
+        rosdep_keys.extend(deps)
+    return set(rosdep_keys)
 
 def command_check(lookup, packages, options):
     verbose = options.verbose
