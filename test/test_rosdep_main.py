@@ -27,7 +27,10 @@
 
 import os
 import sys
-import cStringIO
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 import rospkg
 import rospkg.os_detect
@@ -55,8 +58,8 @@ from contextlib import contextmanager
 def fakeout():
     realstdout = sys.stdout
     realstderr = sys.stderr
-    fakestdout = cStringIO.StringIO()
-    fakestderr = cStringIO.StringIO()
+    fakestdout = StringIO()
+    fakestderr = StringIO()
     sys.stdout = fakestdout
     sys.stderr = fakestderr
     yield fakestdout, fakestderr

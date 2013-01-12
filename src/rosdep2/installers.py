@@ -163,13 +163,13 @@ class InstallerContext(object):
         """
         :returns: list of registered installer keys
         """
-        return self.installers.keys()
+        return list(self.installers.keys())
 
     def get_os_keys(self):
         """
         :returns: list of OS keys that have registered with this context, ``[str]``
         """
-        return self.os_installers.keys()
+        return list(self.os_installers.keys())
     
     def add_os_installer_key(self, os_key, installer_key):
         """

@@ -34,16 +34,18 @@ import sys
 import tempfile
 import yaml
 import hashlib
-import urllib2
+try:
+    from urllib.error import URLError
+    from urllib.request import urlopen
+    from urllib.parse import urlparse
+except ImportError:
+    from urllib2 import URLError
+    from urllib2 import urlopen
+    from urlparse import urlparse
 
 from .core import InvalidData, DownloadFailure
 from .gbpdistro_support import download_gbpdistro_as_rosdep_data
 
-try:
-    import urlparse
-except ImportError:
-    import urllib.parse as urlparse #py3k
-    
 import rospkg
 import rospkg.distro
 
@@ -105,7 +107,7 @@ class DataSource(object):
         # validate inputs
         if not type_ in VALID_TYPES:
             raise ValueError("type must be one of [%s]"%(','.join(VALID_TYPES)))
-        parsed = urlparse.urlparse(url)
+        parsed = urlparse(url)
         if not parsed.scheme or not parsed.netloc or parsed.path in ('', '/'):
             raise ValueError("url must be a fully-specified URL with scheme, hostname, and path: %s"%(str(url)))
         if not type(tags) == list:
@@ -164,7 +166,8 @@ class CachedDataSource(object):
         self.rosdep_data = rosdep_data 
     
     def __eq__(self, other):
-        return self.source == other.source and \
+        return isinstance(other, CachedDataSource) and \
+               self.source == other.source and \
                self.rosdep_data == other.rosdep_data
 
     def __str__(self):
@@ -238,14 +241,14 @@ def download_rosdep_data(url):
         retrieved (e.g. 404, bad YAML format, server down).
     """
     try:
-        f = urllib2.urlopen(url, timeout=DOWNLOAD_TIMEOUT)
+        f = urlopen(url, timeout=DOWNLOAD_TIMEOUT)
         text = f.read()
         f.close()
         data = yaml.safe_load(text)
         if type(data) != dict:
             raise DownloadFailure('rosdep data from [%s] is not a YAML dictionary'%(url))
         return data
-    except urllib2.URLError as e:
+    except URLError as e:
         raise DownloadFailure(str(e))
     except yaml.YAMLError as e:
         raise DownloadFailure(str(e))
@@ -257,16 +260,18 @@ def download_default_sources_list(url=DEFAULT_SOURCES_LIST_URL):
     :param url: override URL of default sources list file
     :return: raw sources list data, ``str``
     :raises: :exc:`InvalidData`
-    :raises: :exc:`urllib2.URLError` If data cannot be
+    :raises: :exc:`URLError` If data cannot be
         retrieved (e.g. 404, server down).
     """
-    f = urllib2.urlopen(url, timeout=DOWNLOAD_TIMEOUT)
+    f = urlopen(url, timeout=DOWNLOAD_TIMEOUT)
     data = f.read()
     f.close()
     if not data:
         raise InvalidSourceFile("cannot download defaults file: empty contents")
     # parse just for validation
     parse_sources_data(data)
+    if type(data) != str and type(data) == bytes:
+        data = data.decode('utf-8')
     return data
 
 def parse_sources_data(data, origin='<string>', model=None):
@@ -293,6 +298,8 @@ def parse_sources_data(data, origin='<string>', model=None):
         model = DataSource
         
     sources = []
+    if type(data) != str and type(data) == bytes:
+        data = data.decode('utf-8')
     for line in data.split('\n'):
         line = line.strip()
         # ignore empty lines or comments
@@ -424,7 +431,7 @@ def load_cached_sources_list(sources_cache_dir=None, verbose=False):
 
 def compute_filename_hash(filename_key):
     sha_hash = hashlib.sha1()
-    sha_hash.update(filename_key)
+    sha_hash.update(filename_key.encode('utf-8'))
     return sha_hash.hexdigest()
     
 def write_cache_file(source_cache_d, filename_key, rosdep_data):
@@ -520,7 +527,8 @@ class SourcesListLoader(RosdepLoader):
             return
         source = self.get_source(view_name)
         if verbose:
-            print("loading view [%s] with sources.list loader"%(view_name), file=sys.stderr)
+            print("loading view [%s] with sources.list loader" % view_name,
+                  file=sys.stderr)
         view_dependencies = self.get_view_dependencies(view_name)
         rosdep_db.set_view_data(view_name, source.rosdep_data, view_dependencies, view_name)
 

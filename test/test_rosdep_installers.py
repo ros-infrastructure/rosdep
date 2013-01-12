@@ -29,7 +29,10 @@ from __future__ import print_function
 
 import os
 import sys
-import cStringIO
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 from rospkg import RosPack, RosStack
 
@@ -483,7 +486,7 @@ def test_RosdepInstaller_get_uninstalled_unconfigured():
         # make sure there is an error when we lookup something that resolves to an apt depend
         uninstalled, errors = installer.get_uninstalled(['roscpp_fake'], verbose)
         assert not uninstalled, uninstalled
-        assert errors.keys() == ['roscpp_fake']
+        assert list(errors.keys()) == ['roscpp_fake']
 
         uninstalled, errors = installer.get_uninstalled(['roscpp_fake', 'stack1_p1'], verbose)
         assert not uninstalled, uninstalled
@@ -522,8 +525,8 @@ from contextlib import contextmanager
 def fakeout():
     realstdout = sys.stdout
     realstderr = sys.stderr
-    fakestdout = cStringIO.StringIO()
-    fakestderr = cStringIO.StringIO()
+    fakestdout = StringIO()
+    fakestderr = StringIO()
     sys.stdout = fakestdout
     sys.stderr = fakestderr
     yield fakestdout, fakestderr

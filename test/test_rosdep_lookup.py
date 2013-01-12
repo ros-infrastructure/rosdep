@@ -162,7 +162,7 @@ def test_RosdepView_merge():
     
     # create empty view and test
     view = RosdepView('common')
-    assert view.keys() == []
+    assert view.keys() == [], list(view.keys())
     # - tripwire
     str(view)
 
@@ -190,7 +190,7 @@ def test_RosdepView_merge():
     # merge new for 'd', 'e'
     d3 = RosdepDatabaseEntry(dict(d=dict(o=4), e=dict(p=5)), [], 'origin3')
     view.merge(d3)
-    assert set(view.keys()) == set(data.keys() + ['d', 'e'])
+    assert set(list(view.keys())) == set(list(data.keys()) + ['d', 'e'])
     for k, v in data.items():
         assert view.lookup(k).data == v
     assert view.lookup('d').data == dict(o=4)
@@ -423,7 +423,7 @@ def test_RosdepLookup_resolve():
     installer_context.set_os_override('ubuntu', 'lucid')
 
     # repeat for caching
-    for count in xrange(0, 2):
+    for count in range(0, 2):
         installer_key, resolution, dependencies = lookup.resolve('testtinyxml', 'rospack_fake', installer_context)
         assert 'apt' == installer_key
         assert ['libtinyxml-dev'] == resolution
@@ -453,7 +453,7 @@ def test_RosdepLookup_resolve_all():
 
     # repeat for caching
     lookup.verbose = True
-    for count in xrange(0, 2):
+    for count in range(0, 2):
         resolutions, errors = lookup.resolve_all(['rospack_fake', 'roscpp_fake'], installer_context)
         assert not errors, errors
         installer_keys, resolveds = zip(*resolutions)

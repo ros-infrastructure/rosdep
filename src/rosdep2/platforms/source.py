@@ -30,8 +30,16 @@
 from __future__ import print_function
 
 import os
-import urllib
-import urllib2
+
+try:
+    from urllib.error import URLError
+    from urllib.request import urlopen
+    from urllib.request import urlretrieve
+except ImportError:
+    from urllib2 import URLError
+    from urllib2 import urlopen
+    from urllib import urlretrieve
+
 import hashlib
 
 import yaml
@@ -65,22 +73,24 @@ def _sub_fetch_file(url, md5sum=None):
     """
     contents = ''
     try:
-        fh = urllib2.urlopen(url)
+        fh = urlopen(url)
         contents = fh.read()
         if md5sum is not None:
             filehash =  hashlib.md5(contents).hexdigest()
             if md5sum and filehash != md5sum:
                 raise DownloadFailed("md5sum didn't match for %s.  Expected %s got %s"%(url, md5sum, filehash))
-    except urllib2.URLError as ex:
+    except URLError as ex:
         raise DownloadFailed(str(ex))
 
-    return contents    
+    if type(contents) != str and type(contents) == bytes:
+        contents = contents.decode('utf-8')
+    return contents
+
 
 def get_file_hash(filename):
     md5 = hashlib.md5()
-    with open(filename,'rb') as f: 
-        for chunk in iter(lambda: f.read(8192), ''): 
-            md5.update(chunk)
+    with open(filename, 'rb') as f:
+        md5.update(f.read())
     return md5.hexdigest()
 
 def fetch_file(url, md5sum=None):
@@ -244,7 +254,7 @@ def install_source(resolved):
 
     # compute desired download path
     filename = os.path.join(tempdir, os.path.basename(resolved.tarball))
-    f = urllib.urlretrieve(resolved.tarball, filename)
+    f = urlretrieve(resolved.tarball, filename)
     assert f[0] == filename
 
     if resolved.tarball_md5sum:
@@ -253,7 +263,7 @@ def install_source(resolved):
         if resolved.tarball_md5sum != hash1:
             #try backup tarball if it is defined
             if resolved.alternate_tarball:
-                f = urllib.urlretrieve(resolved.alternate_tarball)
+                f = urlretrieve(resolved.alternate_tarball)
                 filename = f[0]
                 hash2 = get_file_hash(filename)
                 if resolved.tarball_md5sum != hash2:

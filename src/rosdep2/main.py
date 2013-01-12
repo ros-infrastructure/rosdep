@@ -37,7 +37,10 @@ from __future__ import print_function
 import os
 import sys
 import traceback
-import urllib2
+try:
+    from urllib.error import URLError
+except ImportError:
+    from urllib2 import URLError
 
 from optparse import OptionParser
 
@@ -54,9 +57,9 @@ from .sources_list import update_sources_list, get_sources_cache_dir,\
      get_sources_list_dir, get_default_sources_list_file,\
      DEFAULT_SOURCES_LIST_URL
 
-from catkin_packages import find_catkin_packages_in
-from catkin_packages import set_workspace_packages
-from catkin_packages import get_workspace_packages
+from .catkin_packages import find_catkin_packages_in
+from .catkin_packages import set_workspace_packages
+from .catkin_packages import get_workspace_packages
 
 
 class UsageError(Exception):
@@ -147,14 +150,12 @@ ERROR: %s
         sys.exit(1)
     except Exception as e:
         print("""
-ERROR: Rosdep experienced an internal error: %s
+ERROR: Rosdep experienced an internal error: {0}
 Please go to the rosdep page [1] and file a bug report with the stack trace below.
 [1] : http://www.ros.org/wiki/rosdep
+""".format(str(e)), file=sys.stderr)
+        raise
 
-%s
-"""%(e, traceback.format_exc(e)), file=sys.stderr)
-        sys.exit(1)
-        
 def check_for_sources_list_init(sources_cache_dir):
     """
     Check to see if sources list and cache are present.
@@ -368,7 +369,7 @@ def configure_installer_context_os(installer_context, options):
 def command_init(options):
     try:
         data = download_default_sources_list()
-    except urllib2.URLError as e:
+    except URLError as e:
         print("ERROR: cannot download default sources list from:\n%s\nWebsite may be down."%(DEFAULT_SOURCES_LIST_URL))
         return 4
     # reuse path variable for error message
@@ -536,7 +537,7 @@ def command_db(options):
     print("DB [key -> resolution]")
     # db does not leverage the resource-based API
     view = lookup.get_rosdep_view(DEFAULT_VIEW_KEY, verbose=options.verbose)
-    for rosdep_name in view.keys():
+    for rosdep_name in list(view.keys()):
         try:
             d = view.lookup(rosdep_name)
             inst_key, rule = d.get_rule_for_platform(os_name, os_version, installer_keys, default_key)
@@ -641,7 +642,7 @@ _command_rosdep_args = ['what-needs', 'what_needs', 'where-defined', 'where_defi
 # commands that take no args
 _command_no_args = ['update', 'init', 'db']
 
-_commands = command_handlers.keys()
+_commands = list(command_handlers.keys())
 
 
 

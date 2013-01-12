@@ -239,7 +239,8 @@ def test_fetch_file():
     url = 'https://kforge.ros.org/rosrelease/rosdep/raw-file/931b030d6b3b/test/source/rep112-example.rdmanifest'
     contents, error = fetch_file(url, REP112_MD5SUM)
     assert not error
-    assert contents == expected
+    assert contents == expected, \
+           str(contents) + '\n\n' + str(expected)
 
     contents, error = fetch_file(url, 'badmd5')
     assert bool(error), "should have errored"

@@ -171,7 +171,7 @@ class RosdepView(object):
         """
         :returns: list of rosdep names in this view
         """
-        return self.rosdep_defs.keys()
+        return list(self.rosdep_defs.keys())
         
     def merge(self, update_entry, override=False, verbose=False):
         """
