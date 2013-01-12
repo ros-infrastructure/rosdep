@@ -64,6 +64,23 @@ class RosdepDefinition(object):
         self.data = data
         self.origin = origin
 
+    def reverse_merge(self, new_data, origin="<dynamic>", verbose=False):
+        """
+        Merge two definitions together, with existing rules taking precendence.
+        Definitions are merged at the os_name level, meaning that if two rules
+        exist with the same os_name, the first one wins.
+
+        :param data: raw rosdep data for a single rosdep dependency, ``dict``
+        :param origin: string that indicates where this new data comes from (e.g. filename)
+        """
+        for os_name, rules in new_data.items():
+            if os_name not in self.data:
+                if verbose:
+                    print("[%s] adding rules for os [%s] to [%s]"%(origin, os_name, self.rosdep_key), file=sys.stderr)
+                self.data[os_name] = rules
+            elif verbose:
+                print("[%s] ignoring [%s] for os [%s], already loaded"%(origin, self.rosdep_key, os_name), file=sys.stderr)
+
     def get_rule_for_platform(self, os_name, os_version, installer_keys, default_installer_key):
         """
         Get installer_key and rule for the specified rule.  See REP 111 for precedence rules.
@@ -193,9 +210,8 @@ class RosdepView(object):
             # First rule wins or override, no rule-merging.
             if override or not dep_name in db:
                 db[dep_name] = update_definition
-            elif verbose:
-                print("[%s] ignoring [%s], already loaded"%(update_entry.origin, dep_name), file=sys.stderr)
-
+            elif dep_name in db:
+                db[dep_name].reverse_merge(dep_data, update_entry.origin, verbose=verbose)
 
 def prune_catkin_packages(rosdep_keys, verbose=False):
     workspace_pkgs = catkin_packages.get_workspace_packages()
