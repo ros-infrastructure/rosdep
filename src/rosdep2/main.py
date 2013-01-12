@@ -327,6 +327,8 @@ def _package_args_handler(command, parser, options, args):
             if os.path.exists(path):
                 pkgs = find_catkin_packages_in(path, options.verbose)
                 ws_pkgs.extend(pkgs)
+            elif options.verbose:
+                print("Skipping non-existent path " + path)
         set_workspace_packages(ws_pkgs)
 
     lookup = _get_default_RosdepLookup(options)
@@ -490,7 +492,10 @@ def command_install(lookup, packages, options):
         print("ERROR: the following packages/stacks could not have their rosdep keys resolved\nto system dependencies:", file=sys.stderr)
         for rosdep_key, error in errors.iteritems():
             print("%s: %s"%(rosdep_key, error_to_human_readable(error)), file=sys.stderr)
-        return 1
+        if options.robust:
+            print("Continuing to install resolvable dependencies...")
+        else:
+            return 1
     try:
         installer.install(uninstalled, **install_options)
         if not options.simulate:
