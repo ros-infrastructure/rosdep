@@ -41,10 +41,6 @@ from .core import InvalidData
 
 ROSDEP_YAML = 'rosdep.yaml'
 
-yaml.add_constructor(
-    u'tag:yaml.org,2002:float',
-    yaml.constructor.Constructor.construct_yaml_str)
-
 class RosdepLoader:
     """
     Base API for loading rosdep information by package or stack name.  
