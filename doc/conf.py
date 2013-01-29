@@ -16,6 +16,7 @@ import sys, os
 import sys
 sys.path.insert(0, '../src')
 
+import catkin_sphinx
 from rosdep2 import __version__
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -96,9 +97,9 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
+html_theme_path = [os.path.join(os.path.dirname(catkin_sphinx.__file__), 'theme')]
 html_theme = 'ros-theme'
 html_logo = 'ros.png'
-html_theme_path = [os.path.join(os.path.expanduser('~'), 'sphinx'), 'themes']
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
