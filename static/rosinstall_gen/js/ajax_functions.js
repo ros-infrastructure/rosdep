@@ -1,10 +1,10 @@
-function get_rosinstall(distro, packages, dry)
+function get_rosinstall(distro, packages, gen_type)
 {
   console.log("Building rosinstall for: " + distro + ", " + packages);
   Dajaxice.prerelease_website.rosinstall_gen.get_rosinstall_ajax(rosinstall_cb, 
 		                                                 {'distro': distro,
 							          'packages': packages,
-								  'dry': dry});
+								  'gen_type': gen_type});
 }
 
 function rosinstall_cb(data)
