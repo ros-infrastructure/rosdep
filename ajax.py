@@ -11,8 +11,8 @@ import logging
 logger = logging.getLogger('submit_jobs')
 
 @dajaxice_register
-def get_rosinstall_ajax(request, distro, packages, dry):
-    logger.info("Got distro %s, packages %s, dry %s" % (distro, packages, dry))
+def get_rosinstall_ajax(request, distro, packages, gen_type):
+    logger.info("Got distro %s, packages %s, gen_type %s" % (distro, packages, gen_type))
     timestr = datetime.datetime.now().strftime("%Y%m%d-%H%M%S%f")
     filename = '%s.rosinstall' % '_'.join(packages)
     relative_dir = os.path.join('rosinstalls', timestr)
@@ -23,9 +23,14 @@ def get_rosinstall_ajax(request, distro, packages, dry):
     except:
         pass
 
-    if dry:
+    if gen_type == 'dry':
         logger.info("Calling dry")
         rosinstall = generate_dry_rosinstall(distro, packages[0])
+    elif gen_type == 'combined':
+        logger.info("Calling combined")
+        dry_rs = generate_dry_rosinstall(distro, variant)
+        wet_rs = generate_rosinstall(distro, variant)
+        rosinstall = dict(dry_rs.items() + wet_rs.items())
     else:
         logger.info("Calling wet")
         rosinstall = generate_rosinstall(distro, packages)

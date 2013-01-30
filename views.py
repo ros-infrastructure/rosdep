@@ -16,7 +16,7 @@ def dry_index(request, distro, packages):
     logger.info('Packages: %s' % packages.split(','))
     return render_to_response('index.html', {'distro': distro, 
                                              'packages': packages.split(','),
-                                             'dry': 'true',
+                                             'gen_type': 'dry',
                                             },
                                              context_instance=RequestContext(request))
 def raw(request, distro, packages):
@@ -28,5 +28,20 @@ def index(request, distro, packages):
     logger.info('Packages: %s' % packages.split(','))
     return render_to_response('index.html', {'distro': distro, 
                                              'packages': packages.split(','), 
-                                             'dry': 'false'},
+                                             'gen_type': 'wet'},
                                              context_instance=RequestContext(request))
+
+def combined_raw(request, distro, variant):
+    dry_rs = generate_dry_rosinstall(distro, variant)
+    wet_rs = generate_rosinstall(distro, variant)
+    combined = dict(dry_rs.items() + wet_rs.items())
+    return render_to_response('rosinstall.html', {'rosinstall': combined})
+
+def combined_index(request, distro, packages):
+    logger.info('Distro: %s' % distro)
+    logger.info('Packages: %s' % packages.split(','))
+    return render_to_response('index.html', {'distro': distro, 
+                                             'packages': packages.split(','), 
+                                             'gen_type': 'combined'},
+                                             context_instance=RequestContext(request))
+
