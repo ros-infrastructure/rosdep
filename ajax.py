@@ -28,8 +28,8 @@ def get_rosinstall_ajax(request, distro, packages, gen_type):
         rosinstall = generate_dry_rosinstall(distro, packages[0])
     elif gen_type == 'combined':
         logger.info("Calling combined")
-        dry_rs = generate_dry_rosinstall(distro, variant)
-        wet_rs = generate_rosinstall(distro, variant)
+        dry_rs = generate_dry_rosinstall(distro, packages[0])
+        wet_rs = generate_rosinstall(distro, packages[0])
         rosinstall = dry_rs + wet_rs
     else:
         logger.info("Calling wet")
