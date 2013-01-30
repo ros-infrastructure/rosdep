@@ -9,7 +9,7 @@
 	{% for pkg in packages %}
 		package_list.push('{{pkg}}');
 	{% endfor %}
-		get_rosinstall('{{distro}}', package_list, {{dry}});
+		get_rosinstall('{{distro}}', package_list, '{{gen_type}}');
 	});
 </script>
 {% endblock %}
