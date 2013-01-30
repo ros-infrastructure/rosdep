@@ -34,7 +34,7 @@ def index(request, distro, packages):
 def combined_raw(request, distro, variant):
     dry_rs = generate_dry_rosinstall(distro, variant)
     wet_rs = generate_rosinstall(distro, variant)
-    combined = dict(dry_rs.items() + wet_rs.items())
+    combined = dry_rs + wet_rs
     return render_to_response('rosinstall.html', {'rosinstall': combined})
 
 def combined_index(request, distro, packages):
