@@ -242,7 +242,7 @@ def test_load_cached_sources_list():
     assert not source0.tags
     
     # this should be the 'non-existent' source
-    assert source2.rosdep_data is None
+    assert source2.rosdep_data == {}
     assert source2.tags == ['ubuntu']
 
 def test_DataSourceMatcher():

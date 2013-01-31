@@ -147,7 +147,7 @@ def cache_data_source_loader(sources_cache_dir, verbose=False):
             with open(filepath) as f:
                 rosdep_data = yaml.load(f.read())
         else:
-            rosdep_data = None
+            rosdep_data = {}
         return CachedDataSource(type_, uri, tags, rosdep_data, origin=filepath)
     return create_model
     
