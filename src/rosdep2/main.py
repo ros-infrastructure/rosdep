@@ -373,7 +373,7 @@ def command_init(options):
     except urllib2.URLError as e:
         print("ERROR: cannot download default sources list from:\n%s\nWebsite may be down."%(DEFAULT_SOURCES_LIST_URL))
         return 4
-    # reuse path variable for error message
+    # reuse path variable for error message 
     path = get_sources_list_dir()
     try:
         if not os.path.exists(path):
@@ -399,6 +399,11 @@ def command_update(options):
     def update_error_handler(data_source, exc):
         print("ERROR: unable to process source [%s]:\n\t%s"%(data_source.url, exc), file=sys.stderr)
     sources_list_dir = get_sources_list_dir()
+
+    if not os.path.exists(sources_list_dir):
+        print("ERROR: no sources directory exists on the system meaning rosdep has not yet been initialized.\n\nPlease initialize your rosdep with\n\n\tsudo rosdep init\n")
+        return 1
+
     filelist = [f for f in os.listdir(sources_list_dir) if f.endswith('.list')]    
     if not filelist:
         print("ERROR: no data sources in %s\n\nPlease initialize your rosdep with\n\n\tsudo rosdep init\n"%sources_list_dir, file=sys.stderr)
