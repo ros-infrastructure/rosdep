@@ -92,7 +92,7 @@ class YumInstaller(PackageManagerInstaller):
         if not packages:
             return []
         elif not interactive:
-            return [['sudo', 'yum', '-y', 'install', p] for p in packages]
+            return [['sudo', 'yum', '-y', 'install'] + packages]
         else:
-            return [['sudo', 'yum', 'install', p] for p in packages]
+            return [['sudo', 'yum', 'install'] + packages]
 
