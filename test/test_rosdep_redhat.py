@@ -58,14 +58,12 @@ def test_YumInstaller():
 
         # no interactive option with YUM
         mock_method.return_value = ['a', 'b']
-        expected = [['sudo', 'yum', '-y', 'install', 'a'],
-                    ['sudo', 'yum', '-y', 'install', 'b']]
+        expected = [['sudo', 'yum', '-y', '--skip-broken', 'install', 'a', 'b']]
         val = installer.get_install_command(['whatever'], interactive=False)
-        assert val == expected, val
-        expected = [['sudo', 'yum', 'install', 'a'],
-                    ['sudo', 'yum', 'install', 'b']]
+        assert val == expected, val + expected
+        expected = [['sudo', 'yum', '--skip-broken', 'install', 'a', 'b']]
         val = installer.get_install_command(['whatever'], interactive=True)
-        assert val == expected, val
+        assert val == expected, val + expected
     try:
         test()
     except AssertionError:
