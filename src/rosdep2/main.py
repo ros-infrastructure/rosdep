@@ -394,10 +394,13 @@ def command_init(options):
         return 3
     
 def command_update(options):
+    error_occured = []
     def update_success_handler(data_source):
         print("Hit %s"%(data_source.url))
     def update_error_handler(data_source, exc):
-        print("ERROR: unable to process source [%s]:\n\t%s"%(data_source.url, exc), file=sys.stderr)
+        error_string = "ERROR: unable to process source [%s]:\n\t%s"%(data_source.url, exc)
+        print(error_string, file=sys.stderr)
+        error_occured.append(error_string)
     sources_list_dir = get_sources_list_dir()
 
     if not os.path.exists(sources_list_dir):
@@ -415,8 +418,17 @@ def command_update(options):
         print("updated cache in %s"%(get_sources_cache_dir()))
     except InvalidData as e:
         print("ERROR: invalid sources list file:\n\t%s"%(e), file=sys.stderr)
+        return 1
     except IOError as e:
         print("ERROR: error loading sources list:\n\t%s"%(e), file=sys.stderr)
+        return 1
+    if error_occured:
+        print ("ERROR: Not all sources were able to be updated.\n[[[")
+        for e in error_occured:
+            print (e)
+        print("]]]")
+        return 1
+
     
 def command_keys(lookup, packages, options):
     lookup = _get_default_RosdepLookup(options)
