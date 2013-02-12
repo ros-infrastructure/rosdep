@@ -26,10 +26,10 @@ from .platforms.debian import APT_INSTALLER
 from .platforms.osx import BREW_INSTALLER
 from .platforms.pip import PIP_INSTALLER
 from .platforms.redhat import YUM_INSTALLER
-from .rep3 import download_targets_data
 from .sources_list import get_sources_list_dir, DataSourceMatcher, SourcesListLoader
 from .lookup import RosdepLookup
 from .rospkg_loader import DEFAULT_VIEW_KEY
+from rosdistro.rosdistro import MasterFile
 
 class ValidationFailed(Exception):
     pass
@@ -55,8 +55,8 @@ def get_ubuntu_targets(rosdistro):
 
     :raises: :exc:`ValidationFailed`
     """
-    targets_data = download_targets_data()
-    return targets_data[rosdistro]
+    return MasterFile().get_distro(rosdistro)['targets'].keys()
+
 
 def get_installer(installer_name):
     """ Expected installers APT_INSTALLER, YUM_INSTALLER, ..."""
@@ -75,7 +75,7 @@ default_installers = {
 def resolve_for_os(rosdep_key, view, installer, os_name, os_version):
     """
     Resolve rosdep key to dependencies.
-    
+
     :param os_name: OS name, e.g. 'ubuntu'
 
     :raises: :exc:`rosdep2.ResolutionError`
@@ -110,7 +110,7 @@ def get_catkin_view(rosdistro_name, os_name, os_version, update=True):
 Please make sure you have a valid configuration in:
 \t%s
 """%(sources_list_dir))
-    
+
     # for vestigial reasons, using the roskg loader, but we're only
     # actually using the backend db as resolution is not resource-name based
     lookup = RosdepLookup.create_from_rospkg(sources_loader=sources_loader)
