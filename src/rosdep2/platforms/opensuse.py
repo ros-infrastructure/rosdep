@@ -33,6 +33,7 @@ from rospkg.os_detect import OS_OPENSUSE
 
 from .source import SOURCE_INSTALLER
 from ..installers import PackageManagerInstaller
+from ..shell_utils import read_stdout
 
 # zypper package manager key
 ZYPPER_INSTALLER='zypper'
@@ -44,9 +45,22 @@ def register_platforms(context):
     context.add_os_installer_key(OS_OPENSUSE, SOURCE_INSTALLER)
     context.add_os_installer_key(OS_OPENSUSE, ZYPPER_INSTALLER)
     context.set_default_os_installer_key(OS_OPENSUSE, ZYPPER_INSTALLER)
-    
-def rpm_detect(packages):
-    return subprocess.call(['rpm', '-q', packages], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    
+
+def rpm_detect(packages, exec_fn=None):
+    installed = []
+    cmd = ['rpm', '-q', '--queryformat', '%{NAME}\n']  # output: "pkg_name" for installed, error text for not installed packages
+    cmd.extend(packages)
+
+    if exec_fn is None:
+        exec_fn = read_stdout
+
+    std_out = exec_fn(cmd)
+    out_lines = std_out.split('\n')
+    for line in out_lines:
+        # if there is no space, it's not an error text -> it's installed
+        if line and ' ' not in line:
+            installed.append(line)
+    return installed
 
 class ZypperInstaller(PackageManagerInstaller):
     """
