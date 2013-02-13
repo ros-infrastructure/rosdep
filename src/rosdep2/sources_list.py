@@ -35,6 +35,7 @@ import tempfile
 import yaml
 import hashlib
 import urllib2
+import cPickle
 
 from .core import InvalidData, DownloadFailure
 from .gbpdistro_support import download_gbpdistro_as_rosdep_data
@@ -61,6 +62,9 @@ SOURCES_CACHE_DIR = 'sources.cache'
 
 # name of index file for sources cache
 CACHE_INDEX = 'index'
+
+# extension for binary cache
+PICKLE_CACHE_EXT = '.pickle'
 
 def get_sources_list_dir():
     # base of where we read config files from
@@ -141,7 +145,16 @@ def cache_data_source_loader(sources_cache_dir, verbose=False):
         # compute the filename has from the URL
         filename = compute_filename_hash(uri)
         filepath = os.path.join(sources_cache_dir, filename)
-        if os.path.exists(filepath):
+        pickle_filepath = filepath + PICKLE_CACHE_EXT
+        if os.path.exists(pickle_filepath):
+            if verbose:
+                print("loading cached data source:\n\t%s\n\t%s"%(uri, pickle_filepath), file=sys.stderr)
+            try:
+                with open(pickle_filepath, 'r') as f:
+                    rosdep_data = cPickle.loads(f.read())
+            except cPickle.PickleError:
+                rosdep_data = {}
+        elif os.path.exists(filepath):
             if verbose:
                 print("loading cached data source:\n\t%s\n\t%s"%(uri, filepath), file=sys.stderr)
             with open(filepath) as f:
@@ -440,15 +453,31 @@ def write_cache_file(source_cache_d, filename_key, rosdep_data):
         os.makedirs(source_cache_d)
     key_hash = compute_filename_hash(filename_key)
     filepath = os.path.join(source_cache_d, key_hash)
-    write_atomic(filepath, yaml.safe_dump(rosdep_data))
+    try:
+        write_atomic(filepath + PICKLE_CACHE_EXT, cPickle.dumps(rosdep_data, -1), True)
+        try:
+            os.unlink(filepath)
+        except OSError:
+            pass
+    except cPickle.PickleError:
+        try:
+            os.unlink(filepath + PICKLE_CACHE_EXT)
+        except OSError:
+            pass
+        write_atomic(filepath, yaml.safe_dump(rosdep_data))
     return filepath
     
-def write_atomic(filepath, data):
+def write_atomic(filepath, data, binary=False):
     # write data to new file
     fd, filepath_tmp = tempfile.mkstemp(prefix=os.path.basename(filepath) + '.tmp.', dir=os.path.dirname(filepath))
-    with os.fdopen(fd, 'w') as f:
-        f.write(data)
-        f.close()
+    if (binary):
+        with os.fdopen(fd, 'wb') as f:
+            f.write(data)
+            f.close()
+    else:
+        with os.fdopen(fd, 'w') as f:
+            f.write(data)
+            f.close()
     try:
         # switch file atomically (if supported)
         os.rename(filepath_tmp, filepath)
