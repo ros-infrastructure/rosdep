@@ -169,17 +169,19 @@ def test_parse_sources_list():
     parse_sources_list()
 
 def test_write_cache_file():
-    from rosdep2.sources_list import write_cache_file, compute_filename_hash
+    from rosdep2.sources_list import write_cache_file, compute_filename_hash, PICKLE_CACHE_EXT
+    import cPickle
     tempdir = tempfile.mkdtemp()
     
-    filepath = write_cache_file(tempdir, 'foo', {'data': 1})
-    computed_path = os.path.join(tempdir, compute_filename_hash('foo'))
+    filepath = write_cache_file(tempdir, 'foo', {'data': 1})  + PICKLE_CACHE_EXT
+    computed_path = os.path.join(tempdir, compute_filename_hash('foo')) + PICKLE_CACHE_EXT
     assert os.path.samefile(filepath, computed_path)
     with open(filepath, 'r') as f:
-        assert {'data': 1} == yaml.load(f.read())
+        assert {'data': 1} == cPickle.loads(f.read())
     
 def test_update_sources_list():
-    from rosdep2.sources_list import update_sources_list, InvalidData, compute_filename_hash
+    from rosdep2.sources_list import update_sources_list, InvalidData, compute_filename_hash, PICKLE_CACHE_EXT
+    import cPickle
     sources_list_dir=get_test_dir()
     tempdir = tempfile.mkdtemp()
     # use a subdirectory of test dir to make sure rosdep creates the necessary substructure
@@ -202,8 +204,8 @@ def test_update_sources_list():
     hash2 = compute_filename_hash(BADHOSTNAME_URL)
     filepath = os.path.join(tempdir, hash1)
     assert filepath == path0, "%s vs %s"%(filepath, path0)
-    with open(filepath, 'r') as f:
-        data = yaml.load(f)
+    with open(filepath+PICKLE_CACHE_EXT, 'r') as f:
+        data = cPickle.loads(f.read())
         assert 'cmake' in data
 
     # verify that cache index exists. contract specifies that even
