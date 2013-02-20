@@ -453,18 +453,11 @@ def write_cache_file(source_cache_d, filename_key, rosdep_data):
         os.makedirs(source_cache_d)
     key_hash = compute_filename_hash(filename_key)
     filepath = os.path.join(source_cache_d, key_hash)
+    write_atomic(filepath + PICKLE_CACHE_EXT, cPickle.dumps(rosdep_data, -1), True)
     try:
-        write_atomic(filepath + PICKLE_CACHE_EXT, cPickle.dumps(rosdep_data, -1), True)
-        try:
-            os.unlink(filepath)
-        except OSError:
-            pass
-    except cPickle.PickleError:
-        try:
-            os.unlink(filepath + PICKLE_CACHE_EXT)
-        except OSError:
-            pass
-        write_atomic(filepath, yaml.safe_dump(rosdep_data))
+        os.unlink(filepath)
+    except OSError:
+        pass
     return filepath
     
 def write_atomic(filepath, data, binary=False):
