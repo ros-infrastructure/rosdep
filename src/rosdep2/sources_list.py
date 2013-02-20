@@ -470,14 +470,16 @@ def write_cache_file(source_cache_d, filename_key, rosdep_data):
 def write_atomic(filepath, data, binary=False):
     # write data to new file
     fd, filepath_tmp = tempfile.mkstemp(prefix=os.path.basename(filepath) + '.tmp.', dir=os.path.dirname(filepath))
+
     if (binary):
-        with os.fdopen(fd, 'wb') as f:
-            f.write(data)
-            f.close()
+        fmode = 'wb'
     else:
-        with os.fdopen(fd, 'w') as f:
-            f.write(data)
-            f.close()
+        fmode = 'w'
+
+    with os.fdopen(fd, fmode) as f:
+        f.write(data)
+        f.close()
+
     try:
         # switch file atomically (if supported)
         os.rename(filepath_tmp, filepath)
