@@ -149,11 +149,8 @@ def cache_data_source_loader(sources_cache_dir, verbose=False):
         if os.path.exists(pickle_filepath):
             if verbose:
                 print("loading cached data source:\n\t%s\n\t%s"%(uri, pickle_filepath), file=sys.stderr)
-            try:
-                with open(pickle_filepath, 'r') as f:
-                    rosdep_data = cPickle.loads(f.read())
-            except cPickle.PickleError:
-                rosdep_data = {}
+            with open(pickle_filepath, 'r') as f:
+                rosdep_data = cPickle.loads(f.read())
         elif os.path.exists(filepath):
             if verbose:
                 print("loading cached data source:\n\t%s\n\t%s"%(uri, filepath), file=sys.stderr)
