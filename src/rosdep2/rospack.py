@@ -42,8 +42,11 @@ from .sources_list import get_sources_cache_dir
 
 
 def call_pkg_config(option, pkg_name):
-    value = subprocess.check_output(['pkg-config', option, pkg_name])
-    return value.strip()
+    try:
+        value = subprocess.check_output(['pkg-config', option, pkg_name])
+        return value.strip()
+    except CalledProcessError:
+        return None
 
 
 def init_rospack_interface():
