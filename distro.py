@@ -6,6 +6,7 @@ logger = logging.getLogger('submit_jobs')
 
 
 def logger_print(msg, end='', file=None):
+    end = '' if end is None else end
     logger.info(msg + str(end))
 
 import rosdistro.common
