@@ -1,14 +1,16 @@
-import urllib2
-import sys
-import yaml
-import time
-from Queue import Queue
-from threading import Thread
 from rosdistro import RosDistro
 from rospkg.distro import load_distro, distro_uri
 
 import logging
 logger = logging.getLogger('submit_jobs')
+
+
+def logger_print(msg, end='', file=None):
+    logger.info(msg + str(end))
+
+import rosdistro.common
+rosdistro.common.override_print(logger_print)
+
 
 #Generates a rosinstall file for a package and it's dependences
 def generate_rosinstall(distro_name, packages, check_variants=True):
