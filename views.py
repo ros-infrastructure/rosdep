@@ -1,5 +1,6 @@
 from django.shortcuts import render_to_response
 from django.template import RequestContext
+from django.http import HttpResponseServerError
 from prerelease_website.rosinstall_gen.distro import generate_rosinstall
 from prerelease_website.rosinstall_gen.old_distro import generate_dry_rosinstall
 
@@ -20,7 +21,10 @@ def dry_index(request, distro, packages):
                                             },
                                              context_instance=RequestContext(request))
 def raw(request, distro, packages):
-    rosinstall = generate_rosinstall(distro, packages.split(','))
+    try:
+        rosinstall = generate_rosinstall(distro, packages.split(','))
+    except Exception as e:
+        return HttpResponseServerError("Error generating rosinstall file: {0}".format(e))
     return render_to_response('rosinstall.html', {'rosinstall': rosinstall})
 
 def index(request, distro, packages):
