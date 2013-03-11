@@ -45,7 +45,7 @@ def call_pkg_config(option, pkg_name):
     try:
         value = subprocess.check_output(['pkg-config', option, pkg_name])
         return value.strip()
-    except CalledProcessError:
+    except subprocess.CalledProcessError:
         return None
 
 
