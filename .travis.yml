@@ -5,8 +5,8 @@ python:
   - "3.2"
 # command to install dependencies
 install:
-  - sudo pip install catkin_pkg rospkg PyYAML  # TODO: get from setup.py
-  - sudo pip install nose coverage
+  - pip install PyYAML argparse rospkg vcstools catkin_pkg python-dateutil distribute
+  - pip install nose coverage
 # command to run tests
 script:
   - nosetests --with-coverage --cover-package=rosdep2 --with-xunit test
