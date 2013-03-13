@@ -14,7 +14,7 @@ setup(
     setup_requires=['nose >= 1.0'],
     test_suite='nose.collector',
     test_requires=['mock'],
-    scripts=['scripts/rosdep'],
+    scripts=['scripts/rosdep', 'scripts/rosdep-source'],
     author="Tully Foote, Ken Conley",
     author_email="foote@willowgarage.com, kwc@willowgarage.com",
     url="http://www.ros.org/wiki/rosdep",
