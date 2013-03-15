@@ -49,7 +49,7 @@ def test_url_constants():
 def test_download_gbpdistro_as_rosdep_data():
     from rosdep2.gbpdistro_support import download_gbpdistro_as_rosdep_data
     from rosdep2.gbpdistro_support import FUERTE_GBPDISTRO_URL
-    from rosdep2.rep3 import REP3_TARGETS_URL
+    from rosdistro.rosdistro import MAIN_ROSDIST
     from rosdep2 import DownloadFailure
     data = download_gbpdistro_as_rosdep_data(FUERTE_GBPDISTRO_URL)
     # don't go beyond this, this test is just making sure the download
@@ -68,7 +68,7 @@ def test_download_gbpdistro_as_rosdep_data():
         pass
     try:
         # use targets URL, which should have a bad format
-        download_gbpdistro_as_rosdep_data(REP3_TARGETS_URL)
+        download_gbpdistro_as_rosdep_data("%s/rosdistros.yaml"%MAIN_ROSDIST)
         assert False, "should have raised"
     except DownloadFailure:
         pass

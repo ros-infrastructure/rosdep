@@ -8,7 +8,7 @@ from rospkg.os_detect import OS_OSX
 from .core import InvalidData, DownloadFailure
 from .platforms.debian import APT_INSTALLER
 from .platforms.osx import BREW_INSTALLER
-from .rep3 import download_targets_data
+from rosdistro.rosdistro import MasterFile
 
 #py3k
 try:
@@ -130,7 +130,7 @@ def download_gbpdistro_as_rosdep_data(gbpdistro_url, targets_url=None):
     """
     # we can convert a gbpdistro file into rosdep data by following a
     # couple rules
-    targets_data = download_targets_data(targets_url=targets_url)
+    targets_data = MasterFile().get_targets()
     try:
         f = urllib2.urlopen(gbpdistro_url, timeout=DOWNLOAD_TIMEOUT)
         text = f.read()
