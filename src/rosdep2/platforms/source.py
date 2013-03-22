@@ -141,6 +141,7 @@ class SourceInstall(object):
         self.exec_path = None
         self.tarball = self.alternate_tarball = None
         self.tarball_md5sum = None
+        self.dependencies = None
     
     @staticmethod
     def from_manifest(manifest, manifest_url):
@@ -159,6 +160,7 @@ class SourceInstall(object):
             raise InvalidRdmanifest("uri required for source rosdeps") 
         r.alternate_tarball = manifest.get("alternate-uri")
         r.tarball_md5sum = manifest.get("md5sum")
+        r.dependencies = manifest.get("depends")
         return r
 
     def __str__(self):
@@ -220,7 +222,10 @@ class SourceInstaller(PackageManagerInstaller):
         return commands
 
     def get_depends(self, rosdep_args): 
-        return rosdep_args.get('depends', [])
+        deps = rosdep_args.get('depends', [])
+        for r in self.resolve(rosdep_args):
+            deps.extend(r.dependencies)
+        return deps
 
 def install_from_file(rdmanifest_file):
     with open(rdmanifest_file, 'r') as f:
