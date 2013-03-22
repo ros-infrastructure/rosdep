@@ -201,6 +201,9 @@ def test_SourceInstaller_resolve():
         
     assert type(resolved) == list
     assert len(resolved) == 1
+    # test for reinstall (to check the depends in rdmanifest)
+    dependencies = installer.get_depends(dict(uri=url, md5sum=md5sum_good))
+    assert dependencies == ['checkinstall'], "Dependencies should resolve to checkinstall listed in the rdmanifest."
     resolved = resolved[0]
 
     assert resolved.install_command == rep122_install_command
@@ -208,6 +211,9 @@ def test_SourceInstaller_resolve():
 
     # test again to activate caching
     resolved = installer.resolve(dict(uri=url, md5sum=md5sum_good))
+    assert type(resolved) == list, "Cache should also return a list"
+    assert len(resolved) == 1
+    resolved = resolved[0]
     assert resolved.install_command == rep122_install_command
     assert resolved.check_presence_command == rep122_check_presence_command
 
