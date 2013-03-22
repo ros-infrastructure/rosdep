@@ -199,7 +199,7 @@ class SourceInstaller(PackageManagerInstaller):
             rd_debug("Downloading manifest [%s], mirror [%s]"%(url, alt_url))
             manifest, download_url = download_rdmanifest(url, md5sum, alt_url)
             resolved = SourceInstall.from_manifest(manifest, download_url)
-            self._rdmanifest_cache[download_url] = resolved
+            self._rdmanifest_cache[download_url] = [resolved]
             return [resolved]
         except DownloadFailed as ex:
             # not sure this should be masked this way
