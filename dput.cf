@@ -10,23 +10,23 @@ post_upload_command     = ssh rosbuild@50.28.27.175 -- /usr/bin/reprepro -b /var
 [all-shadow]
 method                  = scp
 login                   = rosbuild
-fqdn                    = pub8
+fqdn                    = packages.ros.org
 incoming                = /var/packages/ros-shadow/ubuntu/queue/all
 run_dinstall            = 0
-post_upload_command     = ssh rosbuild@pub8 -- /usr/bin/reprepro -b /var/packages/ros-shadow/ubuntu --ignore=emptyfilenamepart -V processincoming all
+post_upload_command     = ssh rosbuild@packages.ros.org -- /usr/bin/reprepro -b /var/packages/ros-shadow/ubuntu --ignore=emptyfilenamepart -V processincoming all
 
 [all-shadow-fixed]
 method                  = scp
 login                   = rosbuild
-fqdn                    = pub8
+fqdn                    = packages.ros.org
 incoming                = /var/packages/ros-shadow-fixed/ubuntu/queue/all
 run_dinstall            = 0
-post_upload_command     = ssh rosbuild@pub8 -- /usr/bin/reprepro -b /var/packages/ros-shadow-fixed/ubuntu --ignore=emptyfilenamepart -V processincoming all
+post_upload_command     = ssh rosbuild@packages.ros.org -- /usr/bin/reprepro -b /var/packages/ros-shadow-fixed/ubuntu --ignore=emptyfilenamepart -V processincoming all
 
 [all-ros]
 method                  = scp
 login                   = rosbuild
-fqdn                    = pub8
+fqdn                    = packages.ros.org
 incoming                = /var/packages/ros/ubuntu/queue/all
 run_dinstall            = 0
-post_upload_command     = ssh rosbuild@pub8 -- /usr/bin/reprepro -b /var/packages/ros/ubuntu --ignore=emptyfilenamepart -V processincoming all
+post_upload_command     = ssh rosbuild@packages.ros.org -- /usr/bin/reprepro -b /var/packages/ros/ubuntu --ignore=emptyfilenamepart -V processincoming all
