@@ -29,6 +29,7 @@
 # Author Tully Foote/tfoote@willowgarage.com, Ken Conley
 
 import subprocess
+import re
 
 from rospkg.os_detect import OS_OSX
 
@@ -131,6 +132,7 @@ class HomebrewInstaller(PackageManagerInstaller):
         if not is_brew_installed():
             raise InstallFailed((BREW_INSTALLER, 'Homebrew is not installed'))
         packages = self.get_packages_to_install(resolved, reinstall=reinstall)
+        packages = self.remove_duplicate_dependencies(packages)
         # interactive switch doesn't matter
         if reinstall:
             commands = []
@@ -141,3 +143,17 @@ class HomebrewInstaller(PackageManagerInstaller):
         else:
             return [['brew', 'install', p] for p in packages]
 
+    def remove_duplicate_dependencies(self, packages):
+        # find all dependencies for each package
+        for p in packages:
+            sub_command = ['brew', 'info', p]
+            output = subprocess.Popen(sub_command, stdout=subprocess.PIPE).communicate()[0]
+            match = re.findall("Depends on: (.*)", output)
+            if match:
+                dependencies = re.split(',', match[0])
+                for d in dependencies:
+                    d = d.strip()
+                    # remove duplicate dependency from package list
+                    if(d in packages):
+                        packages.remove(d)
+        return packages

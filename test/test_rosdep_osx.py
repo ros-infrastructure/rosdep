@@ -68,6 +68,11 @@ def test_brew_detect():
 
 def test_HomebrewInstaller():
     from rosdep2.platforms.osx import HomebrewInstaller
+    from rosdep2.platforms.osx import is_brew_installed
+
+    if not is_brew_installed():
+        # Disable test if brew is not installed
+        return
 
     @patch('rosdep2.platforms.osx.is_brew_installed')
     @patch.object(HomebrewInstaller, 'get_packages_to_install')
