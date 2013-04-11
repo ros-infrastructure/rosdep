@@ -1,0 +1,8 @@
+%YAML 1.1
+# index file
+# this file describes the available ROS distributions
+# see REP 137: http://ros.org/reps/rep-0137.html
+---
+type: index
+version: 1
+distributions: []
