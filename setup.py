@@ -10,7 +10,7 @@ setup(
     version=__version__,
     packages=['rosdep2', 'rosdep2.platforms'],
     package_dir={'': 'src'},
-    install_requires=['catkin_pkg', 'rospkg', 'PyYAML >= 3.1'],
+    install_requires=['catkin_pkg', 'rospkg', 'rosdistro', 'PyYAML >= 3.1'],
     setup_requires=['nose >= 1.0'],
     test_suite='nose.collector',
     test_requires=['mock'],
