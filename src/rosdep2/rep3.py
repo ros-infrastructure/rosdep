@@ -30,7 +30,9 @@ import yaml
 import warnings
 
 from .core import DownloadFailure
-from .rosdistrohelper import get_targets
+
+# location of targets file for processing gbpdistro files
+REP3_TARGETS_URL = 'https://raw.github.com/ros/rosdistro/master/releases/targets.yaml'
 
 #seconds to wait before aborting download of gbpdistro data
 DOWNLOAD_TIMEOUT = 15.0
@@ -49,22 +51,20 @@ def download_targets_data(targets_url=None):
     """
     warnings.warn("deprecated, use rosdistro instead")
 
-    # old behavior for compatibility issues
-    if targets_url is not None:
-        try:
-            f = urllib2.urlopen(targets_url, timeout=DOWNLOAD_TIMEOUT)
-            text = f.read()
-            f.close()
-            targets_data = yaml.safe_load(text)
-        except Exception as e:
-            raise DownloadFailure("Failed to download target platform data for gbpdistro:\n\t%s"%(str(e)))
-        if type(targets_data) == list:
-            # convert to dictionary
-            new_targets_data = {}
-            for t in targets_data:
-                platform = t.keys()[0]
-                new_targets_data[platform] = t[platform]
-            targets_data = new_targets_data
-        return targets_data
-
-    return get_targets()
+    if targets_url is None:
+        targets_url = REP3_TARGETS_URL
+    try:
+        f = urllib2.urlopen(targets_url, timeout=DOWNLOAD_TIMEOUT)
+        text = f.read()
+        f.close()
+        targets_data = yaml.safe_load(text)
+    except Exception as e:
+        raise DownloadFailure("Failed to download target platform data for gbpdistro:\n\t%s"%(str(e)))
+    if type(targets_data) == list:
+        # convert to dictionary
+        new_targets_data = {}
+        for t in targets_data:
+            platform = t.keys()[0]
+            new_targets_data[platform] = t[platform]
+        targets_data = new_targets_data
+    return targets_data
