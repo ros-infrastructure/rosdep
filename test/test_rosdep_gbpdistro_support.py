@@ -46,6 +46,22 @@ def test_url_constants():
             assert False, "URL [%s][%s] failed to download" % (url_name, url)
 
 
+def test_get_gbprepo_as_rosdep_data():
+    from rosdep2.rosdistrohelper import get_index
+    from rosdep2.gbpdistro_support import get_gbprepo_as_rosdep_data
+    distro = get_index().distributions.keys()[0]
+    data = get_gbprepo_as_rosdep_data(distro)
+    for k in ['ros', 'catkin', 'genmsg']:
+        assert k in data, data
+    assert data['ros']['ubuntu']
+
+    try:
+        get_gbprepo_as_rosdep_data('fooNonExistantDistro')
+        assert False, "should have raised"
+    except RuntimeError:
+        pass
+
+
 def test_download_gbpdistro_as_rosdep_data():
     from rosdep2.gbpdistro_support import download_gbpdistro_as_rosdep_data
     from rosdep2.gbpdistro_support import FUERTE_GBPDISTRO_URL
