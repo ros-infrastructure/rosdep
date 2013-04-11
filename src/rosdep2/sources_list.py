@@ -38,7 +38,7 @@ import urllib2
 import cPickle
 
 from .core import InvalidData, DownloadFailure
-from .gbpdistro_support import download_gbpdistro_as_rosdep_data
+from .gbpdistro_support import get_gbprepo_as_rosdep_data
 
 try:
     import urlparse
@@ -49,6 +49,7 @@ import rospkg
 import rospkg.distro
 
 from .loader import RosdepLoader
+from .rosdistrohelper import get_index
 
 # default file to download with 'init' command in order to bootstrap
 # rosdep
@@ -136,6 +137,13 @@ class DataSource(object):
 
     def __repr__(self):
         return repr((self.type, self.url, self.tags, self.origin))
+
+class RosDistroSource(DataSource):
+    def __init__(self, distro):
+        self.type = TYPE_GBPDISTRO
+        self.tags = [distro]
+        self.url = get_index().distributions[distro]['release']
+        self.origin = None
 
 # create function we can pass in as model to parse_source_data.  The
 # function emulates the CachedDataSource constructor but does the
@@ -383,18 +391,27 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
 
     sources = parse_sources_list(sources_list_dir=sources_list_dir)
     retval = []
-    for source in sources:
+    for source in list(sources):
         try:
             if source.type == TYPE_YAML:
                 rosdep_data = download_rosdep_data(source.url)
-            elif source.type == TYPE_GBPDISTRO:
-                rosdep_data = download_gbpdistro_as_rosdep_data(source.url)  
+            elif source.type == TYPE_GBPDISTRO:  # DEPRECATED, do not use this file. See REP137
+                sources.remove(source)
+                continue  # do not store this entry in the cache
             retval.append((source, write_cache_file(sources_cache_dir, source.url, rosdep_data)))
             if success_handler is not None:
                 success_handler(source)
         except DownloadFailure as e:
             if error_handler is not None:
                 error_handler(source, e)
+
+    # Additional sources for ros distros
+    # In compliance with REP137
+    for d, dist in get_index().distributions.iteritems():
+        rds = RosDistroSource(d)
+        rosdep_data = get_gbprepo_as_rosdep_data(d)
+        retval.append((rds, write_cache_file(sources_cache_dir, dist['release'], rosdep_data)))
+        sources.append(rds)
 
     # Create a combined index of *all* the sources.  We do all the
     # sources regardless of failures because a cache from a previous
