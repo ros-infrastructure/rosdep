@@ -38,7 +38,7 @@ import urllib2
 import cPickle
 
 from .core import InvalidData, DownloadFailure
-from .gbpdistro_support import get_gbprepo_as_rosdep_data
+from .gbpdistro_support import get_gbprepo_as_rosdep_data, download_gbpdistro_as_rosdep_data
 
 try:
     import urlparse
@@ -396,8 +396,10 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
             if source.type == TYPE_YAML:
                 rosdep_data = download_rosdep_data(source.url)
             elif source.type == TYPE_GBPDISTRO:  # DEPRECATED, do not use this file. See REP137
-                sources.remove(source)
-                continue  # do not store this entry in the cache
+                if not source.tags[0] in ['electric', 'fuerte']:
+                    sources.remove(source)
+                    continue  # do not store this entry in the cache
+                rosdep_data = download_gbpdistro_as_rosdep_data(source.url)
             retval.append((source, write_cache_file(sources_cache_dir, source.url, rosdep_data)))
             if success_handler is not None:
                 success_handler(source)
