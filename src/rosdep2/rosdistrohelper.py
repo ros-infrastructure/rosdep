@@ -30,15 +30,25 @@
 import rosdistro
 
 class RDCache:
+    index_url = None
     index = None
     release_files = {}
 
+def _check_cache():
+    if RDCache.index_url != rosdistro.get_index_url():
+        RDCache.index_url = rosdistro.get_index_url()
+        RDCache.index = None
+        RDCache.release_files = {}
+
+
 def get_index():
+    _check_cache()
     if RDCache.index is None:
-        RDCache.index = rosdistro.get_index(rosdistro.get_index_url())
+        RDCache.index = rosdistro.get_index(RDCache.index_url)
     return RDCache.index
 
 def get_release_file(distro):
+    _check_cache()
     if distro not in RDCache.release_files:
         RDCache.release_files[distro] = rosdistro.get_release_file(get_index(), distro)
     return RDCache.release_files[distro]
