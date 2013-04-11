@@ -180,11 +180,8 @@ def download_gbpdistro_as_rosdep_data(gbpdistro_url, targets_url=None):
     """
     # we can convert a gbpdistro file into rosdep data by following a
     # couple rules
-    if targets_url is not None:
-        # will output a warning
-        targets_data = download_targets_data(targets_url=targets_url)
-    else:
-        targets_data = get_targets()
+    # will output a warning
+    targets_data = download_targets_data(targets_url=targets_url)
     try:
         f = urllib2.urlopen(gbpdistro_url, timeout=DOWNLOAD_TIMEOUT)
         text = f.read()
