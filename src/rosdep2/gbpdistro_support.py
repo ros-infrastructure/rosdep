@@ -1,6 +1,7 @@
 import urllib2
 import yaml
 import urlparse
+import os
 
 from rospkg.os_detect import OS_UBUNTU
 from rospkg.os_detect import OS_OSX
@@ -8,7 +9,11 @@ from rospkg.os_detect import OS_OSX
 from .core import InvalidData, DownloadFailure
 from .platforms.debian import APT_INSTALLER
 from .platforms.osx import BREW_INSTALLER
-from .rep3 import download_targets_data
+from .rosdistrohelper import get_targets, get_release_file, PreRep137Warning
+
+from .rep3 import download_targets_data  # deprecated, will output warning
+
+import warnings
 
 #py3k
 try:
@@ -40,7 +45,7 @@ def get_owner_name(url):
         parsed = urlparse.urlparse(url)
         if parsed.netloc == 'github.com':
             result = parsed.path.split('/')[1]
-    except Exception:
+    except (ValueError, IndexError):
         pass
     return result
 
@@ -48,8 +53,13 @@ def get_owner_name(url):
 # For compatability url defaults to ''
 def gbprepo_to_rosdep_data(gbpdistro_data, targets_data, url=''):
     """
+    DEPRECATED: the rosdistro file format has changed according to REP137
+                this function will yield a deprecation warning
+
     :raises: :exc:`InvalidData`
     """
+
+    warnings.warn("deprecated: see REP137 and rosdistro", PreRep137Warning)
     # Error reporting for this isn't nearly as good as it could be
     # (e.g. doesn't separate gbpdistro vs. targets, nor provide
     # origin), but rushing this implementation a bit.
@@ -118,9 +128,51 @@ def gbprepo_to_rosdep_data(gbpdistro_data, targets_data, url=''):
                         + str(e))
 
 
+# REP137 compliant
+def get_gbprepo_as_rosdep_data(gbpdistro):
+    """
+    :raises: :exc:`InvalidData`
+    """
+    distro_file = get_release_file(gbpdistro)
+    targets = distro_file.platforms
+    release_name = gbpdistro
+
+    rosdep_data = {}
+    gbp_repos = distro_file.repositories
+    for rosdep_key, repo in gbp_repos.items():
+        for pkg in repo.package_names:
+            rosdep_data[pkg] = {}
+
+            # for pkg in repo['packages']: indent the rest of the lines here.
+            # Do generation for ubuntu
+            rosdep_data[pkg][OS_UBUNTU] = {}
+            # following rosdep pull #17, use env var instead of github organization name
+            tap = os.environ.get('ROSDEP_HOMEBREW_TAP', 'ros')
+            # Do generation for empty OS X entries
+            homebrew_name = '%s/%s/%s' % (tap, release_name, rosdep_key)
+            rosdep_data[pkg][OS_OSX] = {
+                BREW_INSTALLER: {'packages': [homebrew_name]}
+            }
+
+            # - debian package name: underscores must be dashes
+            deb_package_name = 'ros-%s-%s' % (release_name, pkg)
+            deb_package_name = deb_package_name.replace('_', '-')
+
+            for t in targets:
+                rosdep_data[pkg][OS_UBUNTU][t] = {
+                    APT_INSTALLER: {'packages': [deb_package_name]}
+                }
+
+            rosdep_data[pkg]['_is_ros'] = True
+    return rosdep_data
+
+
 def download_gbpdistro_as_rosdep_data(gbpdistro_url, targets_url=None):
     """
     Download gbpdistro file from web and convert format to rosdep distro data.
+
+    DEPRECATED: see REP137. This function will output
+                (at least) one deprecation warning
 
     :param gbpdistro_url: url of gbpdistro file, ``str``
     :param target_url: override URL of platform targets file
@@ -130,12 +182,14 @@ def download_gbpdistro_as_rosdep_data(gbpdistro_url, targets_url=None):
     """
     # we can convert a gbpdistro file into rosdep data by following a
     # couple rules
+    # will output a warning
     targets_data = download_targets_data(targets_url=targets_url)
     try:
         f = urllib2.urlopen(gbpdistro_url, timeout=DOWNLOAD_TIMEOUT)
         text = f.read()
         f.close()
         gbpdistro_data = yaml.safe_load(text)
+        # will output a warning
         return gbprepo_to_rosdep_data(gbpdistro_data,
                                       targets_data,
                                       gbpdistro_url)

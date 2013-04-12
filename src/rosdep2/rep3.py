@@ -27,24 +27,31 @@
 
 import urllib2
 import yaml
+import warnings
 
 from .core import DownloadFailure
+from .rosdistrohelper import PreRep137Warning
 
 # location of targets file for processing gbpdistro files
 REP3_TARGETS_URL = 'https://raw.github.com/ros/rosdistro/master/releases/targets.yaml'
 
 #seconds to wait before aborting download of gbpdistro data
-DOWNLOAD_TIMEOUT = 15.0 
+DOWNLOAD_TIMEOUT = 15.0
 
 def download_targets_data(targets_url=None):
     """
     Download REP 3 targets file and unmarshal from YAML.
+    DEPRECATED: this function is deprecated. List of targets should be obtained
+                from the rosdistro module.
+                The body of this function is an example.
 
     :param target_url: override URL of platform targets file. Defaults
       to ``REP3_TARGETS_URL``.
     :raises: :exc:`DownloadFailure`
     :raises: :exc:`InvalidData` If targets file does not pass cursory validation checks.
     """
+    warnings.warn("deprecated, use rosdistro instead", PreRep137Warning)
+
     if targets_url is None:
         targets_url = REP3_TARGETS_URL
     try:
@@ -62,4 +69,3 @@ def download_targets_data(targets_url=None):
             new_targets_data[platform] = t[platform]
         targets_data = new_targets_data
     return targets_data
-
