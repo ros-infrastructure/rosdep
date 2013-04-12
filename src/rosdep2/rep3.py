@@ -30,6 +30,7 @@ import yaml
 import warnings
 
 from .core import DownloadFailure
+from .rosdistrohelper import PreRep137Warning
 
 # location of targets file for processing gbpdistro files
 REP3_TARGETS_URL = 'https://raw.github.com/ros/rosdistro/master/releases/targets.yaml'
@@ -49,7 +50,7 @@ def download_targets_data(targets_url=None):
     :raises: :exc:`DownloadFailure`
     :raises: :exc:`InvalidData` If targets file does not pass cursory validation checks.
     """
-    warnings.warn("deprecated, use rosdistro instead")
+    warnings.warn("deprecated, use rosdistro instead", PreRep137Warning)
 
     if targets_url is None:
         targets_url = REP3_TARGETS_URL

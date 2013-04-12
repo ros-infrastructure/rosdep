@@ -38,6 +38,7 @@ import os
 import sys
 import traceback
 import urllib2
+import warnings
 
 from optparse import OptionParser
 
@@ -53,6 +54,7 @@ from .sources_list import update_sources_list, get_sources_cache_dir,\
      download_default_sources_list, SourcesListLoader,CACHE_INDEX,\
      get_sources_list_dir, get_default_sources_list_file,\
      DEFAULT_SOURCES_LIST_URL
+from .rosdistrohelper import PreRep137Warning
 
 from catkin_packages import find_catkin_packages_in
 from catkin_packages import set_workspace_packages
@@ -402,6 +404,9 @@ def command_update(options):
         print(error_string, file=sys.stderr)
         error_occured.append(error_string)
     sources_list_dir = get_sources_list_dir()
+
+    # disable deprecation warnings when using the command-line tool
+    warnings.filterwarnings("ignore", category=PreRep137Warning)
 
     if not os.path.exists(sources_list_dir):
         print("ERROR: no sources directory exists on the system meaning rosdep has not yet been initialized.\n\nPlease initialize your rosdep with\n\n\tsudo rosdep init\n")
