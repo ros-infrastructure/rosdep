@@ -28,6 +28,10 @@
 # Author Paul Mathieu/paul@osrfoundation.org
 
 import rosdistro
+import warnings
+
+class PreRep137Warning(UserWarning):
+    pass
 
 class RDCache:
     index_url = None

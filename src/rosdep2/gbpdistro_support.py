@@ -8,7 +8,7 @@ from rospkg.os_detect import OS_OSX
 from .core import InvalidData, DownloadFailure
 from .platforms.debian import APT_INSTALLER
 from .platforms.osx import BREW_INSTALLER
-from .rosdistrohelper import get_targets, get_release_file
+from .rosdistrohelper import get_targets, get_release_file, PreRep137Warning
 
 from .rep3 import download_targets_data  # deprecated, will output warning
 
@@ -58,7 +58,7 @@ def gbprepo_to_rosdep_data(gbpdistro_data, targets_data, url=''):
     :raises: :exc:`InvalidData`
     """
 
-    warnings.warn("deprecated: see REP137 and rosdistro")
+    warnings.warn("deprecated: see REP137 and rosdistro", PreRep137Warning)
     # Error reporting for this isn't nearly as good as it could be
     # (e.g. doesn't separate gbpdistro vs. targets, nor provide
     # origin), but rushing this implementation a bit.
