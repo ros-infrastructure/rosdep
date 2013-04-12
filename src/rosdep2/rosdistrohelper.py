@@ -33,29 +33,29 @@ import warnings
 class PreRep137Warning(UserWarning):
     pass
 
-class RDCache:
+class  _RDCache:
     index_url = None
     index = None
     release_files = {}
 
 def _check_cache():
-    if RDCache.index_url != rosdistro.get_index_url():
-        RDCache.index_url = rosdistro.get_index_url()
-        RDCache.index = None
-        RDCache.release_files = {}
+    if _RDCache.index_url != rosdistro.get_index_url():
+        _RDCache.index_url = rosdistro.get_index_url()
+        _RDCache.index = None
+        _RDCache.release_files = {}
 
 
 def get_index():
     _check_cache()
-    if RDCache.index is None:
-        RDCache.index = rosdistro.get_index(RDCache.index_url)
-    return RDCache.index
+    if _RDCache.index is None:
+        _RDCache.index = rosdistro.get_index(_RDCache.index_url)
+    return _RDCache.index
 
 def get_release_file(distro):
     _check_cache()
-    if distro not in RDCache.release_files:
-        RDCache.release_files[distro] = rosdistro.get_release_file(get_index(), distro)
-    return RDCache.release_files[distro]
+    if distro not in _RDCache.release_files:
+        _RDCache.release_files[distro] = rosdistro.get_release_file(get_index(), distro)
+    return _RDCache.release_files[distro]
 
 def get_targets():
     return dict((d, get_release_file(d).platforms) for d in get_index().distributions)
