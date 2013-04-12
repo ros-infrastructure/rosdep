@@ -1,6 +1,7 @@
 import urllib2
 import yaml
 import urlparse
+import os
 
 from rospkg.os_detect import OS_UBUNTU
 from rospkg.os_detect import OS_OSX
@@ -44,7 +45,7 @@ def get_owner_name(url):
         parsed = urlparse.urlparse(url)
         if parsed.netloc == 'github.com':
             result = parsed.path.split('/')[1]
-    except ValueError:
+    except (ValueError, IndexError):
         pass
     return result
 
@@ -145,9 +146,10 @@ def get_gbprepo_as_rosdep_data(gbpdistro):
             # for pkg in repo['packages']: indent the rest of the lines here.
             # Do generation for ubuntu
             rosdep_data[pkg][OS_UBUNTU] = {}
+            # following rosdep pull #17, use env var instead of github organization name
+            tap = os.environ.get('ROSDEP_HOMEBREW_TAP', 'ros')
             # Do generation for empty OS X entries
-            homebrew_name = '%s/%s/%s' % ('ros',  # any reason why this should be something else?
-                                          release_name, rosdep_key)
+            homebrew_name = '%s/%s/%s' % (tap, release_name, rosdep_key)
             rosdep_data[pkg][OS_OSX] = {
                 BREW_INSTALLER: {'packages': [homebrew_name]}
             }
