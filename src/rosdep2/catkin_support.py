@@ -26,10 +26,10 @@ from .platforms.debian import APT_INSTALLER
 from .platforms.osx import BREW_INSTALLER
 from .platforms.pip import PIP_INSTALLER
 from .platforms.redhat import YUM_INSTALLER
-from .rep3 import download_targets_data
 from .sources_list import get_sources_list_dir, DataSourceMatcher, SourcesListLoader
 from .lookup import RosdepLookup
 from .rospkg_loader import DEFAULT_VIEW_KEY
+from .rosdistrohelper import get_targets
 
 class ValidationFailed(Exception):
     pass
@@ -55,7 +55,7 @@ def get_ubuntu_targets(rosdistro):
 
     :raises: :exc:`ValidationFailed`
     """
-    targets_data = download_targets_data()
+    targets_data = get_targets()
     return targets_data[rosdistro]
 
 def get_installer(installer_name):
