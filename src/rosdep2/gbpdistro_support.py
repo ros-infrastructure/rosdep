@@ -134,7 +134,6 @@ def get_gbprepo_as_rosdep_data(gbpdistro):
     :raises: :exc:`InvalidData`
     """
     distro_file = get_release_file(gbpdistro)
-    targets = distro_file.platforms
     release_name = gbpdistro
 
     rosdep_data = {}
@@ -158,10 +157,11 @@ def get_gbprepo_as_rosdep_data(gbpdistro):
             deb_package_name = 'ros-%s-%s' % (release_name, pkg)
             deb_package_name = deb_package_name.replace('_', '-')
 
-            for t in targets:
-                rosdep_data[pkg][OS_UBUNTU][t] = {
-                    APT_INSTALLER: {'packages': [deb_package_name]}
-                }
+            for os_name in distro_file.platforms:
+                for os_code_name in distro_file.platforms[os_name]:
+                    rosdep_data[pkg][os_name][os_code_name] = {
+                        APT_INSTALLER: {'packages': [deb_package_name]}
+                    }
 
             rosdep_data[pkg]['_is_ros'] = True
     return rosdep_data
