@@ -56,7 +56,7 @@ def get_ubuntu_targets(rosdistro):
     :raises: :exc:`ValidationFailed`
     """
     targets_data = get_targets()
-    return targets_data[rosdistro]
+    return targets_data[rosdistro]['ubuntu']
 
 def get_installer(installer_name):
     """ Expected installers APT_INSTALLER, YUM_INSTALLER, ..."""
