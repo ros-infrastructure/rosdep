@@ -38,19 +38,10 @@ def _generate_rosinstall(distro_name, packages, check_variants=True):
         packages = list(set([p for p in all_packages if p in dist.packages.keys()]))
         logger.info("Building rosinstall for wet packages: %s" % packages)
 
-    dep_types = ['buildtool', 'build', 'run']
-    dep_walk = {
-        'buildtool': dep_types,
-        'build': dep_types,
-        'run': dep_types
-    }
-
     walker = DependencyWalker(dist)
     all_pkgs = set([])
     for pkg_name in packages:
-        deps = walker.get_mapped_depends(pkg_name, dep_walk, ros_packages_only=True)
-        for dep_type in dep_types:
-            all_pkgs |= deps[dep_type]
+        all_pkgs |= walker.get_recursive_depends(pkg_name, ['buildtool', 'build', 'run'], ros_packages_only=True, ignore_pkgs=all_pkgs)
 
     rosinstalls = []
     for pkg_name in all_pkgs:
