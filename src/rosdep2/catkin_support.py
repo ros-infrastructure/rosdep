@@ -22,14 +22,15 @@ import os
 from subprocess import Popen, PIPE, CalledProcessError
 
 from . import create_default_installer_context
+from .lookup import RosdepLookup
 from .platforms.debian import APT_INSTALLER
 from .platforms.osx import BREW_INSTALLER
 from .platforms.pip import PIP_INSTALLER
 from .platforms.redhat import YUM_INSTALLER
-from .sources_list import get_sources_list_dir, DataSourceMatcher, SourcesListLoader
-from .lookup import RosdepLookup
-from .rospkg_loader import DEFAULT_VIEW_KEY
+from .rep3 import download_targets_data
 from .rosdistrohelper import get_targets
+from .rospkg_loader import DEFAULT_VIEW_KEY
+from .sources_list import get_sources_list_dir, DataSourceMatcher, SourcesListLoader
 
 class ValidationFailed(Exception):
     pass
@@ -56,6 +57,11 @@ def get_ubuntu_targets(rosdistro):
     :raises: :exc:`ValidationFailed`
     """
     targets_data = get_targets()
+    legacy_targets = download_targets_data()
+    if 'fuerte' in legacy_targets:
+        targets_data['fuerte'] = {'ubuntu': legacy_targets['fuerte']}
+    if 'electric' in legacy_targets:
+        targets_data['electric'] = {'ubuntu': legacy_targets['electric']}
     return targets_data[rosdistro]['ubuntu']
 
 def get_installer(installer_name):
@@ -69,7 +75,7 @@ default_installers = {
     'osx': [BREW_INSTALLER, PIP_INSTALLER],
     'ubuntu': [APT_INSTALLER],
     'fedora': [YUM_INSTALLER],
-    }
+}
 
 
 def resolve_for_os(rosdep_key, view, installer, os_name, os_version):
