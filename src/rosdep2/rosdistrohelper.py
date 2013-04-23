@@ -47,6 +47,11 @@ def _check_cache():
         _RDCache.release_files = {}
 
 
+def get_index_url():
+    _check_cache()
+    return _RDCache.index_url
+
+
 def get_index():
     _check_cache()
     if _RDCache.index is None:

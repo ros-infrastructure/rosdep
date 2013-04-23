@@ -49,7 +49,7 @@ import rospkg
 import rospkg.distro
 
 from .loader import RosdepLoader
-from .rosdistrohelper import get_index
+from .rosdistrohelper import get_index, get_index_url
 
 # default file to download with 'init' command in order to bootstrap
 # rosdep
@@ -397,6 +397,7 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
                 rosdep_data = download_rosdep_data(source.url)
             elif source.type == TYPE_GBPDISTRO:  # DEPRECATED, do not use this file. See REP137
                 if not source.tags[0] in ['electric', 'fuerte']:
+                    print('Ignore legacy gbpdistro "%s"' % source.tags[0])
                     sources.remove(source)
                     continue  # do not store this entry in the cache
                 rosdep_data = download_gbpdistro_as_rosdep_data(source.url)
@@ -409,7 +410,9 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
 
     # Additional sources for ros distros
     # In compliance with REP137
+    print('Query rosdistro index %s' % get_index_url())
     for d, dist in get_index().distributions.iteritems():
+        print('Add distro "%s"' % d)
         rds = RosDistroSource(d)
         rosdep_data = get_gbprepo_as_rosdep_data(d)
         retval.append((rds, write_cache_file(sources_cache_dir, dist['release'], rosdep_data)))
