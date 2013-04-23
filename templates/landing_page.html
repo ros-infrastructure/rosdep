@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Rosinstall Generation{% endblock %}
+{% block content %}
+  <div id="status">
+    <h2>URLs to generate .rosinstall files</h2>
+    <dl>
+      <dt>generate/DISTRO/PKG1,PKG2,PKGn</dt>
+      <dd>Wet packages including their dependencies</dd>
+
+      <dt>generate/raw/DISTRO/PKG1,PKG2,PKGn</dt>
+      <dd>Wet packages including their dependencies as a raw file (no HTML output)</dd>
+
+      <dt>generate/dry/DISTRO/PKG1,PKG2,PKGn</dt>
+      <dd>Dry packages including their dependencies</dd>
+
+      <dt>generate/dry/raw/DISTRO/PKG1,PKG2,PKGn</dt>
+      <dd>Dry packages including their dependencies as a raw file (no HTML output)</dd>
+
+      <dt>generate/combined/DISTRO/PKG1,PKG2,PKGn</dt>
+      <dd>Dry and wet packages including their dependencies</dd>
+
+      <dt>generate/combined/raw/DISTRO/PKG1,PKG2,PKGn</dt>
+      <dd>Dry and wet packages including their dependencies as a raw file (no HTML output)</dd>
+    </dl>
+   </div>
+{% endblock %}

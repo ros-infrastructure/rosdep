@@ -8,6 +8,9 @@ import logging
 logger = logging.getLogger('submit_jobs')
 
 # Create your views here.
+def landing_page(request):
+    return render_to_response('landing_page.html', {})
+
 def dry_raw(request, distro, variant):
     rosinstall = generate_dry_rosinstall(distro, variant)
     return render_to_response('rosinstall.html', {'rosinstall': rosinstall})

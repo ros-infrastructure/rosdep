@@ -2,6 +2,7 @@ from django.conf.urls.defaults import patterns, include, url
 from django.views.generic.simple import redirect_to
 
 urlpatterns = patterns('prerelease_website.rosinstall_gen.views',
+    url(r'^$', 'landing_page'),
     url(r'^generate/dry/raw/(?P<distro>.*)/(?P<variant>.*)$', 'dry_raw'),
     url(r'^generate/dry/(?P<distro>.*)/(?P<packages>.*)$', 'dry_index'),
     url(r'^generate/combined/raw/(?P<distro>.*)/(?P<variant>.*)$', 'combined_raw'),
