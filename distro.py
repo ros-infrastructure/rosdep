@@ -41,6 +41,7 @@ def _generate_rosinstall(distro_name, packages, check_variants=True):
     walker = DependencyWalker(dist)
     all_pkgs = set([])
     for pkg_name in packages:
+        assert pkg_name in dist.packages, 'Package "%s" is not part of distro "%s"' % (pkg_name, distro_name)
         all_pkgs |= walker.get_recursive_depends(pkg_name, ['buildtool', 'build', 'run'], ros_packages_only=True, ignore_pkgs=all_pkgs)
 
     rosinstalls = []
@@ -53,6 +54,7 @@ def _generate_rosinstall(distro_name, packages, check_variants=True):
 def _generate_rosinstall_for_package(dist, pkg_name):
     pkg = dist.packages[pkg_name]
     repo = dist.repositories[pkg.repository_name]
+    assert repo.version is not None, 'Package "%s" does not have a version" % pkg_name'
 
     url = repo.url
     release_tag = get_release_tag(repo, pkg_name)
