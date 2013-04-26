@@ -17,6 +17,7 @@ clean_dist:
 	-rm -f MANIFEST
 	-rm -rf dist
 	-rm -rf deb_dist
+	-rm -rf src/rosdep.egg-info
 
 distro: setup clean_dist
 	python setup.py sdist
