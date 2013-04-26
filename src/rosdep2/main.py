@@ -55,8 +55,7 @@ from .lookup import RosdepLookup, ResolutionError
 from .rospkg_loader import DEFAULT_VIEW_KEY
 from .sources_list import update_sources_list, get_sources_cache_dir,\
      download_default_sources_list, SourcesListLoader,CACHE_INDEX,\
-     get_sources_list_dir, get_default_sources_list_file,\
-     DEFAULT_SOURCES_LIST_URL
+     get_sources_files, DEFAULT_SOURCES_LIST_URL
 from .rosdistrohelper import PreRep137Warning
 
 from .catkin_packages import find_catkin_packages_in
@@ -179,13 +178,9 @@ def check_for_sources_list_init(sources_cache_dir):
     else:
         commands.append('rosdep update')
 
-    sources_list_dir = get_sources_list_dir()
-    if not os.path.exists(sources_list_dir):
+    filelist = get_sources_files()
+    if len(filelist) == 0:
         commands.insert(0, 'sudo rosdep init')
-    else:
-        filelist = [f for f in os.listdir(sources_list_dir) if f.endswith('.list')]    
-        if not filelist:
-            commands.insert(0, 'sudo rosdep init')
 
     if commands:
         commands = '\n'.join(["    %s"%c for c in commands])
@@ -410,21 +405,17 @@ def command_update(options):
         error_string = "ERROR: unable to process source [%s]:\n\t%s"%(data_source.url, exc)
         print(error_string, file=sys.stderr)
         error_occured.append(error_string)
-    sources_list_dir = get_sources_list_dir()
 
     # disable deprecation warnings when using the command-line tool
     warnings.filterwarnings("ignore", category=PreRep137Warning)
 
-    if not os.path.exists(sources_list_dir):
-        print("ERROR: no sources directory exists on the system meaning rosdep has not yet been initialized.\n\nPlease initialize your rosdep with\n\n\tsudo rosdep init\n")
-        return 1
+    filelist = get_sources_files()
 
-    filelist = [f for f in os.listdir(sources_list_dir) if f.endswith('.list')]    
     if not filelist:
-        print("ERROR: no data sources in %s\n\nPlease initialize your rosdep with\n\n\tsudo rosdep init\n"%sources_list_dir, file=sys.stderr)
+        print("ERROR: no data sources\n\nPlease initialize your rosdep with\n\n\tsudo rosdep init\n", file=sys.stderr)
         return 1
     try:
-        print("reading in sources list data from %s"%(sources_list_dir))
+        print("reading in sources list data from %s"%(','.join(filelist)))
         sources_cache_dir = get_sources_cache_dir()
         try:
             if os.geteuid() == 0:
