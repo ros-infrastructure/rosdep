@@ -30,7 +30,7 @@ from .platforms.redhat import YUM_INSTALLER
 from .rep3 import download_targets_data
 from .rosdistrohelper import get_targets
 from .rospkg_loader import DEFAULT_VIEW_KEY
-from .sources_list import get_sources_list_dir, DataSourceMatcher, SourcesListLoader
+from .sources_list import DataSourceMatcher, SourcesListLoader
 
 class ValidationFailed(Exception):
     pass
@@ -45,6 +45,8 @@ def call(command, pipe=None):
     output, unused_err = process.communicate()
     retcode = process.poll()
     if retcode:
+        print(output)
+        print(unused_err)
         raise CalledProcessError(retcode, command)
     if pipe:
         return output
@@ -100,12 +102,6 @@ def get_catkin_view(rosdistro_name, os_name, os_version, update=True):
     """
     :raises: :exc:`ValidationFailed`
     """
-    sources_list_dir = get_sources_list_dir()
-    if not os.path.exists(sources_list_dir):
-        raise ValidationFailed("""rosdep database is not initialized, please run:
-\tsudo rosdep init
-""")
-
     if update:
         update_rosdep()
 
@@ -113,9 +109,8 @@ def get_catkin_view(rosdistro_name, os_name, os_version, update=True):
     sources_loader = SourcesListLoader.create_default(matcher=sources_matcher)
     if not (sources_loader.sources):
         raise ValidationFailed("""rosdep database does not have any sources.
-Please make sure you have a valid configuration in:
-\t%s
-"""%(sources_list_dir))
+Please make sure you have a valid configuration.
+""")
     
     # for vestigial reasons, using the roskg loader, but we're only
     # actually using the backend db as resolution is not resource-name based
