@@ -1,0 +1,19 @@
+#! /bin/sh
+
+set -e
+
+OLD_SOURCE=/etc/ros/rosdep/sources.list.d/20-default.list
+if [ -f $OLD_SOURCE ]
+then
+   SUM=`md5sum $OLD_SOURCE | cut -f1 -d' '`
+   for S in 047a9c87e2d29c1a4e0d1a590b98bac1 5f14e556d3e3eebfcb0c7ded33c601ee c6dbfbebec7a8353d7949b477df25471 3ce6877eaf81de877872cae58ecf6da4 917fd2791de205a8764552c10cb8370d 8dfb02b37035b68194061070dff816ee
+   do
+      if [ $S = $SUM ]
+      then
+         rm $OLD_SOURCE
+         rosdep init
+      fi
+   done
+fi
+
+#DEBHELPER#
