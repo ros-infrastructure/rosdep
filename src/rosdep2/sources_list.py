@@ -78,23 +78,23 @@ def get_sources_files(sources_dirs=None):
 
         # look for config files in /etc
         etc_dir = os.path.join('/etc', 'ros', 'rosdep', SOURCES_LIST_DIR)
-        if os.path.exists(etc_dir):
+        if os.path.isdir(etc_dir):
             sources_dirs.append(etc_dir)
 
         # look for config files in $ROS_HOME/rosdep/sources.list.d
         ros_home_dir = os.path.join(rospkg.get_ros_home(), 'rosdep', SOURCES_LIST_DIR)
-        if os.path.exists(ros_home_dir):
+        if os.path.isdir(ros_home_dir):
             sources_dirs.append(ros_home_dir)
 
         # use the package-provided config as an underlay
         usr_file = resource_filename(__name__, 'sources.list')
-        if os.path.exists(usr_file):
+        if os.path.isfile(usr_file):
             filelist.append(usr_file)
 
     for d in sources_dirs:
         filelist.extend([os.path.join(d, f) for f in os.listdir(d)])
 
-    return [ f for f in filelist if f.endswith('.list') ]
+    return [ f for f in filelist if f.endswith('.list') and os.path.isfile(f) ]
 
 def get_sources_cache_dir():
     ros_home = rospkg.get_ros_home()
@@ -169,12 +169,12 @@ def cache_data_source_loader(sources_cache_dir, verbose=False):
         filename = compute_filename_hash(uri)
         filepath = os.path.join(sources_cache_dir, filename)
         pickle_filepath = filepath + PICKLE_CACHE_EXT
-        if os.path.exists(pickle_filepath):
+        if os.path.isfile(pickle_filepath):
             if verbose:
                 print("loading cached data source:\n\t%s\n\t%s"%(uri, pickle_filepath), file=sys.stderr)
             with open(pickle_filepath, 'r') as f:
                 rosdep_data = cPickle.loads(f.read())
-        elif os.path.exists(filepath):
+        elif os.path.isfile(filepath):
             if verbose:
                 print("loading cached data source:\n\t%s\n\t%s"%(uri, filepath), file=sys.stderr)
             with open(filepath) as f:
@@ -455,7 +455,7 @@ def load_cached_sources_list(sources_cache_dir=None, verbose=False):
     if sources_cache_dir is None:
         sources_cache_dir = get_sources_cache_dir()
     cache_index = os.path.join(sources_cache_dir, 'index')
-    if not os.path.exists(cache_index):
+    if not os.path.isfile(cache_index):
         if verbose:
             print("no cache index present, not loading cached sources", file=sys.stderr)
         return []
