@@ -45,8 +45,6 @@ def call(command, pipe=None):
     output, unused_err = process.communicate()
     retcode = process.poll()
     if retcode:
-        print(output)
-        print(unused_err)
         raise CalledProcessError(retcode, command)
     if pipe:
         return output
