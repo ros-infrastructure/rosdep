@@ -43,6 +43,7 @@ def _generate_rosinstall(distro_name, packages, check_variants=True):
     for pkg_name in packages:
         assert pkg_name in dist.packages, 'Package "%s" is not part of distro "%s"' % (pkg_name, distro_name)
         all_pkgs |= walker.get_recursive_depends(pkg_name, ['buildtool', 'build', 'run'], ros_packages_only=True, ignore_pkgs=all_pkgs)
+    all_pkgs |= set(packages)
 
     rosinstalls = []
     for pkg_name in all_pkgs:
