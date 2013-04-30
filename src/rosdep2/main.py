@@ -360,6 +360,12 @@ def configure_installer_context_os(installer_context, options):
     os_override = convert_os_override_option(options.os_override)
     if os_override is not None:
         installer_context.set_os_override(*os_override)
+
+def command_init(options):
+    print("""Doing nothing.
+
+'rosdep init' is deprecated; default sources are now distributed within rosdep.
+""")
     
 def command_update(options):
     error_occured = []
@@ -616,6 +622,7 @@ command_handlers = {
     'what-needs': command_what_needs,
     'where-defined': command_where_defined,
     'resolve': command_resolve,
+    'init': command_init,
     'update': command_update,
 
     # backwards compat
