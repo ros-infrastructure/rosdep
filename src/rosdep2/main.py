@@ -168,10 +168,6 @@ def check_for_sources_list_init(sources_cache_dir):
     else:
         commands.append('rosdep update')
 
-    filelist = get_sources_files()
-    if len(filelist) == 0:
-        commands.insert(0, 'sudo rosdep init')
-
     if commands:
         commands = '\n'.join(["    %s"%c for c in commands])
         print("""
@@ -381,9 +377,6 @@ def command_update(options):
 
     filelist = get_sources_files()
 
-    if not filelist:
-        print("ERROR: no data sources\n\nPlease initialize your rosdep with\n\n\tsudo rosdep init\n", file=sys.stderr)
-        return 1
     try:
         print("reading in sources list data from %s"%(','.join(filelist)))
         update_sources_list(success_handler=update_success_handler,
