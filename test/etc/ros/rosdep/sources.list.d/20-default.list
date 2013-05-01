@@ -1,0 +1,3 @@
+yaml https://github.com/ros/rosdistro/raw/master/rosdep/base.yaml
+# for test data, give this a tag so we can validate matcher
+yaml https://github.com/ros/rosdistro/raw/master/rosdep/python.yaml python

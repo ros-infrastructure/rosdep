@@ -69,32 +69,24 @@ CACHE_INDEX = 'index'
 # extension for binary cache
 PICKLE_CACHE_EXT = '.pickle'
 
-def get_sources_files(sources_dirs=None):
+def get_sources_files(sources_dir=None):
     filelist = []
 
-    # compute cache directory
-    if sources_dirs is None:
-        sources_dirs = []
+    # if we aren't given a directory, use the default (only for testing)
+    if sources_dir is None:
+        prefix = os.getenv('ROSDEP_PREFIX', '/')
+        etc = os.path.join(prefix, 'etc', 'ros', 'rosdep', SOURCES_LIST_DIR)
+        sources_dir = etc
+        
+    # add files that end in .list to the sources list.
+    if os.path.isdir(sources_dir):
+        filelist.extend([c for c in [os.path.join(sources_dir, f) for f in sorted(os.listdir(sources_dir)) if f.endswith('.list')] if os.path.isfile(c)])
+    
+    # if we didn't find any sources, use the template
+    if len(filelist) == 0:
+        filelist.append(resource_filename(__name__, 'sources.list'))
 
-        # look for config files in /etc
-        etc_dir = os.path.join('/etc', 'ros', 'rosdep', SOURCES_LIST_DIR)
-        if os.path.isdir(etc_dir):
-            sources_dirs.append(etc_dir)
-
-        # look for config files in $ROS_HOME/rosdep/sources.list.d
-        ros_home_dir = os.path.join(rospkg.get_ros_home(), 'rosdep', SOURCES_LIST_DIR)
-        if os.path.isdir(ros_home_dir):
-            sources_dirs.append(ros_home_dir)
-
-        # use the package-provided config as an underlay
-        usr_file = resource_filename(__name__, 'sources.list')
-        if os.path.isfile(usr_file):
-            filelist.append(usr_file)
-
-    for d in sources_dirs:
-        filelist.extend([os.path.join(d, f) for f in os.listdir(d)])
-
-    return [ f for f in filelist if f.endswith('.list') and os.path.isfile(f) ]
+    return filelist
 
 def get_sources_cache_dir():
     ros_home = rospkg.get_ros_home()
