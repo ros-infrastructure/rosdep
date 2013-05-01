@@ -38,8 +38,23 @@ GITHUB_BASE_URL = 'https://raw.github.com/ros/rosdistro/master/rosdep/base.yaml'
 def get_test_dir():
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'sources.list.d'))
 
-def test_get_sources_list_dir():
-    assert rosdep2.sources_list.get_sources_list_dir()
+def test_get_sources_files():
+    from pkg_resources import resource_filename
+    from rosdep2.sources_list import get_sources_files
+    # test that we get the default when no sources are available
+    pkg_sources = [ resource_filename('rosdep2', 'sources.list') ]
+    assert get_sources_files('/asdf') == pkg_sources
+
+    # test that we get multiple files if we specify a directory
+    sources = [os.path.join(get_test_dir(), f) for f in ['20-default.list', '30-nonexistent.list']]
+    assert get_sources_files(get_test_dir()) == sources
+
+    # test environment prefix
+    os.environ['ROSDEP_PREFIX'] = os.path.dirname(__file__)
+    sources = [os.path.join(os.path.dirname(__file__), 'etc', 'ros', 'rosdep',
+       'sources.list.d', '20-default.list') ]
+    assert get_sources_files() == sources
+    del os.environ['ROSDEP_PREFIX']
 
 def test_get_sources_cache_dir():
     assert rosdep2.sources_list.get_sources_cache_dir()
@@ -148,15 +163,15 @@ def test_parse_sources_file():
         pass
     
 def test_parse_sources_list():
-    from rosdep2.sources_list import parse_sources_list
+    from rosdep2.sources_list import parse_sources_list,get_sources_files
     from rosdep2 import InvalidData
     # test with non-existent dir, should return with empty list as
     # directory is not required to exist.
-    assert [] == parse_sources_list(sources_list_dir='/not/a/real/path')
+    assert [] == parse_sources_list(sources_files=[])
     
     # test with real dir
-    path = get_test_dir()
-    sources_list = parse_sources_list(sources_list_dir=get_test_dir())
+    sources_files = get_sources_files(get_test_dir())
+    sources_list = parse_sources_list(sources_files=sources_files)
     # at time test was written, at least two sources files
     assert len(sources_list) > 1
     # make sure files got loaded in intended order
@@ -180,10 +195,10 @@ def test_write_cache_file():
         assert {'data': 1} == cPickle.loads(f.read())
     
 def test_update_sources_list():
-    from rosdep2.sources_list import update_sources_list, InvalidData, compute_filename_hash, PICKLE_CACHE_EXT
+    from rosdep2.sources_list import update_sources_list, get_sources_files, InvalidData, compute_filename_hash, PICKLE_CACHE_EXT
     import cPickle
     from urllib import pathname2url
-    sources_list_dir=get_test_dir()
+    sources_files=get_sources_files(get_test_dir())
     index_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'rosdistro', 'index.yaml'))
     index_url = 'file://' + pathname2url(index_path)
     os.environ['ROSDISTRO_INDEX_URL'] = index_url
@@ -194,7 +209,7 @@ def test_update_sources_list():
     errors = []
     def error_handler(loc, e):
         errors.append((loc, e))
-    retval = update_sources_list(sources_list_dir=sources_list_dir,
+    retval = update_sources_list(sources_files=sources_files,
                                  sources_cache_dir=tempdir, error_handler=error_handler)
     assert retval
     assert len(retval) == 2, retval
@@ -224,15 +239,15 @@ def test_update_sources_list():
     assert expected == index, "\n[%s]\nvs\n[%s]"%(expected, index)
 
 def test_load_cached_sources_list():
-    from rosdep2.sources_list import load_cached_sources_list, update_sources_list
+    from rosdep2.sources_list import load_cached_sources_list, update_sources_list, get_sources_files
     tempdir = tempfile.mkdtemp()
 
     # test behavior on empty cache
     assert [] == load_cached_sources_list(sources_cache_dir=tempdir)
     
     # pull in cache data
-    sources_list_dir=get_test_dir()
-    retval = update_sources_list(sources_list_dir=sources_list_dir,
+    sources_files=get_sources_files(get_test_dir())
+    retval = update_sources_list(sources_files=sources_files,
                                  sources_cache_dir=tempdir, error_handler=None)
     assert retval
     
@@ -383,13 +398,13 @@ def test_DataSourceMatcher_create_default():
     assert not matcher.matches(data_source)    
     
 def test_SourcesListLoader_create_default():
-    from rosdep2.sources_list import update_sources_list, SourcesListLoader, DataSourceMatcher
+    from rosdep2.sources_list import update_sources_list, get_sources_files, SourcesListLoader, DataSourceMatcher
     # create temp dir for holding sources cache
     tempdir = tempfile.mkdtemp()
 
     # pull in cache data
-    sources_list_dir=get_test_dir()
-    retval = update_sources_list(sources_list_dir=sources_list_dir,
+    sources_files=get_sources_files(get_test_dir())
+    retval = update_sources_list(sources_files=sources_files,
                                  sources_cache_dir=tempdir, error_handler=None)
     assert retval
     
