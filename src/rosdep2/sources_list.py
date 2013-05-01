@@ -37,6 +37,8 @@ import hashlib
 import urllib2
 import cPickle
 
+from pkg_resources import resource_filename
+
 from .core import InvalidData, DownloadFailure
 from .gbpdistro_support import get_gbprepo_as_rosdep_data, download_gbpdistro_as_rosdep_data
 
@@ -67,19 +69,24 @@ CACHE_INDEX = 'index'
 # extension for binary cache
 PICKLE_CACHE_EXT = '.pickle'
 
-def get_sources_list_dir():
-    # base of where we read config files from
-    # TODO: windows
-    if 0:
-        # we can't use etc/ros because environment config does not carry over under sudo
-        etc_ros = rospkg.get_etc_ros_dir()
-    else:
-        etc_ros = '/etc/ros'
-    # compute cache directory
-    return os.path.join(etc_ros, 'rosdep', SOURCES_LIST_DIR)
+def get_sources_files(sources_dir=None):
+    filelist = []
 
-def get_default_sources_list_file():
-    return os.path.join(get_sources_list_dir(), '20-default.list')
+    # if we aren't given a directory, use the default (only for testing)
+    if sources_dir is None:
+        prefix = os.getenv('ROSDEP_PREFIX', '/')
+        etc = os.path.join(prefix, 'etc', 'ros', 'rosdep', SOURCES_LIST_DIR)
+        sources_dir = etc
+        
+    # add files that end in .list to the sources list.
+    if os.path.isdir(sources_dir):
+        filelist.extend([c for c in [os.path.join(sources_dir, f) for f in sorted(os.listdir(sources_dir)) if f.endswith('.list')] if os.path.isfile(c)])
+    
+    # if we didn't find any sources, use the template
+    if len(filelist) == 0:
+        filelist.append(resource_filename(__name__, 'sources.list'))
+
+    return filelist
 
 def get_sources_cache_dir():
     ros_home = rospkg.get_ros_home()
@@ -154,12 +161,12 @@ def cache_data_source_loader(sources_cache_dir, verbose=False):
         filename = compute_filename_hash(uri)
         filepath = os.path.join(sources_cache_dir, filename)
         pickle_filepath = filepath + PICKLE_CACHE_EXT
-        if os.path.exists(pickle_filepath):
+        if os.path.isfile(pickle_filepath):
             if verbose:
                 print("loading cached data source:\n\t%s\n\t%s"%(uri, pickle_filepath), file=sys.stderr)
             with open(pickle_filepath, 'r') as f:
                 rosdep_data = cPickle.loads(f.read())
-        elif os.path.exists(filepath):
+        elif os.path.isfile(filepath):
             if verbose:
                 print("loading cached data source:\n\t%s\n\t%s"%(uri, filepath), file=sys.stderr)
             with open(filepath) as f:
@@ -342,7 +349,7 @@ def parse_sources_file(filepath):
     except IOError as e:
         raise InvalidData("I/O error reading sources file: %s"%(str(e)), origin=filepath)
 
-def parse_sources_list(sources_list_dir=None):
+def parse_sources_list(sources_files=None):
     """
     Parse data stored in on-disk sources list directory into a list of
     :class:`DataSource` for processing.
@@ -353,19 +360,15 @@ def parse_sources_list(sources_list_dir=None):
     :raises: :exc:`OSError` if *sources_list_dir* cannot be read.
     :raises: :exc:`IOError` if *sources_list_dir* cannot be read.
     """
-    if sources_list_dir is None:
-        sources_list_dir = get_sources_list_dir()
-    if not os.path.exists(sources_list_dir):
-        # no sources on this system.  this is a valid state.
-        return []
-        
-    filelist = [f for f in os.listdir(sources_list_dir) if f.endswith('.list')]
+    if sources_files is None:
+        sources_files = get_sources_files()
+
     sources_list = []
-    for f in sorted(filelist):
-        sources_list.extend(parse_sources_file(os.path.join(sources_list_dir, f)))
+    for f in sorted(sources_files):
+        sources_list.extend(parse_sources_file(f))
     return sources_list
 
-def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
+def update_sources_list(sources_files=None, sources_cache_dir=None,
                         success_handler=None, error_handler=None):
     """
     Re-downloaded data from remote sources and store in cache.  Also
@@ -389,7 +392,7 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
     if sources_cache_dir is None:
         sources_cache_dir = get_sources_cache_dir()
 
-    sources = parse_sources_list(sources_list_dir=sources_list_dir)
+    sources = parse_sources_list(sources_files=sources_files)
     retval = []
     for source in list(sources):
         try:
@@ -444,7 +447,7 @@ def load_cached_sources_list(sources_cache_dir=None, verbose=False):
     if sources_cache_dir is None:
         sources_cache_dir = get_sources_cache_dir()
     cache_index = os.path.join(sources_cache_dir, 'index')
-    if not os.path.exists(cache_index):
+    if not os.path.isfile(cache_index):
         if verbose:
             print("no cache index present, not loading cached sources", file=sys.stderr)
         return []
