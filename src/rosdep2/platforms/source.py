@@ -160,7 +160,7 @@ class SourceInstall(object):
             raise InvalidRdmanifest("uri required for source rosdeps") 
         r.alternate_tarball = manifest.get("alternate-uri")
         r.tarball_md5sum = manifest.get("md5sum")
-        r.dependencies = manifest.get("depends")
+        r.dependencies = manifest.get("depends", [])
         return r
 
     def __str__(self):
