@@ -134,8 +134,10 @@ ERROR: Rosdep experienced an internal error.
 Please go to the rosdep page [1] and file a bug report with the message below.
 [1] : http://www.ros.org/wiki/rosdep
 
+rosdep version: %s
+
 %s
-"""%(e.message), file=sys.stderr)
+"""%(__version__, e.message), file=sys.stderr)
         sys.exit(1)
     except ResolutionError as e:
         print("""
@@ -149,12 +151,14 @@ ERROR: %s
         sys.exit(1)
     except Exception as e:
         print("""
-ERROR: Rosdep experienced an internal error: %s
+ERROR: Rosdep experienced an error: %s
 Please go to the rosdep page [1] and file a bug report with the stack trace below.
 [1] : http://www.ros.org/wiki/rosdep
 
+rosdep version: %s
+
 %s
-"""%(e, traceback.format_exc(e)), file=sys.stderr)
+"""%(e, __version__, traceback.format_exc(e)), file=sys.stderr)
         sys.exit(1)
         
 def check_for_sources_list_init(sources_cache_dir):
