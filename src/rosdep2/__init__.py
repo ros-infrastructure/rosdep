@@ -33,7 +33,7 @@ rosdep library and command-line tool
 
 from __future__ import print_function
 
-__version__ = '0.10.18'
+__version__ = '0.10.19'
 
 import sys
 
