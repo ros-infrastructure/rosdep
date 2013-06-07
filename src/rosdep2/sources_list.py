@@ -44,7 +44,12 @@ try:
     import urlparse
 except ImportError:
     import urllib.parse as urlparse #py3k
-    
+
+try:
+    import httplib
+except ImportError:
+    import http.client as httplib  # py3k
+
 import rospkg
 import rospkg.distro
 
@@ -263,8 +268,8 @@ def download_rosdep_data(url):
         if type(data) != dict:
             raise DownloadFailure('rosdep data from [%s] is not a YAML dictionary'%(url))
         return data
-    except urllib2.URLError as e:
-        raise DownloadFailure(str(e))
+    except (urllib2.URLError, httplib.HTTPException) as e:
+        raise DownloadFailure(str(e) + ' (%s)' % url)
     except yaml.YAMLError as e:
         raise DownloadFailure(str(e))
     
@@ -278,7 +283,10 @@ def download_default_sources_list(url=DEFAULT_SOURCES_LIST_URL):
     :raises: :exc:`urllib2.URLError` If data cannot be
         retrieved (e.g. 404, server down).
     """
-    f = urllib2.urlopen(url, timeout=DOWNLOAD_TIMEOUT)
+    try:
+        f = urllib2.urlopen(url, timeout=DOWNLOAD_TIMEOUT)
+    except (urllib2.URLError, httplib.HTTPException) as e:
+        raise type(e)(str(e) + ' (%s)' % url)
     data = f.read()
     f.close()
     if not data:
