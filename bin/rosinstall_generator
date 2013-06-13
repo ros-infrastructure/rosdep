@@ -30,22 +30,19 @@ def main(argv=sys.argv[1:]):
         help='Use tarballs instead of repositories for wet packages (dry packages are always tarballs)')
     args = parser.parse_args(argv)
 
-    if not args.tar:
-        raise NotImplementedError()
-
     if args.wet_only and args.dry_only:
         raise RuntimeError('Invalid combination')
 
     if args.wet_only:
         print('Calling wet', file=sys.stderr)
-        rosinstall = generate_rosinstall(args.distro, args.pkgname, args.deps)
+        rosinstall = generate_rosinstall(args.distro, args.pkgname, args.deps, args.tar)
     elif args.dry_only:
         print('Calling dry', file=sys.stderr)
         rosinstall = generate_dry_rosinstall(args.distro, args.pkgname, args.deps)
     else:
         print('Calling combined', file=sys.stderr)
         dry_rs = generate_dry_rosinstall(args.distro, args.pkgname, args.deps)
-        wet_rs = generate_rosinstall(args.distro, args.pkgname, args.deps)
+        wet_rs = generate_rosinstall(args.distro, args.pkgname, args.deps, args.tar)
         rosinstall = wet_rs + dry_rs
 
     print(rosinstall)

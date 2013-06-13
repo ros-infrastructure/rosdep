@@ -18,14 +18,14 @@ rosdistro.common.override_print(logger_print)
 
 
 #Generates a rosinstall file for a package and it's dependences
-def generate_rosinstall(distro_name, packages, recursive=True, check_variants=True):
+def generate_rosinstall(distro_name, packages, recursive=True, reference_tar=False, check_variants=True):
     if distro_name != 'fuerte':
-        return _generate_rosinstall(distro_name, packages, recursive, check_variants)
+        return _generate_rosinstall(distro_name, packages, recursive, reference_tar, check_variants)
     else:
         return _generate_rosinstall_fuerte(distro_name, packages, recursive, check_variants)
 
 
-def _generate_rosinstall(distro_name, packages, recursive=True, check_variants=True):
+def _generate_rosinstall(distro_name, packages, recursive=True, reference_tar=False, check_variants=True):
     packages = packages if type(packages) == list else [packages]
     index = get_index(get_index_url())
     dist = get_cached_release(index, distro_name)
@@ -48,27 +48,37 @@ def _generate_rosinstall(distro_name, packages, recursive=True, check_variants=T
 
     rosinstalls = []
     for pkg_name in all_pkgs:
-        rosinstalls.append(_generate_rosinstall_for_package(dist, pkg_name))
+        rosinstalls.append(_generate_rosinstall_for_package(dist, pkg_name, reference_tar))
 
     return '\n'.join(rosinstalls)
 
 
-def _generate_rosinstall_for_package(dist, pkg_name):
+def _generate_rosinstall_for_package(dist, pkg_name, reference_tar):
     pkg = dist.packages[pkg_name]
     repo = dist.repositories[pkg.repository_name]
     assert repo.version is not None, 'Package "%s" does not have a version" % pkg_name'
 
     url = repo.url
     release_tag = get_release_tag(repo, pkg_name)
-    url = url.replace('.git', '/archive/{0}.tar.gz'.format(release_tag))
-    return yaml.safe_dump([{
-        'tar': {
-            'local-name': pkg_name,
-            'uri': url,
-            'version': '{0}-release-{1}'.format(repo.name, release_tag.replace('/', '-'))
-        }}],
-        default_style=False)
-
+    if reference_tar:
+        url = url.replace('.git', '/archive/{0}.tar.gz'.format(release_tag))
+        data = [{
+            'tar': {
+                'local-name': pkg_name,
+                'uri': url,
+                'version': '{0}-release-{1}'.format(repo.name, release_tag.replace('/', '-'))
+            }
+        }]
+    else:
+        data = [{
+            'git': {
+                'local-name': pkg_name,
+                'uri': url,
+                'version': release_tag
+            }
+        }]
+    return yaml.safe_dump(data,
+            default_style=False)
 
 def _generate_rosinstall_fuerte(distro_name, packages, recursive=True, check_variants=True):
     packages = packages if type(packages) == list else [packages]
