@@ -38,14 +38,14 @@ def main(argv=sys.argv[1:]):
 
     if args.wet_only:
         print('Calling wet', file=sys.stderr)
-        rosinstall = generate_rosinstall(args.distro, args.pkgname)
+        rosinstall = generate_rosinstall(args.distro, args.pkgname, args.deps)
     elif args.dry_only:
         print('Calling dry', file=sys.stderr)
-        rosinstall = generate_dry_rosinstall(args.distro, args.pkgname)
+        rosinstall = generate_dry_rosinstall(args.distro, args.pkgname, args.deps)
     else:
         print('Calling combined', file=sys.stderr)
-        dry_rs = generate_dry_rosinstall(args.distro, args.pkgname)
-        wet_rs = generate_rosinstall(args.distro, args.pkgname)
+        dry_rs = generate_dry_rosinstall(args.distro, args.pkgname, args.deps)
+        wet_rs = generate_rosinstall(args.distro, args.pkgname, args.deps)
         rosinstall = wet_rs + dry_rs
 
     print(rosinstall)

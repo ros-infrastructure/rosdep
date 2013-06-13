@@ -18,14 +18,14 @@ rosdistro.common.override_print(logger_print)
 
 
 #Generates a rosinstall file for a package and it's dependences
-def generate_rosinstall(distro_name, packages, check_variants=True):
+def generate_rosinstall(distro_name, packages, recursive=True, check_variants=True):
     if distro_name != 'fuerte':
-        return _generate_rosinstall(distro_name, packages, check_variants)
+        return _generate_rosinstall(distro_name, packages, recursive, check_variants)
     else:
-        return _generate_rosinstall_fuerte(distro_name, packages, check_variants)
+        return _generate_rosinstall_fuerte(distro_name, packages, recursive, check_variants)
 
 
-def _generate_rosinstall(distro_name, packages, check_variants=True):
+def _generate_rosinstall(distro_name, packages, recursive=True, check_variants=True):
     packages = packages if type(packages) == list else [packages]
     index = get_index(get_index_url())
     dist = get_cached_release(index, distro_name)
@@ -38,11 +38,12 @@ def _generate_rosinstall(distro_name, packages, check_variants=True):
         packages = list(set([p for p in all_packages if p in dist.packages.keys()]))
         logger.info("Building rosinstall for wet packages: %s" % packages)
 
-    walker = DependencyWalker(dist)
     all_pkgs = set([])
-    for pkg_name in packages:
-        assert pkg_name in dist.packages, 'Package "%s" is not part of distro "%s"' % (pkg_name, distro_name)
-        all_pkgs |= walker.get_recursive_depends(pkg_name, ['buildtool', 'build', 'run'], ros_packages_only=True, ignore_pkgs=all_pkgs)
+    if recursive:
+        walker = DependencyWalker(dist)
+        for pkg_name in packages:
+            assert pkg_name in dist.packages, 'Package "%s" is not part of distro "%s"' % (pkg_name, distro_name)
+            all_pkgs |= walker.get_recursive_depends(pkg_name, ['buildtool', 'build', 'run'], ros_packages_only=True, ignore_pkgs=all_pkgs)
     all_pkgs |= set(packages)
 
     rosinstalls = []
@@ -69,7 +70,7 @@ def _generate_rosinstall_for_package(dist, pkg_name):
         default_style=False)
 
 
-def _generate_rosinstall_fuerte(distro_name, packages, check_variants=True):
+def _generate_rosinstall_fuerte(distro_name, packages, recursive=True, check_variants=True):
     packages = packages if type(packages) == list else [packages]
     distro = RosDistro(distro_name)
     dry_distro = load_distro(distro_uri(distro_name))
@@ -81,9 +82,12 @@ def _generate_rosinstall_fuerte(distro_name, packages, check_variants=True):
         packages = list(set([p for p in all_packages if p in distro.get_packages()]))
         logger.info("Building rosinstall for wet packages: %s" % packages)
 
-    deps = distro.get_depends(packages)
-    deps = list(set(deps['build'] + deps['run'] + deps['buildtool']))
-    distro_pkgs = [p for p in list(set(deps + packages)) if p in distro.get_packages()]
+    all_pkgs = set(packages)
+    if recursive:
+        deps = distro.get_depends(packages)
+        deps = list(set(deps['build'] + deps['run'] + deps['buildtool']))
+        all_pkgs |= set(deps)
+    distro_pkgs = [p for p in list(all_pkgs) if p in distro.get_packages()]
 
     rosinstall = distro.get_rosinstall(distro_pkgs, source='tar')
 
