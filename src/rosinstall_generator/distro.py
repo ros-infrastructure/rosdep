@@ -3,7 +3,7 @@ import yaml
 from rosdistro import get_cached_release, get_index, get_index_url, RosDistro
 from rosdistro.dependency_walker import DependencyWalker
 from rosdistro.manifest_provider import get_release_tag
-from rospkg.distro import load_distro, distro_uri
+from rospkg.distro import distro_uri, load_distro
 
 import logging
 logger = logging.getLogger('submit_jobs')

@@ -1,43 +1,55 @@
-from django.conf import settings
-from dajaxice.decorators import dajaxice_register
-from django.utils import simplejson
-import datetime
+#!/usr/bin/env python
+
+from __future__ import print_function
+
+import argparse
 import os
-import yaml
-from prerelease_website.rosinstall_gen.distro import generate_rosinstall
-from prerelease_website.rosinstall_gen.old_distro import generate_dry_rosinstall
+import sys
+
+from rosinstall_generator.distro import generate_rosinstall
+from rosinstall_generator.old_distro import generate_dry_rosinstall
 
 import logging
 logger = logging.getLogger('submit_jobs')
 
-@dajaxice_register
-def get_rosinstall_ajax(request, distro, packages, gen_type):
-    logger.info("Got distro %s, packages %s, gen_type %s" % (distro, packages, gen_type))
-    timestr = datetime.datetime.now().strftime("%Y%m%d-%H%M%S%f")
-    filename = '%s.rosinstall' % '_'.join(packages)
-    relative_dir = os.path.join('rosinstalls', timestr)
-    path = os.path.join(settings.MEDIA_ROOT, relative_dir, filename)
-    logger.info("Writing rosinstall file to %s" % path)
-    try:
-        os.makedirs(os.path.realpath(os.path.dirname(path)))
-    except:
-        pass
 
-    if gen_type == 'dry':
-        logger.info("Calling dry")
-        rosinstall = generate_dry_rosinstall(distro, packages[0])
-    elif gen_type == 'combined':
-        logger.info("Calling combined")
-        dry_rs = generate_dry_rosinstall(distro, packages[0])
-        wet_rs = generate_rosinstall(distro, packages[0])
-        rosinstall = dry_rs + wet_rs
+def main(argv=sys.argv[1:]):
+    distro = os.environ['ROS_DISTRO'] if 'ROS_DISTRO' in os.environ else None
+    parser = argparse.ArgumentParser(
+        description='Creates a new catkin package')
+    parser.add_argument('pkgname', help='The wet pkgname or dry stackname')
+    parser.add_argument('distro', nargs='?' if distro else 1, default=distro, help='The ROS distro (default: environment variable ROS_DISTRO if defined)')
+    parser.add_argument('--deps', action='store_true', default=False,
+        help='Include recursive dependencies')
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('--wet-only', action='store_true', default=False,
+        help='Only include wet packages')
+    group.add_argument('--dry-only', action='store_true', default=False,
+        help='Only include dry stacks')
+    parser.add_argument('--tar', action='store_true', default=False,
+        help='Use tarballs instead of repositories for wet packages (dry packages are always tarballs)')
+    args = parser.parse_args(argv)
+
+    if not args.tar:
+        raise NotImplementedError()
+
+    if args.wet_only and args.dry_only:
+        raise RuntimeError('Invalid combination')
+
+    if args.wet_only:
+        print('Calling wet', file=sys.stderr)
+        rosinstall = generate_rosinstall(args.distro, args.pkgname)
+    elif args.dry_only:
+        print('Calling dry', file=sys.stderr)
+        rosinstall = generate_dry_rosinstall(args.distro, args.pkgname)
     else:
-        logger.info("Calling wet")
-        rosinstall = generate_rosinstall(distro, packages)
+        print('Calling combined', file=sys.stderr)
+        dry_rs = generate_dry_rosinstall(args.distro, args.pkgname)
+        wet_rs = generate_rosinstall(args.distro, args.pkgname)
+        rosinstall = wet_rs + dry_rs
 
-    with open(path, 'w+') as f:
-        f.write(rosinstall)
-        #yaml.dump(rosinstall, f, default_flow_style=False)
+    print(rosinstall)
 
-    return simplejson.dumps({'rosinstall_url': os.path.join(relative_dir,
-                                                            filename)})
+
+if __name__ == '__main__':
+    main()

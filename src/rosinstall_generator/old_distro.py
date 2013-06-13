@@ -1,8 +1,4 @@
-#!/usr/bin/env python
-
-import sys
-import subprocess
-import rospkg.distro as rosdistro 
+import rospkg.distro as rosdistro
 import yaml
 
 
