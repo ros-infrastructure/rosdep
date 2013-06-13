@@ -1,3 +1,4 @@
+import os
 import yaml
 
 from rosdistro import get_cached_release, get_index, get_index_url, RosDistro
@@ -61,12 +62,14 @@ def _generate_rosinstall_for_package(dist, pkg_name, reference_tar):
     url = repo.url
     release_tag = get_release_tag(repo, pkg_name)
     if reference_tar:
+        # the repository name might be different than repo.name coming from rosdistro
+        repo_name = os.path.basename(url[:-4])
         url = url.replace('.git', '/archive/{0}.tar.gz'.format(release_tag))
         data = [{
             'tar': {
                 'local-name': pkg_name,
                 'uri': url,
-                'version': '{0}-release-{1}'.format(repo.name, release_tag.replace('/', '-'))
+                'version': '{0}-{1}'.format(repo_name, release_tag.replace('/', '-'))
             }
         }]
     else:
