@@ -31,8 +31,48 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-"""
-Library to generate rosinstall file for set of packages/stacks.
-"""
+import logging
+import rospkg.distro as rosdistro
+import urllib
+import yaml
 
-__version__ = '0.0.0'
+logger = logging.getLogger('rosinstall_generator')
+
+
+def get_distro(distro_name):
+    return rosdistro.load_distro(rosdistro.distro_uri(distro_name))
+
+
+def get_recursive_dependencies(distro, stack_names):
+    dry_dependencies = set(stack_names)
+    wet_dependencies = set([])
+    traverse_stacks = set(stack_names)
+    while traverse_stacks:
+        stack_name = traverse_stacks.pop()
+        info = _get_stack_info(distro, stack_name)
+        if 'depends' in info:
+            depends = set(info['depends'])
+            for depend in depends:
+                if depend in distro.stacks:
+                    if depend not in dry_dependencies:
+                        dry_dependencies.add(depend)
+                        traverse_stacks.add(depend)
+                else:
+                    wet_dependencies.add(depend)
+    return dry_dependencies, wet_dependencies
+
+
+def _get_stack_info(distro, stack_name):
+    stack = distro.stacks[stack_name]
+    version = stack.version
+    url = 'https://code.ros.org/svn/release/download/stacks/%(stack_name)s/%(stack_name)s-%(version)s/%(stack_name)s-%(version)s.yaml' % locals()
+    logger.debug('Load dry package info from "%s"' % url)
+    y = urllib.urlopen(url)
+    return yaml.load(y.read())
+
+
+def generate_rosinstall(distro, stack_names):
+    rosinstall_data = []
+    for stack_name in stack_names:
+        rosinstall_data.extend(distro.stacks[stack_name].vcs_config.to_rosinstall(stack_name, branch='release-tar', anonymous=True))
+    return rosinstall_data

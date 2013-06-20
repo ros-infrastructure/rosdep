@@ -1,67 +1,72 @@
-import os
-import yaml
+# Software License Agreement (BSD License)
+#
+# Copyright (c) 2013, Open Source Robotics Foundation, Inc.
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#
+#  * Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#  * Redistributions in binary form must reproduce the above
+#    copyright notice, this list of conditions and the following
+#    disclaimer in the documentation and/or other materials provided
+#    with the distribution.
+#  * Neither the name of Open Source Robotics Foundation, Inc. nor
+#    the names of its contributors may be used to endorse or promote
+#    products derived from this software without specific prior
+#    written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+# COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
 
-from rosdistro import get_cached_release, get_index, get_index_url, RosDistro
+import os
+
+from rosdistro import get_cached_release, get_index, get_index_url
 from rosdistro.dependency_walker import DependencyWalker
 from rosdistro.manifest_provider import get_release_tag
-from rospkg.distro import distro_uri, load_distro
-
-import logging
-logger = logging.getLogger('submit_jobs')
 
 
-def logger_print(msg, end='', file=None):
-    end = '' if end is None else end
-    logger.info(msg + str(end))
-
-import rosdistro.common
-rosdistro.common.override_print(logger_print)
-
-
-#Generates a rosinstall file for a package and it's dependences
-def generate_rosinstall(distro_name, packages, recursive=True, reference_tar=False, check_variants=True):
-    if distro_name != 'fuerte':
-        return _generate_rosinstall(distro_name, packages, recursive, reference_tar, check_variants)
-    else:
-        return _generate_rosinstall_fuerte(distro_name, packages, recursive, check_variants)
-
-
-def _generate_rosinstall(distro_name, packages, recursive=True, reference_tar=False, check_variants=True):
-    packages = packages if type(packages) == list else [packages]
+def get_distro(distro_name):
     index = get_index(get_index_url())
-    dist = get_cached_release(index, distro_name)
-    dry_distro = load_distro(distro_uri(distro_name))
-
-    #First, we want to check if there is a dry variant that has been requested
-    if check_variants and len(packages) == 1 and packages[0] in dry_distro.variants:
-        logger.info("Found variant %s" % packages[0])
-        all_packages = dry_distro.variants[packages[0]].get_stack_names()
-        packages = list(set([p for p in all_packages if p in dist.packages.keys()]))
-        logger.info("Building rosinstall for wet packages: %s" % packages)
-
-    all_pkgs = set([])
-    if recursive:
-        walker = DependencyWalker(dist)
-        for pkg_name in packages:
-            assert pkg_name in dist.packages, 'Package "%s" is not part of distro "%s"' % (pkg_name, distro_name)
-            all_pkgs |= walker.get_recursive_depends(pkg_name, ['buildtool', 'build', 'run'], ros_packages_only=True, ignore_pkgs=all_pkgs)
-    all_pkgs |= set(packages)
-
-    rosinstalls = []
-    for pkg_name in all_pkgs:
-        rosinstalls.append(_generate_rosinstall_for_package(dist, pkg_name, reference_tar))
-
-    return '\n'.join(rosinstalls)
+    return get_cached_release(index, distro_name)
 
 
-def _generate_rosinstall_for_package(dist, pkg_name, reference_tar):
-    pkg = dist.packages[pkg_name]
-    repo = dist.repositories[pkg.repository_name]
-    assert repo.version is not None, 'Package "%s" does not have a version" % pkg_name'
+def get_recursive_dependencies(distro, package_names):
+    dependencies = set([])
+    walker = DependencyWalker(distro)
+    for pkg_name in package_names:
+        dependencies |= walker.get_recursive_depends(pkg_name, ['buildtool', 'build', 'run'], ros_packages_only=True, ignore_pkgs=dependencies)
+    dependencies |= set(package_names)
+    return dependencies
+
+
+def generate_rosinstall(distro, package_names, tar=False):
+    rosinstall_data = []
+    for pkg_name in package_names:
+        rosinstall_data.extend(_generate_rosinstall_for_package(distro, pkg_name, tar=tar))
+    return rosinstall_data
+
+
+def _generate_rosinstall_for_package(distro, pkg_name, tar):
+    pkg = distro.packages[pkg_name]
+    repo = distro.repositories[pkg.repository_name]
+    assert repo.version is not None, 'Package "%s" does not have a version"' % pkg_name
 
     url = repo.url
     release_tag = get_release_tag(repo, pkg_name)
-    if reference_tar:
+    if tar:
         # the repository name might be different than repo.name coming from rosdistro
         repo_name = os.path.basename(url[:-4])
         url = url.replace('.git', '/archive/{0}.tar.gz'.format(release_tag))
@@ -80,28 +85,4 @@ def _generate_rosinstall_for_package(dist, pkg_name, reference_tar):
                 'version': release_tag
             }
         }]
-    return yaml.safe_dump(data,
-            default_style=False)
-
-def _generate_rosinstall_fuerte(distro_name, packages, recursive=True, check_variants=True):
-    packages = packages if type(packages) == list else [packages]
-    distro = RosDistro(distro_name)
-    dry_distro = load_distro(distro_uri(distro_name))
-
-    #First, we want to check if there is a dry variant that has been requested
-    if check_variants and len(packages) == 1 and packages[0] in dry_distro.variants:
-        logger.info("Found variant %s" % packages[0])
-        all_packages = dry_distro.variants[packages[0]].get_stack_names()
-        packages = list(set([p for p in all_packages if p in distro.get_packages()]))
-        logger.info("Building rosinstall for wet packages: %s" % packages)
-
-    all_pkgs = set(packages)
-    if recursive:
-        deps = distro.get_depends(packages)
-        deps = list(set(deps['build'] + deps['run'] + deps['buildtool']))
-        all_pkgs |= set(deps)
-    distro_pkgs = [p for p in list(all_pkgs) if p in distro.get_packages()]
-
-    rosinstall = distro.get_rosinstall(distro_pkgs, source='tar')
-
-    return rosinstall
+    return data
