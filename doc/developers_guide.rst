@@ -30,7 +30,7 @@ Getting the code
 
 The rosdep codebase is hosted on GitHub.  To get started contributing patches, please create a fork:
 
-https://github.com/ros/rosdep
+https://github.com/ros-infrastructure/rosdep
 
 Supporting a new OS/package manager
 -----------------------------------
