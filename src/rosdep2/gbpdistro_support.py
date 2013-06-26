@@ -36,7 +36,7 @@ def get_owner_name(url):
     If the url is not a valid github url it returns the default `ros`.
 
     This information is used to set the homebrew tap name, see:
-    https://github.com/ros/rosdep/pull/17
+    https://github.com/ros-infrastructure/rosdep/pull/17
 
     :returns: The github account in the given gbpdistro url
     """

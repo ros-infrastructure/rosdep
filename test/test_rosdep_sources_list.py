@@ -299,7 +299,7 @@ def test_download_rosdep_data():
 BADHOSTNAME_URL = 'https://badhostname.willowgarage.com/rosdep.yaml'
 GITHUB_URL = 'https://github.com/ros/rosdistro/raw/master/rosdep/base.yaml'
 GITHUB_PYTHON_URL = 'https://github.com/ros/rosdistro/raw/master/rosdep/python.yaml'
-GITHUB_FUERTE_URL = 'https://raw.github.com/ros/rosdep_rules/master/rosdep_fuerte.yaml'
+GITHUB_FUERTE_URL = 'https://raw.github.com/ros-infrastructure/rosdep_rules/master/rosdep_fuerte.yaml'
 EXAMPLE_SOURCES_DATA_BAD_TYPE = "YAML %s"%(GITHUB_URL)
 EXAMPLE_SOURCES_DATA_BAD_URL = "yaml not-a-url tag1 tag2"
 EXAMPLE_SOURCES_DATA_BAD_LEN = "yaml"
