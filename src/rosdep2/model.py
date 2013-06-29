@@ -49,6 +49,7 @@ class RosdepDatabaseEntry(object):
         :param view_dependencies: list of view dependency names
         :param origin: name of where data originated, e.g. filename
         """
+        assert isinstance(rosdep_data, dict), 'RosdepDatabaseEntry() rosdep_data is not a dict: %s' % rosdep_data
         self.rosdep_data = rosdep_data
         self.view_dependencies = view_dependencies
         self.origin = origin
