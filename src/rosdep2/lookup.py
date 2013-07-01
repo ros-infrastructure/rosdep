@@ -61,7 +61,8 @@ class RosdepDefinition(object):
         :param origin: string that indicates where data originates from (e.g. filename)
         """
         self.rosdep_key = rosdep_key
-        assert isinstance(data, dict), 'RosdepDefinition() data is not a dict: %s' % data
+        if not isinstance(data, dict):
+            raise InvalidData("rosdep data for [%s] must be a dictionary"  % (self.rosdep_key), origin=origin)
         self.data = data
         self.origin = origin
 
