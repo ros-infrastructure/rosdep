@@ -3,7 +3,7 @@
 NAME=rosinstall_generator
 VERSION=`./setup.py --version`
 
-CHANGENAME=rosinstall_generator
+CHANGENAME=rosinstallgenerator
 
 OUTPUT_DIR=deb_dist
 
