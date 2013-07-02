@@ -14,7 +14,7 @@ from rosinstall_generator.generator import generate_rosinstall, sort_rosinstall
 def main(argv=sys.argv[1:]):
     distro = os.environ['ROS_DISTRO'] if 'ROS_DISTRO' in os.environ else None
     parser = argparse.ArgumentParser(
-        description='Creates a new catkin package')
+        description='Generate a .rosinstall file for a set of packages.')
     parser.add_argument('--debug', action='store_true', default=False,
         help='Print debug information to stderr')
     parser.add_argument('--distro', required=distro is None, default=distro, help='The ROS distro (default: environment variable ROS_DISTRO if defined)')
