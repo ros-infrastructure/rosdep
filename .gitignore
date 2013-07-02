@@ -1,1 +1,5 @@
+build
+deb_dist
+dist
 *.pyc
+rosinstall_generator.egg-info
