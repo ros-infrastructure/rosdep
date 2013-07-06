@@ -422,9 +422,17 @@ def command_update(options):
         return 1
     try:
         print("reading in sources list data from %s"%(sources_list_dir))
+        sources_cache_dir = get_sources_cache_dir()
+        try:
+            if os.geteuid() == 0:
+                print("Warning: running 'rosdep update' as root is not recommended.", file=sys.stderr)
+                print("  You should remove the rosdep database with 'sudo rm -fr %s' and invoke 'rosdep update' again without sudo." % sources_cache_dir, file=sys.stderr)
+        except AttributeError:
+            # nothing we wanna do under Windows
+            pass
         update_sources_list(success_handler=update_success_handler,
                             error_handler=update_error_handler)
-        print("updated cache in %s"%(get_sources_cache_dir()))
+        print("updated cache in %s"%(sources_cache_dir))
     except InvalidData as e:
         print("ERROR: invalid sources list file:\n\t%s"%(e), file=sys.stderr)
         return 1
