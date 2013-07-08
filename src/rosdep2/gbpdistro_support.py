@@ -4,6 +4,7 @@ import urlparse
 import os
 
 from rospkg.os_detect import OS_UBUNTU
+from rospkg.os_detect import OS_DEBIAN
 from rospkg.os_detect import OS_OSX
 
 from .core import InvalidData, DownloadFailure
@@ -98,6 +99,7 @@ def gbprepo_to_rosdep_data(gbpdistro_data, targets_data, url=''):
                 # for pkg in repo['packages']: indent the rest of the lines here.
                 # Do generation for ubuntu
                 rosdep_data[pkg][OS_UBUNTU] = {}
+                rosdep_data[pkg][OS_DEBIAN] = {}
                 # Do generation for empty OS X entries
                 homebrew_name = '%s/%s/%s' % (get_owner_name(url),
                                               release_name, rosdep_key)
@@ -118,6 +120,9 @@ def gbprepo_to_rosdep_data(gbpdistro_data, targets_data, url=''):
                         raise InvalidData("invalid target spec: %s" % (t))
                     # rosdep_data[pkg][OS_UBUNTU][t] = {
                     rosdep_data[pkg][OS_UBUNTU][t] = {
+                        APT_INSTALLER: {'packages': [deb_package_name]}
+                    }
+                    rosdep_data[pkg][OS_DEBIAN][t] = {
                         APT_INSTALLER: {'packages': [deb_package_name]}
                     }
 
