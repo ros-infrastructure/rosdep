@@ -99,7 +99,6 @@ def gbprepo_to_rosdep_data(gbpdistro_data, targets_data, url=''):
                 # for pkg in repo['packages']: indent the rest of the lines here.
                 # Do generation for ubuntu
                 rosdep_data[pkg][OS_UBUNTU] = {}
-                rosdep_data[pkg][OS_DEBIAN] = {}
                 # Do generation for empty OS X entries
                 homebrew_name = '%s/%s/%s' % (get_owner_name(url),
                                               release_name, rosdep_key)
@@ -120,9 +119,6 @@ def gbprepo_to_rosdep_data(gbpdistro_data, targets_data, url=''):
                         raise InvalidData("invalid target spec: %s" % (t))
                     # rosdep_data[pkg][OS_UBUNTU][t] = {
                     rosdep_data[pkg][OS_UBUNTU][t] = {
-                        APT_INSTALLER: {'packages': [deb_package_name]}
-                    }
-                    rosdep_data[pkg][OS_DEBIAN][t] = {
                         APT_INSTALLER: {'packages': [deb_package_name]}
                     }
 
@@ -161,6 +157,11 @@ def get_gbprepo_as_rosdep_data(gbpdistro):
             # - debian package name: underscores must be dashes
             deb_package_name = 'ros-%s-%s' % (release_name, pkg)
             deb_package_name = deb_package_name.replace('_', '-')
+
+            # Generate debian entries
+            rosdep_data[pkg][OS_DEBIAN] = {
+                APT_INSTALLER: {'packages': [deb_package_name]}
+            }
 
             for os_name in distro_file.platforms:
                 for os_code_name in distro_file.platforms[os_name]:
