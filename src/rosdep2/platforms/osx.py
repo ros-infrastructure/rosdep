@@ -144,6 +144,9 @@ class HomebrewInstaller(PackageManagerInstaller):
             return [['brew', 'install', p] for p in packages]
 
     def remove_duplicate_dependencies(self, packages):
+        # we'll remove dependencies from this copy and return it
+        packages_copy = list(packages)
+
         # find all dependencies for each package
         for p in packages:
             sub_command = ['brew', 'info', p]
@@ -155,5 +158,5 @@ class HomebrewInstaller(PackageManagerInstaller):
                     d = d.strip()
                     # remove duplicate dependency from package list
                     if(d in packages):
-                        packages.remove(d)
-        return packages
+                        packages_copy.remove(d)
+        return packages_copy
