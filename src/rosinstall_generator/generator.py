@@ -35,9 +35,11 @@ from __future__ import print_function
 
 import copy
 import logging
+import os
 import sys
 
 from rospkg import RosPack, RosStack
+from rospkg.environment import ROS_PACKAGE_PATH
 
 from rosinstall_generator.distro import get_distro as _get_wet_distro
 from rosinstall_generator.distro import generate_rosinstall as generate_wet_rosinstall
@@ -107,9 +109,6 @@ class Names(object):
                         raise RuntimeError("The following dependency of variant '%s' could not be found: %s" % (variant_name, depend))
 
 
-_packages_in_environment = None
-
-
 def _expand_special_args(distro_name, names):
     if ARG_ALL_PACKAGES in names:
         names.remove(ARG_ALL_PACKAGES)
@@ -125,9 +124,14 @@ def _expand_special_args(distro_name, names):
         names.update(_get_packages_in_environment())
 
 
+_packages_in_environment = None
+
+
 def _get_packages_in_environment():
     global _packages_in_environment
     if _packages_in_environment is None:
+        if ROS_PACKAGE_PATH not in os.environ or not os.environ[ROS_PACKAGE_PATH]:
+            raise RuntimeError("The environment variable '%s' must be set when using '%s'" % (ROS_PACKAGE_PATH, ARG_CURRENT_ENVIRONMENT))
         _packages_in_environment = set([])
         rs = RosStack()
         _packages_in_environment.update(set(rs.list()))
