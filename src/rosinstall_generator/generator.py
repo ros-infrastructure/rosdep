@@ -227,7 +227,11 @@ def generate_rosinstall(distro_name, names,
         # intersect with wet dependencies on
         if deps_up_to_names.wet_package_names:
             wet_distro = get_wet_distro(distro_name)
-            result.wet_package_names &= get_recursive_dependencies_on_of_wet(wet_distro, deps_up_to_names.wet_package_names, excludes=names.wet_package_names, limit=result.wet_package_names)
+            # wet depends on do not include the names since they are excluded to stop recursion asap
+            wet_package_names = get_recursive_dependencies_on_of_wet(wet_distro, deps_up_to_names.wet_package_names, excludes=names.wet_package_names, limit=result.wet_package_names)
+            # keep all names which are already in the result set
+            wet_package_names |= result.wet_package_names & names.wet_package_names
+            result.wet_package_names = wet_package_names
         else:
             result.wet_package_names.clear()
         logger.debug('wet_package_names after intersection: %s' % ', '.join(sorted(result.wet_package_names)))
@@ -236,7 +240,11 @@ def generate_rosinstall(distro_name, names,
         dry_dependency_names = result.wet_package_names | deps_up_to_names.dry_stack_names
         if dry_dependency_names and not wet_only:
             dry_distro = get_dry_distro(distro_name)
-            result.dry_stack_names &= get_recursive_dependencies_on_of_dry(dry_distro, dry_dependency_names, excludes=names.dry_stack_names, limit=result.dry_stack_names)
+            # dry depends on do not include the names since they are excluded to stop recursion asap
+            dry_stack_names = get_recursive_dependencies_on_of_dry(dry_distro, dry_dependency_names, excludes=names.dry_stack_names, limit=result.dry_stack_names)
+            # keep all names which are already in the result set
+            dry_stack_names |= result.dry_stack_names & names.dry_stack_names
+            result.dry_stack_names = dry_stack_names
         else:
             result.dry_stack_names.clear()
         logger.debug('dry_stack_names after intersection: %s' % ', '.join(sorted(result.dry_stack_names)))
