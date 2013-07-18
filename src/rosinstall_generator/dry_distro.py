@@ -33,8 +33,10 @@
 
 import logging
 import rospkg.distro as rosdistro
-import urllib
+import urllib2
 import yaml
+
+from rosdistro.loader import load_url
 
 logger = logging.getLogger('rosinstall_generator')
 
@@ -82,7 +84,7 @@ def get_recursive_dependencies_on(distro, stack_names, excludes=None, limit=None
     # to improve performance limit search space if possible
     if limit:
         released_names, _ = get_stack_names(distro)
-        excludes.update(set(released_names) - set(limit) - set(stack_names))
+        excludes.update(set(released_names) - limit - set(stack_names))
 
     depends_on = set([])
     stacks_to_check = set(stack_names)
@@ -118,8 +120,11 @@ def _get_stack_info(distro, stack_name):
         version = stack.version
         url = 'https://code.ros.org/svn/release/download/stacks/%(stack_name)s/%(stack_name)s-%(version)s/%(stack_name)s-%(version)s.yaml' % locals()
         logger.debug('Load dry package info from "%s"' % url)
-        y = urllib.urlopen(url)
-        _stack_info[stack_name] = yaml.load(y.read())
+        try:
+            data = load_url(url)
+        except urllib2.URLError as e:
+            raise RuntimeError("Could not fetch information for stack '%s' with version '%s': %s" % (stack_name, version, e))
+        _stack_info[stack_name] = yaml.load(data)
     return _stack_info[stack_name]
 
 

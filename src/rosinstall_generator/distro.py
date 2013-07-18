@@ -75,7 +75,7 @@ def get_recursive_dependencies_on(distro, package_names, excludes=None, limit=No
     # to improve performance limit search space if possible
     if limit:
         released_names, _ = get_package_names(distro)
-        excludes.update(set(released_names) - set(limit) - set(package_names))
+        excludes.update(set(released_names) - limit - set(package_names))
 
     dependencies = set([])
     walker = DependencyWalker(distro)

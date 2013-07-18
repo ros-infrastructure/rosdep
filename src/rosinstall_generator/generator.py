@@ -88,7 +88,7 @@ class Names(object):
                 if name in dry_distro.get_stacks(released=True):
                     self.dry_stack_names.add(name)
                 if name in dry_distro.variants:
-                    variant_names.add(pkg_name)
+                    variant_names.add(name)
             unknown_names -= self.dry_stack_names
             unknown_names -= variant_names
 
