@@ -43,12 +43,45 @@ def get_distro(distro_name):
     return get_cached_release(index, distro_name)
 
 
-def get_recursive_dependencies(distro, package_names):
+def get_package_names(distro):
+    released_names = []
+    unreleased_names = []
+    for pkg_name, pkg in distro.packages.items():
+        repo = distro.repositories[pkg.repository_name]
+        if repo.version is not None:
+            released_names.append(pkg_name)
+        else:
+            unreleased_names.append(pkg_name)
+    return released_names, unreleased_names
+
+
+def get_recursive_dependencies(distro, package_names, excludes=None):
+    excludes = set(excludes or [])
     dependencies = set([])
     walker = DependencyWalker(distro)
     for pkg_name in package_names:
-        dependencies |= walker.get_recursive_depends(pkg_name, ['buildtool', 'build', 'run'], ros_packages_only=True, ignore_pkgs=dependencies)
-    dependencies |= set(package_names)
+        try:
+            dependencies |= walker.get_recursive_depends(pkg_name, ['buildtool', 'build', 'run'], ros_packages_only=True, ignore_pkgs=dependencies | excludes)
+        except AssertionError as e:
+            raise RuntimeError("Failed to fetch recursive dependencies of package '%s': %s" % (pkg_name, e))
+    dependencies -= set(package_names)
+    return dependencies
+
+
+def get_recursive_dependencies_on(distro, package_names, excludes=None, limit=None):
+    excludes = set(excludes or [])
+    limit = set(limit or [])
+
+    # to improve performance limit search space if possible
+    if limit:
+        released_names, _ = get_package_names(distro)
+        excludes.update(set(released_names) - limit - set(package_names))
+
+    dependencies = set([])
+    walker = DependencyWalker(distro)
+    for pkg_name in package_names:
+        dependencies |= walker.get_recursive_depends_on(pkg_name, ['buildtool', 'build', 'run'], ignore_pkgs=dependencies | excludes)
+    dependencies -= set(package_names)
     return dependencies
 
 

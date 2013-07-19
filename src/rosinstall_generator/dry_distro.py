@@ -33,8 +33,10 @@
 
 import logging
 import rospkg.distro as rosdistro
-import urllib
+import urllib2
 import yaml
+
+from rosdistro.loader import load_url
 
 logger = logging.getLogger('rosinstall_generator')
 
@@ -43,7 +45,19 @@ def get_distro(distro_name):
     return rosdistro.load_distro(rosdistro.distro_uri(distro_name))
 
 
-def get_recursive_dependencies(distro, stack_names):
+def get_stack_names(distro):
+    released_names = []
+    unreleased_names = []
+    for stack_name, stack in distro.stacks.items():
+        if stack.version:
+            released_names.append(stack_name)
+        else:
+            unreleased_names.append(stack_name)
+    return released_names, unreleased_names
+
+
+def get_recursive_dependencies(distro, stack_names, excludes=None):
+    excludes = set(excludes or [])
     dry_dependencies = set(stack_names)
     wet_dependencies = set([])
     traverse_stacks = set(stack_names)
@@ -51,8 +65,9 @@ def get_recursive_dependencies(distro, stack_names):
         stack_name = traverse_stacks.pop()
         info = _get_stack_info(distro, stack_name)
         if 'depends' in info:
-            depends = set(info['depends'])
-            for depend in depends:
+            for depend in info['depends']:
+                if depend in excludes:
+                    continue
                 if depend in distro.stacks:
                     if depend not in dry_dependencies:
                         dry_dependencies.add(depend)
@@ -62,13 +77,55 @@ def get_recursive_dependencies(distro, stack_names):
     return dry_dependencies, wet_dependencies
 
 
+def get_recursive_dependencies_on(distro, stack_names, excludes=None, limit=None):
+    excludes = set(excludes or [])
+    limit = set(limit or [])
+
+    # to improve performance limit search space if possible
+    if limit:
+        released_names, _ = get_stack_names(distro)
+        excludes.update(set(released_names) - limit - set(stack_names))
+
+    depends_on = set([])
+    stacks_to_check = set(stack_names)
+    while stacks_to_check:
+        next_stack_to_check = stacks_to_check.pop()
+        deps = _get_dependencies_on(distro, next_stack_to_check, ignore_stacks=excludes)
+        new_deps = deps - depends_on
+        stacks_to_check |= new_deps
+        depends_on |= new_deps
+    return depends_on
+
+
+def _get_dependencies_on(distro, stack_name, ignore_stacks=None):
+    ignore_stacks = ignore_stacks or []
+    depends_on = set([])
+    for name, stack in distro.stacks.items():
+        if name in ignore_stacks or not stack.version:
+            continue
+        info = _get_stack_info(distro, name)
+        if 'depends' in info:
+            if stack_name in info['depends']:
+                depends_on.add(name)
+    return depends_on
+
+
+_stack_info = {}
+
+
 def _get_stack_info(distro, stack_name):
-    stack = distro.stacks[stack_name]
-    version = stack.version
-    url = 'https://code.ros.org/svn/release/download/stacks/%(stack_name)s/%(stack_name)s-%(version)s/%(stack_name)s-%(version)s.yaml' % locals()
-    logger.debug('Load dry package info from "%s"' % url)
-    y = urllib.urlopen(url)
-    return yaml.load(y.read())
+    global _stack_info
+    if stack_name not in _stack_info:
+        stack = distro.stacks[stack_name]
+        version = stack.version
+        url = 'https://code.ros.org/svn/release/download/stacks/%(stack_name)s/%(stack_name)s-%(version)s/%(stack_name)s-%(version)s.yaml' % locals()
+        logger.debug('Load dry package info from "%s"' % url)
+        try:
+            data = load_url(url)
+        except urllib2.URLError as e:
+            raise RuntimeError("Could not fetch information for stack '%s' with version '%s': %s" % (stack_name, version, e))
+        _stack_info[stack_name] = yaml.load(data)
+    return _stack_info[stack_name]
 
 
 def generate_rosinstall(distro, stack_names):
