@@ -16,11 +16,13 @@ def main(argv=sys.argv[1:]):
     parser = argparse.ArgumentParser(
         description='Generate a .rosinstall file for a set of packages.')
     parser.add_argument('--debug', action='store_true', default=False,
-        help='Print debug information to stderr')
+        help='Print debug information about fetching the ROS distribution files to stderr')
+    parser.add_argument('--verbose', action='store_true', default=False,
+        help='Print verbose information to stderr')
     parser.add_argument('--rosdistro', required=distro_name is None, default=distro_name,
         help='The ROS distro (default: environment variable ROS_DISTRO if defined)')
     parser.add_argument('package_names', nargs='+', metavar='pkgname',
-        help="Wet package names, dry stack names or variant names. Use '%s' to specify all packages available in the current environment. Use '%s' to specify all release packages." % (ARG_CURRENT_ENVIRONMENT, ARG_ALL_PACKAGES))
+        help="Wet package names, dry stack names or variant names. Use '%s' to specify all packages available in the current environment. Use '%s' to specify all release packages (only usable as a single argument)." % (ARG_CURRENT_ENVIRONMENT, ARG_ALL_PACKAGES))
 
     group = parser.add_mutually_exclusive_group()
     group.add_argument('--deps', action='store_true', default=False,
@@ -47,11 +49,27 @@ def main(argv=sys.argv[1:]):
     args = parser.parse_args(argv)
 
     # check for invalid combinations
+    if ARG_ALL_PACKAGES in args.package_names and len(args.package_names) > 1:
+        parser.error("When using '%s' as a package name no other names can be specified" % ARG_ALL_PACKAGES)
+
     if args.deps_only and not args.deps and not args.deps_up_to:
         parser.error("Option '--deps-only' can only be used together with either '--deps' or '--deps-up-to'")
 
-    if args.debug:
-        logging.basicConfig(format='%(message)s', level=logging.DEBUG)
+    # pass all logging output to stderr
+    logger = logging.getLogger('rosinstall_generator')
+    logger.addHandler(logging.StreamHandler(sys.stderr))
+
+    verbose_level = logging.DEBUG if args.verbose else logging.INFO
+    logger.setLevel(verbose_level)
+
+    debug_level = logging.DEBUG if args.debug else logging.INFO
+    logger = logging.getLogger('rosinstall_generator.dry')
+    logger.setLevel(debug_level)
+    logger = logging.getLogger('rosinstall_generator.wet')
+    logger.setLevel(debug_level)
+
+    if '--rosdistro' not in argv:
+        print('Using ROS_DISTRO: %s' % args.rosdistro, file=sys.stderr)
 
     try:
         rosinstall_data = generate_rosinstall(args.rosdistro, args.package_names,

@@ -58,70 +58,87 @@ logger = logging.getLogger('rosinstall_generator')
 ARG_ALL_PACKAGES = 'ALL'
 ARG_CURRENT_ENVIRONMENT = 'RPP'
 
+
+def _split_special_keywords(names):
+    non_keyword_names = set(names)
+    keywords = set([])
+    if ARG_ALL_PACKAGES in names:
+        non_keyword_names.remove(ARG_ALL_PACKAGES)
+        keywords.add(ARG_ALL_PACKAGES)
+    if ARG_CURRENT_ENVIRONMENT in names:
+        non_keyword_names.remove(ARG_CURRENT_ENVIRONMENT)
+        keywords.add(ARG_CURRENT_ENVIRONMENT)
+    return non_keyword_names, keywords
+
+
+def _classify_names(distro_name, names):
+    unknown_names = set(names or [])
+
+    wet_package_names = set([])
+    dry_stack_names = set([])
+    variant_names = set([])
+
+    # identify wet packages
+    if unknown_names:
+        wet_distro = get_wet_distro(distro_name)
+        for name in unknown_names:
+            if name in wet_distro.packages:
+                wet_package_names.add(name)
+        unknown_names -= wet_package_names
+
+    # identify dry stacks/variants
+    if unknown_names:
+        dry_distro = get_dry_distro(distro_name)
+        for name in unknown_names:
+            if name in dry_distro.get_stacks(released=True):
+                dry_stack_names.add(name)
+            if name in dry_distro.variants:
+                variant_names.add(name)
+        unknown_names -= dry_stack_names
+        unknown_names -= variant_names
+
+    # resolve variant names into wet package names or dry stack names
+    if variant_names:
+        wet_distro = get_wet_distro(distro_name)
+        for variant_name in variant_names:
+            variant_depends = dry_distro.variants[variant_name].get_stack_names()
+            for depend in variant_depends:
+                if depend in wet_distro.packages:
+                    wet_package_names.add(depend)
+                elif depend in dry_distro.stacks:
+                    dry_stack_names.add(depend)
+                else:
+                    raise RuntimeError("The following dependency of variant '%s' could not be found: %s" % (variant_name, depend))
+
+    return Names(wet_package_names, dry_stack_names), unknown_names
+
+
 class Names(object):
     '''
-    Separates a list of names into wet package and dry stack names and resolves variants.
+    Stores wet package names and dry stack names.
     '''
 
-    def __init__(self, distro_name, names):
-        unknown_names = set(names or [])
+    def __init__(self, wet_package_names, dry_stack_names):
+        self.wet_package_names = set(wet_package_names)
+        self.dry_stack_names = set(dry_stack_names)
 
-        # expand special arguments
-        _expand_special_args(distro_name, unknown_names)
-
-        self.wet_package_names = set([])
-        self.dry_stack_names = set([])
-        variant_names = set([])
-
-        # identify wet packages
-        if unknown_names:
-            wet_distro = get_wet_distro(distro_name)
-            for name in unknown_names:
-                if name in wet_distro.packages:
-                    self.wet_package_names.add(name)
-            unknown_names -= self.wet_package_names
-
-        # identify dry stacks/variants
-        if unknown_names:
-            dry_distro = get_dry_distro(distro_name)
-            for name in unknown_names:
-                if name in dry_distro.get_stacks(released=True):
-                    self.dry_stack_names.add(name)
-                if name in dry_distro.variants:
-                    variant_names.add(name)
-            unknown_names -= self.dry_stack_names
-            unknown_names -= variant_names
-
-        if unknown_names:
-            print('The following names could not be found and will be ignored: ' + ', '.join(sorted(unknown_names)), file=sys.stderr)
-
-        # resolve variant names into wet package names or dry stack names
-        if variant_names:
-            wet_distro = get_wet_distro(distro_name)
-            for variant_name in variant_names:
-                variant_depends = dry_distro.variants[variant_name].get_stack_names()
-                for depend in variant_depends:
-                    if depend in wet_distro.packages:
-                        self.wet_package_names.add(depend)
-                    elif depend in dry_distro.stacks:
-                        self.dry_stack_names.add(depend)
-                    else:
-                        raise RuntimeError("The following dependency of variant '%s' could not be found: %s" % (variant_name, depend))
+    def update(self, other):
+        self.wet_package_names.update(other.wet_package_names)
+        self.dry_stack_names.update(other.dry_stack_names)
 
 
-def _expand_special_args(distro_name, names):
-    if ARG_ALL_PACKAGES in names:
-        names.remove(ARG_ALL_PACKAGES)
+def _expand_keywords(distro_name, keywords):
+    names = set([])
+    if ARG_ALL_PACKAGES in keywords:
         wet_distro = get_wet_distro(distro_name)
         released_package_names, _ = get_package_names(wet_distro)
         names.update(released_package_names)
         dry_distro = get_dry_distro(distro_name)
         released_stack_names, _ = get_stack_names(dry_distro)
         names.update(released_stack_names)
-
-    if ARG_CURRENT_ENVIRONMENT in names:
-        names.remove(ARG_CURRENT_ENVIRONMENT)
+    if ARG_CURRENT_ENVIRONMENT in keywords:
         names.update(_get_packages_in_environment())
+    return names
 
 
 _packages_in_environment = None
@@ -163,17 +180,43 @@ def generate_rosinstall(distro_name, names,
     wet_only=False, dry_only=False,
     excludes=None,
     tar=False):
-    names = Names(distro_name, names)
-    if names:
-        logger.debug('Names: %s' % ', '.join(sorted(names.wet_package_names | names.dry_stack_names)))
-    deps_up_to_names = Names(distro_name, deps_up_to)
+    # classify package/stack names
+    names, keywords = _split_special_keywords(names)
+    names, unknown_names = _classify_names(distro_name, names)
+    if unknown_names:
+        logger.warn('The following not released packages/stacks will be ignored: %s' % (', '.join(sorted(unknown_names))))
+    if keywords:
+        expanded_names, unknown_names = _classify_names(distro_name, _expand_keywords(distro_name, keywords))
+        if unknown_names:
+            logger.warn('The following not released packages/stacks from the %s will be ignored: %s' % (ROS_PACKAGE_PATH, ', '.join(sorted(unknown_names))))
+        names.update(expanded_names)
     if not names.wet_package_names and not names.dry_stack_names:
-        raise RuntimeError('No packages specified')
+        raise RuntimeError('No packages/stacks left after ignoring not released')
+    logger.debug('Packages/stacks: %s' % ', '.join(sorted(names.wet_package_names | names.dry_stack_names)))
+
+    # classify deps-up-to
+    deps_up_to_names, keywords = _split_special_keywords(deps_up_to or [])
+    deps_up_to_names, unknown_names = _classify_names(distro_name, deps_up_to_names)
+    if unknown_names:
+        logger.warn("The following not released '--deps-up-to' packages/stacks will be ignored: %s" % (', '.join(sorted(unknown_names))))
+    if keywords:
+        expanded_names, unknown_names = _classify_names(distro_name, _expand_keywords(distro_name, keywords))
+        if unknown_names:
+            logger.warn("The following not released '--deps-up-to' packages/stacks from the %s will be ignored: %s" % (ROS_PACKAGE_PATH, ', '.join(sorted(unknown_names))))
+        deps_up_to_names.update(expanded_names)
     if deps_up_to:
         logger.debug('Dependencies up to: %s' % ', '.join(sorted(deps_up_to_names.wet_package_names | deps_up_to_names.dry_stack_names)))
-    exclude_names = Names(distro_name, excludes)
+
+    # classify excludes
+    exclude_names, keywords = _split_special_keywords(excludes or [])
+    exclude_names, unknown_names = _classify_names(distro_name, exclude_names)
+    if unknown_names:
+        logger.warn("The following not released '--exclude' packages/stacks will be ignored: %s" % (', '.join(sorted(unknown_names))))
+    if keywords:
+        expanded_names, unknown_names = _classify_names(distro_name, _expand_keywords(distro_name, keywords))
+        exclude_names.update(expanded_names)
     if excludes:
-        logger.debug('Excluded packages: %s' % ', '.join(sorted(exclude_names.wet_package_names | exclude_names.dry_stack_names)))
+        logger.debug('Excluded packages/stacks: %s' % ', '.join(sorted(exclude_names.wet_package_names | exclude_names.dry_stack_names)))
 
     result = copy.deepcopy(names)
     # clear wet packages if not requested
@@ -184,15 +227,15 @@ def generate_rosinstall(distro_name, names,
         result.dry_stack_names.clear()
 
     # remove excluded names from the list of wet and dry names
-    result.wet_package_names -= set(exclude_names.wet_package_names)
-    result.dry_stack_names -= set(exclude_names.dry_stack_names)
+    result.wet_package_names -= exclude_names.wet_package_names
+    result.dry_stack_names -= exclude_names.dry_stack_names
     if not result.wet_package_names and not result.dry_stack_names:
-        raise RuntimeError('No packages left after applying the exclusions')
+        raise RuntimeError('No packages/stacks left after applying the exclusions')
 
     if result.wet_package_names:
-        logger.debug('wet package names: %s' % ', '.join(sorted(result.wet_package_names)))
+        logger.debug('Wet packages: %s' % ', '.join(sorted(result.wet_package_names)))
     if result.dry_stack_names:
-        logger.debug('dry stack names: %s' % ', '.join(sorted(result.dry_stack_names)))
+        logger.debug('Dry stacks: %s' % ', '.join(sorted(result.dry_stack_names)))
 
     # extend the names with recursive dependencies
     if deps or deps_up_to:
@@ -202,17 +245,17 @@ def generate_rosinstall(distro_name, names,
             _, unreleased_stack_names = get_stack_names(dry_distro)
             excludes = exclude_names.dry_stack_names | deps_up_to_names.dry_stack_names | set(unreleased_stack_names)
             dry_dependencies, wet_dependencies = get_recursive_dependencies_of_dry(dry_distro, result.dry_stack_names, excludes=excludes)
-            logger.debug('dry stack names including dependencies: %s' % ', '.join(sorted(dry_dependencies)))
+            logger.debug('Dry stacks including dependencies: %s' % ', '.join(sorted(dry_dependencies)))
             result.dry_stack_names |= dry_dependencies
 
             if not dry_only:
                 # add wet dependencies of dry stuff
-                logger.debug('wet dependencies of dry stacks: %s' % ', '.join(sorted(wet_dependencies)))
+                logger.debug('Wet dependencies of dry stacks: %s' % ', '.join(sorted(wet_dependencies)))
                 for depend in wet_dependencies:
                     if depend in exclude_names.wet_package_names or depend in deps_up_to_names.wet_package_names:
                         continue
                     wet_distro = get_wet_distro(distro_name)
-                    assert depend in wet_distro.packages, 'Package "%s" does not have a version"' % depend
+                    assert depend in wet_distro.packages, "Package '%s' does not have a version" % depend
                     result.wet_package_names.add(depend)
         # add wet dependencies
         if result.wet_package_names:
@@ -220,7 +263,7 @@ def generate_rosinstall(distro_name, names,
             _, unreleased_package_names = get_package_names(wet_distro)
             excludes = exclude_names.wet_package_names | deps_up_to_names.wet_package_names | set(unreleased_package_names)
             result.wet_package_names |= get_recursive_dependencies_of_wet(wet_distro, result.wet_package_names, excludes=excludes)
-            logger.debug('wet package names including dependencies: %s' % ', '.join(sorted(result.wet_package_names)))
+            logger.debug('Wet packages including dependencies: %s' % ', '.join(sorted(result.wet_package_names)))
 
     # intersect result with recursive dependencies on
     if deps_up_to:
@@ -234,7 +277,7 @@ def generate_rosinstall(distro_name, names,
             result.wet_package_names = wet_package_names
         else:
             result.wet_package_names.clear()
-        logger.debug('wet_package_names after intersection: %s' % ', '.join(sorted(result.wet_package_names)))
+        logger.debug('Wet packages after intersection: %s' % ', '.join(sorted(result.wet_package_names)))
 
         # intersect with dry dependencies on
         dry_dependency_names = result.wet_package_names | deps_up_to_names.dry_stack_names
@@ -247,7 +290,7 @@ def generate_rosinstall(distro_name, names,
             result.dry_stack_names = dry_stack_names
         else:
             result.dry_stack_names.clear()
-        logger.debug('dry_stack_names after intersection: %s' % ', '.join(sorted(result.dry_stack_names)))
+        logger.debug('Dry stacks after intersection: %s' % ', '.join(sorted(result.dry_stack_names)))
 
     # exclude passed in names
     if deps_only:
@@ -257,10 +300,12 @@ def generate_rosinstall(distro_name, names,
     # get wet and/or dry rosinstall data
     rosinstall_data = []
     if not dry_only and result.wet_package_names:
+        logger.debug('Generate rosinstall entries for wet packages: %s' % ', '.join(sorted(result.wet_package_names)))
         wet_distro = get_wet_distro(distro_name)
         wet_rosinstall_data = generate_wet_rosinstall(wet_distro, result.wet_package_names, tar=tar)
         rosinstall_data += wet_rosinstall_data
     if not wet_only and result.dry_stack_names:
+        logger.debug('Generate rosinstall entries for dry stacks: %s' % ', '.join(sorted(result.dry_stack_names)))
         dry_distro = get_dry_distro(distro_name)
         dry_rosinstall_data = generate_dry_rosinstall(dry_distro, result.dry_stack_names)
         rosinstall_data += dry_rosinstall_data
