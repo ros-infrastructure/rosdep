@@ -157,6 +157,6 @@ class HomebrewInstaller(PackageManagerInstaller):
                 for d in dependencies:
                     d = d.strip()
                     # remove duplicate dependency from package list
-                    if(d in packages):
+                    if d in packages:
                         packages_copy.remove(d)
         return packages_copy
