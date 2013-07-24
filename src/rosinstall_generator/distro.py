@@ -31,7 +31,9 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import logging
 import os
+import sys
 
 from rosdistro import get_cached_release, get_index, get_index_url
 from rosdistro.dependency_walker import DependencyWalker
@@ -55,15 +57,33 @@ def get_package_names(distro):
     return released_names, unreleased_names
 
 
+# redirect all output to logger
+class CustomLogger(object):
+
+    def __init__(self):
+        self.logger = logging.getLogger('rosinstall_generator.wet')
+        self.linebuf = ''
+
+    def write(self, buf):
+      for line in buf.rstrip().splitlines():
+         self.logger.log(logging.DEBUG, line.rstrip())
+
+
 def get_recursive_dependencies(distro, package_names, excludes=None):
     excludes = set(excludes or [])
     dependencies = set([])
     walker = DependencyWalker(distro)
-    for pkg_name in package_names:
-        try:
-            dependencies |= walker.get_recursive_depends(pkg_name, ['buildtool', 'build', 'run'], ros_packages_only=True, ignore_pkgs=dependencies | excludes)
-        except AssertionError as e:
-            raise RuntimeError("Failed to fetch recursive dependencies of package '%s': %s" % (pkg_name, e))
+    # redirect all stderr output to logger
+    stderr = sys.stderr
+    sys.stderr = CustomLogger()
+    try:
+        for pkg_name in package_names:
+            try:
+                dependencies |= walker.get_recursive_depends(pkg_name, ['buildtool', 'build', 'run'], ros_packages_only=True, ignore_pkgs=dependencies | excludes)
+            except AssertionError as e:
+                raise RuntimeError("Failed to fetch recursive dependencies of package '%s': %s" % (pkg_name, e))
+    finally:
+        sys.stderr = stderr
     dependencies -= set(package_names)
     return dependencies
 
@@ -79,8 +99,14 @@ def get_recursive_dependencies_on(distro, package_names, excludes=None, limit=No
 
     dependencies = set([])
     walker = DependencyWalker(distro)
-    for pkg_name in package_names:
-        dependencies |= walker.get_recursive_depends_on(pkg_name, ['buildtool', 'build', 'run'], ignore_pkgs=dependencies | excludes)
+    # redirect all stderr output to logger
+    stderr = sys.stderr
+    sys.stderr = CustomLogger()
+    try:
+        for pkg_name in package_names:
+            dependencies |= walker.get_recursive_depends_on(pkg_name, ['buildtool', 'build', 'run'], ignore_pkgs=dependencies | excludes)
+    finally:
+        sys.stderr = stderr
     dependencies -= set(package_names)
     return dependencies
 

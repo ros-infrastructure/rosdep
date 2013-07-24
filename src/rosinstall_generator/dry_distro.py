@@ -38,7 +38,7 @@ import yaml
 
 from rosdistro.loader import load_url
 
-logger = logging.getLogger('rosinstall_generator')
+logger = logging.getLogger('rosinstall_generator.dry')
 
 
 def get_distro(distro_name):
