@@ -162,7 +162,15 @@ def cache_data_source_loader(sources_cache_dir, verbose=False):
         if os.path.exists(pickle_filepath):
             if verbose:
                 print("loading cached data source:\n\t%s\n\t%s"%(uri, pickle_filepath), file=sys.stderr)
-            with open(pickle_filepath, 'r') as f:
+
+            #Windows make distinction between text and binary mode, that's why we need to append 'b' to the mode.
+            #Note that it should be safe to add 'b' on other systems.
+            if os.name == "nt":
+                mode = 'rb'
+            else:
+                mode = 'r'
+            
+            with open(pickle_filepath, mode) as f:
                 rosdep_data = cPickle.loads(f.read())
         elif os.path.exists(filepath):
             if verbose:
