@@ -176,7 +176,7 @@ def test_write_cache_file():
     filepath = write_cache_file(tempdir, 'foo', {'data': 1})  + PICKLE_CACHE_EXT
     computed_path = os.path.join(tempdir, compute_filename_hash('foo')) + PICKLE_CACHE_EXT
     assert os.path.samefile(filepath, computed_path)
-    with open(filepath, 'r') as f:
+    with open(filepath, 'rb') as f:
         assert {'data': 1} == cPickle.loads(f.read())
     
 def test_update_sources_list():
@@ -208,7 +208,7 @@ def test_update_sources_list():
     hash2 = compute_filename_hash(BADHOSTNAME_URL)
     filepath = os.path.join(tempdir, hash1)
     assert filepath == path0, "%s vs %s"%(filepath, path0)
-    with open(filepath+PICKLE_CACHE_EXT, 'r') as f:
+    with open(filepath+PICKLE_CACHE_EXT, 'rb') as f:
         data = cPickle.loads(f.read())
         assert 'cmake' in data
 
