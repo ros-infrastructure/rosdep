@@ -70,18 +70,18 @@ def test_HomebrewInstaller():
     from rosdep2.platforms.osx import HomebrewInstaller
 
     @patch('rosdep2.platforms.osx.is_brew_installed')
-    @patch.object(HomebrewInstaller, 'get_packages_to_install')
     @patch.object(HomebrewInstaller, 'remove_duplicate_dependencies')
+    @patch.object(HomebrewInstaller, 'get_packages_to_install')
     def test(mock_get_packages_to_install, mock_remove_duplicate_dependencies, mock_brew_installed):
         mock_brew_installed.return_value = True
         
         installer = HomebrewInstaller()
         mock_get_packages_to_install.return_value = []
-        mock_remove_duplicate_dependencies = mock_get_packages_to_install
+        mock_remove_duplicate_dependencies.return_value = mock_get_packages_to_install.return_value
         assert [] == installer.get_install_command(['fake'])
 
         mock_get_packages_to_install.return_value = ['subversion', 'bazaar']
-        mock_remove_duplicate_dependencies = mock_get_packages_to_install
+        mock_remove_duplicate_dependencies.return_value = mock_get_packages_to_install.return_value
         expected = [['brew', 'install', 'subversion'],
                     ['brew', 'install', 'bazaar']]
         # brew is always non-interactive
