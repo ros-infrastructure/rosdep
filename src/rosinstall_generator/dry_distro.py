@@ -118,7 +118,7 @@ def _get_stack_info(distro, stack_name):
     if stack_name not in _stack_info:
         stack = distro.stacks[stack_name]
         version = stack.version
-        url = 'https://code.ros.org/svn/release/download/stacks/%(stack_name)s/%(stack_name)s-%(version)s/%(stack_name)s-%(version)s.yaml' % locals()
+        url = 'http://ros-dry-releases.googlecode.com/svn/download/stacks/%(stack_name)s/%(stack_name)s-%(version)s/%(stack_name)s-%(version)s.yaml' % locals()
         logger.debug('Load dry package info from "%s"' % url)
         try:
             data = load_url(url)
