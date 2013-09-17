@@ -38,6 +38,8 @@ import logging
 import os
 import sys
 
+from catkin_pkg.package import InvalidPackage, parse_package_string
+
 from rospkg import RosPack, RosStack
 from rospkg.environment import ROS_PACKAGE_PATH
 
@@ -177,7 +179,7 @@ def get_dry_distro(distro_name):
 
 def generate_rosinstall(distro_name, names,
     deps=False, deps_up_to=None, deps_only=False,
-    wet_only=False, dry_only=False,
+    wet_only=False, dry_only=False, catkin_only=False, non_catkin_only=False,
     excludes=None,
     tar=False):
     # classify package/stack names
@@ -296,6 +298,21 @@ def generate_rosinstall(distro_name, names,
     if deps_only:
         result.wet_package_names -= set(names.wet_package_names)
         result.dry_stack_names -= set(names.dry_stack_names)
+
+    # exclude wet packages based on build type
+    if catkin_only or non_catkin_only:
+        wet_distro = get_wet_distro(distro_name)
+        for pkg_name in list(result.wet_package_names):
+            pkg_xml = wet_distro.get_package_xml(pkg_name)
+            try:
+                pkg = parse_package_string(pkg_xml)
+            except InvalidPackage as e:
+                logger.warn("The package '%s' has an invalid manifest and will be ignored: %s" % (pkg_name, e))
+                result.wet_package_names.remove(pkg_name)
+                continue
+            build_type = ([e.content for e in pkg.exports if e.tagname == 'build_type'][0]) if 'build_type' in [e.tagname for e in pkg.exports] else 'catkin'
+            if catkin_only ^ (build_type == 'catkin'):
+                result.wet_package_names.remove(pkg_name)
 
     # get wet and/or dry rosinstall data
     rosinstall_data = []

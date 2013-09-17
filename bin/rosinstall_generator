@@ -39,6 +39,10 @@ def main(argv=sys.argv[1:]):
         help='Only include wet packages')
     group.add_argument('--dry-only', action='store_true', default=False,
         help='Only include dry stacks')
+    group.add_argument('--catkin-only', action='store_true', default=False,
+        help="Only wet packages with build type 'catkin'")
+    group.add_argument('--non-catkin-only', action='store_true', default=False,
+        help="Only wet packages with build type other than 'catkin'")
 
     parser.add_argument('--exclude', nargs='*',
         help="Exclude a set of packages (also skips further recursive dependencies). Use '%s' to specify all packages available in the current environment." % ARG_CURRENT_ENVIRONMENT)
@@ -54,6 +58,9 @@ def main(argv=sys.argv[1:]):
 
     if args.deps_only and not args.deps and not args.deps_up_to:
         parser.error("Option '--deps-only' can only be used together with either '--deps' or '--deps-up-to'")
+
+    if args.catkin_only or args.non_catkin_only:
+        args.wet_only = True
 
     # pass all logging output to stderr
     logger = logging.getLogger('rosinstall_generator')
@@ -74,7 +81,7 @@ def main(argv=sys.argv[1:]):
     try:
         rosinstall_data = generate_rosinstall(args.rosdistro, args.package_names,
             deps=args.deps, deps_up_to=args.deps_up_to, deps_only=args.deps_only,
-            wet_only=args.wet_only, dry_only=args.dry_only,
+            wet_only=args.wet_only, dry_only=args.dry_only, catkin_only=args.catkin_only, non_catkin_only=args.non_catkin_only,
             excludes=args.exclude,
             tar=args.tar)
     except RuntimeError as e:
