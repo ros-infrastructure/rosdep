@@ -17,8 +17,8 @@ setup(
     scripts=['scripts/rosdep', 'scripts/rosdep-source'],
     author="Tully Foote, Ken Conley",
     author_email="foote@willowgarage.com, kwc@willowgarage.com",
-    url="http://www.ros.org/wiki/rosdep",
-    download_url="http://pr.willowgarage.com/downloads/rosdep/",
+    url="http://wiki.ros.org/rosdep",
+    download_url="http://download.ros.org/downloads/rosdep/",
     keywords=['ROS'],
     classifiers=[
         "Programming Language :: Python",

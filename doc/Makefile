@@ -132,5 +132,5 @@ doctest:
 upload: html
 	# set write permission for group so that everybody can overwrite existing files on the webserver
 	chmod -R g+w _build/html/
-	scp -pr _build/html/ wgs32.willowgarage.com:/var/www/www.ros.org/html/doc/api/rosdep2
+	scp -pr _build/html/ rosbot@ros.osuosl.org:/home/rosbot/docs/independent/api/rosdep
 
