@@ -28,6 +28,7 @@
 
 # Author Tully Foote/tfoote@willowgarage.com
 
+import os
 import subprocess
 
 from ..installers import PackageManagerInstaller
@@ -35,13 +36,20 @@ from .source import SOURCE_INSTALLER
 
 ARCH_OS_NAME = 'arch'
 PACMAN_INSTALLER = 'pacman'
+AUR_INSTALLER = 'aur'
 
 def register_installers(context):
     context.set_installer(PACMAN_INSTALLER, PacmanInstaller())
+
+    # Is this the right place to do this kind of check?
+    aur_tool = detect_aur_tool()
+    if aur_tool is not None:
+        context.set_installer(AUR_INSTALLER, AURInstaller(aur_tool))
     
 def register_platforms(context):
     context.add_os_installer_key(ARCH_OS_NAME, SOURCE_INSTALLER)
     context.add_os_installer_key(ARCH_OS_NAME, PACMAN_INSTALLER)
+    context.add_os_installer_key(ARCH_OS_NAME, AUR_INSTALLER)
     context.set_default_os_installer_key(ARCH_OS_NAME, PACMAN_INSTALLER)
 
 def pacman_detect_single(p):
@@ -62,3 +70,29 @@ class PacmanInstaller(PackageManagerInstaller):
             return []
         else:
             return [['sudo', 'pacman', '-Sy', '--needed', p] for p in packages]
+
+def detect_aur_tool():
+    tool_names = ['packer', 'yaourt']
+
+    for path in os.environ['PATH'].split(os.pathsep):
+        for tool_name in tool_names:
+            if os.path.exists(os.path.join(path, tool_name)):
+                return tool_name
+
+class AURInstaller(PackageManagerInstaller):
+
+    def __init__(self, aur_tool):
+        super(AURInstaller, self).__init__(pacman_detect)
+        self.aur_tool = aur_tool
+
+    def get_install_command(self, resolved, interactive=True, reinstall=False):
+        #TODO: interactive switch
+        packages = self.get_packages_to_install(resolved, reinstall=reinstall)
+        if not packages:
+            return []
+        else:
+            if self.aur_tool == 'packer':
+                return [['sudo', 'packer', '-S', p] for p in packages]
+            elif self.aur_tool == 'yaourt':
+                # TODO: Test this...
+                return [['sudo', 'yaourt', '-S', p] for p in packages]
