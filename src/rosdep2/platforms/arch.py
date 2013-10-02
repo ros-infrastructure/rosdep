@@ -33,6 +33,7 @@ import subprocess
 
 from ..installers import PackageManagerInstaller
 from .source import SOURCE_INSTALLER
+from ..core import InstallFailed
 
 ARCH_OS_NAME = 'arch'
 PACMAN_INSTALLER = 'pacman'
@@ -43,8 +44,7 @@ def register_installers(context):
 
     # Is this the right place to do this kind of check?
     aur_tool = detect_aur_tool()
-    if aur_tool is not None:
-        context.set_installer(AUR_INSTALLER, AURInstaller(aur_tool))
+    context.set_installer(AUR_INSTALLER, AURInstaller(aur_tool))
     
 def register_platforms(context):
     context.add_os_installer_key(ARCH_OS_NAME, SOURCE_INSTALLER)
@@ -86,7 +86,8 @@ class AURInstaller(PackageManagerInstaller):
         self.aur_tool = aur_tool
 
     def get_install_command(self, resolved, interactive=True, reinstall=False):
-        #TODO: interactive switch
+        if self.aur_tool is None:
+            raise InstallFailed((AUR_INSTALLER, "neither packer nor yaourt is installed"))
         packages = self.get_packages_to_install(resolved, reinstall=reinstall)
         if not packages:
             return []
