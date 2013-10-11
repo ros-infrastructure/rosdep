@@ -41,10 +41,7 @@ AUR_INSTALLER = 'aur'
 
 def register_installers(context):
     context.set_installer(PACMAN_INSTALLER, PacmanInstaller())
-
-    # Is this the right place to do this kind of check?
-    aur_tool = detect_aur_tool()
-    context.set_installer(AUR_INSTALLER, AURInstaller(aur_tool))
+    context.set_installer(AUR_INSTALLER, AURInstaller())
     
 def register_platforms(context):
     context.add_os_installer_key(ARCH_OS_NAME, SOURCE_INSTALLER)
@@ -81,13 +78,15 @@ def detect_aur_tool():
 
 class AURInstaller(PackageManagerInstaller):
 
-    def __init__(self, aur_tool):
+    def __init__(self):
         super(AURInstaller, self).__init__(pacman_detect)
-        self.aur_tool = aur_tool
+        self.aur_tool = None
 
     def get_install_command(self, resolved, interactive=True, reinstall=False):
         if self.aur_tool is None:
-            raise InstallFailed((AUR_INSTALLER, "neither packer nor yaourt is installed"))
+            self.aur_tool = detect_aur_tool()
+            if self.aur_tool is None:
+                raise InstallFailed((AUR_INSTALLER, "neither packer nor yaourt is installed"))
         packages = self.get_packages_to_install(resolved, reinstall=reinstall)
         if not packages:
             return []
@@ -95,5 +94,4 @@ class AURInstaller(PackageManagerInstaller):
             if self.aur_tool == 'packer':
                 return [['sudo', 'packer', '-S', p] for p in packages]
             elif self.aur_tool == 'yaourt':
-                # TODO: Test this...
                 return [['sudo', 'yaourt', '-S', p] for p in packages]
