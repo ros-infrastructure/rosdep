@@ -29,6 +29,7 @@
 # Author Tully Foote/tfoote@willowgarage.com
 
 import os
+import re
 import subprocess
 
 from ..installers import PackageManagerInstaller
@@ -50,7 +51,26 @@ def register_platforms(context):
     context.set_default_os_installer_key(ARCH_OS_NAME, PACMAN_INSTALLER)
 
 def pacman_detect_single(p):
-    return not subprocess.call(['pacman', '-Q', p], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    
+    if not subprocess.call(['pacman', '-Q', p], stdout=subprocess.PIPE, stderr=subprocess.PIPE):
+        return True
+    else:
+        return bool(find_providers(p))
+
+def find_providers(term):
+    """Pacman has no way to search for package providers in the local database, so
+    we need to search on our own (or use a nonstandard library)."""
+    providers = []
+
+    provision_re = re.compile("\n%PROVIDES%(\n.+)*(\n" + term + "\n)")
+
+    for pkgspec in os.listdir('/var/lib/pacman/local'):
+        desc_path = os.path.join('/var/lib/pacman/local', pkgspec, 'desc')
+        with open(desc_path, 'r') as desc_file:
+            desc = desc_file.read()
+            if provision_re.search(desc):
+                providers.append(pkgspec)
+
+    return providers
 
 def pacman_detect(packages):
     return [p for p in packages if pacman_detect_single(p)]
