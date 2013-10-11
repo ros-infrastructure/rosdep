@@ -61,7 +61,7 @@ def find_providers(term):
     we need to search on our own (or use a nonstandard library)."""
     providers = []
 
-    provision_re = re.compile("\n%PROVIDES%(\n.+)*(\n" + term + "\n)")
+    provision_re = re.compile("\n%PROVIDES%(\n.+)*(\n" + re.escape(term) + "\n)")
 
     for pkgspec in os.listdir('/var/lib/pacman/local'):
         desc_path = os.path.join('/var/lib/pacman/local', pkgspec, 'desc')
