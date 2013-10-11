@@ -286,7 +286,7 @@ def download_default_sources_list(url=DEFAULT_SOURCES_LIST_URL):
     try:
         f = urllib2.urlopen(url, timeout=DOWNLOAD_TIMEOUT)
     except (urllib2.URLError, httplib.HTTPException) as e:
-        raise type(e)(str(e) + ' (%s)' % url)
+        raise urllib2.URLError(str(e) + ' (%s)' % url)
     data = f.read()
     f.close()
     if not data:
