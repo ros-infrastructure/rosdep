@@ -26,7 +26,10 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import os
-import urllib2
+try:
+    from urllib.request import urlopen
+except ImportError:
+    from urllib2 import urlopen
 
 def get_test_dir():
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'sources.list.d'))
@@ -36,7 +39,7 @@ def test_url_constants():
     for url_name, url in [('REP3_TARGETS_URL', REP3_TARGETS_URL),
                           ]:
         try:
-            f = urllib2.urlopen(url)
+            f = urlopen(url)
             f.read()
             f.close()
         except:

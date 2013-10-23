@@ -34,8 +34,16 @@ import sys
 import tempfile
 import yaml
 import hashlib
-import urllib2
-import cPickle
+try:
+    from urllib.request import urlopen
+    from urllib.error import URLError
+except ImportError:
+    from urllib2 import urlopen
+    from urllib2 import URLError
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 
 from .core import InvalidData, DownloadFailure
 from .gbpdistro_support import get_gbprepo_as_rosdep_data, download_gbpdistro_as_rosdep_data
@@ -163,7 +171,7 @@ def cache_data_source_loader(sources_cache_dir, verbose=False):
             if verbose:
                 print("loading cached data source:\n\t%s\n\t%s"%(uri, pickle_filepath), file=sys.stderr)
             with open(pickle_filepath, 'rb') as f:
-                rosdep_data = cPickle.loads(f.read())
+                rosdep_data = pickle.loads(f.read())
         elif os.path.exists(filepath):
             if verbose:
                 print("loading cached data source:\n\t%s\n\t%s"%(uri, filepath), file=sys.stderr)
@@ -261,14 +269,14 @@ def download_rosdep_data(url):
         retrieved (e.g. 404, bad YAML format, server down).
     """
     try:
-        f = urllib2.urlopen(url, timeout=DOWNLOAD_TIMEOUT)
+        f = urlopen(url, timeout=DOWNLOAD_TIMEOUT)
         text = f.read()
         f.close()
         data = yaml.safe_load(text)
         if type(data) != dict:
             raise DownloadFailure('rosdep data from [%s] is not a YAML dictionary'%(url))
         return data
-    except (urllib2.URLError, httplib.HTTPException) as e:
+    except (URLError, httplib.HTTPException) as e:
         raise DownloadFailure(str(e) + ' (%s)' % url)
     except yaml.YAMLError as e:
         raise DownloadFailure(str(e))
@@ -284,10 +292,10 @@ def download_default_sources_list(url=DEFAULT_SOURCES_LIST_URL):
         retrieved (e.g. 404, server down).
     """
     try:
-        f = urllib2.urlopen(url, timeout=DOWNLOAD_TIMEOUT)
-    except (urllib2.URLError, httplib.HTTPException) as e:
-        raise urllib2.URLError(str(e) + ' (%s)' % url)
-    data = f.read()
+        f = urlopen(url, timeout=DOWNLOAD_TIMEOUT)
+    except (URLError, httplib.HTTPException) as e:
+        raise URLError(str(e) + ' (%s)' % url)
+    data = f.read().decode()
     f.close()
     if not data:
         raise InvalidSourceFile("cannot download defaults file: empty contents")
@@ -419,7 +427,7 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
     # Additional sources for ros distros
     # In compliance with REP137
     print('Query rosdistro index %s' % get_index_url())
-    for d, dist in get_index().distributions.iteritems():
+    for d, dist in get_index().distributions.items():
         print('Add distro "%s"' % d)
         rds = RosDistroSource(d)
         rosdep_data = get_gbprepo_as_rosdep_data(d)
@@ -464,7 +472,7 @@ def load_cached_sources_list(sources_cache_dir=None, verbose=False):
 
 def compute_filename_hash(filename_key):
     sha_hash = hashlib.sha1()
-    sha_hash.update(filename_key)
+    sha_hash.update(filename_key.encode())
     return sha_hash.hexdigest()
     
 def write_cache_file(source_cache_d, filename_key, rosdep_data):
@@ -480,7 +488,7 @@ def write_cache_file(source_cache_d, filename_key, rosdep_data):
         os.makedirs(source_cache_d)
     key_hash = compute_filename_hash(filename_key)
     filepath = os.path.join(source_cache_d, key_hash)
-    write_atomic(filepath + PICKLE_CACHE_EXT, cPickle.dumps(rosdep_data, -1), True)
+    write_atomic(filepath + PICKLE_CACHE_EXT, pickle.dumps(rosdep_data, -1), True)
     try:
         os.unlink(filepath)
     except OSError:

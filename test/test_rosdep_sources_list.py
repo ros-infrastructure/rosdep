@@ -28,7 +28,12 @@
 import os
 import tempfile
 import yaml
-import urllib2
+try:
+    from urllib.request import urlopen
+    from urllib.error import URLError
+except ImportError:
+    from urllib2 import urlopen
+    from urllib2 import URLError
 
 import rospkg.distro
 import rosdep2.sources_list
@@ -53,7 +58,7 @@ def test_url_constants():
     from rosdep2.sources_list import DEFAULT_SOURCES_LIST_URL
     for url_name, url in [('DEFAULT_SOURCES_LIST_URL', DEFAULT_SOURCES_LIST_URL)]:
         try:
-            f = urllib2.urlopen(url)
+            f = urlopen(url)
             f.read()
             f.close()
         except:
@@ -66,7 +71,7 @@ def test_download_default_sources_list():
     try:
         download_default_sources_list(url='http://bad.ros.org/foo.yaml')
         assert False, "should not have succeeded/valdiated"
-    except urllib2.URLError:
+    except URLError:
         pass
     
 def test_CachedDataSource():

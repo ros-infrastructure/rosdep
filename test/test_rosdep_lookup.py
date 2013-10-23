@@ -442,7 +442,7 @@ def test_RosdepLookup_resolve():
     installer_context.set_os_override('ubuntu', 'lucid')
 
     # repeat for caching
-    for count in xrange(0, 2):
+    for count in range(0, 2):
         installer_key, resolution, dependencies = lookup.resolve('testtinyxml', 'rospack_fake', installer_context)
         assert 'apt' == installer_key
         assert ['libtinyxml-dev'] == resolution
@@ -472,7 +472,7 @@ def test_RosdepLookup_resolve_all():
 
     # repeat for caching
     lookup.verbose = True
-    for count in xrange(0, 2):
+    for count in range(0, 2):
         resolutions, errors = lookup.resolve_all(['rospack_fake', 'roscpp_fake'], installer_context)
         assert not errors, errors
         installer_keys, resolveds = zip(*resolutions)

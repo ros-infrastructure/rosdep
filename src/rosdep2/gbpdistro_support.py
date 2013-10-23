@@ -1,6 +1,12 @@
-import urllib2
+try:
+    from urllib.request import urlopen
+except ImportError:
+    from urllib2 import urlopen
 import yaml
-import urlparse
+try:
+    import urlparse
+except ImportError:
+    import urllib.parse as urlparse #py3k
 import os
 
 from rospkg.os_detect import OS_UBUNTU
@@ -191,7 +197,7 @@ def download_gbpdistro_as_rosdep_data(gbpdistro_url, targets_url=None):
     # will output a warning
     targets_data = download_targets_data(targets_url=targets_url)
     try:
-        f = urllib2.urlopen(gbpdistro_url, timeout=DOWNLOAD_TIMEOUT)
+        f = urlopen(gbpdistro_url, timeout=DOWNLOAD_TIMEOUT)
         text = f.read()
         f.close()
         gbpdistro_data = yaml.safe_load(text)
