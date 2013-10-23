@@ -33,7 +33,10 @@
 
 import logging
 import rospkg.distro as rosdistro
-import urllib2
+try:
+    from urllib.error import URLError
+except ImportError:
+    from urllib2 import URLError
 import yaml
 
 from rosdistro.loader import load_url
@@ -122,7 +125,7 @@ def _get_stack_info(distro, stack_name):
         logger.debug('Load dry package info from "%s"' % url)
         try:
             data = load_url(url)
-        except urllib2.URLError as e:
+        except URLError as e:
             raise RuntimeError("Could not fetch information for stack '%s' with version '%s': %s" % (stack_name, version, e))
         _stack_info[stack_name] = yaml.load(data)
     return _stack_info[stack_name]
