@@ -161,7 +161,7 @@ Please go to the rosdep page [1] and file a bug report with the stack trace belo
 rosdep version: %s
 
 %s
-"""%(e, __version__, traceback.format_exc(e)), file=sys.stderr)
+"""%(e, __version__, traceback.format_exc()), file=sys.stderr)
         sys.exit(1)
         
 def check_for_sources_list_init(sources_cache_dir):

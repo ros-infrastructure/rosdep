@@ -84,8 +84,8 @@ def _sub_fetch_file(url, md5sum=None):
 
 def get_file_hash(filename):
     md5 = hashlib.md5()
-    with open(filename,'rb') as f: 
-        for chunk in iter(lambda: f.read(8192), ''): 
+    with open(filename,'rb') as f:
+        for chunk in iter(lambda: f.read(8192), b''):
             md5.update(chunk)
     return md5.hexdigest()
 
@@ -99,6 +99,8 @@ def fetch_file(url, md5sum=None):
     error = contents = ''
     try:
         contents = _sub_fetch_file(url, md5sum)
+        if not isinstance(contents, str):
+            contents = contents.decode('utf-8')
     except DownloadFailed as e:
         rd_debug("Download of file %s failed"%(url))
         error = str(e)

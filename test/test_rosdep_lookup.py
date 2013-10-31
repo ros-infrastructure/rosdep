@@ -181,7 +181,7 @@ def test_RosdepView_merge():
     
     # create empty view and test
     view = RosdepView('common')
-    assert view.keys() == []
+    assert len(view.keys()) == 0
     # - tripwire
     str(view)
 
@@ -209,7 +209,7 @@ def test_RosdepView_merge():
     # merge new for 'd', 'e'
     d3 = RosdepDatabaseEntry(dict(d=dict(o=4), e=dict(p=5)), [], 'origin3')
     view.merge(d3)
-    assert set(view.keys()) == set(data.keys() + ['d', 'e'])
+    assert set(view.keys()) == set(list(data.keys()) + ['d', 'e'])
     for k, v in data.items():
         assert view.lookup(k).data == v
     assert view.lookup('d').data == dict(o=4)

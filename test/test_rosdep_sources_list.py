@@ -175,19 +175,28 @@ def test_parse_sources_list():
 
 def test_write_cache_file():
     from rosdep2.sources_list import write_cache_file, compute_filename_hash, PICKLE_CACHE_EXT
-    import cPickle
+    try:
+        import cPickle as pickle
+    except ImportError:
+        import pickle
     tempdir = tempfile.mkdtemp()
     
     filepath = write_cache_file(tempdir, 'foo', {'data': 1})  + PICKLE_CACHE_EXT
     computed_path = os.path.join(tempdir, compute_filename_hash('foo')) + PICKLE_CACHE_EXT
     assert os.path.samefile(filepath, computed_path)
     with open(filepath, 'rb') as f:
-        assert {'data': 1} == cPickle.loads(f.read())
+        assert {'data': 1} == pickle.loads(f.read())
     
 def test_update_sources_list():
     from rosdep2.sources_list import update_sources_list, InvalidData, compute_filename_hash, PICKLE_CACHE_EXT
-    import cPickle
-    from urllib import pathname2url
+    try:
+        import cPickle as pickle
+    except ImportError:
+        import pickle
+    try:
+        from urllib.request import pathname2url
+    except ImportError:
+        from urllib import pathname2url
     sources_list_dir=get_test_dir()
     index_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'rosdistro', 'index.yaml'))
     index_url = 'file://' + pathname2url(index_path)
@@ -214,7 +223,7 @@ def test_update_sources_list():
     filepath = os.path.join(tempdir, hash1)
     assert filepath == path0, "%s vs %s"%(filepath, path0)
     with open(filepath+PICKLE_CACHE_EXT, 'rb') as f:
-        data = cPickle.loads(f.read())
+        data = pickle.loads(f.read())
         assert 'cmake' in data
 
     # verify that cache index exists. contract specifies that even
@@ -243,7 +252,7 @@ def test_load_cached_sources_list():
     
     # now test with cached data
     retval = load_cached_sources_list(sources_cache_dir=tempdir)
-    assert len(retval) == 3
+    assert len(retval) == 3, '%s != %s' % ([source0, source1, source2], retval[0:3])
     source0 = retval[0]
     source1 = retval[1]
     source2 = retval[2]

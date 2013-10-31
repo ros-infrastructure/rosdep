@@ -29,7 +29,10 @@ from __future__ import print_function
 
 import os
 import sys
-import cStringIO
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 from rospkg import RosPack, RosStack
 
@@ -68,13 +71,13 @@ def test_InstallerContext_ctor():
     detect = OsDetect()
     context = InstallerContext(detect)
     assert context.get_os_detect() == detect
-    assert [] == context.get_installer_keys()
-    assert [] == context.get_os_keys()
+    assert len(context.get_installer_keys()) == 0
+    assert len(context.get_os_keys()) == 0
 
     context.verbose = True
     assert context.get_os_detect() == detect
-    assert [] == context.get_installer_keys()
-    assert [] == context.get_os_keys()
+    assert len(context.get_installer_keys()) == 0
+    assert len(context.get_os_keys()) == 0
     
 def test_InstallerContext_get_os_version_type():
     from rospkg.os_detect import OS_UBUNTU
@@ -158,17 +161,17 @@ def test_InstallerContext_installers():
     installer2 = FakeInstaller2()
     context.set_installer(key, installer)
     assert context.get_installer(key) == installer
-    assert context.get_installer_keys() == [key]
+    assert list(context.get_installer_keys()) == [key]
 
     # repeat with same args
     context.set_installer(key, installer)
     assert context.get_installer(key) == installer
-    assert context.get_installer_keys() == [key]
+    assert list(context.get_installer_keys()) == [key]
 
     # repeat with new installer
     context.set_installer(key, installer2)
     assert context.get_installer(key) == installer2
-    assert context.get_installer_keys() == [key]
+    assert list(context.get_installer_keys()) == [key]
     
     # repeat with new key
     key2 = 'fake-port'
@@ -483,7 +486,7 @@ def test_RosdepInstaller_get_uninstalled_unconfigured():
         # make sure there is an error when we lookup something that resolves to an apt depend
         uninstalled, errors = installer.get_uninstalled(['roscpp_fake'], verbose)
         assert not uninstalled, uninstalled
-        assert errors.keys() == ['roscpp_fake']
+        assert list(errors.keys()) == ['roscpp_fake']
 
         uninstalled, errors = installer.get_uninstalled(['roscpp_fake', 'stack1_p1'], verbose)
         assert not uninstalled, uninstalled
@@ -522,8 +525,8 @@ from contextlib import contextmanager
 def fakeout():
     realstdout = sys.stdout
     realstderr = sys.stderr
-    fakestdout = cStringIO.StringIO()
-    fakestderr = cStringIO.StringIO()
+    fakestdout = StringIO()
+    fakestderr = StringIO()
     sys.stdout = fakestdout
     sys.stderr = fakestderr
     yield fakestdout, fakestderr
@@ -562,7 +565,7 @@ def test_RosdepInstaller_install_resolved():
                 raise
             return True
     stdout_lines = [x.strip() for x in stdout.getvalue().split('\n') if x.strip()]
-    assert stdout_lines == ['#[apt] Installation commands:',
-                            'sudo apt-get install rosdep-fake1',
-                            'sudo apt-get install rosdep-fake2',
-                            ], ("%s: %s"%(stdout.getvalue(), stdout_lines))
+    assert len(stdout_lines) == 3
+    assert stdout_lines[0] == '#[apt] Installation commands:'
+    assert 'sudo apt-get install rosdep-fake1' in stdout_lines, 'stdout_lines: %s' % stdout_lines
+    assert 'sudo apt-get install rosdep-fake2' in stdout_lines, 'stdout_lines: %s' % stdout_lines

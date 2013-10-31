@@ -195,8 +195,11 @@ class CachedDataSource(object):
         self.rosdep_data = rosdep_data 
     
     def __eq__(self, other):
-        return self.source == other.source and \
-               self.rosdep_data == other.rosdep_data
+        try:
+            return self.source == other.source and \
+                   self.rosdep_data == other.rosdep_data
+        except AttributeError:
+            return False
 
     def __str__(self):
         return "%s\n%s"%(self.source, self.rosdep_data)
