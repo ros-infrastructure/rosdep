@@ -330,14 +330,7 @@ def generate_rosinstall(distro_name, names,
 
 
 def sort_rosinstall(rosinstall_data):
-    def _rosinstall_compare(a, b):
-        a_key = a.keys()[0]
-        b_key = b.keys()[0]
-        a_name = a[a_key]['local-name']
-        b_name = b[b_key]['local-name']
-        if a_name < b_name:
-            return -1
-        if a_name > b_name:
-            return 1
-        return 0
-    return sorted(rosinstall_data, _rosinstall_compare)
+    def _rosinstall_key(item):
+        key = list(item.keys())[0]
+        return item[key]['local-name']
+    return sorted(rosinstall_data, key=_rosinstall_key)
