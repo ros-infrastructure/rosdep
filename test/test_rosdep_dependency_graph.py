@@ -149,8 +149,11 @@ def test_DependencyGraph_Multi_Root():
 	# TODO: The expected might also have a different order, for example it might be:
 	# [('c_installer', ['c']), ('d_installer', ['d']), ('b_installer', ['b']), ('a_installer', ['a'])]
 	# But that wont invalidate the order from a dependency graph stand point
-	expected = [('c_installer', ['c']), ('b_installer', ['b']), ('a_installer', ['a']), ('d_installer', ['d'])]
-	assert result == expected, "Results did not match expectations: %s == %s"%(str(result),str(expected))
+	expected = [
+		[('c_installer', ['c']), ('b_installer', ['b']), ('a_installer', ['a']), ('d_installer', ['d'])],
+		[('c_installer', ['c']), ('d_installer', ['d']), ('b_installer', ['b']), ('a_installer', ['a'])],
+	]
+	assert result in expected, "Results did not match expectations: %s == %s"%(str(result),str(expected))
 
 def test_DependencyGraph_Realworld():
 	from rosdep2.dependency_graph import DependencyGraph

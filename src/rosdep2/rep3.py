@@ -25,7 +25,10 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import urllib2
+try:
+    from urllib.request import urlopen
+except ImportError:
+    from urllib2 import urlopen
 import yaml
 import warnings
 
@@ -55,7 +58,7 @@ def download_targets_data(targets_url=None):
     if targets_url is None:
         targets_url = REP3_TARGETS_URL
     try:
-        f = urllib2.urlopen(targets_url, timeout=DOWNLOAD_TIMEOUT)
+        f = urlopen(targets_url, timeout=DOWNLOAD_TIMEOUT)
         text = f.read()
         f.close()
         targets_data = yaml.safe_load(text)
@@ -65,7 +68,7 @@ def download_targets_data(targets_url=None):
         # convert to dictionary
         new_targets_data = {}
         for t in targets_data:
-            platform = t.keys()[0]
+            platform = list(t.keys())[0]
             new_targets_data[platform] = t[platform]
         targets_data = new_targets_data
     return targets_data

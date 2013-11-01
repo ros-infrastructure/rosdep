@@ -31,6 +31,7 @@ from __future__ import print_function
 
 import os
 import sys
+import stat
 import subprocess
 import tempfile
 
@@ -64,7 +65,7 @@ def create_tempfile_from_string_and_execute(string_script, path=None, exec_fn=No
         fh.close()
         print("Executing script below with cwd=%s\n{{{\n%s\n}}}\n"%(path, string_script))
         try:
-            os.chmod(fh.name, 0700)
+            os.chmod(fh.name, stat.S_IRWXU)
             if exec_fn is None:
                 result = subprocess.call(fh.name, cwd=path)
             else:

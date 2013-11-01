@@ -37,7 +37,10 @@ from __future__ import print_function
 import os
 import sys
 import traceback
-import urllib2
+try:
+    from urllib.error import URLError
+except ImportError:
+    from urllib2 import URLError
 import warnings
 
 from optparse import OptionParser
@@ -56,9 +59,9 @@ from .sources_list import update_sources_list, get_sources_cache_dir,\
      DEFAULT_SOURCES_LIST_URL
 from .rosdistrohelper import PreRep137Warning
 
-from catkin_packages import find_catkin_packages_in
-from catkin_packages import set_workspace_packages
-from catkin_packages import get_workspace_packages
+from .catkin_packages import find_catkin_packages_in
+from .catkin_packages import set_workspace_packages
+from .catkin_packages import get_workspace_packages
 
 
 class UsageError(Exception):
@@ -158,7 +161,7 @@ Please go to the rosdep page [1] and file a bug report with the stack trace belo
 rosdep version: %s
 
 %s
-"""%(e, __version__, traceback.format_exc(e)), file=sys.stderr)
+"""%(e, __version__, traceback.format_exc()), file=sys.stderr)
         sys.exit(1)
         
 def check_for_sources_list_init(sources_cache_dir):
@@ -376,7 +379,7 @@ def configure_installer_context_os(installer_context, options):
 def command_init(options):
     try:
         data = download_default_sources_list()
-    except urllib2.URLError as e:
+    except URLError as e:
         print("ERROR: cannot download default sources list from:\n%s\nWebsite may be down."%(DEFAULT_SOURCES_LIST_URL))
         return 4
     # reuse path variable for error message 
@@ -524,7 +527,7 @@ def command_install(lookup, packages, options):
         
     if errors:
         print("ERROR: the following packages/stacks could not have their rosdep keys resolved\nto system dependencies:", file=sys.stderr)
-        for rosdep_key, error in errors.iteritems():
+        for rosdep_key, error in errors.items():
             print("%s: %s"%(rosdep_key, error_to_human_readable(error)), file=sys.stderr)
         if options.robust:
             print("Continuing to install resolvable dependencies...")

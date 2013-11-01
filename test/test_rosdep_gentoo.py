@@ -43,7 +43,7 @@ def get_test_dir():
 # Requires 2.7 @unittest.skipIf(not rospkg.os_detect.Gentoo().is_os(), "not running Gentoo")
 def test_portage_available():
     if not is_gentoo():
-        print "Skipping not Gentoo"
+        print("Skipping not Gentoo")
         return 
     from rosdep2.platforms.gentoo import portage_available
 
@@ -92,7 +92,7 @@ def test_portage_available():
 
 def test_portage_detect():
     if not is_gentoo():
-        print "Skipping not Gentoo"
+        print("Skipping not Gentoo")
         return 
 
     from rosdep2.platforms.gentoo import portage_detect
@@ -163,7 +163,7 @@ def test_portage_detect():
 
 def test_PortageInstaller():
     if not is_gentoo():
-        print "Skipping not Gentoo"
+        print("Skipping not Gentoo")
         return 
 
     from rosdep2.platforms.gentoo import PortageInstaller

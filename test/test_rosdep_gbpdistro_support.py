@@ -26,7 +26,10 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import os
-import urllib2
+try:
+    from urllib.request import urlopen
+except ImportError:
+    from urllib2 import urlopen
 
 
 def get_test_dir():
@@ -39,7 +42,7 @@ def test_url_constants():
     for url_name, url in [
                           ('FUERTE_GBPDISTRO_URL', FUERTE_GBPDISTRO_URL)]:
         try:
-            f = urllib2.urlopen(url)
+            f = urlopen(url)
             f.read()
             f.close()
         except:
@@ -49,7 +52,7 @@ def test_url_constants():
 def test_get_gbprepo_as_rosdep_data():
     from rosdep2.rosdistrohelper import get_index
     from rosdep2.gbpdistro_support import get_gbprepo_as_rosdep_data
-    distro = get_index().distributions.keys()[0]
+    distro = list(get_index().distributions.keys())[0]
     data = get_gbprepo_as_rosdep_data(distro)
     for k in ['ros', 'catkin', 'genmsg']:
         assert k in data, data

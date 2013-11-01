@@ -62,7 +62,7 @@ class RosdepInternalError(Exception):
     def __init__(self, e, message=None):
         self.error = e
         if message is None:
-            self.message = traceback.format_exc(e)
+            self.message = traceback.format_exc()
         else:
             self.message = message
 
