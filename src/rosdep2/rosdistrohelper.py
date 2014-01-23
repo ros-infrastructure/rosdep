@@ -40,6 +40,17 @@ class _RDCache:
     release_files = {}
 
 
+class ReleaseFile(object):
+
+    def __init__(self, dist_file):
+        self.repositories = {}
+        for repo_name in dist_file.repositories.keys():
+            repo = dist_file.repositories[repo_name].release_repository
+            if repo:
+                self.repositories[repo_name] = repo
+        self.platforms = dist_file.release_platforms
+
+
 def _check_cache():
     if _RDCache.index_url != rosdistro.get_index_url():
         _RDCache.index_url = rosdistro.get_index_url()
@@ -62,7 +73,8 @@ def get_index():
 def get_release_file(distro):
     _check_cache()
     if distro not in _RDCache.release_files:
-        _RDCache.release_files[distro] = rosdistro.get_release_file(get_index(), distro)
+        dist_file = rosdistro.get_distribution_file(get_index(), distro)
+        _RDCache.release_files[distro] = ReleaseFile(dist_file)
     return _RDCache.release_files[distro]
 
 
