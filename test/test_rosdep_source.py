@@ -49,6 +49,8 @@ else
   exit 1}'
 """
 
+REP112_MD5SUM = '77040d44b0e620c092bce918ac7b4180'
+
 def get_test_dir():
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'source'))
 
@@ -182,8 +184,8 @@ def test_SourceInstaller_resolve():
     from rosdep2.platforms.source import SourceInstaller, InvalidData
     test_dir = get_test_dir()
 
-    url = 'https://kforge.ros.org/rosrelease/rosdep/raw-file/908818f28156/test/source/rep112-example.rdmanifest'
-    md5sum_good = 'af0dc0e2d0c0c3181dd7670c4147f155'
+    url = 'file://%s' % os.path.join(test_dir, 'rep112-example.rdmanifest')
+    md5sum_good = REP112_MD5SUM
     md5sum_bad = 'fake'
 
     installer = SourceInstaller()
@@ -229,8 +231,7 @@ def test_load_rdmanifest():
         assert False, "should have raised"
     except InvalidRdmanifest as e:
         pass
-    
-REP112_MD5SUM = 'af0dc0e2d0c0c3181dd7670c4147f155'
+
 def test_get_file_hash():
     from rosdep2.platforms.source import get_file_hash
     path = os.path.join(get_test_dir(), 'rep112-example.rdmanifest')
@@ -242,7 +243,7 @@ def test_fetch_file():
         expected = f.read()
 
     from rosdep2.platforms.source import fetch_file
-    url = 'https://kforge.ros.org/rosrelease/rosdep/raw-file/931b030d6b3b/test/source/rep112-example.rdmanifest'
+    url = 'file://%s' % os.path.join(test_dir, 'rep112-example.rdmanifest')
     contents, error = fetch_file(url, REP112_MD5SUM)
     assert not error
     assert contents == expected
@@ -261,7 +262,7 @@ def test_download_rdmanifest():
         expected = yaml.load(f)
 
     from rosdep2.platforms.source import download_rdmanifest, DownloadFailed
-    url = 'https://kforge.ros.org/rosrelease/rosdep/raw-file/931b030d6b3b/test/source/rep112-example.rdmanifest'
+    url = 'file://%s' % os.path.join(test_dir, 'rep112-example.rdmanifest')
     contents, download_url = download_rdmanifest(url, REP112_MD5SUM)
     assert contents == expected
     assert download_url == url
