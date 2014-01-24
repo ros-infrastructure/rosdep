@@ -35,25 +35,26 @@ import logging
 import os
 import sys
 
-from rosdistro import get_cached_release, get_index, get_index_url
+from rosdistro import get_cached_distribution, get_index, get_index_url
 from rosdistro.dependency_walker import DependencyWalker
 from rosdistro.manifest_provider import get_release_tag
 
 
 def get_distro(distro_name):
     index = get_index(get_index_url())
-    return get_cached_release(index, distro_name)
+    return get_cached_distribution(index, distro_name)
 
 
 def get_package_names(distro):
     released_names = []
     unreleased_names = []
-    for pkg_name, pkg in distro.packages.items():
-        repo = distro.repositories[pkg.repository_name]
-        if repo.version is not None:
-            released_names.append(pkg_name)
-        else:
-            unreleased_names.append(pkg_name)
+    for pkg_name, pkg in distro.release_packages.items():
+        repo = distro.repositories[pkg.repository_name].release_repository
+        if repo:
+            if repo.version is not None:
+                released_names.append(pkg_name)
+            else:
+                unreleased_names.append(pkg_name)
     return released_names, unreleased_names
 
 
@@ -119,9 +120,9 @@ def generate_rosinstall(distro, package_names, tar=False):
 
 
 def _generate_rosinstall_for_package(distro, pkg_name, tar):
-    pkg = distro.packages[pkg_name]
-    repo = distro.repositories[pkg.repository_name]
-    assert repo.version is not None, 'Package "%s" does not have a version"' % pkg_name
+    pkg = distro.release_packages[pkg_name]
+    repo = distro.repositories[pkg.repository_name].release_repository
+    assert repo is not None and repo.version is not None, 'Package "%s" does not have a version"' % pkg_name
 
     url = repo.url
     release_tag = get_release_tag(repo, pkg_name)

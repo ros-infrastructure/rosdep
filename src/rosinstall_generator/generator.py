@@ -84,7 +84,7 @@ def _classify_names(distro_name, names):
     if unknown_names:
         wet_distro = get_wet_distro(distro_name)
         for name in unknown_names:
-            if name in wet_distro.packages:
+            if name in wet_distro.release_packages:
                 wet_package_names.add(name)
         unknown_names -= wet_package_names
 
@@ -105,7 +105,7 @@ def _classify_names(distro_name, names):
         for variant_name in variant_names:
             variant_depends = dry_distro.variants[variant_name].get_stack_names()
             for depend in variant_depends:
-                if depend in wet_distro.packages:
+                if depend in wet_distro.release_packages:
                     wet_package_names.add(depend)
                 elif depend in dry_distro.stacks:
                     dry_stack_names.add(depend)
@@ -257,7 +257,7 @@ def generate_rosinstall(distro_name, names,
                     if depend in exclude_names.wet_package_names or depend in deps_up_to_names.wet_package_names:
                         continue
                     wet_distro = get_wet_distro(distro_name)
-                    assert depend in wet_distro.packages, "Package '%s' does not have a version" % depend
+                    assert depend in wet_distro.release_packages, "Package '%s' does not have a version" % depend
                     result.wet_package_names.add(depend)
         # add wet dependencies
         if result.wet_package_names:
@@ -303,7 +303,7 @@ def generate_rosinstall(distro_name, names,
     if catkin_only or non_catkin_only:
         wet_distro = get_wet_distro(distro_name)
         for pkg_name in list(result.wet_package_names):
-            pkg_xml = wet_distro.get_package_xml(pkg_name)
+            pkg_xml = wet_distro.get_release_package_xml(pkg_name)
             try:
                 pkg = parse_package_string(pkg_xml)
             except InvalidPackage as e:
