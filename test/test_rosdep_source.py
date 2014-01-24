@@ -65,7 +65,7 @@ def _subtest_rep112_rdmanifest(resolved):
     assert len(resolved.check_presence_command) == len(rep122_check_presence_command), "%s %s"%(len(resolved.check_presence_command), len(rep122_check_presence_command))
 
     assert resolved.exec_path == 'yaml-cpp-0.2.5'
-    assert resolved.tarball == 'https://kforge.ros.org/rosrelease/viewvc/sourcedeps/yaml-cpp/yaml-cpp-0.2.5.tar.gz'
+    assert resolved.tarball == 'https://yaml-cpp.googlecode.com/files/yaml-cpp-0.2.5.tar.gz'
     assert resolved.alternate_tarball == None
     assert resolved.tarball_md5sum == 'b17dc36055cd2259c88b2602601415d9'
 
@@ -294,7 +294,7 @@ def test_install_from_file():
 def test_install_source():
     from rosdep2.platforms.source import install_source, SourceInstall
     resolved = SourceInstall()
-    resolved.tarball = 'https://kforge.ros.org/rosrelease/rosdep/raw-file/tip/test/source/foo.tar.gz'
+    resolved.tarball = 'https://github.com/ros-infrastructure/rosdep/raw/master/test/source/foo.tar.gz'
     resolved.tarball_md5sum = 'fd34dc39f8f192b97fcc191fe0a6befc'
     resolved.install_command = """#!/bin/sh
 exit 0
