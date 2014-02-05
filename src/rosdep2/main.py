@@ -486,7 +486,7 @@ def command_check(lookup, packages, options):
             if isinstance(ex, rospkg.ResourceNotFound):
                 print("ERROR[%s]: resource not found [%s]"%(package_name, ex.args[0]), file=sys.stderr)
             else:
-                print("ERROR[%s]: %s"%(package_name, str(ex)), file=sys.stderr)                
+                print("ERROR[%s]: %s"%(package_name, ex), file=sys.stderr)                
     if uninstalled:
         return 1
     else:
