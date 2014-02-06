@@ -53,6 +53,11 @@ def main(argv=sys.argv[1:]):
     args = parser.parse_args(argv)
 
     # check for invalid combinations
+    if args.rosdistro != 'groovy':
+        if args.dry_only:
+            parser.error("For the ROS distro '%s' there are no dry released packages so '--dry-only' is not a valid option" % args.rosdistro)
+        args.wet_only = True
+
     if ARG_ALL_PACKAGES in args.package_names and len(args.package_names) > 1:
         parser.error("When using '%s' as a package name no other names can be specified" % ARG_ALL_PACKAGES)
 
