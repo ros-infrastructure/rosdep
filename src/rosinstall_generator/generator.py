@@ -88,29 +88,30 @@ def _classify_names(distro_name, names):
                 wet_package_names.add(name)
         unknown_names -= wet_package_names
 
-    # identify dry stacks/variants
-    if unknown_names:
-        dry_distro = get_dry_distro(distro_name)
-        for name in unknown_names:
-            if name in dry_distro.get_stacks(released=True):
-                dry_stack_names.add(name)
-            if name in dry_distro.variants:
-                variant_names.add(name)
-        unknown_names -= dry_stack_names
-        unknown_names -= variant_names
+    if distro_name == 'groovy':
+        # identify dry stacks/variants
+        if unknown_names:
+            dry_distro = get_dry_distro(distro_name)
+            for name in unknown_names:
+                if name in dry_distro.get_stacks(released=True):
+                    dry_stack_names.add(name)
+                if name in dry_distro.variants:
+                    variant_names.add(name)
+            unknown_names -= dry_stack_names
+            unknown_names -= variant_names
 
-    # resolve variant names into wet package names or dry stack names
-    if variant_names:
-        wet_distro = get_wet_distro(distro_name)
-        for variant_name in variant_names:
-            variant_depends = dry_distro.variants[variant_name].get_stack_names()
-            for depend in variant_depends:
-                if depend in wet_distro.release_packages:
-                    wet_package_names.add(depend)
-                elif depend in dry_distro.stacks:
-                    dry_stack_names.add(depend)
-                else:
-                    raise RuntimeError("The following dependency of variant '%s' could not be found: %s" % (variant_name, depend))
+        # resolve variant names into wet package names or dry stack names
+        if variant_names:
+            wet_distro = get_wet_distro(distro_name)
+            for variant_name in variant_names:
+                variant_depends = dry_distro.variants[variant_name].get_stack_names()
+                for depend in variant_depends:
+                    if depend in wet_distro.release_packages:
+                        wet_package_names.add(depend)
+                    elif depend in dry_distro.stacks:
+                        dry_stack_names.add(depend)
+                    else:
+                        raise RuntimeError("The following dependency of variant '%s' could not be found: %s" % (variant_name, depend))
 
     return Names(wet_package_names, dry_stack_names), unknown_names
 
@@ -135,9 +136,10 @@ def _expand_keywords(distro_name, keywords):
         wet_distro = get_wet_distro(distro_name)
         released_package_names, _ = get_package_names(wet_distro)
         names.update(released_package_names)
-        dry_distro = get_dry_distro(distro_name)
-        released_stack_names, _ = get_stack_names(dry_distro)
-        names.update(released_stack_names)
+        if distro_name == 'groovy':
+            dry_distro = get_dry_distro(distro_name)
+            released_stack_names, _ = get_stack_names(dry_distro)
+            names.update(released_stack_names)
     if ARG_CURRENT_ENVIRONMENT in keywords:
         names.update(_get_packages_in_environment())
     return names
@@ -172,7 +174,7 @@ def get_wet_distro(distro_name):
 
 def get_dry_distro(distro_name):
     global _dry_distro
-    if _dry_distro is None:
+    if _dry_distro is None and distro_name == 'groovy':
         _dry_distro = _get_dry_distro(distro_name)
     return _dry_distro
 
