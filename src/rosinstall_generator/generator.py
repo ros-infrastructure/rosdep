@@ -36,7 +36,6 @@ from __future__ import print_function
 import copy
 import logging
 import os
-import sys
 
 from catkin_pkg.package import InvalidPackage, parse_package_string
 

@@ -66,8 +66,8 @@ class CustomLogger(object):
         self.linebuf = ''
 
     def write(self, buf):
-      for line in buf.rstrip().splitlines():
-         self.logger.log(logging.DEBUG, line.rstrip())
+        for line in buf.rstrip().splitlines():
+            self.logger.log(logging.DEBUG, line.rstrip())
 
 
 def get_recursive_dependencies(distro, package_names, excludes=None, limit_depth=None):
