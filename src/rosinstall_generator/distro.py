@@ -70,7 +70,7 @@ class CustomLogger(object):
          self.logger.log(logging.DEBUG, line.rstrip())
 
 
-def get_recursive_dependencies(distro, package_names, excludes=None):
+def get_recursive_dependencies(distro, package_names, excludes=None, limit_depth=None):
     excludes = set(excludes or [])
     dependencies = set([])
     walker = DependencyWalker(distro)
@@ -80,7 +80,7 @@ def get_recursive_dependencies(distro, package_names, excludes=None):
     try:
         for pkg_name in package_names:
             try:
-                dependencies |= walker.get_recursive_depends(pkg_name, ['buildtool', 'build', 'run'], ros_packages_only=True, ignore_pkgs=dependencies | excludes)
+                dependencies |= walker.get_recursive_depends(pkg_name, ['buildtool', 'build', 'run'], ros_packages_only=True, ignore_pkgs=dependencies | excludes, limit_depth=limit_depth)
             except AssertionError as e:
                 raise RuntimeError("Failed to fetch recursive dependencies of package '%s': %s" % (pkg_name, e))
     finally:

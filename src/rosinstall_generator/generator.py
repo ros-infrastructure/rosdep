@@ -180,7 +180,7 @@ def get_dry_distro(distro_name):
 
 
 def generate_rosinstall(distro_name, names,
-    deps=False, deps_up_to=None, deps_only=False,
+    deps=False, deps_up_to=None, deps_depth=None, deps_only=False,
     wet_only=False, dry_only=False, catkin_only=False, non_catkin_only=False,
     excludes=None,
     tar=False):
@@ -266,7 +266,7 @@ def generate_rosinstall(distro_name, names,
             wet_distro = get_wet_distro(distro_name)
             _, unreleased_package_names = get_package_names(wet_distro)
             excludes = exclude_names.wet_package_names | deps_up_to_names.wet_package_names | set(unreleased_package_names)
-            result.wet_package_names |= get_recursive_dependencies_of_wet(wet_distro, result.wet_package_names, excludes=excludes)
+            result.wet_package_names |= get_recursive_dependencies_of_wet(wet_distro, result.wet_package_names, excludes=excludes, limit_depth=deps_depth)
             logger.debug('Wet packages including dependencies: %s' % ', '.join(sorted(result.wet_package_names)))
 
     # intersect result with recursive dependencies on
