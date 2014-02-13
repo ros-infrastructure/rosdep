@@ -182,6 +182,7 @@ def generate_rosinstall(distro_name, names,
     deps=False, deps_up_to=None, deps_depth=None, deps_only=False,
     wet_only=False, dry_only=False, catkin_only=False, non_catkin_only=False,
     excludes=None,
+    flat=False,
     tar=False):
     # classify package/stack names
     names, keywords = _split_special_keywords(names)
@@ -320,7 +321,7 @@ def generate_rosinstall(distro_name, names,
     if not dry_only and result.wet_package_names:
         logger.debug('Generate rosinstall entries for wet packages: %s' % ', '.join(sorted(result.wet_package_names)))
         wet_distro = get_wet_distro(distro_name)
-        wet_rosinstall_data = generate_wet_rosinstall(wet_distro, result.wet_package_names, tar=tar)
+        wet_rosinstall_data = generate_wet_rosinstall(wet_distro, result.wet_package_names, flat=flat, tar=tar)
         rosinstall_data += wet_rosinstall_data
     if not wet_only and result.dry_stack_names:
         logger.debug('Generate rosinstall entries for dry stacks: %s' % ', '.join(sorted(result.dry_stack_names)))
