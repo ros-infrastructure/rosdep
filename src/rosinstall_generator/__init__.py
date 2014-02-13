@@ -35,4 +35,4 @@
 Library to generate rosinstall file for set of packages/stacks.
 """
 
-__version__ = '0.1.7'
+__version__ = '0.1.8'
