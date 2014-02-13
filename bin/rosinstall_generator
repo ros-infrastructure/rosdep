@@ -49,6 +49,9 @@ def main(argv=sys.argv[1:]):
     parser.add_argument('--exclude', nargs='*',
         help="Exclude a set of packages (also skips further recursive dependencies). Use '%s' to specify all packages available in the current environment." % ARG_CURRENT_ENVIRONMENT)
 
+    parser.add_argument('--flat', action='store_true', default=False,
+        help='Use a flat folder structure without a parent folder names after the repository containing the wet packages')
+
     parser.add_argument('--tar', action='store_true', default=False,
         help='Use tarballs instead of repositories for wet packages (dry packages are always tarballs)')
 
@@ -98,6 +101,7 @@ def main(argv=sys.argv[1:]):
             deps=args.deps, deps_up_to=args.deps_up_to, deps_depth=args.deps_depth, deps_only=args.deps_only,
             wet_only=args.wet_only, dry_only=args.dry_only, catkin_only=args.catkin_only, non_catkin_only=args.non_catkin_only,
             excludes=args.exclude,
+            flat=args.flat,
             tar=args.tar)
     except RuntimeError as e:
         if args.debug:

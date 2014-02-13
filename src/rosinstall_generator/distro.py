@@ -112,18 +112,21 @@ def get_recursive_dependencies_on(distro, package_names, excludes=None, limit=No
     return dependencies
 
 
-def generate_rosinstall(distro, package_names, tar=False):
+def generate_rosinstall(distro, package_names, flat=False, tar=False):
     rosinstall_data = []
     for pkg_name in package_names:
-        rosinstall_data.extend(_generate_rosinstall_for_package(distro, pkg_name, tar=tar))
+        rosinstall_data.extend(_generate_rosinstall_for_package(distro, pkg_name, flat=flat, tar=tar))
     return rosinstall_data
 
 
-def _generate_rosinstall_for_package(distro, pkg_name, tar):
+def _generate_rosinstall_for_package(distro, pkg_name, flat=False, tar=False):
     pkg = distro.release_packages[pkg_name]
     repo = distro.repositories[pkg.repository_name].release_repository
     assert repo is not None and repo.version is not None, 'Package "%s" does not have a version"' % pkg_name
 
+    local_name = pkg_name
+    if not flat and repo.package_names != [pkg_name]:
+        local_name = '%s/%s' % (repo.name, local_name)
     url = repo.url
     release_tag = get_release_tag(repo, pkg_name)
     if tar:
@@ -132,7 +135,7 @@ def _generate_rosinstall_for_package(distro, pkg_name, tar):
         url = url.replace('.git', '/archive/{0}.tar.gz'.format(release_tag))
         data = [{
             'tar': {
-                'local-name': pkg_name,
+                'local-name': local_name,
                 'uri': url,
                 'version': '{0}-{1}'.format(repo_name, release_tag.replace('/', '-'))
             }
@@ -140,7 +143,7 @@ def _generate_rosinstall_for_package(distro, pkg_name, tar):
     else:
         data = [{
             'git': {
-                'local-name': pkg_name,
+                'local-name': local_name,
                 'uri': url,
                 'version': release_tag
             }
