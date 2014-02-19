@@ -230,6 +230,16 @@ def _rosdep_main(args):
                            "that are found to be catkin packages anywhere in "
                            "the ROS_PACKAGE_PATH or in any of the directories "
                            "given by the --from-paths option.")
+    parser.add_option("--skip-keys",
+                      dest='skip_keys', action="append", default=[],
+                      help="Affects the 'check' and 'install' verbs. The "
+                           "specified rosdep keys will be ignored, i.e. not "
+                           "resolved and not installed. The option can be supplied multiple "
+                           "times. A space separated list of rosdep keys can also "
+                           "be passed as a string. A more permanent solution to "
+                           "locally ignore a rosdep key is creating a local rosdep rule "
+                           "with an empty list of packages (include it in "
+                           "/etc/ros/rosdep/sources.list.d/ before the defaults).")
     parser.add_option("--from-paths", dest='from_paths',
                       default=False, action="store_true",
                       help="Affects the 'check', 'keys', and 'install' verbs. "
@@ -245,6 +255,9 @@ def _rosdep_main(args):
     if options.print_version:
         print(__version__)
         sys.exit(0)
+
+    # flatten list of skipped keys
+    options.skip_keys = [key for s in options.skip_keys for key in s.split(' ')]
 
     if len(args) == 0:
         parser.error("Please enter a command")
@@ -338,6 +351,14 @@ def _package_args_handler(command, parser, options, args):
                 ws_pkgs.extend(pkgs)
             elif options.verbose:
                 print("Skipping non-existent path " + path)
+        set_workspace_packages(ws_pkgs)
+
+    # Handle the --skip-keys option by pretending that they are packages in the catkin workspace
+    if command in ['install', 'check'] and options.skip_keys:
+        if options.verbose:
+            print("Skipping the specified rosdep keys (by pretending that they are packages in the catkin workspace): " + ', '.join(options.skip_keys))
+        ws_pkgs = get_workspace_packages()
+        ws_pkgs.extend(options.skip_keys)
         set_workspace_packages(ws_pkgs)
 
     lookup = _get_default_RosdepLookup(options)
