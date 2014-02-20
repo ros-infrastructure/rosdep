@@ -353,13 +353,13 @@ def _package_args_handler(command, parser, options, args):
                 print("Skipping non-existent path " + path)
         set_workspace_packages(ws_pkgs)
 
+    lookup = _get_default_RosdepLookup(options)
+
     # Handle the --skip-keys option by pretending that they are packages in the catkin workspace
     if command in ['install', 'check'] and options.skip_keys:
         if options.verbose:
-            print("Skipping the specified rosdep keys:" + '\n- '.join(options.skip_keys) + "\n")
+            print("Skipping the specified rosdep keys:\n- " + '\n- '.join(options.skip_keys))
         lookup.skipped_keys = options.skip_keys
-
-    lookup = _get_default_RosdepLookup(options)
 
     if 0 and not packages:  # disable, let individual handlers specify behavior
         # possible with empty stacks
