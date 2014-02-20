@@ -356,10 +356,8 @@ def _package_args_handler(command, parser, options, args):
     # Handle the --skip-keys option by pretending that they are packages in the catkin workspace
     if command in ['install', 'check'] and options.skip_keys:
         if options.verbose:
-            print("Skipping the specified rosdep keys (by pretending that they are packages in the catkin workspace): " + ', '.join(options.skip_keys))
-        ws_pkgs = get_workspace_packages()
-        ws_pkgs.extend(options.skip_keys)
-        set_workspace_packages(ws_pkgs)
+            print("Skipping the specified rosdep keys:" + '\n- '.join(options.skip_keys) + "\n")
+        lookup.skipped_keys = options.skip_keys
 
     lookup = _get_default_RosdepLookup(options)
 

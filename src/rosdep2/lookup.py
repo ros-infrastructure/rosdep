@@ -215,6 +215,7 @@ class RosdepView(object):
             elif dep_name in db:
                 db[dep_name].reverse_merge(dep_data, update_entry.origin, verbose=verbose)
 
+
 def prune_catkin_packages(rosdep_keys, verbose=False):
     workspace_pkgs = catkin_packages.get_workspace_packages()
     if not workspace_pkgs:
@@ -225,8 +226,22 @@ def prune_catkin_packages(rosdep_keys, verbose=False):
             # and if the rosdep_key is a package in that
             # workspace, then skip it rather than resolve it
             if verbose:
-                print("rosdep key '{0}'".format(rosdep_key) + \
+                print("rosdep key '{0}'".format(rosdep_key) +
                       " is in the catkin workspace, skipping.",
+                      file=sys.stderr)
+            del rosdep_keys[i]
+    return rosdep_keys
+
+
+def prune_skipped_packages(rosdep_keys, skipped_keys, verbose=False):
+    if not skipped_keys:
+        return rosdep_keys
+    for i, rosdep_key in reversed(list(enumerate(rosdep_keys))):
+        if rosdep_key in skipped_keys:
+            # If the key is in the list of keys to explicitly skip, skip it
+            if verbose:
+                print("rosdep key '{0}'".format(rosdep_key) +
+                      " was listed in the skipped packages, skipping.",
                       file=sys.stderr)
             del rosdep_keys[i]
     return rosdep_keys
@@ -261,6 +276,8 @@ class RosdepLookup(object):
 
         # flag for turning on printing to console
         self.verbose = False
+
+        self.skipped_keys = []
 
     def get_loader(self):
         return self.loader
@@ -367,6 +384,7 @@ class RosdepLookup(object):
                 if self.verbose:
                     print("resolve_all: resource [%s] requires rosdep keys [%s]"%(resource_name, ', '.join(rosdep_keys)), file=sys.stderr)
                 rosdep_keys = prune_catkin_packages(rosdep_keys, self.verbose)
+                rosdep_keys = prune_skipped_packages(rosdep_keys, self.skipped_keys, self.verbose)
                 for rosdep_key in rosdep_keys:
                     try:
                         installer_key, resolution, dependencies = \
