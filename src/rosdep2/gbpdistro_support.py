@@ -9,13 +9,16 @@ except ImportError:
     import urllib.parse as urlparse #py3k
 import os
 
-from rospkg.os_detect import OS_UBUNTU
 from rospkg.os_detect import OS_DEBIAN
+from rospkg.os_detect import OS_FEDORA
 from rospkg.os_detect import OS_OSX
+from rospkg.os_detect import OS_UBUNTU
 
+from . import create_default_installer_context
 from .core import InvalidData, DownloadFailure
 from .platforms.debian import APT_INSTALLER
 from .platforms.osx import BREW_INSTALLER
+from .platforms.redhat import YUM_INSTALLER
 from .rosdistrohelper import get_targets, get_release_file, PreRep137Warning
 
 from .rep3 import download_targets_data  # deprecated, will output warning
@@ -141,17 +144,16 @@ def get_gbprepo_as_rosdep_data(gbpdistro):
     :raises: :exc:`InvalidData`
     """
     distro_file = get_release_file(gbpdistro)
+    ctx = create_default_installer_context()
     release_name = gbpdistro
 
     rosdep_data = {}
+    default_installers = {}
     gbp_repos = distro_file.repositories
     for rosdep_key, repo in gbp_repos.items():
         for pkg in repo.package_names:
             rosdep_data[pkg] = {}
 
-            # for pkg in repo['packages']: indent the rest of the lines here.
-            # Do generation for ubuntu
-            rosdep_data[pkg][OS_UBUNTU] = {}
             # following rosdep pull #17, use env var instead of github organization name
             tap = os.environ.get('ROSDEP_HOMEBREW_TAP', 'ros')
             # Do generation for empty OS X entries
@@ -160,19 +162,23 @@ def get_gbprepo_as_rosdep_data(gbpdistro):
                 BREW_INSTALLER: {'packages': [homebrew_name]}
             }
 
-            # - debian package name: underscores must be dashes
-            deb_package_name = 'ros-%s-%s' % (release_name, pkg)
-            deb_package_name = deb_package_name.replace('_', '-')
+            # - package name: underscores must be dashes
+            package_name = 'ros-%s-%s' % (release_name, pkg)
+            package_name = package_name.replace('_', '-')
 
             # Generate debian entries
             rosdep_data[pkg][OS_DEBIAN] = {
-                APT_INSTALLER: {'packages': [deb_package_name]}
+                APT_INSTALLER: {'packages': [package_name]}
             }
 
             for os_name in distro_file.platforms:
+                if not os_name in rosdep_data[pkg]:
+                    rosdep_data[pkg][os_name] = {}
+                if not os_name in default_installers:
+                    default_installers[os_name] = ctx.get_installer(ctx.get_default_os_installer_key(os_name))
                 for os_code_name in distro_file.platforms[os_name]:
                     rosdep_data[pkg][os_name][os_code_name] = {
-                        APT_INSTALLER: {'packages': [deb_package_name]}
+                        default_installers[os_name]: {'packages': [package_name]}
                     }
 
             rosdep_data[pkg]['_is_ros'] = True
