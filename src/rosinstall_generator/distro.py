@@ -132,7 +132,10 @@ def _generate_rosinstall_for_package(distro, pkg_name, flat=False, tar=False):
     if tar:
         # the repository name might be different than repo.name coming from rosdistro
         repo_name = os.path.basename(url[:-4])
-        url = url.replace('.git', '/archive/{0}.tar.gz'.format(release_tag))
+        suffix = '.git'
+        if not url.endswith(suffix):
+            raise RuntimeError("The repository '%s' must end with '%s': %s" % (repo_name, suffix, url))
+        url = url[:-len(suffix)] + '/archive/{0}.tar.gz'.format(release_tag)
         data = [{
             'tar': {
                 'local-name': local_name,
