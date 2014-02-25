@@ -29,11 +29,11 @@
 # Author Tully Foote/tfoote@willowgarage.com, Ken Conley
 
 import subprocess
-import re
+import json
 
 from rospkg.os_detect import OS_OSX
 
-from ..core import InstallFailed
+from ..core import InstallFailed, RosdepInternalError, InvalidData
 from .pip import PIP_INSTALLER
 from .source import SOURCE_INSTALLER
 from ..installers import PackageManagerInstaller, TYPE_CODENAME
@@ -102,64 +102,236 @@ def is_brew_installed():
     except OSError:
         return False
 
-def brew_detect(formulas, exec_fn=None):
-    """ 
-    Given a list of formulas, return the list of installed formulas.
 
-    :param formulas: List of homebrew formula names
+class HomebrewResolution(object):
+
+    """Resolution information for a single package of a Homebrew rosdep."""
+
+    def __init__(self, package, install_flags, options):
+        """
+        :param package: Homebrew package name, possibly fully qualified
+            with tap.
+        :param install_flags: List of strings of additional flags for
+            ``brew install`` and ``brew deps`` command which are not
+            options (e.g. ``--HEAD``)
+        :param options: List of strings of options for the homebrew
+            package.
+        """
+        self.package = package
+        self.install_flags = install_flags
+        self.options = options
+
+    def __eq__(self, other):
+        return other.package == self.package and \
+               other.install_flags == self.install_flags and \
+               other.options == self.options
+
+    def __hash__(self):
+        return hash((
+            type(self),
+            self.package,
+            tuple(self.install_flags),
+            tuple(self.options)))
+
+    def __str__(self):
+        return ' '.join(self.to_list())
+
+    def to_list(self):
+        return [self.package] + self.install_flags + self.options
+
+
+def brew_strip_pkg_name(package):
+    """Strip the tap information of a fully qualified package name.
+
+    :returns: Unqualified package name. E.g. 'foo-pkg' for input
+        'ros/hydro/foo-pkg'
+    """
+    return package.split('/')[-1]
+
+
+def brew_detect(resolved, exec_fn=None):
+    """Given a list of resolutions, return the list of installed resolutions.
+
+    :param resolved: List of HomebrewResolution objects
+    :returns: Filtered list of HomebrewResolution objects
     """
     if exec_fn is None:
         exec_fn = read_stdout
-    ret_list = []
     std_out = exec_fn(['brew', 'list'])
+    installed_formulae = std_out.split()
+
+    def is_installed(r):
+        # TODO: Does not check installed version (stable, devel, HEAD)
+        # TODO: Does not check origin (Tap) of formula
+        # TODO: Does not handle excluding options (e.g. specifying
+        #       --without-foo for --with-foo option)
+
+        # fast fail with a quick check first, then slower check if
+        # really linked and for options
+        if not brew_strip_pkg_name(r.package) in installed_formulae:
+            return False
+
+        std_out = exec_fn(['brew', 'info', r.package, '--json=v1'])
+        try:
+            pkg_info = json.loads(std_out)
+            pkg_info = pkg_info[0]
+            linked_version = pkg_info['linked_keg']
+            if not linked_version:
+                return False
+            for spec in pkg_info['installed']:
+                if spec['version'] == linked_version:
+                    # print(r.package, spec)
+                    installed_options = spec['used_options']
+                    break
+        except (ValueError, TypeError) as e:
+            raise RosdepInternalError(
+                "Error while parsing brew package info for '%s'\n-info: '%s'\n-error: '%s'." %
+                (r.package, std_out, e))
+
+        if set(r.options) <= set(installed_options):
+            return True
+        else:
+            return False
+
     # preserve order
-    clean_formulas = []
-    for f in formulas:
-        clean_formulas.append(f.split('/')[-1])
-    for f in std_out.split():
-        if f in clean_formulas:
-            ret_list.append(formulas[clean_formulas.index(f)])
-    return ret_list
+    return list(filter(is_installed, resolved))
+
 
 class HomebrewInstaller(PackageManagerInstaller):
 
-    """An implementation of Installer for use on homebrew systems."""
+    """
+    An implementation of Installer for use on homebrew systems.
+
+    Some examples for supported rosdep specifications:
+
+    # Example 1: flat list of options if only one package defined.
+    foo:
+        osx:
+            homebrew:
+                depends: [bar]
+                options: [--with-quux, --with-quax]
+                packages: [foo-pkg]
+
+    # Example 2: list of list of options for multiple packages
+    bar:
+        osx:
+            homebrew:
+                options: [[], [--with-quux]]
+                packages: [bar-pkg, bar-pkg-dev]
+
+    # Example 3: list of options can be shorter than list of packages (filling
+    # up with empty options)
+    baz:
+        osx:
+            homebrew:
+                options: [[--with-quax]]
+                packages: [baz-pkg, baz-pkg-dev]
+
+    # Example 4: No options is fine.
+    buz:
+        osx:
+            homebrew:
+                packages: [buz-pkg]
+
+    ``install_flags`` are handled analogously to ``options``.
+    """
 
     def __init__(self):
         super(HomebrewInstaller, self).__init__(brew_detect, supports_depends=True)
 
+    def resolve(self, rosdep_args):
+        """
+        See :meth:`Installer.resolve()`
+        """
+
+        def coerce_to_list(options):
+            if type(options) == list:
+                return options
+            elif type(options) == str:
+                return options.split()
+            else:
+                raise InvalidData("Expected list or string for options '%s'" % options)
+
+        def handle_options(options):
+            # if only one package is specified we allow a flat list of options
+            if len(packages) == 1 and options and type(options[0]) != list:
+                options = [options]
+            else:
+                options = map(coerce_to_list, options)
+
+            # make sure options is a list of list of strings
+            try:
+                valid = all([type(x) == str for l in options for x in l])
+            except Exception as e:
+                raise InvalidData("Invalid list of options '%s', error: %s" % (options, str(e)))
+            else:
+                if not valid:
+                    raise InvalidData("Invalid list of options '%s'" % options)
+
+            # allow only fewer or equal number of option lists
+            if len(options) > len(packages):
+                raise InvalidData("More options '%s' than packages '%s'" % (options, packages))
+            else:
+                options.extend([[]] * (len(packages) - len(options)))
+
+            return options
+
+        packages = super(HomebrewInstaller, self).resolve(rosdep_args)
+        resolution = []
+        if packages:
+            options = []
+            install_flags = []
+            if type(rosdep_args) == dict:
+                options = coerce_to_list(rosdep_args.get("options", []))
+                install_flags = coerce_to_list(rosdep_args.get("install_flags", []))
+
+            options = handle_options(options)
+            install_flags = handle_options(install_flags)
+
+            # packages, options and install_flags now have the same length
+            resolution = map(HomebrewResolution, packages, install_flags, options)
+        return resolution
+
     def get_install_command(self, resolved, interactive=True, reinstall=False):
+        # TODO: We should somehow inform the user that we uninstall all versions
+        #       of packages and do not keep track of which options have been
+        #       activated. Then again, maybe not this would be the
+        #       responsibility of the user to before or not use --reinstall.
+
         if not is_brew_installed():
             raise InstallFailed((BREW_INSTALLER, 'Homebrew is not installed'))
-        packages = self.get_packages_to_install(resolved, reinstall=reinstall)
-        packages = self.remove_duplicate_dependencies(packages)
+        resolved = self.get_packages_to_install(resolved, reinstall=reinstall)
+        resolved = self.remove_duplicate_dependencies(resolved)
         # interactive switch doesn't matter
         if reinstall:
             commands = []
-            for p in packages:
-                commands.append(['brew', 'uninstall', '--force', p])
-                commands.append(['brew', 'install', p])
+            for r in resolved:
+                # --force uninstalls all versions of that package
+                commands.append(['brew', 'uninstall', '--force', r.package])
+                commands.append(['brew', 'install'] + r.to_list())
             return commands
         else:
-            return [['brew', 'install', p] for p in packages]
+            return [['brew', 'install'] + r.to_list() for r in resolved]
 
-    def remove_duplicate_dependencies(self, packages):
+    def remove_duplicate_dependencies(self, resolved):
+        # TODO: we do not look at options here, however the install check later
+        #       will inform use if installed options are not appropriate
+        # TODO: we comapre unqualified package names, ignoring the specifed tap
+
         if not is_brew_installed():
             raise InstallFailed((BREW_INSTALLER, 'Homebrew is not installed'))
 
         # we'll remove dependencies from this copy and return it
-        packages_copy = list(packages)
+        resolved_copy = list(resolved)
 
         # find all dependencies for each package
-        for p in packages:
-            sub_command = ['brew', 'info', p]
+        for r in resolved:
+            sub_command = ['brew', 'deps'] + r.to_list()
             output = subprocess.Popen(sub_command, stdout=subprocess.PIPE).communicate()[0]
-            match = re.findall("Depends on: (.*)", output)
-            if match:
-                dependencies = re.split(',', match[0])
-                for d in dependencies:
-                    d = d.strip()
-                    # remove duplicate dependency from package list
-                    if d in packages:
-                        packages_copy.remove(d)
-        return packages_copy
+            deps = output.split()
+            for d in deps:
+                # remove duplicate dependency from package list
+                for other in resolved_copy:
+                    if brew_strip_pkg_name(other.package) == brew_strip_pkg_name(d):
+                        resolved_copy.remove(other)
+        return resolved_copy
