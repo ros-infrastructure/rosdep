@@ -110,7 +110,7 @@ class PortageInstaller(PackageManagerInstaller):
     def get_install_command(self, resolved, interactive=True, reinstall=False):
         atoms = self.get_packages_to_install(resolved, reinstall=reinstall)      
 
-        cmd = [ 'sudo', 'emerge' ]
+        cmd = self.elevate_priv(['emerge'])
         if not atoms:
             return []
 
