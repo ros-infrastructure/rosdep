@@ -101,7 +101,7 @@ class MacportsInstaller(PackageManagerInstaller):
             return []
         else:
             #TODO: interactive
-            return [['sudo', 'port', 'install', p] for p in packages]
+            return [self.elevate_priv(['port', 'install', p]) for p in packages]
 
 def is_brew_installed():
     try:
@@ -249,6 +249,7 @@ class HomebrewInstaller(PackageManagerInstaller):
 
     def __init__(self):
         super(HomebrewInstaller, self).__init__(brew_detect, supports_depends=True)
+        self.as_root = False
 
     def resolve(self, rosdep_args):
         """
@@ -318,11 +319,11 @@ class HomebrewInstaller(PackageManagerInstaller):
             commands = []
             for r in resolved:
                 # --force uninstalls all versions of that package
-                commands.append(['brew', 'uninstall', '--force', r.package])
-                commands.append(['brew', 'install'] + r.to_list())
+                commands.append(self.elevate_priv(['brew', 'uninstall', '--force', r.package]))
+                commands.append(self.elevate_priv(['brew', 'install'] + r.to_list()))
             return commands
         else:
-            return [['brew', 'install'] + r.to_list() for r in resolved]
+            return [self.elevate_priv(['brew', 'install'] + r.to_list()) for r in resolved]
 
     def remove_duplicate_dependencies(self, resolved):
         # TODO: we do not look at options here, however the install check later

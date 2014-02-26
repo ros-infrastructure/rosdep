@@ -65,6 +65,6 @@ class ZypperInstaller(PackageManagerInstaller):
         if not packages:
             return []
         if not interactive:
-            return [['sudo', 'zypper', 'install', '-yl']+packages]
+            return [self.elevate_priv(['zypper', 'install', '-yl'])+packages]
         else:
-            return [['sudo', 'zypper', 'install']+packages]
+            return [self.elevate_priv(['zypper', 'install'])+packages]

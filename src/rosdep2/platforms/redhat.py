@@ -120,10 +120,11 @@ class DnfInstaller(PackageManagerInstaller):
         else:
             return [['sudo', 'dnf', 'install'] + packages]
 
+
 class YumInstaller(PackageManagerInstaller):
     """
     This class provides the functions for installing using yum
-    it's methods partially implement the Rosdep OS api to complement 
+    it's methods partially implement the Rosdep OS api to complement
     the roslib.OSDetect API.
     """
 
@@ -135,11 +136,10 @@ class YumInstaller(PackageManagerInstaller):
         if not packages:
             return []
         elif not interactive and quiet:
-            return [['sudo', 'yum', '--assumeyes', '--quiet', '--skip-broken', 'install'] + packages]
+            return [self.elevate_priv(['yum', '--assumeyes', '--quiet', '--skip-broken', 'install']) + packages]
         elif quiet:
-            return [['sudo', 'yum', '--quiet', '--skip-broken', 'install'] + packages]
+            return [self.elevate_priv(['yum', '--quiet', '--skip-broken', 'install']) + packages]
         elif not interactive:
-            return [['sudo', 'yum', '--assumeyes', '--skip-broken', 'install'] + packages]
+            return [self.elevate_priv(['yum', '--assumeyes', '--skip-broken', 'install']) + packages]
         else:
-            return [['sudo', 'yum', '--skip-broken', 'install'] + packages]
-
+            return [self.elevate_priv(['yum', '--skip-broken', 'install']) + packages]

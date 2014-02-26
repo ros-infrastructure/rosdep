@@ -84,4 +84,4 @@ class PkgAddInstaller(Installer):
             return []
         else:
             #pkg_add does not have a non-interactive command
-            return [['sudo', '/usr/sbin/pkg_add', '-r']+packages]
+            return [self.elevate_priv(['/usr/sbin/pkg_add', '-r'])+packages]

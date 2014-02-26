@@ -206,6 +206,31 @@ ERROR: your rosdep installation has not been initialized yet.  Please run:
         sys.exit(1)
     else:
         return True
+
+
+def key_list_to_dict(key_list):
+    """
+    Convert a list of strings of the form 'foo:bar' to a dictionary.
+
+    Splits strings of the form 'foo:bar quux:quax' into separate entries.
+    """
+    try:
+        key_list = [key for s in key_list for key in s.split(' ')]
+        return dict(map(lambda s: [t.strip() for t in s.split(':')], key_list))
+    except ValueError as e:
+        raise UsageError("Invalid 'key:value' list: '%s'" % ' '.join(key_list))
+
+
+def str_to_bool(s):
+    """Maps a string to bool. Supports true/false, and yes/no, and is case-insensitive"""
+    s = s.lower()
+    if s in ['yes', 'true']:
+        return True
+    elif s in ['no', 'false']:
+        return False
+    else:
+        raise UsageError("Cannot parse '%s' as boolean" % s)
+
     
 def setup_proxy_opener():
     import urllib2
@@ -271,6 +296,11 @@ def _rosdep_main(args):
                       help="Explicitly sets the ROS distro to use, overriding "
                            "the normal method of detecting the ROS distro "
                            "using the ROS_DISTRO environment variable.")
+    parser.add_option("--as-root", default=[], action='append',
+                      metavar="INSTALLER_KEY:<bool>", help="Override "
+                      "whether sudo is used for a specific installer, "
+                      "e.g. '--as-root pip:false' or '--as-root \"pip:no homebrew:yes\"'. "
+                      "Can be specified multiple times.")
 
     options, args = parser.parse_args(args)
     if options.print_version:
@@ -289,6 +319,9 @@ def _rosdep_main(args):
 
     if options.ros_distro:
         os.environ['ROS_DISTRO'] = options.ros_distro
+
+    # Convert list of keys to dictionary
+    options.as_root = dict((k, str_to_bool(v)) for k, v in key_list_to_dict(options.as_root).items())
 
     if not command in ['init', 'update']:
         check_for_sources_list_init(options.sources_cache_dir)
@@ -408,15 +441,23 @@ def convert_os_override_option(options_os_override):
     os_version = val[val.find(':')+1:]
     return os_name, os_version
     
-def configure_installer_context_os(installer_context, options):
+def configure_installer_context(installer_context, options):
     """
-    Override the OS detector in *installer_context* if necessary.
+    Configure the *installer_context* from *options*.
+
+    - Override the OS detector in *installer_context* if necessary.
+    - Set *as_root* for installers if specified.
 
     :raises: :exc:`UsageError` If user input options incorrectly
     """
     os_override = convert_os_override_option(options.os_override)
     if os_override is not None:
         installer_context.set_os_override(*os_override)
+    for k,v in options.as_root.items():
+        try:
+            installer_context.get_installer(k).as_root = v
+        except KeyError:
+            raise UsageError("Installer '%s' not defined." % k)
     
 def command_init(options):
     try:
@@ -512,7 +553,7 @@ def command_check(lookup, packages, options):
     verbose = options.verbose
     
     installer_context = create_default_installer_context(verbose=verbose)
-    configure_installer_context_os(installer_context, options)
+    configure_installer_context(installer_context, options)
     installer = RosdepInstaller(installer_context, lookup)
 
     uninstalled, errors = installer.get_uninstalled(packages, implicit=options.recursive, verbose=verbose)
@@ -553,7 +594,7 @@ def command_install(lookup, packages, options):
 
     # setup installer
     installer_context = create_default_installer_context(verbose=options.verbose)
-    configure_installer_context_os(installer_context, options)
+    configure_installer_context(installer_context, options)
     installer = RosdepInstaller(installer_context, lookup)
 
     if options.reinstall:
@@ -608,7 +649,7 @@ def command_db(options):
     # exact same setup logic as command_resolve, should possibly combine
     lookup = _get_default_RosdepLookup(options)
     installer_context = create_default_installer_context(verbose=options.verbose)
-    configure_installer_context_os(installer_context, options)
+    configure_installer_context(installer_context, options)
     os_name, os_version = installer_context.get_os_name_and_version()
     try:
         installer_keys = installer_context.get_os_installer_keys(os_name)
@@ -674,7 +715,7 @@ def command_where_defined(args, options):
 def command_resolve(args, options):
     lookup = _get_default_RosdepLookup(options)
     installer_context = create_default_installer_context(verbose=options.verbose)
-    configure_installer_context_os(installer_context, options)
+    configure_installer_context(installer_context, options)
 
     installer, installer_keys, default_key, \
             os_name, os_version = get_default_installer(installer_context=installer_context,

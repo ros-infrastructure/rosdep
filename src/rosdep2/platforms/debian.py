@@ -92,8 +92,9 @@ def dpkg_detect(pkgs, exec_fn=None):
             ret_list.append( pkg_row[0])
     return [version_lock_map[r] for r in ret_list]
 
+
 class AptInstaller(PackageManagerInstaller):
-    """ 
+    """
     An implementation of the Installer for use on debian style
     systems.
     """
@@ -105,10 +106,10 @@ class AptInstaller(PackageManagerInstaller):
         if not packages:
             return []
         if not interactive and quiet:
-            return [['sudo', 'apt-get', 'install', '-y', '-qq', p] for p in packages]
+            return [self.elevate_priv(['apt-get', 'install', '-y', '-qq', p]) for p in packages]
         elif quiet:
-            return [['sudo', 'apt-get', 'install', '-qq', p] for p in packages]
-        elif not interactive:
-            return [['sudo', 'apt-get', 'install', '-y', p] for p in packages]
+            return [self.elevate_priv(['apt-get', 'install', '-qq', p]) for p in packages]
+        if not interactive:
+            return [self.elevate_priv(['apt-get', 'install', '-y', p]) for p in packages]
         else:
-            return [['sudo', 'apt-get', 'install', p] for p in packages]
+            return [self.elevate_priv(['apt-get', 'install', p]) for p in packages]

@@ -81,5 +81,5 @@ class PipInstaller(PackageManagerInstaller):
         if not packages:
             return []
         else:
-            return [['sudo', 'pip', 'install', '-U', p] for p in packages]
+            return [self.elevate_priv(['pip', 'install', '-U', p]) for p in packages]
             
