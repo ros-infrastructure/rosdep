@@ -430,10 +430,11 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
     # Additional sources for ros distros
     # In compliance with REP137
     print('Query rosdistro index %s' % get_index_url())
-    for d, dist in get_index().distributions.items():
-        print('Add distro "%s"' % d)
-        rds = RosDistroSource(d)
-        rosdep_data = get_gbprepo_as_rosdep_data(d)
+    for dist_name in sorted(get_index().distributions.keys()):
+        print('Add distro "%s"' % dist_name)
+        rds = RosDistroSource(dist_name)
+        rosdep_data = get_gbprepo_as_rosdep_data(dist_name)
+        dist = get_index().distributions[dist_name]
         retval.append((rds, write_cache_file(sources_cache_dir, dist['distribution'], rosdep_data)))
         sources.append(rds)
 
