@@ -233,8 +233,10 @@ def generate_rosinstall(distro_name, names,
         logger.warn('The following unknown repositories will be ignored: %s' % (', '.join(sorted(unknown_repo_names))))
     wet_package_names, unreleased_repo_names = _get_packages_for_repos(distro_name, repo_names)
     names.update(wet_package_names)
+    if unreleased_repo_names and not upstream_version_tag and not upstream_source_version:
+        logger.warn('The following unreleased repositories will be ignored: %s' % ', '.join(sorted(unreleased_repo_names)))
     if unreleased_repo_names and (deps or deps_up_to) and (upstream_version_tag or upstream_source_version):
-        logger.warn('The dependencies of the following unreleased repositories are unknown and will be ignored: %s' % ', '.join(sorted(names.unreleased_repo_names)))
+        logger.warn('The dependencies of the following unreleased repositories are unknown and will be ignored: %s' % ', '.join(sorted(unreleased_repo_names)))
 
     names, unknown_names = _classify_names(distro_name, names)
     if unknown_names:
