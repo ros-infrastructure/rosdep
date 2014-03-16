@@ -391,10 +391,10 @@ def generate_rosinstall(distro_name, names,
                 logger.warn('The following repositories with an unknown upstream will be ignored: %s' % ', '.join(sorted(repos_without_source)))
                 [repos.pop(repo_name) for repo_name in repos_without_source]
             if upstream_version_tag:
-                repos_without_version = [repo_name for repo_name, repo in repos.items() if not repo.release_repository.version]
-                if repos_without_version:
-                    logger.warn('The following repositories without a release version will be ignored: %s' % ', '.join(sorted(repos_without_version)))
-                    [repos.pop(repo_name) for repo_name in repos_without_version]
+                repos_without_release = [repo_name for repo_name, repo in repos.items() if not repo.release_repository or repo.release_repository.version]
+                if repos_without_release:
+                    logger.warn('The following repositories without a release will be ignored: %s' % ', '.join(sorted(repos_without_release)))
+                    [repos.pop(repo_name) for repo_name in repos_without_release]
             logger.debug('Generate rosinstall entries for wet repositories: %s' % ', '.join(sorted(repos.keys())))
             wet_rosinstall_data = generate_rosinstall_for_repos(repos, version_tag=upstream_version_tag, tar=tar)
             rosinstall_data += wet_rosinstall_data
