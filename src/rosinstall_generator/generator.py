@@ -38,6 +38,7 @@ import logging
 import os
 
 from catkin_pkg.package import InvalidPackage, parse_package_string
+from catkin_pkg.packages import find_packages
 
 from rospkg import RosPack, RosStack
 from rospkg.environment import ROS_PACKAGE_PATH
@@ -198,6 +199,10 @@ def _get_packages_in_environment():
     return _packages_in_environment
 
 
+def _get_package_names(path):
+    return set([pkg.name for _, pkg in find_packages(path).items()])
+
+
 _wet_distro = None
 _dry_distro = None
 
@@ -220,7 +225,7 @@ def generate_rosinstall(distro_name, names,
     repo_names=None,
     deps=False, deps_up_to=None, deps_depth=None, deps_only=False,
     wet_only=False, dry_only=False, catkin_only=False, non_catkin_only=False,
-    excludes=None,
+    excludes=None, exclude_paths=None,
     flat=False,
     tar=False,
     upstream_version_tag=False, upstream_source_version=False):
@@ -269,6 +274,11 @@ def generate_rosinstall(distro_name, names,
 
     # classify excludes
     exclude_names, keywords = _split_special_keywords(excludes or [])
+    if exclude_paths:
+        exclude_names_from_path = set([])
+        [exclude_names_from_path.update(_get_package_names(exclude_path)) for exclude_path in exclude_paths]
+        logger.debug("The following packages found on '--exclude-path' will be excluded: %s" % ', '.join(sorted(exclude_names_from_path)))
+        exclude_names.update(exclude_names_from_path)
     exclude_names, unknown_names = _classify_names(distro_name, exclude_names)
     if unknown_names:
         logger.warn("The following not released '--exclude' packages/stacks will be ignored: %s" % (', '.join(sorted(unknown_names))))

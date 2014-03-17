@@ -11,6 +11,12 @@ import yaml
 from rosinstall_generator.generator import ARG_ALL_PACKAGES, ARG_CURRENT_ENVIRONMENT, generate_rosinstall, sort_rosinstall
 
 
+def _existing_directory(path):
+    if not os.path.isdir(path):
+        raise argparse.ArgumentTypeError("'%s' is not an existing directory" % path)
+    return path
+
+
 def main(argv=sys.argv[1:]):
     distro_name = os.environ['ROS_DISTRO'] if 'ROS_DISTRO' in os.environ else None
     parser = argparse.ArgumentParser(
@@ -55,6 +61,8 @@ def main(argv=sys.argv[1:]):
 
     parser.add_argument('--exclude', nargs='*',
         help="Exclude a set of packages (also skips further recursive dependencies). Use '%s' to specify all packages available in the current environment." % ARG_CURRENT_ENVIRONMENT)
+    parser.add_argument('--exclude-path', type=_existing_directory, nargs='*',
+        help='Exclude a set of packages found recursively under the given path (also skips further recursive dependencies).')
 
     parser.add_argument('--flat', action='store_true', default=False,
         help='Use a flat folder structure without a parent folder names after the repository containing the wet packages')
@@ -111,7 +119,7 @@ def main(argv=sys.argv[1:]):
             repo_names=args.repos,
             deps=args.deps, deps_up_to=args.deps_up_to, deps_depth=args.deps_depth, deps_only=args.deps_only,
             wet_only=args.wet_only, dry_only=args.dry_only, catkin_only=args.catkin_only, non_catkin_only=args.non_catkin_only,
-            excludes=args.exclude,
+            excludes=args.exclude, exclude_paths=args.exclude_path,
             flat=args.flat,
             tar=args.tar,
             upstream_version_tag=args.upstream, upstream_source_version=args.upstream_development)
