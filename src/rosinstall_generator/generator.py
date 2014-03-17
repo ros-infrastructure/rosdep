@@ -237,6 +237,7 @@ def generate_rosinstall(distro_name, names,
         logger.warn('The following unreleased repositories will be ignored: %s' % ', '.join(sorted(unreleased_repo_names)))
     if unreleased_repo_names and (deps or deps_up_to) and (upstream_version_tag or upstream_source_version):
         logger.warn('The dependencies of the following unreleased repositories are unknown and will be ignored: %s' % ', '.join(sorted(unreleased_repo_names)))
+    has_repos = ((repo_names - unreleased_repo_names) and (upstream_version_tag or upstream_source_version)) or (unreleased_repo_names and upstream_source_version)
 
     names, unknown_names = _classify_names(distro_name, names)
     if unknown_names:
@@ -246,9 +247,12 @@ def generate_rosinstall(distro_name, names,
         if unknown_names:
             logger.warn('The following not released packages/stacks from the %s will be ignored: %s' % (ROS_PACKAGE_PATH, ', '.join(sorted(unknown_names))))
         names.update(expanded_names)
-    if not names.wet_package_names and not names.dry_stack_names:
+    if not names.wet_package_names and not names.dry_stack_names and not has_repos:
         raise RuntimeError('No packages/stacks left after ignoring not released')
-    logger.debug('Packages/stacks: %s' % ', '.join(sorted(names.wet_package_names | names.dry_stack_names)))
+    if names.wet_package_names or names.dry_stack_names:
+        logger.debug('Packages/stacks: %s' % ', '.join(sorted(names.wet_package_names | names.dry_stack_names)))
+    if unreleased_repo_names:
+        logger.debug('Unreleased repositories: %s' % ', '.join(sorted(unreleased_repo_names)))
 
     # classify deps-up-to
     deps_up_to_names, keywords = _split_special_keywords(deps_up_to or [])
@@ -285,7 +289,7 @@ def generate_rosinstall(distro_name, names,
     # remove excluded names from the list of wet and dry names
     result.wet_package_names -= exclude_names.wet_package_names
     result.dry_stack_names -= exclude_names.dry_stack_names
-    if not result.wet_package_names and not result.dry_stack_names:
+    if not result.wet_package_names and not result.dry_stack_names and not has_repos:
         raise RuntimeError('No packages/stacks left after applying the exclusions')
 
     if result.wet_package_names:
@@ -370,7 +374,7 @@ def generate_rosinstall(distro_name, names,
 
     # get wet and/or dry rosinstall data
     rosinstall_data = []
-    if not dry_only and result.wet_package_names:
+    if not dry_only and (result.wet_package_names or has_repos):
         wet_distro = get_wet_distro(distro_name)
         if upstream_version_tag or upstream_source_version:
             # determine repositories based on package names and passed in repository names
