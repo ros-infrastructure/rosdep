@@ -38,7 +38,7 @@ import logging
 import os
 
 from catkin_pkg.package import InvalidPackage, parse_package_string
-from catkin_pkg.packages import find_packages
+from catkin_pkg.packages import find_packages_allowing_duplicates
 
 from rospkg import RosPack, RosStack
 from rospkg.environment import ROS_PACKAGE_PATH
@@ -200,7 +200,7 @@ def _get_packages_in_environment():
 
 
 def _get_package_names(path):
-    return set([pkg.name for _, pkg in find_packages(path).items()])
+    return set([pkg.name for _, pkg in find_packages_allowing_duplicates(path).items()])
 
 
 _wet_distro = None
@@ -222,15 +222,23 @@ def get_dry_distro(distro_name):
 
 
 def generate_rosinstall(distro_name, names,
-    repo_names=None,
+    include_paths=None, repo_names=None,
     deps=False, deps_up_to=None, deps_depth=None, deps_only=False,
     wet_only=False, dry_only=False, catkin_only=False, non_catkin_only=False,
     excludes=None, exclude_paths=None,
     flat=False,
     tar=False,
     upstream_version_tag=False, upstream_source_version=False):
+
     # classify package/stack names
     names, keywords = _split_special_keywords(names)
+
+    # find packages recursively in include paths
+    if include_paths:
+        include_names_from_path = set([])
+        [include_names_from_path.update(_get_package_names(include_path)) for include_path in include_paths]
+        logger.debug("The following wet packages found in '--include-path' will be considered: %s" % ', '.join(sorted(include_names_from_path)))
+        names.update(include_names_from_path)
 
     # expand repository names into package names
     repo_names, unknown_repo_names = _classify_repo_names(distro_name, repo_names)
@@ -277,7 +285,7 @@ def generate_rosinstall(distro_name, names,
     if exclude_paths:
         exclude_names_from_path = set([])
         [exclude_names_from_path.update(_get_package_names(exclude_path)) for exclude_path in exclude_paths]
-        logger.debug("The following packages found on '--exclude-path' will be excluded: %s" % ', '.join(sorted(exclude_names_from_path)))
+        logger.debug("The following wet packages found in '--exclude-path' will be excluded: %s" % ', '.join(sorted(exclude_names_from_path)))
         exclude_names.update(exclude_names_from_path)
     exclude_names, unknown_names = _classify_names(distro_name, exclude_names)
     if unknown_names:
