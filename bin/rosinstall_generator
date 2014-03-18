@@ -29,8 +29,8 @@ def main(argv=sys.argv[1:]):
         help='The ROS distro (default: environment variable ROS_DISTRO if defined)')
     parser.add_argument('package_names', nargs='*', metavar='pkgname',
         help="Wet package names, dry stack names or variant names. Use '%s' to specify all packages available in the current environment. Use '%s' to specify all release packages (only usable as a single argument)." % (ARG_CURRENT_ENVIRONMENT, ARG_ALL_PACKAGES))
-    parser.add_argument('--include-path', type=_existing_directory, nargs='*',
-        help='Include a set of wet packages found recursively under the given path.')
+    parser.add_argument('--from-path', type=_existing_directory, nargs='*',
+        help="Add a set of wet packages found recursively under the given path as if they would have been passed as 'package_names'.")
     parser.add_argument('--repos', nargs='*', metavar='reponame',
         help='Repository names containing wet packages.')
 
@@ -82,8 +82,8 @@ def main(argv=sys.argv[1:]):
             parser.error("For the ROS distro '%s' there are no dry released packages so '--dry-only' is not a valid option" % args.rosdistro)
         args.wet_only = True
 
-    if not args.package_names and not args.include_path and not args.repos:
-        parser.error('Either some package names must be specified, some --include-path or some repository names using --repos')
+    if not args.package_names and not args.from_path and not args.repos:
+        parser.error('Either some package names must be specified, some --from-path or some repository names using --repos')
 
     if ARG_ALL_PACKAGES in args.package_names and (len(args.package_names) > 1 or args.repos):
         parser.error("When using '%s' as a package name no other names can be specified" % ARG_ALL_PACKAGES)
@@ -118,7 +118,7 @@ def main(argv=sys.argv[1:]):
 
     try:
         rosinstall_data = generate_rosinstall(args.rosdistro, args.package_names,
-            include_paths=args.include_path,
+            from_path=args.from_path,
             repo_names=args.repos,
             deps=args.deps, deps_up_to=args.deps_up_to, deps_depth=args.deps_depth, deps_only=args.deps_only,
             wet_only=args.wet_only, dry_only=args.dry_only, catkin_only=args.catkin_only, non_catkin_only=args.non_catkin_only,

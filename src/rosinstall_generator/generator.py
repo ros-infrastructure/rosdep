@@ -222,7 +222,7 @@ def get_dry_distro(distro_name):
 
 
 def generate_rosinstall(distro_name, names,
-    include_paths=None, repo_names=None,
+    from_paths=None, repo_names=None,
     deps=False, deps_up_to=None, deps_depth=None, deps_only=False,
     wet_only=False, dry_only=False, catkin_only=False, non_catkin_only=False,
     excludes=None, exclude_paths=None,
@@ -234,10 +234,10 @@ def generate_rosinstall(distro_name, names,
     names, keywords = _split_special_keywords(names)
 
     # find packages recursively in include paths
-    if include_paths:
+    if from_paths:
         include_names_from_path = set([])
-        [include_names_from_path.update(_get_package_names(include_path)) for include_path in include_paths]
-        logger.debug("The following wet packages found in '--include-path' will be considered: %s" % ', '.join(sorted(include_names_from_path)))
+        [include_names_from_path.update(_get_package_names(from_path)) for from_path in from_paths]
+        logger.debug("The following wet packages found in '--from-path' will be considered: %s" % ', '.join(sorted(include_names_from_path)))
         names.update(include_names_from_path)
 
     # expand repository names into package names
