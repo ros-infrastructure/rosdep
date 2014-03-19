@@ -118,7 +118,7 @@ def main(argv=sys.argv[1:]):
 
     try:
         rosinstall_data = generate_rosinstall(args.rosdistro, args.package_names,
-            from_path=args.from_path,
+            from_paths=args.from_path,
             repo_names=args.repos,
             deps=args.deps, deps_up_to=args.deps_up_to, deps_depth=args.deps_depth, deps_only=args.deps_only,
             wet_only=args.wet_only, dry_only=args.dry_only, catkin_only=args.catkin_only, non_catkin_only=args.non_catkin_only,
