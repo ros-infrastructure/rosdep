@@ -69,12 +69,13 @@ from .rosdistrohelper import get_index, get_index_url
 # default file to download with 'init' command in order to bootstrap
 # rosdep
 DEFAULT_SOURCES_LIST_URL = 'https://raw.github.com/ros/rosdistro/master/rosdep/sources.list.d/20-default.list'
+DEFAULT_SOURCES_LIST = resource_filename(__name__, '20-default.list')
 
 #seconds to wait before aborting download of rosdep data
 DOWNLOAD_TIMEOUT = 15.0 
 
-SOURCES_LIST_DIR = 'sources.list.d'
-SOURCES_CACHE_DIR = 'sources.cache'
+SOURCES_LIST_PATH = os.path.join('etc', 'ros', 'rosdep', 'sources.list.d')
+SOURCES_CACHE_PATH = os.path.join('var', 'cache', 'rosdep')
 
 # name of index file for sources cache
 CACHE_INDEX = 'index'
@@ -82,28 +83,32 @@ CACHE_INDEX = 'index'
 # extension for binary cache
 PICKLE_CACHE_EXT = '.pickle'
 
+def get_default_prefix():
+    if hasattr(sys, 'real_prefix'):
+        return sys.prefix
+    else:
+        return '/'
+
+def get_rosdep_prefix():
+    return os.getenv('ROSDEP_PREFIX', get_default_prefix())
+
 def get_sources_files(sources_dir=None):
     filelist = []
 
     # if we aren't given a directory, use the default (only for testing)
     if sources_dir is None:
-        prefix = os.getenv('ROSDEP_PREFIX', '/')
-        etc = os.path.join(prefix, 'etc', 'ros', 'rosdep', SOURCES_LIST_DIR)
+        prefix = get_rosdep_prefix()
+        etc = os.path.join(prefix, SOURCES_LIST_PATH)
         sources_dir = etc
         
     # add files that end in .list to the sources list.
     if os.path.isdir(sources_dir):
         filelist.extend([c for c in [os.path.join(sources_dir, f) for f in sorted(os.listdir(sources_dir)) if f.endswith('.list')] if os.path.isfile(c)])
-    
-    # if we didn't find any sources, use the template
-    if len(filelist) == 0:
-        filelist.append(resource_filename(__name__, 'sources.list'))
 
     return filelist
 
 def get_sources_cache_dir():
-    ros_home = rospkg.get_ros_home()
-    return os.path.join(ros_home, 'rosdep', SOURCES_CACHE_DIR)
+    return os.path.join(get_rosdep_prefix(), SOURCES_CACHE_PATH)
 
 # Default rosdep.yaml format.  For now this is the only valid type and
 # is specified for future compatibility.
@@ -301,6 +306,7 @@ def download_default_sources_list(url=DEFAULT_SOURCES_LIST_URL):
     :raises: :exc:`urllib2.URLError` If data cannot be
         retrieved (e.g. 404, server down).
     """
+    # TODO: make this use the packaged default sources
     try:
         f = urlopen(url, timeout=DOWNLOAD_TIMEOUT)
     except (URLError, httplib.HTTPException) as e:
