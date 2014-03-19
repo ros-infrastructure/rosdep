@@ -166,11 +166,6 @@ def get_gbprepo_as_rosdep_data(gbpdistro):
             package_name = 'ros-%s-%s' % (release_name, pkg)
             package_name = package_name.replace('_', '-')
 
-            # Generate debian entries
-            rosdep_data[pkg][OS_DEBIAN] = {
-                APT_INSTALLER: {'packages': [package_name]}
-            }
-
             for os_name in distro_file.platforms:
                 if not os_name in rosdep_data[pkg]:
                     rosdep_data[pkg][os_name] = {}
