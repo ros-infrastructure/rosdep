@@ -34,6 +34,7 @@ import sys
 import tempfile
 import yaml
 import hashlib
+import stat
 try:
     from urllib.request import urlopen
     from urllib.error import URLError
@@ -520,6 +521,12 @@ def write_atomic(filepath, data, binary=False):
     with os.fdopen(fd, fmode) as f:
         f.write(data)
         f.close()
+
+    # set cache permissions
+    #  owner read/write; group + others read
+    #  this _should_ work on Linux, OSX and Windows
+    os.chmod(filepath_tmp, stat.S_IWUSR | stat.S_IRUSR | stat.S_IRGRP |
+             stat.S_IROTH )
 
     try:
         # switch file atomically (if supported)
