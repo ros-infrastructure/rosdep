@@ -63,7 +63,7 @@ def register_rhel(context):
 def rpm_detect(packages, exec_fn=None):
     ret_list = []
     #cmd = ['rpm', '-q', '--qf ""']  # suppress output for installed packages
-    cmd = ['rpm', '-q', '--qf', '%{NAME}\n']  # output: "pkg_name" for installed, error text for not installed packages
+    cmd = ['rpm', '-q', '--whatprovides', '--qf', '[%{PROVIDES}\n]']  # output: "pkg_name" for installed, error text for not installed packages
     cmd.extend(packages)
 
     if exec_fn is None:
