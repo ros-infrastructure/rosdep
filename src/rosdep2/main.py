@@ -403,6 +403,7 @@ def command_init(options):
         return 4
     # reuse path variable for error message 
     path = get_sources_list_dir()
+    old_umask = os.umask(0o022)
     try:
         if not os.path.exists(path):
             os.makedirs(path)
@@ -420,6 +421,8 @@ def command_init(options):
     except OSError as e:
         print("ERROR: cannot create %s:\n\t%s\nPerhaps you need to run 'sudo rosdep init' instead"%(path, e), file=sys.stderr)
         return 3
+    finally:
+        os.umask(old_umask)
     
 def command_update(options):
     error_occured = []
