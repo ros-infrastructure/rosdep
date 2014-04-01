@@ -37,20 +37,14 @@ __version__ = '0.10.25'
 
 import sys
 
-try:
-    from .installers import InstallerContext, Installer, \
-            PackageManagerInstaller
-    from .core import RosdepInternalError, InstallFailed, UnsupportedOs, \
-            InvalidData, DownloadFailure
-    from .model import RosdepDatabase, RosdepDatabaseEntry
-    from .lookup import RosdepDefinition, RosdepView, RosdepLookup, \
-            ResolutionError
-    from .loader import RosdepLoader
-except ImportError:
-    # soft-fail if rospkg not available.  Need this backoff behavior
-    # in order to support setting __version__ in the module.
-    print("failed to load symbols, rosdep will not function properly",
-            file=sys.stderr)
+from .installers import InstallerContext, Installer, \
+        PackageManagerInstaller
+from .core import RosdepInternalError, InstallFailed, UnsupportedOs, \
+        InvalidData, DownloadFailure
+from .model import RosdepDatabase, RosdepDatabaseEntry
+from .lookup import RosdepDefinition, RosdepView, RosdepLookup, \
+        ResolutionError
+from .loader import RosdepLoader
 
 # don't let import error take down code as when attempting to compute version number
 try:
@@ -77,7 +71,7 @@ def create_default_installer_context(verbose=False):
 
     context = InstallerContext()
     context.set_verbose(verbose)
-    
+
     # setup installers
     for m in installer_mods:
         if verbose:
@@ -91,6 +85,10 @@ def create_default_installer_context(verbose=False):
         m.register_platforms(context)
 
     return context
+
+import gbpdistro_support
+gbpdistro_support.create_default_installer_context = create_default_installer_context
+
 
 #TODO: this was partially abstracted from main() for another library,
 # but it turned out to be unnecessary. Not sure it's worth maintaining

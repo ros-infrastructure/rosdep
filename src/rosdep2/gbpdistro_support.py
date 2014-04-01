@@ -14,7 +14,7 @@ from rospkg.os_detect import OS_FEDORA
 from rospkg.os_detect import OS_OSX
 from rospkg.os_detect import OS_UBUNTU
 
-from . import create_default_installer_context
+create_default_installer_context = None
 from .core import InvalidData, DownloadFailure
 from .platforms.debian import APT_INSTALLER
 from .platforms.osx import BREW_INSTALLER
