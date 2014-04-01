@@ -93,7 +93,7 @@ class MacportsInstaller(PackageManagerInstaller):
             return []
         else:
             #TODO: interactive
-            return ['sudo', 'port', 'install'] + packages
+            return [['sudo', 'port', 'install', p] for p in packages]
 
 def is_brew_installed():
     try:
