@@ -128,7 +128,7 @@ class RosPkgLoader(RosdepLoader):
             if m.is_catkin:
                 path = self._rospack.get_path(resource_name)
                 pkg = catkin_pkg.package.parse_package(path)
-                deps = pkg.build_depends + pkg.buildtool_depends + pkg.run_depends
+                deps = pkg.build_depends + pkg.buildtool_depends + pkg.run_depends + pkg.test_depends
                 return [d.name for d in deps]
             else:
                 return self._rospack.get_rosdeps(resource_name, implicit=implicit)
