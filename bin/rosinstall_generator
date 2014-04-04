@@ -34,9 +34,10 @@ def main(argv=sys.argv[1:]):
     parser.add_argument('--repos', nargs='*', metavar='reponame',
         help='Repository names containing wet packages.')
 
-    parser.add_argument('--upstream', action='store_true', default=False,
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('--upstream', action='store_true', default=False,
         help='Fetch the release tag of wet packages from the upstream repo instead of the gbp. Note that this implies always fetching the whole repository which might contain additional (unreleased) packages.')
-    parser.add_argument('--upstream-development', action='store_true', default=False,
+    group.add_argument('--upstream-development', action='store_true', default=False,
         help='Fetch the development version of wet packages from the upstream repo instead of the gbp. Be aware that the development version might not even be intended to build between releases. Note that this implies always fetching the whole repository which might contain additional (unreleased) packages.')
 
     group = parser.add_mutually_exclusive_group()
