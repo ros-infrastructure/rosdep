@@ -413,7 +413,7 @@ def generate_rosinstall(distro_name, names,
                 logger.warn('The following repositories with an unknown upstream will be ignored: %s' % ', '.join(sorted(repos_without_source)))
                 [repos.pop(repo_name) for repo_name in repos_without_source]
             if upstream_version_tag:
-                repos_without_release = [repo_name for repo_name, repo in repos.items() if not repo.release_repository or repo.release_repository.version]
+                repos_without_release = [repo_name for repo_name, repo in repos.items() if not repo.release_repository or not repo.release_repository.version]
                 if repos_without_release:
                     logger.warn('The following repositories without a release will be ignored: %s' % ', '.join(sorted(repos_without_release)))
                     [repos.pop(repo_name) for repo_name in repos_without_release]
