@@ -11,6 +11,12 @@ import yaml
 from rosinstall_generator.generator import ARG_ALL_PACKAGES, ARG_CURRENT_ENVIRONMENT, generate_rosinstall, sort_rosinstall
 
 
+def _existing_directory(path):
+    if not os.path.isdir(path):
+        raise argparse.ArgumentTypeError("'%s' is not an existing directory" % path)
+    return path
+
+
 def main(argv=sys.argv[1:]):
     distro_name = os.environ['ROS_DISTRO'] if 'ROS_DISTRO' in os.environ else None
     parser = argparse.ArgumentParser(
@@ -21,8 +27,18 @@ def main(argv=sys.argv[1:]):
         help='Print verbose information to stderr')
     parser.add_argument('--rosdistro', required=distro_name is None, default=distro_name,
         help='The ROS distro (default: environment variable ROS_DISTRO if defined)')
-    parser.add_argument('package_names', nargs='+', metavar='pkgname',
-        help="Wet package names, dry stack names or variant names. Use '%s' to specify all packages available in the current environment. Use '%s' to specify all release packages (only usable as a single argument)." % (ARG_CURRENT_ENVIRONMENT, ARG_ALL_PACKAGES))
+    parser.add_argument('package_names', nargs='*', metavar='pkgname',
+        help="catkin package names, rosbuild stack names or variant names. Use '%s' to specify all packages available in the current environment. Use '%s' to specify all release packages (only usable as a single argument)." % (ARG_CURRENT_ENVIRONMENT, ARG_ALL_PACKAGES))
+    parser.add_argument('--from-path', type=_existing_directory, nargs='*',
+        help="Add a set of catkin packages found recursively under the given path as if they would have been passed as 'package_names'.")
+    parser.add_argument('--repos', nargs='*', metavar='reponame',
+        help='Repository names containing catkin packages.')
+
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('--upstream', action='store_true', default=False,
+        help='Fetch the release tag of catkin packages from the upstream repo instead of the gbp. Note that this implies always fetching the whole repository which might contain additional (unreleased) packages.')
+    group.add_argument('--upstream-development', action='store_true', default=False,
+        help='Fetch the development version of catkin packages from the upstream repo instead of the gbp. Be aware that the development version might not even be intended to build between releases. Note that this implies always fetching the whole repository which might contain additional (unreleased) packages.')
 
     group = parser.add_mutually_exclusive_group()
     group.add_argument('--deps', action='store_true', default=False,
@@ -38,9 +54,9 @@ def main(argv=sys.argv[1:]):
 
     group = parser.add_mutually_exclusive_group()
     group.add_argument('--wet-only', action='store_true', default=False,
-        help='Only include wet packages')
+        help='Only include catkin packages')
     group.add_argument('--dry-only', action='store_true', default=False,
-        help='Only include dry stacks')
+        help='Only include rosbuild stacks')
     group.add_argument('--catkin-only', action='store_true', default=False,
         help="Only wet packages with build type 'catkin'")
     group.add_argument('--non-catkin-only', action='store_true', default=False,
@@ -48,12 +64,14 @@ def main(argv=sys.argv[1:]):
 
     parser.add_argument('--exclude', nargs='*',
         help="Exclude a set of packages (also skips further recursive dependencies). Use '%s' to specify all packages available in the current environment." % ARG_CURRENT_ENVIRONMENT)
+    parser.add_argument('--exclude-path', type=_existing_directory, nargs='*',
+        help='Exclude a set of catkin packages found recursively under the given path (also skips further recursive dependencies).')
 
     parser.add_argument('--flat', action='store_true', default=False,
-        help='Use a flat folder structure without a parent folder names after the repository containing the wet packages')
+        help='Use a flat folder structure without a parent folder names after the repository containing the catkin packages')
 
     parser.add_argument('--tar', action='store_true', default=False,
-        help='Use tarballs instead of repositories for wet packages (dry packages are always tarballs)')
+        help='Use tarballs instead of repositories for catkin packages (rosbuild stacks are always tarballs)')
 
     args = parser.parse_args(argv)
 
@@ -62,10 +80,13 @@ def main(argv=sys.argv[1:]):
         parser.error("Option '--deps-depth N' is not available for the ROS distro 'groovy'")
     if args.rosdistro != 'groovy':
         if args.dry_only:
-            parser.error("For the ROS distro '%s' there are no dry released packages so '--dry-only' is not a valid option" % args.rosdistro)
+            parser.error("For the ROS distro '%s' there are no rosbuild released packages so '--dry-only' is not a valid option" % args.rosdistro)
         args.wet_only = True
 
-    if ARG_ALL_PACKAGES in args.package_names and len(args.package_names) > 1:
+    if not args.package_names and not args.from_path and not args.repos:
+        parser.error('Either some package names must be specified, some --from-path or some repository names using --repos')
+
+    if ARG_ALL_PACKAGES in args.package_names and (len(args.package_names) > 1 or args.repos):
         parser.error("When using '%s' as a package name no other names can be specified" % ARG_ALL_PACKAGES)
 
     if not args.deps and not args.deps_up_to:
@@ -98,11 +119,14 @@ def main(argv=sys.argv[1:]):
 
     try:
         rosinstall_data = generate_rosinstall(args.rosdistro, args.package_names,
+            from_paths=args.from_path,
+            repo_names=args.repos,
             deps=args.deps, deps_up_to=args.deps_up_to, deps_depth=args.deps_depth, deps_only=args.deps_only,
             wet_only=args.wet_only, dry_only=args.dry_only, catkin_only=args.catkin_only, non_catkin_only=args.non_catkin_only,
-            excludes=args.exclude,
+            excludes=args.exclude, exclude_paths=args.exclude_path,
             flat=args.flat,
-            tar=args.tar)
+            tar=args.tar,
+            upstream_version_tag=args.upstream, upstream_source_version=args.upstream_development)
     except RuntimeError as e:
         if args.debug:
             raise
