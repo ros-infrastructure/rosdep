@@ -70,14 +70,6 @@ def get_installer(installer_name):
     installer_context = create_default_installer_context()
     return installer_context.get_installer(installer_name)
 
-default_installers = {
-    'debian': [APT_INSTALLER],
-    'osx': [BREW_INSTALLER, PIP_INSTALLER],
-    'ubuntu': [APT_INSTALLER],
-    'fedora': [YUM_INSTALLER],
-}
-
-
 def resolve_for_os(rosdep_key, view, installer, os_name, os_version):
     """
     Resolve rosdep key to dependencies.
@@ -87,8 +79,11 @@ def resolve_for_os(rosdep_key, view, installer, os_name, os_version):
     :raises: :exc:`rosdep2.ResolutionError`
     """
     d = view.lookup(rosdep_key)
-    inst_key, rule = d.get_rule_for_platform(os_name, os_version, default_installers[os_name], APT_INSTALLER)
-    assert inst_key == APT_INSTALLER
+    ctx = create_default_installer_context()
+    os_installers = ctx.get_os_installer_keys(os_name)
+    default_os_installer = ctx.get_default_os_installer_key(os_name)
+    inst_key, rule = d.get_rule_for_platform(os_name, os_version, os_installers, default_os_installer)
+    assert inst_key in os_installers
     return installer.resolve(rule)
 
 
