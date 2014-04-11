@@ -80,8 +80,8 @@ def resolve_for_os(rosdep_key, view, installer, os_name, os_version):
     """
     d = view.lookup(rosdep_key)
     ctx = create_default_installer_context()
-    os_installers = [ctx.get_installer(k) for k in ctx.get_os_installer_keys(os_name)]
-    default_os_installer = ctx.get_installer(ctx.get_os_default_installer_key(os_name))
+    os_installers = ctx.get_os_installer_keys(os_name)
+    default_os_installer = ctx.get_default_os_installer_key(os_name)
     inst_key, rule = d.get_rule_for_platform(os_name, os_version, os_installers, default_os_installer)
     assert inst_key in os_installers
     return installer.resolve(rule)

@@ -170,7 +170,7 @@ def get_gbprepo_as_rosdep_data(gbpdistro):
                 if not os_name in rosdep_data[pkg]:
                     rosdep_data[pkg][os_name] = {}
                 if not os_name in default_installers:
-                    default_installers[os_name] = ctx.get_installer(ctx.get_default_os_installer_key(os_name))
+                    default_installers[os_name] = ctx.get_default_os_installer_key(os_name)
                 for os_code_name in distro_file.platforms[os_name]:
                     rosdep_data[pkg][os_name][os_code_name] = {
                         default_installers[os_name]: {'packages': [package_name]}
