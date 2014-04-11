@@ -80,7 +80,7 @@ def get_recursive_dependencies(distro, package_names, excludes=None, limit_depth
     try:
         for pkg_name in package_names:
             try:
-                dependencies |= walker.get_recursive_depends(pkg_name, ['buildtool', 'build', 'run'], ros_packages_only=True, ignore_pkgs=dependencies | excludes, limit_depth=limit_depth)
+                dependencies |= walker.get_recursive_depends(pkg_name, ['buildtool', 'build', 'run', 'test'], ros_packages_only=True, ignore_pkgs=dependencies | excludes, limit_depth=limit_depth)
             except AssertionError as e:
                 raise RuntimeError("Failed to fetch recursive dependencies of package '%s': %s" % (pkg_name, e))
     finally:
@@ -105,7 +105,7 @@ def get_recursive_dependencies_on(distro, package_names, excludes=None, limit=No
     sys.stderr = CustomLogger()
     try:
         for pkg_name in package_names:
-            dependencies |= walker.get_recursive_depends_on(pkg_name, ['buildtool', 'build', 'run'], ignore_pkgs=dependencies | excludes)
+            dependencies |= walker.get_recursive_depends_on(pkg_name, ['buildtool', 'build', 'run', 'test'], ignore_pkgs=dependencies | excludes)
     finally:
         sys.stderr = stderr
     dependencies -= set(package_names)
