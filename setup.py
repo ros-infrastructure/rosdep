@@ -1,9 +1,7 @@
+import os
 from setuptools import setup
 
-import sys
-sys.path.insert(0, 'src')
-
-from rosdep2 import __version__
+exec(open(os.path.join(os.path.dirname(__file__), 'src', 'rosdep2', '_version.py')).read())
 
 setup(
     name='rosdep',
