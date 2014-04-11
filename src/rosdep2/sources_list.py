@@ -34,6 +34,7 @@ import sys
 import tempfile
 import yaml
 import hashlib
+import stat
 try:
     from urllib.request import urlopen
     from urllib.error import URLError
@@ -44,6 +45,8 @@ try:
     import cPickle as pickle
 except ImportError:
     import pickle
+
+from pkg_resources import resource_filename
 
 from .core import InvalidData, DownloadFailure
 from .gbpdistro_support import get_gbprepo_as_rosdep_data, download_gbpdistro_as_rosdep_data
@@ -67,12 +70,13 @@ from .rosdistrohelper import get_index, get_index_url
 # default file to download with 'init' command in order to bootstrap
 # rosdep
 DEFAULT_SOURCES_LIST_URL = 'https://raw.github.com/ros/rosdistro/master/rosdep/sources.list.d/20-default.list'
+DEFAULT_SOURCES_LIST = resource_filename(__name__, '20-default.list')
 
 #seconds to wait before aborting download of rosdep data
 DOWNLOAD_TIMEOUT = 15.0 
 
-SOURCES_LIST_DIR = 'sources.list.d'
-SOURCES_CACHE_DIR = 'sources.cache'
+SOURCES_LIST_PATH = os.path.join('etc', 'ros', 'rosdep', 'sources.list.d')
+SOURCES_CACHE_PATH = os.path.join('var', 'cache', 'rosdep')
 
 # name of index file for sources cache
 CACHE_INDEX = 'index'
@@ -80,23 +84,32 @@ CACHE_INDEX = 'index'
 # extension for binary cache
 PICKLE_CACHE_EXT = '.pickle'
 
-def get_sources_list_dir():
-    # base of where we read config files from
-    # TODO: windows
-    if 0:
-        # we can't use etc/ros because environment config does not carry over under sudo
-        etc_ros = rospkg.get_etc_ros_dir()
+def get_default_prefix():
+    if hasattr(sys, 'real_prefix'):
+        return sys.prefix
     else:
-        etc_ros = '/etc/ros'
-    # compute cache directory
-    return os.path.join(etc_ros, 'rosdep', SOURCES_LIST_DIR)
+        return '/'
 
-def get_default_sources_list_file():
-    return os.path.join(get_sources_list_dir(), '20-default.list')
+def get_rosdep_prefix():
+    return os.getenv('ROSDEP_PREFIX', get_default_prefix())
+
+def get_sources_files(sources_dir=None):
+    filelist = []
+
+    # if we aren't given a directory, use the default (only for testing)
+    if sources_dir is None:
+        prefix = get_rosdep_prefix()
+        etc = os.path.join(prefix, SOURCES_LIST_PATH)
+        sources_dir = etc
+        
+    # add files that end in .list to the sources list.
+    if os.path.isdir(sources_dir):
+        filelist.extend([c for c in [os.path.join(sources_dir, f) for f in sorted(os.listdir(sources_dir)) if f.endswith('.list')] if os.path.isfile(c)])
+
+    return filelist
 
 def get_sources_cache_dir():
-    ros_home = rospkg.get_ros_home()
-    return os.path.join(ros_home, 'rosdep', SOURCES_CACHE_DIR)
+    return os.path.join(get_rosdep_prefix(), SOURCES_CACHE_PATH)
 
 # Default rosdep.yaml format.  For now this is the only valid type and
 # is specified for future compatibility.
@@ -167,12 +180,12 @@ def cache_data_source_loader(sources_cache_dir, verbose=False):
         filename = compute_filename_hash(uri)
         filepath = os.path.join(sources_cache_dir, filename)
         pickle_filepath = filepath + PICKLE_CACHE_EXT
-        if os.path.exists(pickle_filepath):
+        if os.path.isfile(pickle_filepath):
             if verbose:
                 print("loading cached data source:\n\t%s\n\t%s"%(uri, pickle_filepath), file=sys.stderr)
             with open(pickle_filepath, 'rb') as f:
                 rosdep_data = pickle.loads(f.read())
-        elif os.path.exists(filepath):
+        elif os.path.isfile(filepath):
             if verbose:
                 print("loading cached data source:\n\t%s\n\t%s"%(uri, filepath), file=sys.stderr)
             with open(filepath) as f:
@@ -294,6 +307,7 @@ def download_default_sources_list(url=DEFAULT_SOURCES_LIST_URL):
     :raises: :exc:`urllib2.URLError` If data cannot be
         retrieved (e.g. 404, server down).
     """
+    # TODO: make this use the packaged default sources
     try:
         f = urlopen(url, timeout=DOWNLOAD_TIMEOUT)
     except (URLError, httplib.HTTPException) as e:
@@ -361,7 +375,7 @@ def parse_sources_file(filepath):
     except IOError as e:
         raise InvalidData("I/O error reading sources file: %s"%(str(e)), origin=filepath)
 
-def parse_sources_list(sources_list_dir=None):
+def parse_sources_list(sources_files=None):
     """
     Parse data stored in on-disk sources list directory into a list of
     :class:`DataSource` for processing.
@@ -372,19 +386,15 @@ def parse_sources_list(sources_list_dir=None):
     :raises: :exc:`OSError` if *sources_list_dir* cannot be read.
     :raises: :exc:`IOError` if *sources_list_dir* cannot be read.
     """
-    if sources_list_dir is None:
-        sources_list_dir = get_sources_list_dir()
-    if not os.path.exists(sources_list_dir):
-        # no sources on this system.  this is a valid state.
-        return []
-        
-    filelist = [f for f in os.listdir(sources_list_dir) if f.endswith('.list')]
+    if sources_files is None:
+        sources_files = get_sources_files()
+
     sources_list = []
-    for f in sorted(filelist):
-        sources_list.extend(parse_sources_file(os.path.join(sources_list_dir, f)))
+    for f in sorted(sources_files):
+        sources_list.extend(parse_sources_file(f))
     return sources_list
 
-def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
+def update_sources_list(sources_files=None, sources_cache_dir=None,
                         success_handler=None, error_handler=None):
     """
     Re-downloaded data from remote sources and store in cache.  Also
@@ -408,7 +418,7 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
     if sources_cache_dir is None:
         sources_cache_dir = get_sources_cache_dir()
 
-    sources = parse_sources_list(sources_list_dir=sources_list_dir)
+    sources = parse_sources_list(sources_files=sources_files)
     retval = []
     for source in list(sources):
         try:
@@ -464,7 +474,7 @@ def load_cached_sources_list(sources_cache_dir=None, verbose=False):
     if sources_cache_dir is None:
         sources_cache_dir = get_sources_cache_dir()
     cache_index = os.path.join(sources_cache_dir, 'index')
-    if not os.path.exists(cache_index):
+    if not os.path.isfile(cache_index):
         if verbose:
             print("no cache index present, not loading cached sources", file=sys.stderr)
         return []
@@ -511,6 +521,12 @@ def write_atomic(filepath, data, binary=False):
     with os.fdopen(fd, fmode) as f:
         f.write(data)
         f.close()
+
+    # set cache permissions
+    #  owner read/write; group + others read
+    #  this _should_ work on Linux, OSX and Windows
+    os.chmod(filepath_tmp, stat.S_IWUSR | stat.S_IRUSR | stat.S_IRGRP |
+             stat.S_IROTH )
 
     try:
         # switch file atomically (if supported)

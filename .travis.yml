@@ -5,8 +5,6 @@ python:
   - "3.3"
 # command to install dependencies
 install:
-# develop seems to be required by travis since 02/2013
-  - python setup.py build develop
   - pip install PyYAML argparse rospkg vcstools catkin_pkg python-dateutil distribute
   - pip install nose coverage
 # command to run tests
