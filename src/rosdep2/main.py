@@ -516,11 +516,11 @@ def command_check(lookup, packages, options):
 
 def error_to_human_readable(error):
     if isinstance(error, rospkg.ResourceNotFound):
-        return "Missing resource %s"%(str(error))
+        return "Missing resource %s"%(error,)
     elif isinstance(error, ResolutionError):
-        return str(error.args[0])
+        return "%s"%(error.args[0],)
     else:
-        return str(error)
+        return "%s"%(error,)
     
 def command_install(lookup, packages, options):
     # map options
