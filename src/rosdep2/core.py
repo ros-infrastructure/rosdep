@@ -68,6 +68,12 @@ class RosdepInternalError(Exception):
 
     def __str__(self):
         return self.message
+
+class CachePermissionError(Exception):
+
+    """Failure when writing the cache."""
+
+    pass
         
 class DownloadFailure(Exception):
     """

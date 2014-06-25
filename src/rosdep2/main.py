@@ -49,7 +49,7 @@ import rospkg
 
 from . import create_default_installer_context, get_default_installer
 from . import __version__
-from .core import RosdepInternalError, InstallFailed, UnsupportedOs, InvalidData
+from .core import RosdepInternalError, InstallFailed, UnsupportedOs, InvalidData, CachePermissionError
 from .installers import RosdepInstaller
 from .lookup import RosdepLookup, ResolutionError
 from .rospkg_loader import DEFAULT_VIEW_KEY
@@ -153,6 +153,10 @@ ERROR: %s
 
 %s
 """%(e.args[0], e), file=sys.stderr)
+        sys.exit(1)
+    except CachePermissionError as e:
+        print(str(e))
+        print("Try running 'sudo rosdep fix-permissions'")
         sys.exit(1)
     except UnsupportedOs as e:
         print("Unsupported OS: %s\nSupported OSes are [%s]"%(e.args[0], ', '.join(e.args[1])), file=sys.stderr)
@@ -456,7 +460,7 @@ def command_update(options):
         try:
             if os.geteuid() == 0:
                 print("Warning: running 'rosdep update' as root is not recommended.", file=sys.stderr)
-                print("  You should remove the rosdep database with 'sudo rm -fr %s' and invoke 'rosdep update' again without sudo." % sources_cache_dir, file=sys.stderr)
+                print("  You should run 'sudo rosdep fix-permissions' and invoke 'rosdep update' again without sudo.", file=sys.stderr)
         except AttributeError:
             # nothing we wanna do under Windows
             pass
