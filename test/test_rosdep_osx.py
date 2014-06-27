@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # Copyright (c) 2011, Willow Garage, Inc.
 # All rights reserved.
 # 
@@ -126,6 +128,14 @@ def test_HomebrewInstaller():
         mock_remove_duplicate_dependencies.return_value = mock_get_packages_to_install.return_value
         expected = [['brew', 'install', 'subversion', 'foo', 'bar', 'baz'],
                     ['brew', 'install', 'bazaar', '--with-quux']]
+        val = installer.get_install_command(['whatever'])
+        assert val == expected, val
+
+        mock_get_packages_to_install.return_value = make_resolutions_options(
+            [('subversion', [u'f´´ßß', u'öäö'], []), (u'bazaar', [], [u"tüü"])])
+        mock_remove_duplicate_dependencies.return_value = mock_get_packages_to_install.return_value
+        expected = [['brew', 'install', 'subversion', u'f´´ßß', u'öäö'],
+                    ['brew', 'install', 'bazaar', u"tüü"]]
         val = installer.get_install_command(['whatever'])
         assert val == expected, val
     try:

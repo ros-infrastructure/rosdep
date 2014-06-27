@@ -45,6 +45,12 @@ OSXBREW_OS_NAME = 'osxbrew'
 BREW_INSTALLER = 'homebrew'
 MACPORTS_INSTALLER = 'macports'
 
+#py3k
+try:
+    _basestring = basestring
+except NameError:
+    _basestring = str
+
 def register_installers(context):
     context.set_installer(MACPORTS_INSTALLER, MacportsInstaller())
     context.set_installer(BREW_INSTALLER, HomebrewInstaller())
@@ -180,7 +186,6 @@ def brew_detect(resolved, exec_fn=None):
                 return False
             for spec in pkg_info['installed']:
                 if spec['version'] == linked_version:
-                    # print(r.package, spec)
                     installed_options = spec['used_options']
                     break
         except (ValueError, TypeError) as e:
@@ -245,25 +250,25 @@ class HomebrewInstaller(PackageManagerInstaller):
         """
 
         def coerce_to_list(options):
-            if type(options) == list:
+            if isinstance(options, list):
                 return options
-            elif type(options) == str:
+            elif isinstance(options, _basestring):
                 return options.split()
             else:
                 raise InvalidData("Expected list or string for options '%s'" % options)
 
         def handle_options(options):
             # if only one package is specified we allow a flat list of options
-            if len(packages) == 1 and options and type(options[0]) != list:
+            if len(packages) == 1 and options and not isinstance(options[0],list):
                 options = [options]
             else:
                 options = map(coerce_to_list, options)
 
             # make sure options is a list of list of strings
             try:
-                valid = all([type(x) == str for l in options for x in l])
+                valid = all([isinstance(x, _basestring) for l in options for x in l])
             except Exception as e:
-                raise InvalidData("Invalid list of options '%s', error: %s" % (options, str(e)))
+                raise InvalidData("Invalid list of options '%s', error: %s" % (options, e))
             else:
                 if not valid:
                     raise InvalidData("Invalid list of options '%s'" % options)
