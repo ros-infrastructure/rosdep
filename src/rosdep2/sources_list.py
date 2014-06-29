@@ -45,7 +45,7 @@ try:
 except ImportError:
     import pickle
 
-from .core import InvalidData, DownloadFailure
+from .core import InvalidData, DownloadFailure, CachePermissionError
 from .gbpdistro_support import get_gbprepo_as_rosdep_data, download_gbpdistro_as_rosdep_data
 
 try:
@@ -492,7 +492,10 @@ def write_cache_file(source_cache_d, filename_key, rosdep_data):
         os.makedirs(source_cache_d)
     key_hash = compute_filename_hash(filename_key)
     filepath = os.path.join(source_cache_d, key_hash)
-    write_atomic(filepath + PICKLE_CACHE_EXT, pickle.dumps(rosdep_data, -1), True)
+    try:
+        write_atomic(filepath + PICKLE_CACHE_EXT, pickle.dumps(rosdep_data, -1), True)
+    except OSError as e:
+        raise CachePermissionError("Failed to write cache file: " + str(e))
     try:
         os.unlink(filepath)
     except OSError:

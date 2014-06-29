@@ -49,7 +49,7 @@ import rospkg
 
 from . import create_default_installer_context, get_default_installer
 from . import __version__
-from .core import RosdepInternalError, InstallFailed, UnsupportedOs, InvalidData
+from .core import RosdepInternalError, InstallFailed, UnsupportedOs, InvalidData, CachePermissionError
 from .installers import RosdepInstaller
 from .lookup import RosdepLookup, ResolutionError
 from .rospkg_loader import DEFAULT_VIEW_KEY
@@ -99,6 +99,11 @@ rosdep what-needs <rosdeps>...
 rosdep where-defined <rosdeps>...
   print a list of yaml files that declare a rosdep on (at least
   one of) <rosdeps>
+
+rosdep fix-permissions
+  Recursively change the permissions of the user's ros home directory.
+  May require sudo.  Can be useful to fix permissions after calling
+  "rosdep update" with sudo accidentally.
 """
 
 def _get_default_RosdepLookup(options):
@@ -148,6 +153,10 @@ ERROR: %s
 
 %s
 """%(e.args[0], e), file=sys.stderr)
+        sys.exit(1)
+    except CachePermissionError as e:
+        print(str(e))
+        print("Try running 'sudo rosdep fix-permissions'")
         sys.exit(1)
     except UnsupportedOs as e:
         print("Unsupported OS: %s\nSupported OSes are [%s]"%(e.args[0], ', '.join(e.args[1])), file=sys.stderr)
@@ -451,7 +460,7 @@ def command_update(options):
         try:
             if os.geteuid() == 0:
                 print("Warning: running 'rosdep update' as root is not recommended.", file=sys.stderr)
-                print("  You should remove the rosdep database with 'sudo rm -fr %s' and invoke 'rosdep update' again without sudo." % sources_cache_dir, file=sys.stderr)
+                print("  You should run 'sudo rosdep fix-permissions' and invoke 'rosdep update' again without sudo.", file=sys.stderr)
         except AttributeError:
             # nothing we wanna do under Windows
             pass
@@ -683,6 +692,46 @@ def command_resolve(args, options):
     if invalid_key_errors:
         return 1 # error exit code
 
+def command_fix_permissions(options):
+    import os
+    import pwd
+    import grp
+
+    stat_info = os.stat(os.path.expanduser('~'))
+    uid = stat_info.st_uid
+    gid = stat_info.st_gid
+    user_name = pwd.getpwuid(uid).pw_name
+    group_name = grp.getgrgid(gid).gr_name
+    ros_home = rospkg.get_ros_home()
+
+    print("Recursively changing ownership of ros home directory '{0}' "
+          "to '{1}:{2}' (current user)...".format(ros_home, user_name, group_name))
+    failed = []
+    try:
+        for dirpath, dirnames, filenames in os.walk(ros_home):
+            try:
+                os.lchown(dirpath, uid, gid)
+            except Exception as e:
+                failed.append((dirpath, str(e)))
+            for f in filenames:
+                try:
+                    path = os.path.join(dirpath, f)
+                    os.lchown(path, uid, gid)
+                except Exception as e:
+                    failed.append((path, str(e)))
+    except Exception:
+        import traceback
+        traceback.print_exc()
+        print("Failed to walk directory. Try with sudo?")
+    else:
+        if failed:
+            print("Failed to change ownership for:")
+            for p, e in failed:
+                print("{0} --> {1}".format(p, e))
+            print("Try with sudo?")
+        else:
+            print("Done.")
+
 command_handlers = {
     'db': command_db,
     'check': command_check,
@@ -693,6 +742,7 @@ command_handlers = {
     'resolve': command_resolve,
     'init': command_init,
     'update': command_update,
+    'fix-permissions': command_fix_permissions,
 
     # backwards compat
     'what_needs': command_what_needs,
@@ -703,7 +753,7 @@ command_handlers = {
 # commands that accept rosdep names as args
 _command_rosdep_args = ['what-needs', 'what_needs', 'where-defined', 'where_defined', 'resolve']
 # commands that take no args
-_command_no_args = ['update', 'init', 'db']
+_command_no_args = ['update', 'init', 'db', 'fix-permissions']
 
 _commands = command_handlers.keys()
 
