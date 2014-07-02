@@ -207,6 +207,16 @@ ERROR: your rosdep installation has not been initialized yet.  Please run:
     else:
         return True
     
+def setup_proxy_opener():
+    import urllib2
+    # check for http[s]?_proxy user
+    for scheme in ['http', 'https']:
+        if os.environ.has_key(scheme+'_proxy') :
+            proxy = urllib2.ProxyHandler({scheme: os.environ[scheme+'_proxy']})
+            auth = urllib2.HTTPBasicAuthHandler()
+            opener = urllib2.build_opener(proxy, auth, urllib2.HTTPHandler)
+            urllib2.install_opener(opener)
+
 def _rosdep_main(args):
     # sources cache dir is our local database.  
     default_sources_cache = get_sources_cache_dir()
@@ -280,6 +290,8 @@ def _rosdep_main(args):
 
     if not command in ['init', 'update']:
         check_for_sources_list_init(options.sources_cache_dir)
+    else:
+        setup_proxy_opener()
     if command in _command_rosdep_args:
         return _rosdep_args_handler(command, parser, options, args)
     elif command in _command_no_args:
