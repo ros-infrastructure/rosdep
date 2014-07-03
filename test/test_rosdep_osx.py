@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # Copyright (c) 2011, Willow Garage, Inc.
 # All rights reserved.
 # 
@@ -29,7 +31,7 @@
 
 import os
 import traceback
-from mock import Mock, patch
+from mock import Mock, patch, call
 
 def get_test_dir():
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'osx'))
@@ -43,7 +45,29 @@ def is_brew_installed_tripwire():
     # don't know the correct answer, but make sure this does not throw
     from rosdep2.platforms.osx import is_brew_installed
     assert is_brew_installed() in [True, False]
+
+def make_resolutions(package_list):
+    from rosdep2.platforms.osx import HomebrewResolution
+    return list(map(lambda pkg: HomebrewResolution(pkg, [], []), package_list))
+
+def make_resolutions_options(package_list):
+    from rosdep2.platforms.osx import HomebrewResolution
+    return list(map(lambda pkg: HomebrewResolution(pkg[0], pkg[1], pkg[2]), package_list))
     
+def brew_command(command):
+    if command[1] == "list":
+        with open(os.path.join(get_test_dir(), 'brew-list-output'), 'r') as f:
+            return f.read()
+    elif command[1] == "info":
+        pkg = command[2]
+        with open(os.path.join(get_test_dir(), 'brew-info-output'), 'r') as f:
+            output = f.readlines()
+        for line in output:
+            res = line.split(":", 1)
+            if res[0] == pkg:
+                return res[1]
+    return ''
+
 def test_brew_detect():
     from rosdep2.platforms.osx import brew_detect
     
@@ -54,17 +78,20 @@ def test_brew_detect():
 
     m = Mock()
     m.return_value = ''
-    val = brew_detect(['tinyxml'], exec_fn=m)
+    val = brew_detect(make_resolutions(['tinyxml']), exec_fn=m)
     assert val == [], val
     # make sure our test harness is based on the same implementation
     m.assert_called_with(['brew', 'list'])
+    assert m.call_args_list == [call(['brew', 'list'])], m.call_args_list
 
-    with open(os.path.join(get_test_dir(), 'brew-list-output'), 'r') as f:
-        m.return_value = f.read()
-    val = brew_detect(['apt', 'subversion', 'python', 'bazaar'], exec_fn=m)
+    m = Mock()
+    m.side_effect = brew_command
+    val = brew_detect(make_resolutions(['apt', 'subversion', 'python', 'bazaar']), exec_fn=m)
     # make sure it preserves order
-    assert set(val) == set(['subversion', 'bazaar'])
-    assert len(val) == len(set(val))
+    expected = make_resolutions(['subversion', 'bazaar'])
+    assert set(val) == set(expected), val
+    assert val == expected, val
+    assert len(val) == len(set(val)), val
 
 def test_HomebrewInstaller():
     from rosdep2.platforms.osx import HomebrewInstaller
@@ -78,22 +105,38 @@ def test_HomebrewInstaller():
         installer = HomebrewInstaller()
         mock_get_packages_to_install.return_value = []
         mock_remove_duplicate_dependencies.return_value = mock_get_packages_to_install.return_value
-        assert [] == installer.get_install_command(['fake'])
+        assert [] == installer.get_install_command( make_resolutions(['fake']))
 
-        mock_get_packages_to_install.return_value = ['subversion', 'bazaar']
+        mock_get_packages_to_install.return_value = make_resolutions(['subversion', 'bazaar'])
         mock_remove_duplicate_dependencies.return_value = mock_get_packages_to_install.return_value
         expected = [['brew', 'install', 'subversion'],
                     ['brew', 'install', 'bazaar']]
         # brew is always non-interactive
         for interactive in [True, False]:
             val = installer.get_install_command(['whatever'], interactive=interactive)
-            
-        assert val == expected, val
+            assert val == expected, val
+
         expected = [['brew', 'uninstall', '--force', 'subversion'],
                     ['brew', 'install', 'subversion'],
                     ['brew', 'uninstall', '--force', 'bazaar'],
                     ['brew', 'install', 'bazaar']]
         val = installer.get_install_command(['whatever'], reinstall=True)
+        assert val == expected, val
+
+        mock_get_packages_to_install.return_value = make_resolutions_options(
+            [('subversion', ['foo', 'bar'], ['baz']), ('bazaar', [], ['--with-quux'])])
+        mock_remove_duplicate_dependencies.return_value = mock_get_packages_to_install.return_value
+        expected = [['brew', 'install', 'subversion', 'foo', 'bar', 'baz'],
+                    ['brew', 'install', 'bazaar', '--with-quux']]
+        val = installer.get_install_command(['whatever'])
+        assert val == expected, val
+
+        mock_get_packages_to_install.return_value = make_resolutions_options(
+            [('subversion', [u'f´´ßß', u'öäö'], []), (u'bazaar', [], [u"tüü"])])
+        mock_remove_duplicate_dependencies.return_value = mock_get_packages_to_install.return_value
+        expected = [['brew', 'install', 'subversion', u'f´´ßß', u'öäö'],
+                    ['brew', 'install', 'bazaar', u"tüü"]]
+        val = installer.get_install_command(['whatever'])
         assert val == expected, val
     try:
         test()
