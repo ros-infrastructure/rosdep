@@ -79,6 +79,19 @@ CACHE_INDEX = 'index'
 
 # extension for binary cache
 PICKLE_CACHE_EXT = '.pickle'
+SOURCE_PATH_ENV = 'ROSDEP_SOURCE_PATH'
+
+
+def get_sources_list_dirs(source_list_dir):
+    if SOURCE_PATH_ENV in os.environ:
+        sdirs = os.environ[SOURCE_PATH_ENV].split(os.pathsep)
+    else:
+        sdirs = [source_list_dir]
+    for p in list(sdirs):
+        if not os.path.exists(p):
+            sdirs.remove(p)
+    return sdirs
+
 
 def get_sources_list_dir():
     # base of where we read config files from
@@ -374,14 +387,14 @@ def parse_sources_list(sources_list_dir=None):
     """
     if sources_list_dir is None:
         sources_list_dir = get_sources_list_dir()
-    if not os.path.exists(sources_list_dir):
-        # no sources on this system.  this is a valid state.
-        return []
+    sources_list_dirs = get_sources_list_dirs(sources_list_dir)
 
-    filelist = [f for f in os.listdir(sources_list_dir) if f.endswith('.list')]
+    filelist = []
+    for sdir in sources_list_dirs:
+        filelist += sorted([os.path.join(sdir, f) for f in os.listdir(sdir) if f.endswith('.list')])
     sources_list = []
-    for f in sorted(filelist):
-        sources_list.extend(parse_sources_file(os.path.join(sources_list_dir, f)))
+    for f in filelist:
+        sources_list.extend(parse_sources_file(f))
     return sources_list
 
 def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
