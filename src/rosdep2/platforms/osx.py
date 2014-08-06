@@ -30,6 +30,8 @@
 
 import subprocess
 import json
+import sys
+import traceback
 
 from rospkg.os_detect import OS_OSX
 
@@ -188,10 +190,14 @@ def brew_detect(resolved, exec_fn=None):
                 if spec['version'] == linked_version:
                     installed_options = spec['used_options']
                     break
-        except (ValueError, TypeError) as e:
+        except (ValueError, TypeError):
+            e_type, e, tb = sys.exc_info()
             raise RosdepInternalError(
-                "Error while parsing brew package info for '%s'\n-info: '%s'\n-error: '%s'." %
-                (r.package, std_out, e))
+                e, """Error while parsing brew info for '{0}'
+ * Output of `brew info {0} --json=v1`:
+ {1}
+ * Error while parsing:
+ {2}""".format(r.package, std_out, "".join(traceback.format_exception(e_type, e, tb))))
 
         if set(r.options) <= set(installed_options):
             return True
