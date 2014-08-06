@@ -45,7 +45,7 @@ else:
 env = dict(os.environ)
 env['LANG'] = 'C'
 
-def read_stdout(cmd, capture_stderr=False):
+def read_stdout(cmd, capture_stderr=False, return_exitcode=False):
     '''
     Execute given command and return stdout and if requested also stderr.
 
@@ -61,16 +61,28 @@ def read_stdout(cmd, capture_stderr=False):
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
         std_out, std_err = p.communicate()
         if python3:
-            return std_out.decode(), std_err.decode()
+            result = std_out.decode(), std_err.decode()
         else:
-            return std_out, std_err
+            result = std_out, std_err
     else:
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, env=env)
         std_out, std_err = p.communicate() # ignore stderr
         if python3:
-            return std_out.decode()
+            result = std_out.decode()
         else:
-            return std_out
+            result = std_out
+    if return_exitcode:
+        result = result + (p.returncode,)
+    return result
+
+
+def read_stdout_err(cmd):
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
+    std_out, std_err = p.communicate()
+    if python3:
+        return std_out.decode(), std_err.decode(), p.returncode
+    else:
+        return std_out, std_err, p.returncode
 
 
 def create_tempfile_from_string_and_execute(string_script, path=None, exec_fn=None):

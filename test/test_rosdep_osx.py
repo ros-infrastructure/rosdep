@@ -66,7 +66,7 @@ def make_resolutions_options(package_list):
 def brew_command(command):
     if command[1] == "list":
         with open(os.path.join(get_test_dir(), 'brew-list-output'), 'r') as f:
-            return f.read()
+            return (f.read(), "", 0)
     elif command[1] == "info":
         pkg = command[2]
         with open(os.path.join(get_test_dir(), 'brew-info-output'), 'r') as f:
@@ -74,7 +74,7 @@ def brew_command(command):
         for line in output:
             res = line.split(":", 1)
             if res[0] == pkg:
-                return res[1]
+                return (res[1], "", 0)
     return ''
 
 
@@ -82,13 +82,13 @@ def test_brew_detect():
     from rosdep2.platforms.osx import brew_detect
 
     m = Mock()
-    m.return_value = ''
-    val = brew_detect([], exec_fn=m)
+    m.return_value = ('', '', 0)
+    val = brew_detect([], exec_fn_err=m)
     assert val == [], val
 
     m = Mock()
-    m.return_value = ''
-    val = brew_detect(make_resolutions(['tinyxml']), exec_fn=m)
+    m.return_value = ('', '', 0)
+    val = brew_detect(make_resolutions(['tinyxml']), exec_fn_err=m)
     assert val == [], val
     # make sure our test harness is based on the same implementation
     m.assert_called_with(['brew', 'list'])
@@ -96,7 +96,7 @@ def test_brew_detect():
 
     m = Mock()
     m.side_effect = brew_command
-    val = brew_detect(make_resolutions(['apt', 'subversion', 'python', 'bazaar']), exec_fn=m)
+    val = brew_detect(make_resolutions(['apt', 'subversion', 'python', 'bazaar']), exec_fn_err=m)
     # make sure it preserves order
     expected = make_resolutions(['subversion', 'bazaar'])
     assert set(val) == set(expected), val
