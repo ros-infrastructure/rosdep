@@ -82,5 +82,5 @@ class GemInstaller(PackageManagerInstaller):
         if not packages:
             return []
         else:
-            return [['sudo', 'gem', 'install', p] for p in packages]
+            return [self.elevate_priv(['gem', 'install', p]) for p in packages]
             

@@ -320,6 +320,17 @@ class PackageManagerInstaller(Installer):
         """
         self.detect_fn = detect_fn
         self.supports_depends = supports_depends
+        self.as_root = True
+        self.sudo_command = 'sudo'
+
+    def elevate_priv(self, cmd):
+        """
+        Prepend *self.sudo_command* to the command if *self.as_root* is ``True``.
+
+        :param list cmd: list of strings comprising the command
+        :returns: a list of commands
+        """
+        return (self.sudo_command.split() if self.as_root else []) + cmd
 
     def resolve(self, rosdep_args):
         """
