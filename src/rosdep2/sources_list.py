@@ -1,9 +1,9 @@
 # Copyright (c) 2012, Willow Garage, Inc.
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 #     * Redistributions of source code must retain the above copyright
 #       notice, this list of conditions and the following disclaimer.
 #     * Redistributions in binary form must reproduce the above copyright
@@ -12,7 +12,7 @@
 #     * Neither the name of the Willow Garage, Inc. nor the names of its
 #       contributors may be used to endorse or promote products derived from
 #       this software without specific prior written permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -69,7 +69,7 @@ from .rosdistrohelper import get_index, get_index_url
 DEFAULT_SOURCES_LIST_URL = 'https://raw.github.com/ros/rosdistro/master/rosdep/sources.list.d/20-default.list'
 
 #seconds to wait before aborting download of rosdep data
-DOWNLOAD_TIMEOUT = 15.0 
+DOWNLOAD_TIMEOUT = 15.0
 
 SOURCES_LIST_DIR = 'sources.list.d'
 SOURCES_CACHE_DIR = 'sources.cache'
@@ -79,6 +79,19 @@ CACHE_INDEX = 'index'
 
 # extension for binary cache
 PICKLE_CACHE_EXT = '.pickle'
+SOURCE_PATH_ENV = 'ROSDEP_SOURCE_PATH'
+
+
+def get_sources_list_dirs(source_list_dir):
+    if SOURCE_PATH_ENV in os.environ:
+        sdirs = os.environ[SOURCE_PATH_ENV].split(os.pathsep)
+    else:
+        sdirs = [source_list_dir]
+    for p in list(sdirs):
+        if not os.path.exists(p):
+            sdirs.remove(p)
+    return sdirs
+
 
 def get_sources_list_dir():
     # base of where we read config files from
@@ -106,7 +119,7 @@ TYPE_GBPDISTRO = 'gbpdistro'
 VALID_TYPES = [TYPE_YAML, TYPE_GBPDISTRO]
 
 class DataSource(object):
-    
+
     def __init__(self, type_, url, tags, origin=None):
         """
         :param type_: data source type, e.g. TYPE_YAML, TYPE_GBPDISTRO
@@ -114,7 +127,7 @@ class DataSource(object):
         :param url: URL of data location.  For file resources, must
           start with the file:// scheme.  For remote resources, URL
           must include a path.
-        
+
         :param tags: tags for matching data source to configurations
         :param origin: filename or other indicator of where data came from for debugging.
 
@@ -131,7 +144,7 @@ class DataSource(object):
 
         self.type = type_
         self.tags = tags
-        
+
         self.url = url
         self.origin = origin
 
@@ -141,12 +154,12 @@ class DataSource(object):
                self.tags == other.tags and \
                self.url == other.url and \
                self.origin == other.origin
-    
+
     def __str__(self):
         if self.origin:
             return "[%s]:\n%s %s %s"%(self.origin, self.type, self.url, ' '.join(self.tags))
         else:
-            return "%s %s %s"%(self.type, self.url, ' '.join(self.tags))            
+            return "%s %s %s"%(self.type, self.url, ' '.join(self.tags))
 
     def __repr__(self):
         return repr((self.type, self.url, self.tags, self.origin))
@@ -181,7 +194,7 @@ def cache_data_source_loader(sources_cache_dir, verbose=False):
             rosdep_data = {}
         return CachedDataSource(type_, uri, tags, rosdep_data, origin=filepath)
     return create_model
-    
+
 class CachedDataSource(object):
 
     def __init__(self, type_, url, tags, rosdep_data, origin=None):
@@ -192,8 +205,8 @@ class CachedDataSource(object):
         duck-type compatible with the DataSource API.
         """
         self.source = DataSource(type_, url, tags, origin=origin)
-        self.rosdep_data = rosdep_data 
-    
+        self.rosdep_data = rosdep_data
+
     def __eq__(self, other):
         try:
             return self.source == other.source and \
@@ -234,19 +247,19 @@ class CachedDataSource(object):
         return self.source.origin
 
 class DataSourceMatcher(object):
-    
+
     def __init__(self, tags):
         self.tags = tags
-        
+
     def matches(self, rosdep_data_source):
         """
         Check if the datasource matches this configuration.
-        
+
         :param rosdep_data_source: :class:`DataSource`
         """
         # all of the rosdep_data_source tags must be in our matcher tags
         return not any(set(rosdep_data_source.tags)-set(self.tags))
-                 
+
     @staticmethod
     def create_default(os_override=None):
         """
@@ -283,7 +296,7 @@ def download_rosdep_data(url):
         raise DownloadFailure(str(e) + ' (%s)' % url)
     except yaml.YAMLError as e:
         raise DownloadFailure(str(e))
-    
+
 def download_default_sources_list(url=DEFAULT_SOURCES_LIST_URL):
     """
     Download (and validate) contents of default sources list.
@@ -309,26 +322,26 @@ def download_default_sources_list(url=DEFAULT_SOURCES_LIST_URL):
 def parse_sources_data(data, origin='<string>', model=None):
     """
     Parse sources file format (tags optional)::
-    
+
       # comments and empty lines allowed
       <type> <uri> [tags]
 
     e.g.::
 
       yaml http://foo/rosdep.yaml fuerte lucid ubuntu
-    
+
     If tags are specified, *all* tags must match the current
     configuration for the sources data to be used.
-    
+
     :param data: data in sources file format
     :param model: model to load data into.  Defaults to :class:`DataSource`
-    
+
     :returns: List of data sources, [:class:`DataSource`]
     :raises: :exc:`InvalidData`
     """
     if model is None:
         model = DataSource
-        
+
     sources = []
     for line in data.split('\n'):
         line = line.strip()
@@ -350,7 +363,7 @@ def parse_sources_data(data, origin='<string>', model=None):
 def parse_sources_file(filepath):
     """
     Parse file on disk
-    
+
     :returns: List of data sources, [:class:`DataSource`]
     :raises: :exc:`InvalidData` If any error occurs reading
         file, so an I/O error, non-existent file, or invalid format.
@@ -374,14 +387,14 @@ def parse_sources_list(sources_list_dir=None):
     """
     if sources_list_dir is None:
         sources_list_dir = get_sources_list_dir()
-    if not os.path.exists(sources_list_dir):
-        # no sources on this system.  this is a valid state.
-        return []
-        
-    filelist = [f for f in os.listdir(sources_list_dir) if f.endswith('.list')]
+    sources_list_dirs = get_sources_list_dirs(sources_list_dir)
+
+    filelist = []
+    for sdir in sources_list_dirs:
+        filelist += sorted([os.path.join(sdir, f) for f in os.listdir(sdir) if f.endswith('.list')])
     sources_list = []
-    for f in sorted(filelist):
-        sources_list.extend(parse_sources_file(os.path.join(sources_list_dir, f)))
+    for f in filelist:
+        sources_list.extend(parse_sources_file(f))
     return sources_list
 
 def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
@@ -389,7 +402,7 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
     """
     Re-downloaded data from remote sources and store in cache.  Also
     update the cache index based on current sources.
-    
+
     :param sources_list_dir: override source list directory
     :param sources_cache_dir: override sources cache directory
     :param success_handler: fn(DataSource) to call if a particular
@@ -455,7 +468,7 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
 def load_cached_sources_list(sources_cache_dir=None, verbose=False):
     """
     Load cached data based on the sources list.
-    
+
     :returns: list of :class:`CachedDataSource` instance with raw
         rosdep data loaded.
     :raises: :exc:`OSError` if cache cannot be read
@@ -478,7 +491,7 @@ def compute_filename_hash(filename_key):
     sha_hash = hashlib.sha1()
     sha_hash.update(filename_key.encode())
     return sha_hash.hexdigest()
-    
+
 def write_cache_file(source_cache_d, filename_key, rosdep_data):
     """
     :param source_cache_d: directory to write cache file to
@@ -501,7 +514,7 @@ def write_cache_file(source_cache_d, filename_key, rosdep_data):
     except OSError:
         pass
     return filepath
-    
+
 def write_atomic(filepath, data, binary=False):
     # write data to new file
     fd, filepath_tmp = tempfile.mkstemp(prefix=os.path.basename(filepath) + '.tmp.', dir=os.path.dirname(filepath))
@@ -563,7 +576,7 @@ class SourcesListLoader(RosdepLoader):
             matcher = DataSourceMatcher.create_default(os_override=os_override)
         if verbose:
             print("using matcher with tags [%s]"%(', '.join(matcher.tags)), file=sys.stderr)
-            
+
         sources = load_cached_sources_list(sources_cache_dir=sources_cache_dir, verbose=verbose)
         if verbose:
             print("loaded %s sources"%(len(sources)), file=sys.stderr)
@@ -571,7 +584,7 @@ class SourcesListLoader(RosdepLoader):
         if verbose:
             print("%s sources match current tags"%(len(sources)), file=sys.stderr)
         return SourcesListLoader(sources)
-        
+
     def load_view(self, view_name, rosdep_db, verbose=False):
         """
         Load view data into rosdep_db. If the view has already been
@@ -606,7 +619,7 @@ class SourcesListLoader(RosdepLoader):
 
         # not one of our views, so it depends on everything we provide
         return [x.url for x in self.sources]
-    
+
     def get_source(self, view_name):
         matches = [x for x in self.sources if x.url == view_name]
         if matches:
@@ -617,11 +630,11 @@ class SourcesListLoader(RosdepLoader):
     def get_rosdeps(self, resource_name, implicit=True):
         """
         Always raises as SourceListLoader defines no concrete resources with rosdeps.
-        
+
         :raises: :exc:`rospkg.ResourceNotFound`
         """
         raise rospkg.ResourceNotFound(resource_name)
-    
+
     def get_view_key(self, resource_name):
         """
         Always raises as SourceListLoader defines no concrete resources with rosdeps.
