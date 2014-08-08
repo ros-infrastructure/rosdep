@@ -95,7 +95,7 @@ def rpm_detect_cmd(raw_packages, exec_fn=None):
             ret_list.append(raw_packages[index])
     return ret_list
 
-def rpm_detect(packages, exec_fn=None):
+def rpm_detect(packages, exec_fn=None, warnings=False):
     try:
         return rpm_detect_py(packages)
     except ImportError:

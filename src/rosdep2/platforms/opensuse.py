@@ -45,7 +45,7 @@ def register_platforms(context):
     context.add_os_installer_key(OS_OPENSUSE, ZYPPER_INSTALLER)
     context.set_default_os_installer_key(OS_OPENSUSE, lambda self: ZYPPER_INSTALLER)
     
-def rpm_detect(packages):
+def rpm_detect(packages, warnings=False):
     installed = []
     for p in packages:
         if not subprocess.call(['rpm', '-q', p]):

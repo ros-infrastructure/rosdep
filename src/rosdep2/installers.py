@@ -358,7 +358,7 @@ class PackageManagerInstaller(Installer):
             s.update(resolved)
         return sorted(list(s))
         
-    def get_packages_to_install(self, resolved, reinstall=False):
+    def get_packages_to_install(self, resolved, reinstall=False, warnings=False):
         '''
         Return a list of packages (out of *resolved*) that still need to get
         installed.
@@ -368,13 +368,13 @@ class PackageManagerInstaller(Installer):
         if not resolved:
             return []
         else:
-            return list(set(resolved) - set(self.detect_fn(resolved)))
+            return list(set(resolved) - set(self.detect_fn(resolved, warnings=warnings)))
 
-    def is_installed(self, resolved_item):
+    def is_installed(self, resolved_item, warnings=False):
         '''
         Check if a given package was installed.
         '''
-        return not self.get_packages_to_install([resolved_item])
+        return not self.get_packages_to_install([resolved_item], warnings=warnings)
 
     def get_version_strings(self):
         '''
@@ -416,7 +416,7 @@ class RosdepInstaller(object):
         self.installer_context = installer_context
         self.lookup = lookup
         
-    def get_uninstalled(self, resources, implicit=False, verbose=False):
+    def get_uninstalled(self, resources, implicit=False, verbose=False, warnings=False):
         """
         Get list of system dependencies that have not been installed
         as well as a list of errors from performing the resolution.
@@ -451,7 +451,7 @@ class RosdepInstaller(object):
             except KeyError as e: # lookup has to be buggy to cause this
                 raise RosdepInternalError(e)
             try:
-                packages_to_install = installer.get_packages_to_install(resolved)
+                packages_to_install = installer.get_packages_to_install(resolved, warnings=warnings)
             except Exception as e:
                 rd_debug(traceback.format_exc())
                 raise RosdepInternalError(e, message="Bad installer [%s]: %s"%(installer_key, e))
@@ -577,7 +577,7 @@ class RosdepInstaller(object):
 
         # test installation of each
         for r in resolved:
-            if not installer.is_installed(r):
+            if not installer.is_installed(r, warnings=True):
                 failures.append((installer_key, "Failed to detect successful installation of [%s]"%(r)))
         # finalize result
         if failures:

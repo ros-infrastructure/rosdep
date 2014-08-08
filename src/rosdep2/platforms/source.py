@@ -177,7 +177,7 @@ class SourceInstall(object):
 def is_source_installed(source_item, exec_fn=None):
     return create_tempfile_from_string_and_execute(source_item.check_presence_command, exec_fn=exec_fn)
             
-def source_detect(pkgs, exec_fn=None):
+def source_detect(pkgs, exec_fn=None, warnings=False):
     return [x for x in pkgs if is_source_installed(x, exec_fn=exec_fn)]
 
 class SourceInstaller(PackageManagerInstaller):

@@ -53,7 +53,7 @@ def is_pip_installed():
         return False
 
 
-def pip_detect(pkgs, exec_fn=None):
+def pip_detect(pkgs, exec_fn=None, warnings=False):
     """
     Given a list of package, return the list of installed packages.
 

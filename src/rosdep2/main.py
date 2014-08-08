@@ -608,7 +608,7 @@ def command_check(lookup, packages, options):
     configure_installer_context(installer_context, options)
     installer = RosdepInstaller(installer_context, lookup)
 
-    uninstalled, errors = installer.get_uninstalled(packages, implicit=options.recursive, verbose=verbose)
+    uninstalled, errors = installer.get_uninstalled(packages, implicit=options.recursive, verbose=verbose, warnings=True)
 
     # pretty print the result
     if [v for k, v in uninstalled if v]:

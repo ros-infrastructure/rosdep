@@ -288,12 +288,12 @@ def test_Installer_tripwire():
     except NotImplementedError: pass
     assert Installer().get_depends({}) == []
 
-def detect_fn_empty(packages):
+def detect_fn_empty(packages, warnings=False):
     return []
-def detect_fn_all(packages):
+def detect_fn_all(packages, warnings=False):
     return packages
 # return any packages that are string length 1
-def detect_fn_single(packages):
+def detect_fn_single(packages, warnings=False):
     return [p for p in packages if len(p) == 1]
 
 
@@ -406,7 +406,7 @@ def test_RosdepInstaller_get_uninstalled():
     installer = RosdepInstaller(context, lookup)
     
     # in this first test, detect_fn detects everything as installed
-    fake_apt = get_fake_apt(lambda x: x)
+    fake_apt = get_fake_apt(lambda x, warnings: x)
     context.set_installer(APT_INSTALLER, fake_apt)
 
     for verbose in [True, False]:
@@ -420,7 +420,7 @@ def test_RosdepInstaller_get_uninstalled():
             assert not errors, errors
 
     # in this second test, detect_fn detects nothing as installed
-    fake_apt = get_fake_apt(lambda x: [])
+    fake_apt = get_fake_apt(lambda x, warnings: [])
     context.set_installer(APT_INSTALLER, fake_apt)
 
     for verbose in [True, False]:

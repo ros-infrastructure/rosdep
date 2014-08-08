@@ -72,7 +72,7 @@ def is_port_installed():
     except OSError:
         return False
 
-def port_detect(pkgs, exec_fn=None):
+def port_detect(pkgs, exec_fn=None, warnings=False):
     ret_list = []
     if not is_port_installed():
         return ret_list
@@ -171,7 +171,7 @@ def brew_strip_pkg_name(package):
     return package.split('/')[-1]
 
 
-def brew_detect(resolved, exec_fn_err=None):
+def brew_detect(resolved, exec_fn_err=None, warnings=False):
     """Given a list of resolutions, return the list of installed resolutions.
 
     :param resolved: List of HomebrewResolution objects
@@ -208,10 +208,10 @@ for syntax errors (`brew info {0}`). Captured `stderr` output:
             pkg_info = pkg_info[0]
             linked_version = pkg_info['linked_keg']
             if not linked_version:
-                print("""\
+                if warnings:
+                    print("""\
 WARNING: Formula '{0}' is installed, but not linked. You might need to
-         manually call `brew link {0}` unless you are using rosdep with
-         `--reinstall`.""".format(r.package))
+         manually call `brew link {0}` or use `rosdep install ... --reinstall`""".format(r.package))
                 return False
             for spec in pkg_info['installed']:
                 if spec['version'] == linked_version:
@@ -229,12 +229,12 @@ WARNING: Formula '{0}' is installed, but not linked. You might need to
         if set(r.options) <= set(installed_options):
             return True
         else:
-            print("""\
-
+            if warnings:
+                print("""\
 WARNING: Formula '{0}' is installed, but used options '{1}' are not
          superset of required options '{2}'. You might need to manually
-         call `brew reinstall {0} {2}` unless you are using rosdep with
-         `--reinstall`.""".format(r.package, " ".join(installed_options), " ".join(r.options)))
+         call `brew reinstall {0} {2}` or use `rosdep install ... --reinstall`.""".
+                    format(r.package, " ".join(installed_options), " ".join(r.options)))
             return False
 
     # preserve order
