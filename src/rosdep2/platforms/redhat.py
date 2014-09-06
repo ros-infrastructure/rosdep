@@ -87,7 +87,7 @@ class YumInstaller(PackageManagerInstaller):
     def __init__(self):
         super(YumInstaller, self).__init__(rpm_detect)
 
-    def get_install_command(self, resolved, interactive=True, reinstall=False):
+    def get_install_command(self, resolved, interactive=True, reinstall=False, quiet=False):
         packages = self.get_packages_to_install(resolved, reinstall=reinstall)
         if not packages:
             return []

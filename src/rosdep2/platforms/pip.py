@@ -74,7 +74,7 @@ class PipInstaller(PackageManagerInstaller):
     def __init__(self):
         super(PipInstaller, self).__init__(pip_detect, supports_depends=True)
 
-    def get_install_command(self, resolved, interactive=True, reinstall=False):
+    def get_install_command(self, resolved, interactive=True, reinstall=False, quiet=False):
         if not is_pip_installed():
             raise InstallFailed((PIP_INSTALLER, "pip is not installed"))
         packages = self.get_packages_to_install(resolved, reinstall=reinstall)

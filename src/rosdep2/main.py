@@ -228,6 +228,8 @@ def _rosdep_main(args):
                       action="store_true", help="Simulate install")
     parser.add_option("-r", dest="robust", default=False, 
                       action="store_true", help="Continue installing despite errors.")
+    parser.add_option("-q", dest="quiet", default=False, 
+                      action="store_true", help="Suprress output except for errors")
     parser.add_option("-a", "--all", dest="rosdep_all", default=False, 
                       action="store_true", help="select all packages")
     parser.add_option("-n", dest="recursive", default=True, 
@@ -535,7 +537,7 @@ def command_install(lookup, packages, options):
     # map options
     install_options = dict(interactive=not options.default_yes, verbose=options.verbose,
                            reinstall=options.reinstall,
-                           continue_on_error=options.robust, simulate=options.simulate)
+                           continue_on_error=options.robust, simulate=options.simulate, quiet=options.quiet)
 
     # setup installer
     installer_context = create_default_installer_context(verbose=options.verbose)
