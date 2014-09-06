@@ -303,7 +303,7 @@ class HomebrewInstaller(PackageManagerInstaller):
             resolution = map(HomebrewResolution, packages, install_flags, options)
         return resolution
 
-    def get_install_command(self, resolved, interactive=True, reinstall=False):
+    def get_install_command(self, resolved, interactive=True, reinstall=False, quiet=False):
         # TODO: We should somehow inform the user that we uninstall all versions
         #       of packages and do not keep track of which options have been
         #       activated. Then again, maybe not this would be the

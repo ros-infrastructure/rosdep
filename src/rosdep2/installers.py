@@ -260,14 +260,14 @@ class Installer(object):
         """
         raise NotImplementedError("is_installed", resolved_item) 
         
-    def get_install_command(self, resolved, interactive=True, reinstall=False):
+    def get_install_command(self, resolved, interactive=True, reinstall=False, quiet=False):
         """
         :param resolved: list of resolved installation items, ``[opaque]``
         :param interactive: If `False`, disable interactive prompts,
           e.g. Pass through ``-y`` or equivalant to package manager.
         :param reinstall: If `True`, install everything even if already installed
         """
-        raise NotImplementedError("get_package_install_command", resolved, interactive, reinstall)
+        raise NotImplementedError("get_package_install_command", resolved, interactive, reinstall, quiet)
 
     def get_depends(self, rosdep_args): 
         """ 
@@ -358,8 +358,8 @@ class PackageManagerInstaller(Installer):
     def is_installed(self, resolved_item):
         return not self.get_packages_to_install([resolved_item])
 
-    def get_install_command(self, resolved, interactive=True, reinstall=False):
-        raise NotImplementedError('subclasses must implement', resolved, interactive, reinstall)
+    def get_install_command(self, resolved, interactive=True, reinstall=False, quiet=False):
+        raise NotImplementedError('subclasses must implement', resolved, interactive, reinstall, quiet)
 
     def get_depends(self, rosdep_args): 
         """ 
@@ -426,7 +426,7 @@ class RosdepInstaller(object):
         return uninstalled, errors
     
     def install(self, uninstalled, interactive=True, simulate=False,
-                continue_on_error=False, reinstall=False, verbose=False):
+                continue_on_error=False, reinstall=False, verbose=False, quiet=False):
         """
         Install the uninstalled rosdeps.  This API is for the bulk
         workflow of rosdep (see example below).  For a more targeted
@@ -474,7 +474,7 @@ class RosdepInstaller(object):
             try:
                 self.install_resolved(installer_key, resolved, simulate=simulate,
                                       interactive=interactive, reinstall=reinstall, continue_on_error=continue_on_error,
-                                      verbose=verbose)
+                                      verbose=verbose, quiet=quiet)
             except InstallFailed as e:
                 if not continue_on_error:
                     raise
@@ -485,7 +485,7 @@ class RosdepInstaller(object):
             raise InstallFailed(failures=failures)
 
     def install_resolved(self, installer_key, resolved, simulate=False, interactive=True,
-                         reinstall=False, continue_on_error=False, verbose=False):
+                         reinstall=False, continue_on_error=False, verbose=False, quiet=False):
         """
         Lower-level API for installing a rosdep dependency.  The
         rosdep keys have already been resolved to *installer_key* and
@@ -498,12 +498,13 @@ class RosdepInstaller(object):
         :param reinstall: If ``True``, install dependencies if even
           already installed (default ``False``).
         :param verbose: If ``True``, print verbose output to screen (default ``False``)
+        :param quiet: If ``True``, supress output except for errors (default ``False``)
         
         :raises: :exc:`InstallFailed` if any of *resolved* fail to install.
         """
         installer_context = self.installer_context
         installer = installer_context.get_installer(installer_key)
-        command = installer.get_install_command(resolved, interactive=interactive, reinstall=reinstall)
+        command = installer.get_install_command(resolved, interactive=interactive, reinstall=reinstall, quiet=quiet)
         if not command:
             if verbose:
                 print("#No packages to install")
