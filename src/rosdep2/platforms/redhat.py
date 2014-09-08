@@ -91,8 +91,12 @@ class YumInstaller(PackageManagerInstaller):
         packages = self.get_packages_to_install(resolved, reinstall=reinstall)
         if not packages:
             return []
+        elif not interactive and quiet:
+            return [['sudo', 'yum', '--assumeyes', '--quiet', '--skip-broken', 'install'] + packages]
+        elif quiet:
+            return [['sudo', 'yum', '--quiet', '--skip-broken', 'install'] + packages]
         elif not interactive:
-            return [['sudo', 'yum', '-y', '--skip-broken', 'install'] + packages]
+            return [['sudo', 'yum', '--assumeyes', '--skip-broken', 'install'] + packages]
         else:
             return [['sudo', 'yum', '--skip-broken', 'install'] + packages]
 
