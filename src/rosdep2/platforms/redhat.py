@@ -37,10 +37,14 @@ from .source import SOURCE_INSTALLER
 from ..installers import PackageManagerInstaller, TYPE_CODENAME
 from ..shell_utils import read_stdout
 
+# dnf package manager key
+DNF_INSTALLER='dnf'
+
 # yum package manager key
 YUM_INSTALLER='yum'
 
 def register_installers(context):
+    context.set_installer(DNF_INSTALLER, DnfInstaller())
     context.set_installer(YUM_INSTALLER, YumInstaller())
 
 def register_platforms(context):
@@ -49,6 +53,7 @@ def register_platforms(context):
     
 def register_fedora(context):
     context.add_os_installer_key(OS_FEDORA, PIP_INSTALLER)
+    context.add_os_installer_key(OS_FEDORA, DNF_INSTALLER)
     context.add_os_installer_key(OS_FEDORA, YUM_INSTALLER)
     context.add_os_installer_key(OS_FEDORA, SOURCE_INSTALLER)
     context.set_default_os_installer_key(OS_FEDORA, YUM_INSTALLER)
@@ -60,9 +65,18 @@ def register_rhel(context):
     context.add_os_installer_key(OS_RHEL, SOURCE_INSTALLER)
     context.set_default_os_installer_key(OS_RHEL, YUM_INSTALLER)
 
-def rpm_detect(packages, exec_fn=None):
+def rpm_detect_py(packages, exec_fn=None):
     ret_list = []
-    #cmd = ['rpm', '-q', '--qf ""']  # suppress output for installed packages
+    import rpm
+    ts = rpm.TransactionSet()
+    for req in packages:
+        rpms = ts.dbMatch(rpm.RPMTAG_PROVIDES, req)
+        if len(rpms) > 0:
+            ret_list += [req]
+    return ret_list
+
+def rpm_detect_cmd(packages, exec_fn=None):
+    ret_list = []
     cmd = ['rpm', '-q', '--whatprovides', '--qf', '[%{PROVIDES}\n]']  # output: "pkg_name" for installed, error text for not installed packages
     cmd.extend(packages)
 
@@ -76,6 +90,35 @@ def rpm_detect(packages, exec_fn=None):
         if line and ' ' not in line:
             ret_list.append(line)
     return ret_list
+
+def rpm_detect(packages, exec_fn=None):
+    try:
+        return rpm_detect_py(packages, exec_fn)
+    except ImportError:
+        return rpm_detect_cmd(packages, exec_fn)
+
+class DnfInstaller(PackageManagerInstaller):
+    """
+    This class provides the functions for installing using dnf
+    it's methods partially implement the Rosdep OS api to complement
+    the roslib.OSDetect API.
+    """
+
+    def __init__(self):
+        super(DnfInstaller, self).__init__(rpm_detect)
+
+    def get_install_command(self, resolved, interactive=True, reinstall=False, quiet=False):
+        packages = self.get_packages_to_install(resolved, reinstall=reinstall)
+        if not packages:
+            return []
+        elif not interactive and quiet:
+            return [['sudo', 'dnf', '--assumeyes', '--quiet', 'install'] + packages]
+        elif quiet:
+            return [['sudo', 'dnf', '--quiet', 'install'] + packages]
+        elif not interactive:
+            return [['sudo', 'dnf', '--assumeyes', 'install'] + packages]
+        else:
+            return [['sudo', 'dnf', 'install'] + packages]
 
 class YumInstaller(PackageManagerInstaller):
     """
