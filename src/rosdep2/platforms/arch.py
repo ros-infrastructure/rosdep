@@ -28,24 +28,49 @@
 
 # Author Tully Foote/tfoote@willowgarage.com
 
+import os
+import re
 import subprocess
 
 from ..installers import PackageManagerInstaller
 from .source import SOURCE_INSTALLER
+from ..core import InstallFailed
 
 ARCH_OS_NAME = 'arch'
 PACMAN_INSTALLER = 'pacman'
+AUR_INSTALLER = 'aur'
 
 def register_installers(context):
     context.set_installer(PACMAN_INSTALLER, PacmanInstaller())
+    context.set_installer(AUR_INSTALLER, AURInstaller())
     
 def register_platforms(context):
     context.add_os_installer_key(ARCH_OS_NAME, SOURCE_INSTALLER)
     context.add_os_installer_key(ARCH_OS_NAME, PACMAN_INSTALLER)
+    context.add_os_installer_key(ARCH_OS_NAME, AUR_INSTALLER)
     context.set_default_os_installer_key(ARCH_OS_NAME, PACMAN_INSTALLER)
 
 def pacman_detect_single(p):
-    return not subprocess.call(['pacman', '-Q', p], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    
+    if not subprocess.call(['pacman', '-Q', p], stdout=subprocess.PIPE, stderr=subprocess.PIPE):
+        return True
+    else:
+        return bool(find_providers(p))
+
+def find_providers(term):
+    """Pacman has no way to search for package providers in the local database, so
+    we need to search on our own (or use a nonstandard library)."""
+    providers = []
+
+    provision_re = re.compile("\n%PROVIDES%(\n.+)*(\n" + re.escape(term) + "\n)")
+
+    for pkgspec in os.listdir('/var/lib/pacman/local'):
+        desc_path = os.path.join('/var/lib/pacman/local', pkgspec, 'desc')
+        with open(desc_path, 'r') as desc_file:
+            desc = desc_file.read()
+            if provision_re.search(desc):
+                providers.append(pkgspec)
+
+    return providers
 
 def pacman_detect(packages):
     return [p for p in packages if pacman_detect_single(p)]
@@ -62,3 +87,31 @@ class PacmanInstaller(PackageManagerInstaller):
             return []
         else:
             return [['sudo', 'pacman', '-Sy', '--needed', p] for p in packages]
+
+def detect_aur_tool():
+    tool_names = ['packer', 'yaourt']
+
+    for path in os.environ['PATH'].split(os.pathsep):
+        for tool_name in tool_names:
+            if os.path.exists(os.path.join(path, tool_name)):
+                return tool_name
+
+class AURInstaller(PackageManagerInstaller):
+
+    def __init__(self):
+        super(AURInstaller, self).__init__(pacman_detect)
+        self.aur_tool = None
+
+    def get_install_command(self, resolved, interactive=True, reinstall=False):
+        if self.aur_tool is None:
+            self.aur_tool = detect_aur_tool()
+            if self.aur_tool is None:
+                raise InstallFailed((AUR_INSTALLER, "neither packer nor yaourt is installed"))
+        packages = self.get_packages_to_install(resolved, reinstall=reinstall)
+        if not packages:
+            return []
+        else:
+            if self.aur_tool == 'packer':
+                return [['sudo', 'packer', '-S', p] for p in packages]
+            elif self.aur_tool == 'yaourt':
+                return [['sudo', 'yaourt', '-S', p] for p in packages]
