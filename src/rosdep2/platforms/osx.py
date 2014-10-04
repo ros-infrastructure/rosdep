@@ -33,12 +33,12 @@ import json
 import sys
 import traceback
 
-from rospkg.os_detect import OS_OSX
+from rospkg.os_detect import OS_OSX, OsDetect
 
 from ..core import InstallFailed, RosdepInternalError, InvalidData
 from .pip import PIP_INSTALLER
 from .source import SOURCE_INSTALLER
-from ..installers import PackageManagerInstaller, TYPE_CODENAME
+from ..installers import PackageManagerInstaller
 from ..shell_utils import read_stdout
 
 # add additional os names for brew, macports (TODO)
@@ -63,7 +63,7 @@ def register_platforms(context):
     context.add_os_installer_key(OS_OSX, PIP_INSTALLER)
     context.add_os_installer_key(OS_OSX, SOURCE_INSTALLER)
     context.set_default_os_installer_key(OS_OSX, BREW_INSTALLER)
-    context.set_os_version_type(OS_OSX, TYPE_CODENAME)
+    context.set_os_version_type(OS_OSX, OsDetect.get_codename)
 
 def is_port_installed():
     try:

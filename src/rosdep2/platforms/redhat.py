@@ -30,11 +30,11 @@
 
 import subprocess
 
-from rospkg.os_detect import OS_RHEL, OS_FEDORA
+from rospkg.os_detect import OS_RHEL, OS_FEDORA, OsDetect
 
 from .pip import PIP_INSTALLER
 from .source import SOURCE_INSTALLER
-from ..installers import PackageManagerInstaller, TYPE_CODENAME
+from ..installers import PackageManagerInstaller
 from ..shell_utils import read_stdout
 
 # dnf package manager key
@@ -57,7 +57,7 @@ def register_fedora(context):
     context.add_os_installer_key(OS_FEDORA, YUM_INSTALLER)
     context.add_os_installer_key(OS_FEDORA, SOURCE_INSTALLER)
     context.set_default_os_installer_key(OS_FEDORA, YUM_INSTALLER)
-    context.set_os_version_type(OS_FEDORA, TYPE_CODENAME)
+    context.set_os_version_type(OS_FEDORA, OsDetect.get_codename)
 
 def register_rhel(context):
     context.add_os_installer_key(OS_RHEL, PIP_INSTALLER)
