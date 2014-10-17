@@ -233,14 +233,26 @@ def str_to_bool(s):
 
     
 def setup_proxy_opener():
-    import urllib2
+    try:
+        from urllib.request import build_opener
+        from urllib.request import HTTPBasicAuthHandler
+        from urllib.request import HTTPHandler
+        from urllib.request import install_opener
+        from urllib.request import ProxyHandler
+    except ImportError:
+        from urllib2 import build_opener
+        from urllib2 import HTTPBasicAuthHandler
+        from urllib2 import HTTPHandler
+        from urllib2 import install_opener
+        from urllib2 import ProxyHandler
     # check for http[s]?_proxy user
     for scheme in ['http', 'https']:
-        if os.environ.has_key(scheme+'_proxy') :
-            proxy = urllib2.ProxyHandler({scheme: os.environ[scheme+'_proxy']})
-            auth = urllib2.HTTPBasicAuthHandler()
-            opener = urllib2.build_opener(proxy, auth, urllib2.HTTPHandler)
-            urllib2.install_opener(opener)
+        key = scheme + '_proxy'
+        if key in os.environ:
+            proxy = ProxyHandler({scheme: os.environ[key]})
+            auth = HTTPBasicAuthHandler()
+            opener = build_opener(proxy, auth, HTTPHandler)
+            install_opener(opener)
 
 def _rosdep_main(args):
     # sources cache dir is our local database.  
