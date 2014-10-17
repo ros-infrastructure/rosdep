@@ -37,6 +37,9 @@ import rospkg.os_detect
 
 import unittest
 
+from mock import patch
+from mock import DEFAULT
+
 GITHUB_BASE_URL = 'https://github.com/ros/rosdistro/raw/master/rosdep/base.yaml'
 GITHUB_PYTHON_URL = 'https://github.com/ros/rosdistro/raw/master/rosdep/python.yaml'
 
@@ -51,7 +54,9 @@ def get_cache_dir():
     assert os.path.isdir(p)
     return p
 
+from rosdep2 import main
 from rosdep2.main import rosdep_main
+from rosdep2.main import setup_proxy_opener
 
 from contextlib import contextmanager
 @contextmanager
@@ -214,3 +219,15 @@ class TestRosdepMain(unittest.TestCase):
             assert False, "system exit should have occurred"
         except SystemExit:
             pass
+
+    @patch('rosdep2.main.install_opener')
+    @patch('rosdep2.main.build_opener')
+    @patch('rosdep2.main.HTTPBasicAuthHandler')
+    @patch('rosdep2.main.ProxyHandler')
+    def test_proxy_detection(self, proxy, bah, build, install):
+        with patch.dict('os.environ', {'http_proxy': 'something'}, clear=True):
+            setup_proxy_opener()
+            proxy.assert_called_with({'http': 'something'})
+        with patch.dict('os.environ', {'https_proxy': 'somethings'}, clear=True):
+            setup_proxy_opener()
+            proxy.assert_called_with({'https': 'somethings'})
