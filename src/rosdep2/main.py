@@ -39,7 +39,17 @@ import sys
 import traceback
 try:
     from urllib.error import URLError
+    from urllib.request import build_opener
+    from urllib.request import HTTPBasicAuthHandler
+    from urllib.request import HTTPHandler
+    from urllib.request import install_opener
+    from urllib.request import ProxyHandler
 except ImportError:
+    from urllib2 import build_opener
+    from urllib2 import HTTPBasicAuthHandler
+    from urllib2 import HTTPHandler
+    from urllib2 import install_opener
+    from urllib2 import ProxyHandler
     from urllib2 import URLError
 import warnings
 
@@ -231,20 +241,8 @@ def str_to_bool(s):
     else:
         raise UsageError("Cannot parse '%s' as boolean" % s)
 
-    
+
 def setup_proxy_opener():
-    try:
-        from urllib.request import build_opener
-        from urllib.request import HTTPBasicAuthHandler
-        from urllib.request import HTTPHandler
-        from urllib.request import install_opener
-        from urllib.request import ProxyHandler
-    except ImportError:
-        from urllib2 import build_opener
-        from urllib2 import HTTPBasicAuthHandler
-        from urllib2 import HTTPHandler
-        from urllib2 import install_opener
-        from urllib2 import ProxyHandler
     # check for http[s]?_proxy user
     for scheme in ['http', 'https']:
         key = scheme + '_proxy'
