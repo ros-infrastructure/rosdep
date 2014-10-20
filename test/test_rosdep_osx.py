@@ -142,11 +142,19 @@ def test_HomebrewInstaller():
         val = installer.get_install_command(['whatever'])
         assert val == expected, val
 
-        mock_get_packages_to_install.return_value = make_resolutions_options(
-            [('subversion', [u'f´´ßß', u'öäö'], []), (u'bazaar', [], [u"tüü"])])
+        try:
+            mock_get_packages_to_install.return_value = eval("make_resolutions_options([('subversion', [u'f´´ßß', u'öäö'], []), (u'bazaar', [], [u'tüü'])])")
+        except SyntaxError:
+            # Python 3.2, u'...' is not allowed, but string literals are unicode
+            mock_get_packages_to_install.return_value = make_resolutions_options(
+                [('subversion', ['f´´ßß', 'öäö'], []), ('bazaar', [], ["tüü"])])
         mock_remove_duplicate_dependencies.return_value = mock_get_packages_to_install.return_value
-        expected = [['brew', 'install', 'subversion', u'f´´ßß', u'öäö'],
-                    ['brew', 'install', 'bazaar', u"tüü"]]
+        try:
+            expected = eval("[['brew', 'install', 'subversion', u'f´´ßß', u'öäö'], ['brew', 'install', 'bazaar', u'tüü']]")
+        except SyntaxError:
+            # Python 3.2, u'...' is not allowed, but string literals are unicode
+            expected = [['brew', 'install', 'subversion', 'f´´ßß', 'öäö'],
+                        ['brew', 'install', 'bazaar', "tüü"]]
         val = installer.get_install_command(['whatever'])
         assert val == expected, val
     try:
