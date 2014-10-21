@@ -101,8 +101,13 @@ def get_sources_list_dir():
         etc_ros = rospkg.get_etc_ros_dir()
     else:
         etc_ros = '/etc/ros'
-    # compute cache directory
-    return os.path.join(etc_ros, 'rosdep', SOURCES_LIST_DIR)
+    # compute default system wide sources directory
+    sys_sources_list_dir = os.path.join(etc_ros, 'rosdep', SOURCES_LIST_DIR)
+    sources_list_dirs = get_sources_list_dirs(sys_sources_list_dir)
+    if sources_list_dirs:
+        return sources_list_dirs[0]
+    else:
+        return sys_sources_list_dir
 
 def get_default_sources_list_file():
     return os.path.join(get_sources_list_dir(), '20-default.list')
