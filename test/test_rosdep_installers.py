@@ -80,8 +80,8 @@ def test_InstallerContext_ctor():
     assert len(context.get_os_keys()) == 0
     
 def test_InstallerContext_get_os_version_type():
-    from rospkg.os_detect import OS_UBUNTU
-    from rosdep2.installers import InstallerContext, TYPE_CODENAME, TYPE_VERSION
+    from rospkg.os_detect import OS_UBUNTU, OsDetect
+    from rosdep2.installers import InstallerContext
     context = InstallerContext()
 
     try:
@@ -90,12 +90,13 @@ def test_InstallerContext_get_os_version_type():
     except ValueError:
         pass
 
-    assert TYPE_VERSION == context.get_os_version_type(OS_UBUNTU)
-    context.set_os_version_type(OS_UBUNTU, TYPE_CODENAME)
-    assert TYPE_CODENAME == context.get_os_version_type(OS_UBUNTU)
+    assert OsDetect.get_version == context.get_os_version_type(OS_UBUNTU)
+    context.set_os_version_type(OS_UBUNTU, OsDetect.get_codename)
+    assert OsDetect.get_codename == context.get_os_version_type(OS_UBUNTU)
     
 def test_InstallerContext_os_version_and_name():
-    from rosdep2.installers import InstallerContext, TYPE_CODENAME, TYPE_VERSION
+    from rospkg.os_detect import OsDetect
+    from rosdep2.installers import InstallerContext
     context = InstallerContext()
     context.set_verbose(True)
     os_name, os_version = context.get_os_name_and_version()
@@ -113,12 +114,12 @@ def test_InstallerContext_os_version_and_name():
     os_detect_mock.get_version.return_value = 'fakeos-version'
     os_detect_mock.get_codename.return_value = 'fakeos-codename'
     context = InstallerContext(os_detect_mock)
-    context.set_os_version_type('fakeos', TYPE_CODENAME)
+    context.set_os_version_type('fakeos', os_detect_mock.get_codename)
     os_name, os_version = context.get_os_name_and_version()
     assert os_name == 'fakeos', os_name
     assert os_version == 'fakeos-codename', os_version
 
-    context.set_os_version_type('fakeos', TYPE_VERSION)
+    context.set_os_version_type('fakeos', os_detect_mock.get_version)
     os_name, os_version = context.get_os_name_and_version()
     assert os_name == 'fakeos', os_name
     assert os_version == 'fakeos-version', os_version

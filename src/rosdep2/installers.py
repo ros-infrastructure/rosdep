@@ -36,11 +36,6 @@ from rospkg.os_detect import OsDetect
 
 from .core import rd_debug, RosdepInternalError, InstallFailed, print_bold, InvalidData
 
-# use OsDetect.get_version() for OS version key
-TYPE_VERSION = 'version'
-# use OsDetect.get_codename() for OS version key
-TYPE_CODENAME = 'codename'
-
 # kwc: InstallerContext is basically just a bunch of dictionaries with
 # defined lookup methods.  It really encompasses two facets of a
 # rosdep configuration: the pluggable nature of installers and
@@ -95,11 +90,11 @@ class InstallerContext(object):
         self.os_override = os_name, os_version
 
     def get_os_version_type(self, os_name):
-        return self.os_version_type.get(os_name, TYPE_VERSION)
+        return self.os_version_type.get(os_name, OsDetect.get_version)
 
     def set_os_version_type(self, os_name, version_type):
-        if version_type not in (TYPE_VERSION, TYPE_CODENAME):
-            raise ValueError("version type not TYPE_VERSION or TYPE_CODENAME")
+        if not hasattr(version_type, '__call__'):
+            raise ValueError("version type should be a method")
         self.os_version_type[os_name] = version_type
         
     def get_os_name_and_version(self):
@@ -115,10 +110,8 @@ class InstallerContext(object):
             return self.os_override
         else:
             os_name = self.os_detect.get_name()
-            if self.get_os_version_type(os_name) == TYPE_CODENAME:
-                os_version = self.os_detect.get_codename()
-            else:
-                os_version = self.os_detect.get_version()
+            os_key = self.get_os_version_type(os_name)
+            os_version = os_key(self.os_detect)
             return os_name, os_version
         
     def get_os_detect(self):
