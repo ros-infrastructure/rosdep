@@ -34,6 +34,7 @@ from rospkg.os_detect import OS_RHEL, OS_FEDORA
 
 from .pip import PIP_INSTALLER
 from .source import SOURCE_INSTALLER
+from ..core import rd_debug
 from ..installers import PackageManagerInstaller
 from ..shell_utils import read_stdout
 
@@ -65,37 +66,64 @@ def register_rhel(context):
     context.add_os_installer_key(OS_RHEL, SOURCE_INSTALLER)
     context.set_default_os_installer_key(OS_RHEL, YUM_INSTALLER)
 
-def rpm_detect_py(packages, exec_fn=None):
+def rpm_detect_py(packages):
     ret_list = []
     import rpm
     ts = rpm.TransactionSet()
-    for req in packages:
+    for raw_req in packages:
+        req = rpm_expand_py(raw_req)
         rpms = ts.dbMatch(rpm.RPMTAG_PROVIDES, req)
         if len(rpms) > 0:
-            ret_list += [req]
+            ret_list += [raw_req]
     return ret_list
 
-def rpm_detect_cmd(packages, exec_fn=None):
+def rpm_detect_cmd(raw_packages, exec_fn=None):
     ret_list = []
-    cmd = ['rpm', '-q', '--whatprovides', '--qf', '[%{PROVIDES}\n]']  # output: "pkg_name" for installed, error text for not installed packages
-    cmd.extend(packages)
 
     if exec_fn is None:
         exec_fn = read_stdout
 
+    packages = [rpm_expand_cmd(package, exec_fn) for package in raw_packages]
+
+    cmd = ['rpm', '-q', '--whatprovides', '--qf', '[%{PROVIDES}\n]']
+    cmd.extend(packages)
+
     std_out = exec_fn(cmd)
-    out_lines = std_out.split('\n')
-    for line in out_lines:
-        # if there is no space, it's not an error text -> it's installed
-        if line and ' ' not in line:
-            ret_list.append(line)
+    out_lines = std_out.split()
+    for index, package in enumerate(packages):
+        if package in out_lines:
+            ret_list.append(raw_packages[index])
     return ret_list
 
 def rpm_detect(packages, exec_fn=None):
     try:
-        return rpm_detect_py(packages, exec_fn)
+        return rpm_detect_py(packages)
     except ImportError:
         return rpm_detect_cmd(packages, exec_fn)
+
+def rpm_expand_py(macro):
+    import rpm
+    expanded = rpm.expandMacro(macro)
+    rd_debug('Expanded rpm macro in \'%s\' to \'%s\'' % (macro, expanded))
+    return expanded
+
+def rpm_expand_cmd(macro, exec_fn=None):
+    cmd = ['rpm', '-E', macro]
+
+    if exec_fn is None:
+        exec_fn = read_stdout
+
+    expanded = exec_fn(cmd).strip()
+    rd_debug('Expanded rpm macro in \'%s\' to \'%s\'' % (macro, expanded))
+    return expanded
+
+def rpm_expand(package, exec_fn=None):
+    if not '%' in package:
+        return package
+    try:
+        return rpm_expand_py(package)
+    except ImportError:
+        return rpm_expand_cmd(package, exec_fn)
 
 class DnfInstaller(PackageManagerInstaller):
     """
@@ -108,7 +136,9 @@ class DnfInstaller(PackageManagerInstaller):
         super(DnfInstaller, self).__init__(rpm_detect)
 
     def get_install_command(self, resolved, interactive=True, reinstall=False, quiet=False):
-        packages = self.get_packages_to_install(resolved, reinstall=reinstall)
+        raw_packages = self.get_packages_to_install(resolved, reinstall=reinstall)
+        packages = [rpm_expand(package) for package in raw_packages]
+
         if not packages:
             return []
         elif not interactive and quiet:
@@ -132,7 +162,9 @@ class YumInstaller(PackageManagerInstaller):
         super(YumInstaller, self).__init__(rpm_detect)
 
     def get_install_command(self, resolved, interactive=True, reinstall=False, quiet=False):
-        packages = self.get_packages_to_install(resolved, reinstall=reinstall)
+        raw_packages = self.get_packages_to_install(resolved, reinstall=reinstall)
+        packages = [rpm_expand(package) for package in raw_packages]
+
         if not packages:
             return []
         elif not interactive and quiet:
