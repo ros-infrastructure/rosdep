@@ -174,6 +174,8 @@ class RosDistroSource(DataSource):
         self.type = TYPE_GBPDISTRO
         self.tags = [distro]
         self.url = get_index().distributions[distro]['distribution']
+        if isinstance(self.url, list):
+            self.url = self.url[0]
         self.origin = None
 
 # create function we can pass in as model to parse_source_data.  The
@@ -453,7 +455,10 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
         rds = RosDistroSource(dist_name)
         rosdep_data = get_gbprepo_as_rosdep_data(dist_name)
         dist = get_index().distributions[dist_name]
-        retval.append((rds, write_cache_file(sources_cache_dir, dist['distribution'], rosdep_data)))
+        distribution_file = dist['distribution']
+        if isinstance(distribution_file, list):
+            distribution_file = distribution_file[0]
+        retval.append((rds, write_cache_file(sources_cache_dir, distribution_file, rosdep_data)))
         sources.append(rds)
 
     # Create a combined index of *all* the sources.  We do all the
