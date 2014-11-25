@@ -486,9 +486,12 @@ def load_cached_sources_list(sources_cache_dir=None, verbose=False):
         if verbose:
             print("no cache index present, not loading cached sources", file=sys.stderr)
         return []
-    with open(cache_index, 'r') as f:
-        cache_data = f.read()
-    # the loader does all the work
+    try:
+        with open(cache_index, 'r') as f:
+            cache_data = f.read()
+            # the loader does all the work
+    except (OSError,IOError) as e:
+        raise CachePermissionError("Failed to open cache index file: " + str(e))
     model = cache_data_source_loader(sources_cache_dir, verbose=verbose)
     return parse_sources_data(cache_data, origin=cache_index, model=model)
 
