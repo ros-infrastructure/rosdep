@@ -173,6 +173,7 @@ class RosDistroSource(DataSource):
     def __init__(self, distro):
         self.type = TYPE_GBPDISTRO
         self.tags = [distro]
+        # In this case self.url is a list if REP-143 is being used
         self.url = get_index().distributions[distro]['distribution']
         self.origin = None
 
@@ -446,14 +447,15 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
                 error_handler(source, e)
 
     # Additional sources for ros distros
-    # In compliance with REP137
+    # In compliance with REP137 and REP143
     print('Query rosdistro index %s' % get_index_url())
     for dist_name in sorted(get_index().distributions.keys()):
         print('Add distro "%s"' % dist_name)
         rds = RosDistroSource(dist_name)
         rosdep_data = get_gbprepo_as_rosdep_data(dist_name)
-        dist = get_index().distributions[dist_name]
-        retval.append((rds, write_cache_file(sources_cache_dir, dist['distribution'], rosdep_data)))
+        # dist_files can either be a string (single filename) or a list (list of filenames)
+        dist_files = get_index().distributions[dist_name]['distribution']
+        retval.append((rds, write_cache_file(sources_cache_dir, dist_files, rosdep_data)))
         sources.append(rds)
 
     # Create a combined index of *all* the sources.  We do all the
@@ -492,15 +494,21 @@ def load_cached_sources_list(sources_cache_dir=None, verbose=False):
     model = cache_data_source_loader(sources_cache_dir, verbose=verbose)
     return parse_sources_data(cache_data, origin=cache_index, model=model)
 
-def compute_filename_hash(filename_key):
+
+def compute_filename_hash(key_filenames):
     sha_hash = hashlib.sha1()
-    sha_hash.update(filename_key.encode())
+    if isinstance(key_filenames, list):
+        for key in key_filenames:
+            sha_hash.update(key.encode())
+    else:
+        sha_hash.update(key_filenames.encode())
     return sha_hash.hexdigest()
 
-def write_cache_file(source_cache_d, filename_key, rosdep_data):
+
+def write_cache_file(source_cache_d, key_filenames, rosdep_data):
     """
     :param source_cache_d: directory to write cache file to
-    :param filename_key: hash of filename is used to store data in
+    :param key_filenames: filename (or list of filenames) to be used in hashing
     :param rosdep_data: dictionary of data to serialize as YAML
     :returns: name of file where cache is stored
     :raises: :exc:`OSError` if cannot write to cache file/directory
@@ -508,7 +516,7 @@ def write_cache_file(source_cache_d, filename_key, rosdep_data):
     """
     if not os.path.exists(source_cache_d):
         os.makedirs(source_cache_d)
-    key_hash = compute_filename_hash(filename_key)
+    key_hash = compute_filename_hash(key_filenames)
     filepath = os.path.join(source_cache_d, key_hash)
     try:
         write_atomic(filepath + PICKLE_CACHE_EXT, pickle.dumps(rosdep_data, -1), True)
@@ -519,6 +527,7 @@ def write_cache_file(source_cache_d, filename_key, rosdep_data):
     except OSError:
         pass
     return filepath
+
 
 def write_atomic(filepath, data, binary=False):
     # write data to new file
