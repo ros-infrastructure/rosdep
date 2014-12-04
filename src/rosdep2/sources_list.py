@@ -320,7 +320,7 @@ def download_default_sources_list(url=DEFAULT_SOURCES_LIST_URL):
     data = f.read().decode()
     f.close()
     if not data:
-        raise InvalidSourceFile("cannot download defaults file: empty contents")
+        raise RuntimeError("cannot download defaults file: empty contents")
     # parse just for validation
     parse_sources_data(data)
     return data
