@@ -87,16 +87,16 @@ def test_YumInstaller():
 
         # no interactive option with YUM
         mock_method.return_value = ['a', 'b']
-        expected = [['sudo', 'yum', '--assumeyes', '--quiet', '--skip-broken', 'install', 'a', 'b']]
+        expected = [['sudo', '-H', 'yum', '--assumeyes', '--quiet', '--skip-broken', 'install', 'a', 'b']]
         val = installer.get_install_command(['whatever'], interactive=False, quiet=True)
         assert val == expected, val + expected
-        expected = [['sudo', 'yum', '--quiet', '--skip-broken', 'install', 'a', 'b']]
+        expected = [['sudo', '-H', 'yum', '--quiet', '--skip-broken', 'install', 'a', 'b']]
         val = installer.get_install_command(['whatever'], interactive=True, quiet=True)
         assert val == expected, val + expected
-        expected = [['sudo', 'yum', '--assumeyes', '--skip-broken', 'install', 'a', 'b']]
+        expected = [['sudo', '-H', 'yum', '--assumeyes', '--skip-broken', 'install', 'a', 'b']]
         val = installer.get_install_command(['whatever'], interactive=False, quiet=False)
         assert val == expected, val + expected
-        expected = [['sudo', 'yum', '--skip-broken', 'install', 'a', 'b']]
+        expected = [['sudo', '-H', 'yum', '--skip-broken', 'install', 'a', 'b']]
         val = installer.get_install_command(['whatever'], interactive=True, quiet=False)
         assert val == expected, val + expected
     try:

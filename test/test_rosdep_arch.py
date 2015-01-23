@@ -46,12 +46,12 @@ def test_PacmanInstaller():
 
         # no interactive option implemented yet
         mock_method.return_value = ['a', 'b']
-        expected = [['sudo', 'pacman', '-Sy', '--needed', 'a'],
-                    ['sudo', 'pacman', '-Sy', '--needed', 'b']]
+        expected = [['sudo', '-H', 'pacman', '-Sy', '--needed', 'a'],
+                    ['sudo', '-H', 'pacman', '-Sy', '--needed', 'b']]
         val = installer.get_install_command(['whatever'], interactive=False)
         assert val == expected, val
-        expected = [['sudo', 'pacman', '-Sy', '--needed', 'a'],
-                    ['sudo', 'pacman', '-Sy', '--needed', 'b']]
+        expected = [['sudo', '-H', 'pacman', '-Sy', '--needed', 'a'],
+                    ['sudo', '-H', 'pacman', '-Sy', '--needed', 'b']]
         val = installer.get_install_command(['whatever'], interactive=True)
         assert val == expected, val
     try:
