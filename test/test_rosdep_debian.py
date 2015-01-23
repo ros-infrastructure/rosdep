@@ -66,13 +66,13 @@ def test_AptInstaller():
         assert [] == installer.get_install_command(['fake'])
 
         mock_method.return_value = ['a', 'b']
-        expected = [['sudo', 'apt-get', 'install', '-y', 'a'],
-                    ['sudo', 'apt-get', 'install', '-y', 'b']]
+        expected = [['sudo', '-H', 'apt-get', 'install', '-y', 'a'],
+                    ['sudo', '-H', 'apt-get', 'install', '-y', 'b']]
         val = installer.get_install_command(['whatever'], interactive=False)
         print("VAL", val)
         assert val == expected, val
-        expected = [['sudo', 'apt-get', 'install', 'a'],
-                    ['sudo', 'apt-get', 'install', 'b']]
+        expected = [['sudo', '-H', 'apt-get', 'install', 'a'],
+                    ['sudo', '-H', 'apt-get', 'install', 'b']]
         val = installer.get_install_command(['whatever'], interactive=True)
         assert val == expected, val
     try:

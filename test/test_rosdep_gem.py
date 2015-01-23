@@ -90,12 +90,12 @@ def test_GemInstaller():
 
         # no interactive option with GEM
         mock_method.return_value = ['a', 'b']
-        expected = [['sudo', 'gem', 'install', 'a'],
-                    ['sudo', 'gem', 'install', 'b']]
+        expected = [['sudo', '-H', 'gem', 'install', 'a'],
+                    ['sudo', '-H', 'gem', 'install', 'b']]
         val = installer.get_install_command(['whatever'], interactive=False)
         assert val == expected, val
-        expected = [['sudo', 'gem', 'install', 'a'],
-                    ['sudo', 'gem', 'install', 'b']]
+        expected = [['sudo', '-H', 'gem', 'install', 'a'],
+                    ['sudo', '-H', 'gem', 'install', 'b']]
         val = installer.get_install_command(['whatever'], interactive=True)
         assert val == expected, val
     try:

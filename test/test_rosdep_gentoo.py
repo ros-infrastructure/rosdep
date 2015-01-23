@@ -176,13 +176,13 @@ def test_PortageInstaller():
 
         mock_method.return_value = ['a', 'b']
         
-        expected = [['sudo', 'emerge', 'a'],
-                    ['sudo', 'emerge', 'b']]
+        expected = [['sudo', '-H', 'emerge', 'a'],
+                    ['sudo', '-H', 'emerge', 'b']]
         val = installer.get_install_command(['whatever'], interactive=False)
         assert val == expected, val
 
-        expected = [['sudo', 'emerge', '-a', 'a'],
-                    ['sudo', 'emerge', '-a', 'b']]
+        expected = [['sudo', '-H', 'emerge', '-a', 'a'],
+                    ['sudo', '-H', 'emerge', '-a', 'b']]
         val = installer.get_install_command(['whatever'], interactive=True)
         assert val == expected, val
         

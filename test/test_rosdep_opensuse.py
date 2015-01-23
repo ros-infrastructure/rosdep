@@ -46,10 +46,10 @@ def test_ZypperInstaller():
 
         # no interactive option with YUM
         mock_method.return_value = ['a', 'b']
-        expected = [['sudo', 'zypper', 'install', '-yl', 'a', 'b']]
+        expected = [['sudo', '-H', 'zypper', 'install', '-yl', 'a', 'b']]
         val = installer.get_install_command(['whatever'], interactive=False)
         assert val == expected, val
-        expected = [['sudo', 'zypper', 'install', 'a', 'b']]
+        expected = [['sudo', '-H', 'zypper', 'install', 'a', 'b']]
         val = installer.get_install_command(['whatever'], interactive=True)
         assert val == expected, val
     try:
