@@ -28,7 +28,10 @@
 
 # Author Tully Foote, Ken Conley
 
-from rospkg.os_detect import OS_DEBIAN, OS_UBUNTU, OsDetect
+from __future__ import print_function
+import sys
+
+from rospkg.os_detect import OS_DEBIAN, OS_LINARO, OS_UBUNTU, OsDetect
 
 from .pip import PIP_INSTALLER
 from .gem import GEM_INSTALLER
@@ -44,6 +47,7 @@ def register_installers(context):
 
 def register_platforms(context):
     register_debian(context)
+    register_linaro(context)
     register_ubuntu(context)
     
 def register_debian(context):
@@ -54,6 +58,13 @@ def register_debian(context):
     context.set_default_os_installer_key(OS_DEBIAN, APT_INSTALLER)
     context.set_os_version_type(OS_DEBIAN, OsDetect.get_codename)
     
+def register_linaro(context):
+    # Linaro is an alias for Ubuntu. If linaro is detected and it's not set as an override force ubuntu.
+    (os_name, os_version) = context.get_os_name_and_version()
+    if os_name == OS_LINARO and not context.os_override:
+        print("rosdep detected OS: [%s] aliasing it to: [%s]" % (OS_LINARO, OS_UBUNTU), file=sys.stderr)
+        context.set_os_override(OS_UBUNTU, context.os_detect.get_codename())
+
 def register_ubuntu(context):
     context.add_os_installer_key(OS_UBUNTU, APT_INSTALLER)
     context.add_os_installer_key(OS_UBUNTU, PIP_INSTALLER)
