@@ -67,6 +67,18 @@ def pip_detect(pkgs, exec_fn=None):
         pkg_row = pkg.split("==")
         if pkg_row[0] in pkgs:
             ret_list.append(pkg_row[0])
+
+    # Try to detect with the return code of `pip show`.
+    # This can show the existance of things like `argparse` which
+    # otherwise do not show up.
+    # See:
+    #   https://github.com/pypa/pip/issues/1570#issuecomment-71111030
+    left_over_list = [x for x in pkgs if x not in ret_list]
+    for pkg in left_over_list:
+        if subprocess.call(['pip', 'show', '-q', pkg]) == 0:
+            # `pip show` detected it, add it to the list.
+            ret_list.append(pkg)
+
     return ret_list
 
 
