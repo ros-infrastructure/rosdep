@@ -14,7 +14,7 @@ setup(
     test_requires=['mock'],
     scripts=['scripts/rosdep', 'scripts/rosdep-source'],
     author="Tully Foote, Ken Conley",
-    author_email="foote@willowgarage.com, kwc@willowgarage.com",
+    author_email="tfoote@osrfoundation.org",
     url="http://wiki.ros.org/rosdep",
     download_url="http://download.ros.org/downloads/rosdep/",
     keywords=['ROS'],
