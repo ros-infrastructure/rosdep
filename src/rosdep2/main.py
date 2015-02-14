@@ -296,11 +296,13 @@ def _rosdep_main(args):
                            "locally ignore a rosdep key is creating a local rosdep rule "
                            "with an empty list of packages (include it in "
                            "/etc/ros/rosdep/sources.list.d/ before the defaults).")
-    parser.add_option("--filter-for-installer-method",
-                      dest='installer', default=None,
-                      help="Affects the 'db' verb. filters the output of the 'db' command "
-                           "by packages installed with the provided install method; "
-                           "can be any install , e.e. apt, pip, etc.")
+    parser.add_option("--filter-for-installers",
+                      action="append", default=[],
+                      help="Affects the 'db' verb. If supplied, the output of the 'db' "
+                           "command is filtered to only list packages whose installer "
+                           "is in the provided list. The option can be supplied "
+                           "multiple times. A space separated list of installers can also "
+                           "be passed as a string. Example: `--filter-for-installers \"apt pip\"`")
     parser.add_option("--from-paths", dest='from_paths',
                       default=False, action="store_true",
                       help="Affects the 'check', 'keys', and 'install' verbs. "
@@ -322,8 +324,9 @@ def _rosdep_main(args):
         print(__version__)
         sys.exit(0)
 
-    # flatten list of skipped keys
+    # flatten list of skipped keys and filter-for-installers
     options.skip_keys = [key for s in options.skip_keys for key in s.split(' ')]
+    options.filter_for_installers = [inst for s in options.filter_for_installers for inst in s.split(' ')]
 
     if len(args) == 0:
         parser.error("Please enter a command")
@@ -683,7 +686,7 @@ def command_db(options):
         try:
             d = view.lookup(rosdep_name)
             inst_key, rule = d.get_rule_for_platform(os_name, os_version, installer_keys, default_key)
-            if options.installer and inst_key != options.installer:
+            if options.filter_for_installers and inst_key not in options.filter_for_installers:
                 continue
             resolved = installer.resolve(rule)
             resolved_str = " ".join(resolved)
