@@ -8,6 +8,7 @@ install:
   - pip install argparse catkin-pkg distribute rosdistro rospkg PyYAML
 # command to run tests
 script:
-  - nosetests -s --tests test
+# This package doesn't have tests yet.
+  - true # - nosetests -s --tests test
 notifications:
   email: false
