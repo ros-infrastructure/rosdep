@@ -625,12 +625,21 @@ def command_install(lookup, packages, options):
             return 1
     else:
         uninstalled, errors = installer.get_uninstalled(packages, implicit=options.recursive, verbose=options.verbose)
-        
+
     if options.verbose:
         print("uninstalled dependencies are: [%s]"%(', '.join([', '.join(pkg) for pkg in [v for k,v in uninstalled]])))
-        
+
     if errors:
-        print("ERROR: the following packages/stacks could not have their rosdep keys resolved\nto system dependencies:", file=sys.stderr)
+        err_msg = ("ERROR: the following packages/stacks could not have their "
+                   "rosdep keys resolved\nto system dependencies")
+        if rospkg.distro.current_distro_codename() is None:
+            err_msg += (
+                " (ROS distro is not set. "
+                "Make sure `ROS_DISTRO` environment variable is set, or use "
+                "`--rosdistro` option to specify the distro, "
+                "e.g. `--rosdistro indigo`)"
+            )
+        print(err_msg + ":", file=sys.stderr)
         for rosdep_key, error in errors.items():
             print("%s: %s"%(rosdep_key, error_to_human_readable(error)), file=sys.stderr)
         if options.robust:
