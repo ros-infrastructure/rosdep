@@ -29,6 +29,7 @@
 
 import os
 import traceback
+import multiprocessing
 from mock import Mock, patch
 
 import rospkg.os_detect
@@ -175,14 +176,35 @@ def test_PortageInstaller():
         assert [] == installer.get_install_command(['fake'])
 
         mock_method.return_value = ['a', 'b']
-        
-        expected = [['sudo', '-H', 'emerge', 'a'],
-                    ['sudo', '-H', 'emerge', 'b']]
+        try:
+            numProcessors = multiprocessing.cpu_count();
+            if rospkg.os_detect.OsDetect().detect_os() == 'funtoo':
+                expected = [['rosdep detected OS: [funtoo], aliasing it to [gentoo]'],
+                            ['sudo', '-H', 'emerge', '--jobs',
+                            '--load-average {0}'.format(numProcessors), 'a', 'b']]
+            else:
+                expected = [['sudo', '-H', 'emerge', '--jobs',
+                             '--load-average {0}'.format(numProcessors), 'a', 'b']]
+        except NotImplementedError :
+            expected = [['WARNING: Unable to count processors. Building will not be threaded.'],
+                        ['sudo', '-H', 'emerge',  'a', 'b']]
         val = installer.get_install_command(['whatever'], interactive=False)
         assert val == expected, val
 
-        expected = [['sudo', '-H', 'emerge', '-a', 'a'],
-                    ['sudo', '-H', 'emerge', '-a', 'b']]
+        try:
+            numProcessors = multiprocessing.cpu_count();
+            expected = [['sudo', '-H', 'emerge', '--jobs',
+                        '--load-average {0}'.format(numProcessors),
+                        '-a', 'a', 'b']]
+        except NotImplementedError :
+            if rospkg.os_detect.OsDetect().detect_os() == 'funtoo':
+                expected = [['rosdep detected OS: [funtoo], aliasing it to [gentoo]'],
+                            ['WARNING: Unable to count processors. Building will not be threaded.'],
+                            ['sudo', '-H', 'emerge', '-a', 'a', 'b']]
+            else:
+                expected = [['WARNING: Unable to count processors. Building will not be threaded.'],
+                        ['sudo', '-H', 'emerge', '-a', 'a', 'b']]
+
         val = installer.get_install_command(['whatever'], interactive=True)
         assert val == expected, val
         
