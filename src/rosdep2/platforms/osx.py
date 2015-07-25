@@ -269,7 +269,7 @@ class HomebrewInstaller(PackageManagerInstaller):
             if len(packages) == 1 and options and not isinstance(options[0],list):
                 options = [options]
             else:
-                options = map(coerce_to_list, options)
+                options = list(map(coerce_to_list, options))
 
             # make sure options is a list of list of strings
             try:
