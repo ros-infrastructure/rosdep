@@ -88,6 +88,35 @@ Options
 
   Print version and exit.
 
+**-q**
+
+  Suppress output except for errors
+
+**-n**
+
+  Do not consider implicit/recursive dependencies.  Only valid with ``keys``, ``check``, and ``install`` commands.
+
+**-i, --ignore-packages-from-source, --ignore-src**
+
+  Affects the ``check`` and ``install`` verbs. If specified then rosdep will not install keys that are found to be catkin packages anywhere in the ROS_PACKAGE_PATH or in any of the directories given by the ``--from-paths`` option.
+  
+**--skip-keys=SKIP_KEYS**
+
+  Affects the ``check`` and ``install`` verbs. The specified rosdep keys will be ignored, i.e. not resolved and not installed. The option can be supplied multiple times. A space separated list of rosdep keys can also be passed as a string. A more permanent solution to locally ignore a rosdep key is creating a local rosdep rule with an empty list of packages (include it in ``/etc/ros/rosdep/sources.list.d/`` before the defaults).
+
+**--from-paths**
+
+  Affects the ``check``, ``keys``, and ``install`` verbs. If specified the arugments to those verbs will be considered paths to be searched, acting on all catkin packages found there in.
+ 
+**--rosdistro=ROS_DISTRO**
+
+  Explicitly sets the ROS distro to use, overriding the normal method of detecting the ROS distro using the ROS_DISTRO environment variable.
+
+**--as-root=INSTALLER_KEY:<bool>**
+
+  Override whether sudo is used for a specific installer, e.g. ``--as-root pip:false`` or ``--as-root "pip:no homebrew:yes"``. Can be specified multiple times.
+
+
 Install Options
 ---------------
 
