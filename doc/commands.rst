@@ -33,7 +33,7 @@ Commands
 
 **init**
 
-  Initialize /etc/ros/sources.list.d/ configuration.  May require sudo.
+  Initialize /etc/ros/rosdep/sources.list.d/ configuration.  May require sudo.
 
 **install <stacks-and-packages>...**
 
