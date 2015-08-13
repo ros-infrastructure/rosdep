@@ -341,7 +341,7 @@ def _rosdep_main(args):
     # Convert list of keys to dictionary
     options.as_root = dict((k, str_to_bool(v)) for k, v in key_list_to_dict(options.as_root).items())
 
-    if not command in ['init', 'update']:
+    if not command in ['init', 'update', 'fix-permissions']:
         check_for_sources_list_init(options.sources_cache_dir)
     else:
         setup_proxy_opener()
