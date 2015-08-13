@@ -343,7 +343,7 @@ def _rosdep_main(args):
 
     if not command in ['init', 'update', 'fix-permissions']:
         check_for_sources_list_init(options.sources_cache_dir)
-    else:
+    elif not command in ['fix-permissions']:
         setup_proxy_opener()
     if command in _command_rosdep_args:
         return _rosdep_args_handler(command, parser, options, args)
