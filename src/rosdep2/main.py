@@ -785,7 +785,10 @@ def command_fix_permissions(options):
     uid = stat_info.st_uid
     gid = stat_info.st_gid
     user_name = pwd.getpwuid(uid).pw_name
-    group_name = grp.getgrgid(gid).gr_name
+    try:
+        group_name = grp.getgrgid(gid).gr_name
+    except KeyError as e:
+        group_name = gid
     ros_home = rospkg.get_ros_home()
 
     print("Recursively changing ownership of ros home directory '{0}' "
