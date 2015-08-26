@@ -57,7 +57,7 @@ def register_fedora(context):
     context.add_os_installer_key(OS_FEDORA, DNF_INSTALLER)
     context.add_os_installer_key(OS_FEDORA, YUM_INSTALLER)
     context.add_os_installer_key(OS_FEDORA, SOURCE_INSTALLER)
-    context.set_default_os_installer_key(OS_FEDORA, YUM_INSTALLER)
+    context.set_default_os_installer_key(OS_FEDORA, DNF_INSTALLER)
     context.set_os_version_type(OS_FEDORA, lambda self: self.get_version() if int(self.get_version()) > 20 else self.get_codename())
 
 def register_rhel(context):
