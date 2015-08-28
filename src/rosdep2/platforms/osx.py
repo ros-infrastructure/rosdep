@@ -62,7 +62,7 @@ def register_platforms(context):
     context.add_os_installer_key(OS_OSX, MACPORTS_INSTALLER)
     context.add_os_installer_key(OS_OSX, PIP_INSTALLER)
     context.add_os_installer_key(OS_OSX, SOURCE_INSTALLER)
-    context.set_default_os_installer_key(OS_OSX, BREW_INSTALLER)
+    context.set_default_os_installer_key(OS_OSX, lambda self: BREW_INSTALLER)
     context.set_os_version_type(OS_OSX, OsDetect.get_codename)
 
 def is_port_installed():

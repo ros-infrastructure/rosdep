@@ -55,7 +55,7 @@ def register_debian(context):
     context.add_os_installer_key(OS_DEBIAN, PIP_INSTALLER)
     context.add_os_installer_key(OS_DEBIAN, GEM_INSTALLER)
     context.add_os_installer_key(OS_DEBIAN, SOURCE_INSTALLER)
-    context.set_default_os_installer_key(OS_DEBIAN, APT_INSTALLER)
+    context.set_default_os_installer_key(OS_DEBIAN, lambda self: APT_INSTALLER)
     context.set_os_version_type(OS_DEBIAN, OsDetect.get_codename)
     
 def register_linaro(context):
@@ -70,7 +70,7 @@ def register_ubuntu(context):
     context.add_os_installer_key(OS_UBUNTU, PIP_INSTALLER)
     context.add_os_installer_key(OS_UBUNTU, GEM_INSTALLER)
     context.add_os_installer_key(OS_UBUNTU, SOURCE_INSTALLER)
-    context.set_default_os_installer_key(OS_UBUNTU, APT_INSTALLER)
+    context.set_default_os_installer_key(OS_UBUNTU, lambda self: APT_INSTALLER)
     context.set_os_version_type(OS_UBUNTU, OsDetect.get_codename)
 
 def dpkg_detect(pkgs, exec_fn=None):

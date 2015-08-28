@@ -64,7 +64,7 @@ def register_platforms(context):
 def register_gentoo(context):
     context.add_os_installer_key(OS_GENTOO, PORTAGE_INSTALLER)
     context.add_os_installer_key(OS_GENTOO, SOURCE_INSTALLER)
-    context.set_default_os_installer_key(OS_GENTOO, PORTAGE_INSTALLER)
+    context.set_default_os_installer_key(OS_GENTOO, lambda self: PORTAGE_INSTALLER)
 
 def register_funtoo(context):
     # Funtoo is an alias for Gentoo.
