@@ -142,13 +142,13 @@ class DnfInstaller(PackageManagerInstaller):
         if not packages:
             return []
         elif not interactive and quiet:
-            return [['sudo', 'dnf', '--assumeyes', '--quiet', 'install'] + packages]
+            return [self.elevate_priv(['dnf', '--assumeyes', '--quiet', 'install']) + packages]
         elif quiet:
-            return [['sudo', 'dnf', '--quiet', 'install'] + packages]
+            return [self.elevate_priv(['dnf', '--quiet', 'install']) + packages]
         elif not interactive:
-            return [['sudo', 'dnf', '--assumeyes', 'install'] + packages]
+            return [self.elevate_priv(['dnf', '--assumeyes', 'install']) + packages]
         else:
-            return [['sudo', 'dnf', 'install'] + packages]
+            return [self.elevate_priv(['dnf', 'install']) + packages]
 
 
 class YumInstaller(PackageManagerInstaller):
