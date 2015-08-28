@@ -56,7 +56,7 @@ def register_installers(context):
 def register_platforms(context):
     context.add_os_installer_key(OS_GENTOO, PORTAGE_INSTALLER)
     context.add_os_installer_key(OS_GENTOO, SOURCE_INSTALLER)
-    context.set_default_os_installer_key(OS_GENTOO, PORTAGE_INSTALLER)
+    context.set_default_os_installer_key(OS_GENTOO, lambda self: PORTAGE_INSTALLER)
 
 # Determine whether an atom is already satisfied
 def portage_detect_single(atom, exec_fn = read_stdout ):

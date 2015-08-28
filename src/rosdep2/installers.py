@@ -211,13 +211,12 @@ class InstallerContext(object):
         """
         if not os_key in self.os_installers:
             raise KeyError("unknown OS: %s"%(os_key))
-        if not installer_key in self.os_installers[os_key]:
-            raise KeyError("installer [%s] is not associated with OS [%s]. call add_os_installer_key() first"%(installer_key, os_key))
-
-        # validate, will throw KeyError
-        self.get_installer(installer_key)
+        if not hasattr(installer_key, '__call__'):
+            raise ValueError("version type should be a method")
+        if not installer_key(self.os_detect) in self.os_installers[os_key]:
+            raise KeyError("installer [%s] is not associated with OS [%s]. call add_os_installer_key() first"%(installer_key(self.os_detect), os_key))
         if self.verbose:
-            print("set default installer [%s] for OS [%s]"%(installer_key, os_key))
+            print("set default installer for OS [%s]"%(os_key,))
         self.default_os_installer[os_key] = installer_key
 
     def get_default_os_installer_key(self, os_key):
@@ -232,7 +231,12 @@ class InstallerContext(object):
         if not os_key in self.os_installers:
             raise KeyError("unknown OS: %s"%(os_key))
         try:
-            return self.default_os_installer[os_key]
+            installer_key = self.default_os_installer[os_key](self.os_detect)
+            if not installer_key in self.os_installers[os_key]:
+                raise KeyError("installer [%s] is not associated with OS [%s]. call add_os_installer_key() first"%(installer_key, os_key))
+            # validate, will throw KeyError
+            self.get_installer(installer_key)
+            return installer_key
         except KeyError:
             return None
 
