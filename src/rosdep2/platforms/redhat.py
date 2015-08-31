@@ -57,14 +57,14 @@ def register_fedora(context):
     context.add_os_installer_key(OS_FEDORA, DNF_INSTALLER)
     context.add_os_installer_key(OS_FEDORA, YUM_INSTALLER)
     context.add_os_installer_key(OS_FEDORA, SOURCE_INSTALLER)
-    context.set_default_os_installer_key(OS_FEDORA, YUM_INSTALLER)
-    context.set_os_version_type(OS_FEDORA, lambda self: self.get_version() if int(self.get_version()) > 20 else self.get_codename())
+    context.set_default_os_installer_key(OS_FEDORA, lambda self: DNF_INSTALLER if self.get_version().isdigit() and int(self.get_version()) > 21 else YUM_INSTALLER)
+    context.set_os_version_type(OS_FEDORA, lambda self: self.get_version() if self.get_version().isdigit() and int(self.get_version()) > 20 else self.get_codename())
 
 def register_rhel(context):
     context.add_os_installer_key(OS_RHEL, PIP_INSTALLER)
     context.add_os_installer_key(OS_RHEL, YUM_INSTALLER)
     context.add_os_installer_key(OS_RHEL, SOURCE_INSTALLER)
-    context.set_default_os_installer_key(OS_RHEL, YUM_INSTALLER)
+    context.set_default_os_installer_key(OS_RHEL, lambda self: YUM_INSTALLER)
 
 def rpm_detect_py(packages):
     ret_list = []
@@ -142,13 +142,13 @@ class DnfInstaller(PackageManagerInstaller):
         if not packages:
             return []
         elif not interactive and quiet:
-            return [['sudo', 'dnf', '--assumeyes', '--quiet', 'install'] + packages]
+            return [self.elevate_priv(['dnf', '--assumeyes', '--quiet', 'install']) + packages]
         elif quiet:
-            return [['sudo', 'dnf', '--quiet', 'install'] + packages]
+            return [self.elevate_priv(['dnf', '--quiet', 'install']) + packages]
         elif not interactive:
-            return [['sudo', 'dnf', '--assumeyes', 'install'] + packages]
+            return [self.elevate_priv(['dnf', '--assumeyes', 'install']) + packages]
         else:
-            return [['sudo', 'dnf', 'install'] + packages]
+            return [self.elevate_priv(['dnf', 'install']) + packages]
 
 
 class YumInstaller(PackageManagerInstaller):
