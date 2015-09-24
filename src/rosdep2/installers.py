@@ -414,7 +414,7 @@ class RosdepInstaller(object):
             return uninstalled, errors
         for installer_key, resolved in resolutions: #py3k
             if verbose:
-                print("resolution: %s [%s]"%(installer_key, ', '.join(resolved)))
+                print("resolution: %s [%s]" % (installer_key, ', '.join([str(r) for r in resolved])))
             try:
                 installer = installer_context.get_installer(installer_key)
             except KeyError as e: # lookup has to be buggy to cause this
@@ -429,7 +429,7 @@ class RosdepInstaller(object):
             if packages_to_install:
                 uninstalled.append((installer_key, packages_to_install))
             if verbose:
-                print("uninstalled: [%s]"%(', '.join(packages_to_install)))
+                print("uninstalled: [%s]"%(', '.join([str(p) for p in packages_to_install])))
         
         return uninstalled, errors
     
