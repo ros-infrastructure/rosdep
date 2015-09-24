@@ -398,7 +398,11 @@ def _package_args_handler(command, parser, options, args):
             if 'ROS_PACKAGE_PATH' not in os.environ:
                 os.environ['ROS_PACKAGE_PATH'] = '{0}'.format(path)
             else:
-                os.environ['ROS_PACKAGE_PATH'] += ':{0}'.format(path)
+                os.environ['ROS_PACKAGE_PATH'] = '{0}{1}{2}'.format(
+                    path,
+                    os.pathsep,
+                    os.environ['ROS_PACKAGE_PATH']
+                )
             pkgs = find_catkin_packages_in(path, options.verbose)
             packages.extend(pkgs)
         # Make packages list unique
