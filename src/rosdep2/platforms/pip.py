@@ -79,7 +79,7 @@ def pip_detect(pkgs, exec_fn=None):
         for pkg in [p for p in pkgs if p not in ret_list]:
             # does not see retcode but stdout for old pip to check if installed
             output = subprocess.check_output(['pip', 'show', pkg]).strip()
-            if not output:
+            if output:
                 # `pip show` detected it, add it to the list.
                 ret_list.append(pkg)
 
