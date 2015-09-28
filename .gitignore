@@ -12,3 +12,5 @@ deb_dist
 dist
 src/rosdep.egg-info
 nose*
+.project
+.pydevproject
