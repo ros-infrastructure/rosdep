@@ -42,7 +42,7 @@ def register_installers(context):
 def register_platforms(context):
     context.add_os_installer_key(ARCH_OS_NAME, SOURCE_INSTALLER)
     context.add_os_installer_key(ARCH_OS_NAME, PACMAN_INSTALLER)
-    context.set_default_os_installer_key(ARCH_OS_NAME, PACMAN_INSTALLER)
+    context.set_default_os_installer_key(ARCH_OS_NAME, lambda self: PACMAN_INSTALLER)
 
 def pacman_detect_single(p):
     return not subprocess.call(['pacman', '-Q', p], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    

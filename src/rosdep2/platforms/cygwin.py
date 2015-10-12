@@ -45,7 +45,7 @@ def register_installers(context):
 def register_platforms(context):
     context.add_os_installer_key(OS_CYGWIN, SOURCE_INSTALLER)
     context.add_os_installer_key(OS_CYGWIN, APT_CYG_INSTALLER)
-    context.set_default_os_installer_key(OS_CYGWIN, APT_CYG_INSTALLER)
+    context.set_default_os_installer_key(OS_CYGWIN, lambda self: APT_CYG_INSTALLER)
 
 def cygcheck_detect_single(p):
     std_out = read_stdout(['cygcheck', '-c', p])

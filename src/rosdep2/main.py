@@ -341,9 +341,9 @@ def _rosdep_main(args):
     # Convert list of keys to dictionary
     options.as_root = dict((k, str_to_bool(v)) for k, v in key_list_to_dict(options.as_root).items())
 
-    if not command in ['init', 'update']:
+    if not command in ['init', 'update', 'fix-permissions']:
         check_for_sources_list_init(options.sources_cache_dir)
-    else:
+    elif not command in ['fix-permissions']:
         setup_proxy_opener()
     if command in _command_rosdep_args:
         return _rosdep_args_handler(command, parser, options, args)
@@ -785,7 +785,10 @@ def command_fix_permissions(options):
     uid = stat_info.st_uid
     gid = stat_info.st_gid
     user_name = pwd.getpwuid(uid).pw_name
-    group_name = grp.getgrgid(gid).gr_name
+    try:
+        group_name = grp.getgrgid(gid).gr_name
+    except KeyError as e:
+        group_name = gid
     ros_home = rospkg.get_ros_home()
 
     print("Recursively changing ownership of ros home directory '{0}' "
