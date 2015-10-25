@@ -131,7 +131,7 @@ def _generate_rosinstall_for_package(distro, pkg_name, flat=False, tar=False):
     return _generate_rosinstall(local_name, repo.url, release_tag, tar=tar)
 
 
-def _generate_rosinstall(local_name, url, release_tag, tar=False):
+def _generate_rosinstall(local_name, url, release_tag, tar=False, vcs_type=None):
     if tar:
         # the repository name might be different than repo.name coming from rosdistro
         repo_name = os.path.basename(url[:-4])
@@ -148,7 +148,7 @@ def _generate_rosinstall(local_name, url, release_tag, tar=False):
         }]
     else:
         data = [{
-            'git': {
+            vcs_type or 'git': {
                 'local-name': local_name,
                 'uri': url,
                 'version': release_tag

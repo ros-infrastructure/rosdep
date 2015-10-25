@@ -148,9 +148,11 @@ def generate_rosinstall_for_repos(repos, version_tag=True, tar=False):
     for repo in repos.values():
         if version_tag:
             version = repo.release_repository.version.split('-')[0]
+            vcs_type = repo.release_repository.type
         else:
             version = repo.source_repository.version
-        rosinstall_data += _generate_rosinstall(repo.name, repo.source_repository.url, version, tar=tar)
+            vcs_type = repo.source_repository.type
+        rosinstall_data += _generate_rosinstall(repo.name, repo.source_repository.url, version, tar=tar, vcs_type=vcs_type)
     return rosinstall_data
 
 
