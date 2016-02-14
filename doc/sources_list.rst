@@ -44,7 +44,7 @@ source first.  The general format is::
 
   ``yaml``
 
-     ``rosdep.yaml`` file   
+     ``rosdep.yaml`` file
 
   ``gbpdistro``
 
@@ -53,7 +53,7 @@ source first.  The general format is::
 ``type``
 
     Type must be ``yaml`` or ``gbpdistro``.  In the future, more types may be supported.
-           
+
 ``url``
 
     URL should point to the HTTP location of a rosdep YAML file. URL
@@ -91,4 +91,4 @@ currently in use for building catkin-based ROS stacks.  End users are
 not expected to write their own ``gbpdistro`` files and the
 specification is unstable.
 
-    
+
