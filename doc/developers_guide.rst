@@ -12,12 +12,12 @@ REP 114: rospkg standalone library
 ----------------------------------
 
 The rosdep library is being developed using the ROS REP process.  It
-is necessary to be familiar with these REPs in order to make sure 
+is necessary to be familiar with these REPs in order to make sure
 that rosdep continues to follow the relevant specifications.
 
-- `REP 111: Multiple Package Manager Support for Rosdep <http://ros.org/reps/rep-0111.html>`_.  
-- `REP 112: Source Package Manager for Rosdep <http://ros.org/reps/rep-0112.html>`_.  
-- `REP 125: rosdep 2 <http://ros.org/reps/rep-0125.html>`_.  
+- `REP 111: Multiple Package Manager Support for Rosdep <http://ros.org/reps/rep-0111.html>`_.
+- `REP 112: Source Package Manager for Rosdep <http://ros.org/reps/rep-0112.html>`_.
+- `REP 125: rosdep 2 <http://ros.org/reps/rep-0125.html>`_.
 
 Bug reports and feature requests
 --------------------------------
@@ -45,7 +45,7 @@ Declaring a new OS
 ''''''''''''''''''
 
 Adding support for a new OS is fairly straightforward: you just
-have to provide rosdep2 the keys that are associated with your OS and the 
+have to provide rosdep2 the keys that are associated with your OS and the
 keys of the installers that your OS supports.
 
 Implementations must provide a ``register_platforms(context)`` call
@@ -97,7 +97,7 @@ of the ``PipInstaller``::
                 return []
             else:
                 return [['sudo', 'pip', 'install', '-U', p] for p in packages]
-            
+
 
 The pattern is fairly simple to implement for other package managers.
 You must provide a ``detect_function(package_names)``
@@ -125,7 +125,7 @@ Setup
     pip install mock
 
 
-rosdep2 uses `Python nose <http://readthedocs.org/docs/nose/en/latest/>`_ 
+rosdep2 uses `Python nose <http://readthedocs.org/docs/nose/en/latest/>`_
 for testing, which is a fairly simple and straightfoward test
 framework.  You just have to write a function start with the name
 ``test`` and use normal ``assert`` statements for your tests.
@@ -138,7 +138,7 @@ You can run the tests, including coverage, as follows:
 ::
 
     cd rosdep2/test
-    nosetests 
+    nosetests
 
 
 Documentation

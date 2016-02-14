@@ -67,7 +67,7 @@ Example::
       sudo apt-get install python-numpy
       sudo apt-get install python-paramiko
       sudo apt-get install python-yaml
-    
+
 You can also query rosdep to find out more information about specific
 dependencies::
 

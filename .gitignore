@@ -12,3 +12,4 @@ deb_dist
 dist
 src/rosdep.egg-info
 nose*
+_build
