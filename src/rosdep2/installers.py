@@ -293,7 +293,7 @@ class Installer(object):
             resolved2 = installer.resolve(args2)
             resolved = installer.unique(resolved1, resolved2)
 
-        :param *resolved_rules: resolved arguments.  Resolved
+        :param resolved_rules: resolved arguments.  Resolved
           arguments must all be from this :class:`Installer` instance.
         """
         raise NotImplementedError("Base class unique", resolved_rules)
