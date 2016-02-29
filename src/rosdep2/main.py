@@ -274,7 +274,7 @@ def _rosdep_main(args):
     parser.add_option("-r", dest="robust", default=False, 
                       action="store_true", help="Continue installing despite errors.")
     parser.add_option("-q", dest="quiet", default=False, 
-                      action="store_true", help="Suprress output except for errors")
+                      action="store_true", help="Quiet. Suppress output except for errors.")
     parser.add_option("-a", "--all", dest="rosdep_all", default=False, 
                       action="store_true", help="select all packages")
     parser.add_option("-n", dest="recursive", default=True, 
