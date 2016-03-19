@@ -8,7 +8,7 @@ exec(open(os.path.join(os.path.dirname(__file__), 'src', 'rosinstall_generator',
 setup(
     name='rosinstall_generator',
     version=__version__,
-    install_requires=['argparse', 'catkin_pkg >= 0.1.28', 'distribute', 'rosdistro >= 0.3.4', 'rospkg', 'PyYAML'],
+    install_requires=['argparse', 'catkin_pkg >= 0.1.28', 'rosdistro >= 0.3.4', 'rospkg', 'PyYAML', 'setuptools'],
     packages=find_packages('src'),
     package_dir={'': 'src'},
     scripts=['bin/rosinstall_generator'],

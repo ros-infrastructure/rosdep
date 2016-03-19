@@ -5,7 +5,7 @@ python:
   - "3.3"
 # command to install dependencies
 install:
-  - pip install argparse catkin-pkg distribute rosdistro rospkg PyYAML
+  - pip install argparse catkin-pkg rosdistro rospkg PyYAML setuptools
 # command to run tests
 script:
 # This package doesn't have tests yet.
