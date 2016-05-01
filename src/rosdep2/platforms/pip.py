@@ -106,5 +106,7 @@ class PipInstaller(PackageManagerInstaller):
         packages = self.get_packages_to_install(resolved, reinstall=reinstall)
         if not packages:
             return []
+        elif quiet:
+            return [self.elevate_priv(['pip', 'install', '-q', '-U', p]) for p in packages]
         else:
             return [self.elevate_priv(['pip', 'install', '-U', p]) for p in packages]
