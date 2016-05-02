@@ -109,4 +109,6 @@ class PipInstaller(PackageManagerInstaller):
         cmd = ['pip', 'install', '-U']
         if quiet:
             cmd.append('-q')
+        if reinstall:
+            cmd.append('-I')
         return [self.elevate_priv(cmd + [p]) for p in packages]
