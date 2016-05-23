@@ -1,3 +1,11 @@
+0.11.5 (2016-05-23)
+-------------------
+
+- add ca-certificates as a dependency to support https urls
+- add quiet option for ``pip``
+- Documentation updates
+- Elementary support improvements
+
 0.11.4 (2015-09-25)
 -------------------
 
