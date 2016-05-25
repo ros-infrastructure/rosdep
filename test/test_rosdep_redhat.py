@@ -58,16 +58,16 @@ def test_DnfInstaller():
 
         # no interactive option with YUM
         mock_method.return_value = ['a', 'b']
-        expected = [['sudo', 'dnf', '--assumeyes', '--quiet', 'install', 'a', 'b']]
+        expected = [['sudo', '-H', 'dnf', '--assumeyes', '--quiet', 'install', 'a', 'b']]
         val = installer.get_install_command(['whatever'], interactive=False, quiet=True)
         assert val == expected, val + expected
-        expected = [['sudo', 'dnf', '--quiet', 'install', 'a', 'b']]
+        expected = [['sudo', '-H', 'dnf', '--quiet', 'install', 'a', 'b']]
         val = installer.get_install_command(['whatever'], interactive=True, quiet=True)
         assert val == expected, val + expected
-        expected = [['sudo', 'dnf', '--assumeyes', 'install', 'a', 'b']]
+        expected = [['sudo', '-H', 'dnf', '--assumeyes', 'install', 'a', 'b']]
         val = installer.get_install_command(['whatever'], interactive=False, quiet=False)
         assert val == expected, val + expected
-        expected = [['sudo', 'dnf', 'install', 'a', 'b']]
+        expected = [['sudo', '-H', 'dnf', 'install', 'a', 'b']]
         val = installer.get_install_command(['whatever'], interactive=True, quiet=False)
         assert val == expected, val + expected
     try:
@@ -104,3 +104,56 @@ def test_YumInstaller():
     except AssertionError:
         traceback.print_exc()
         raise
+
+def test_Fedora_variable_installer_key():
+    from rosdep2 import InstallerContext
+    from rosdep2.platforms import pip, redhat, source
+    from rosdep2.platforms.redhat import DNF_INSTALLER, YUM_INSTALLER
+
+    from rospkg.os_detect import OsDetect, OS_FEDORA
+    os_detect_mock = Mock(spec=OsDetect)
+    os_detect_mock.get_name.return_value = 'fedora'
+    os_detect_mock.get_codename.return_value = 'twenty'
+    os_detect_mock.get_version.return_value = '21'
+
+    # create our test fixture.  use most of the default toolchain, but
+    # replace the apt installer with one that we can have more fun
+    # with.  we will do all tests with ubuntu lucid keys -- other
+    # tests should cover different resolution cases.
+    context = InstallerContext(os_detect_mock)
+    pip.register_installers(context)
+    redhat.register_installers(context)
+    source.register_installers(context)
+    redhat.register_platforms(context)
+
+    assert YUM_INSTALLER == context.get_default_os_installer_key(OS_FEDORA)
+
+    os_detect_mock.get_version.return_value = '22'
+    assert DNF_INSTALLER == context.get_default_os_installer_key(OS_FEDORA)
+
+def test_Fedora_variable_lookup_key():
+    from rosdep2 import InstallerContext
+    from rosdep2.platforms import pip, redhat, source
+    from rosdep2.platforms.redhat import DNF_INSTALLER, YUM_INSTALLER
+
+    from rospkg.os_detect import OsDetect, OS_FEDORA
+    os_detect_mock = Mock(spec=OsDetect)
+    os_detect_mock.get_name.return_value = 'fedora'
+    os_detect_mock.get_codename.return_value = 'heisenbug'
+    os_detect_mock.get_version.return_value = '20'
+
+    # create our test fixture.  use most of the default toolchain, but
+    # replace the apt installer with one that we can have more fun
+    # with.  we will do all tests with ubuntu lucid keys -- other
+    # tests should cover different resolution cases.
+    context = InstallerContext(os_detect_mock)
+    pip.register_installers(context)
+    redhat.register_installers(context)
+    source.register_installers(context)
+    redhat.register_platforms(context)
+
+    assert ('fedora', 'heisenbug') == context.get_os_name_and_version()
+
+    os_detect_mock.get_codename.return_value = 'twenty'
+    os_detect_mock.get_version.return_value = '21'
+    assert (OS_FEDORA, '21') == context.get_os_name_and_version()

@@ -211,13 +211,12 @@ class InstallerContext(object):
         """
         if not os_key in self.os_installers:
             raise KeyError("unknown OS: %s"%(os_key))
-        if not installer_key in self.os_installers[os_key]:
-            raise KeyError("installer [%s] is not associated with OS [%s]. call add_os_installer_key() first"%(installer_key, os_key))
-
-        # validate, will throw KeyError
-        self.get_installer(installer_key)
+        if not hasattr(installer_key, '__call__'):
+            raise ValueError("version type should be a method")
+        if not installer_key(self.os_detect) in self.os_installers[os_key]:
+            raise KeyError("installer [%s] is not associated with OS [%s]. call add_os_installer_key() first"%(installer_key(self.os_detect), os_key))
         if self.verbose:
-            print("set default installer [%s] for OS [%s]"%(installer_key, os_key))
+            print("set default installer for OS [%s]"%(os_key,))
         self.default_os_installer[os_key] = installer_key
 
     def get_default_os_installer_key(self, os_key):
@@ -232,7 +231,12 @@ class InstallerContext(object):
         if not os_key in self.os_installers:
             raise KeyError("unknown OS: %s"%(os_key))
         try:
-            return self.default_os_installer[os_key]
+            installer_key = self.default_os_installer[os_key](self.os_detect)
+            if not installer_key in self.os_installers[os_key]:
+                raise KeyError("installer [%s] is not associated with OS [%s]. call add_os_installer_key() first"%(installer_key, os_key))
+            # validate, will throw KeyError
+            self.get_installer(installer_key)
+            return installer_key
         except KeyError:
             return None
 
@@ -289,7 +293,7 @@ class Installer(object):
             resolved2 = installer.resolve(args2)
             resolved = installer.unique(resolved1, resolved2)
 
-        :param *resolved_rules: resolved arguments.  Resolved
+        :param resolved_rules: resolved arguments.  Resolved
           arguments must all be from this :class:`Installer` instance.
         """
         raise NotImplementedError("Base class unique", resolved_rules)
@@ -410,7 +414,7 @@ class RosdepInstaller(object):
             return uninstalled, errors
         for installer_key, resolved in resolutions: #py3k
             if verbose:
-                print("resolution: %s [%s]"%(installer_key, ', '.join(resolved)))
+                print("resolution: %s [%s]" % (installer_key, ', '.join([str(r) for r in resolved])))
             try:
                 installer = installer_context.get_installer(installer_key)
             except KeyError as e: # lookup has to be buggy to cause this
@@ -425,7 +429,7 @@ class RosdepInstaller(object):
             if packages_to_install:
                 uninstalled.append((installer_key, packages_to_install))
             if verbose:
-                print("uninstalled: [%s]"%(', '.join(packages_to_install)))
+                print("uninstalled: [%s]"%(', '.join([str(p) for p in packages_to_install])))
         
         return uninstalled, errors
     

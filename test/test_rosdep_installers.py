@@ -216,7 +216,11 @@ def test_InstallerContext_os_installers():
         assert False, "should have raised"
     except KeyError: pass
     try:
-        context.set_default_os_installer_key(os_key, 'fake-key')
+        context.set_default_os_installer_key(os_key, 'non-method')
+        assert False, "should have raised"
+    except KeyError: pass
+    try:
+        context.set_default_os_installer_key(os_key, lambda self: 'fake-key')
         assert False, "should have raised"
     except KeyError: pass
     try:
@@ -241,7 +245,7 @@ def test_InstallerContext_os_installers():
 
     # retest set_default_os_installer_key, now with installer_key not configured on os
     try:
-        context.set_default_os_installer_key(os_key, installer_key2)
+        context.set_default_os_installer_key(os_key, lambda self: installer_key2)
         assert False, "should have raised"
     except KeyError as e:
         assert 'add_os_installer' in str(e), e
@@ -252,14 +256,14 @@ def test_InstallerContext_os_installers():
 
     # test default
     assert None == context.get_default_os_installer_key(os_key)
-    context.set_default_os_installer_key(os_key, installer_key1)
+    context.set_default_os_installer_key(os_key, lambda self: installer_key1)
     assert installer_key1 == context.get_default_os_installer_key(os_key)
-    context.set_default_os_installer_key(os_key, installer_key2)    
+    context.set_default_os_installer_key(os_key, lambda self: installer_key2)
     assert installer_key2 == context.get_default_os_installer_key(os_key)
 
     # retest set_default_os_installer_key, now with invalid os
     try:
-        context.set_default_os_installer_key('bad-os', installer_key1)
+        context.set_default_os_installer_key('bad-os', lambda self: installer_key1)
         assert False, "should have raised"
     except KeyError: pass
 

@@ -45,7 +45,7 @@ def register_installers(context):
 def register_platforms(context):
     context.add_os_installer_key(OS_FREEBSD, SOURCE_INSTALLER)
     context.add_os_installer_key(OS_FREEBSD, PKG_ADD_INSTALLER)
-    context.set_default_os_installer_key(OS_FREEBSD, PKG_ADD_INSTALLER)
+    context.set_default_os_installer_key(OS_FREEBSD, lambda self: PKG_ADD_INSTALLER)
 
 def pkg_info_detect_single(p):
     if p == "builtin":

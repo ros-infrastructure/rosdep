@@ -77,7 +77,15 @@ def pip_detect(pkgs, exec_fn=None):
     #   https://github.com/pypa/pip/issues/1570#issuecomment-71111030
     if fallback_to_pip_show:
         for pkg in [p for p in pkgs if p not in ret_list]:
-            if subprocess.call(['pip', 'show', '-q', pkg]) == 0:
+            # does not see retcode but stdout for old pip to check if installed
+            proc = subprocess.Popen(
+                ['pip', 'show', pkg],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT
+            )
+            output, _ = proc.communicate()
+            output = output.strip()
+            if proc.returncode == 0 and output:
                 # `pip show` detected it, add it to the list.
                 ret_list.append(pkg)
 
@@ -98,5 +106,9 @@ class PipInstaller(PackageManagerInstaller):
         packages = self.get_packages_to_install(resolved, reinstall=reinstall)
         if not packages:
             return []
-        else:
-            return [self.elevate_priv(['pip', 'install', '-U', p]) for p in packages]
+        cmd = ['pip', 'install', '-U']
+        if quiet:
+            cmd.append('-q')
+        if reinstall:
+            cmd.append('-I')
+        return [self.elevate_priv(cmd + [p]) for p in packages]

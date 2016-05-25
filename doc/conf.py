@@ -11,13 +11,14 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys, os
-
+import os
 import sys
+
+sys.path.insert(0, './')
 sys.path.insert(0, '../src')
 
-import catkin_sphinx
-from rosdep2 import __version__
+import catkin_sphinx  # noqa
+from rosdep2 import __version__  # noqa
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -31,7 +32,13 @@ from rosdep2 import __version__
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.intersphinx', 'sphinx.ext.coverage', 'sphinx.ext.viewcode']
+extensions = [
+    'sphinx.ext.autodoc',
+    'sphinx.ext.intersphinx',
+    'sphinx.ext.coverage',
+    'sphinx.ext.viewcode',
+    'rosdep_doc_utils',
+]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
