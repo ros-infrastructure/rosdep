@@ -40,9 +40,13 @@
 # >=sys-apps/sed-4 // sed of at least version 4
 # sed[static,-nls] // sed built the static USE flag and withou the nls one
 
-import os
+from __future__ import print_function
 
-from rospkg.os_detect import OS_GENTOO
+import os
+import sys
+import multiprocessing
+
+from rospkg.os_detect import OS_GENTOO, OS_FUNTOO
 
 from .source import SOURCE_INSTALLER
 from ..installers import PackageManagerInstaller
@@ -54,9 +58,20 @@ def register_installers(context):
     context.set_installer(PORTAGE_INSTALLER, PortageInstaller())
 
 def register_platforms(context):
+    register_funtoo(context)
+    register_gentoo(context)
+
+def register_gentoo(context):
     context.add_os_installer_key(OS_GENTOO, PORTAGE_INSTALLER)
     context.add_os_installer_key(OS_GENTOO, SOURCE_INSTALLER)
     context.set_default_os_installer_key(OS_GENTOO, lambda self: PORTAGE_INSTALLER)
+
+def register_funtoo(context):
+    # Funtoo is an alias for Gentoo.
+    (os_name, os_version) = context.get_os_name_and_version()
+    if os_name == OS_FUNTOO:
+        print("rosdep detected OS: [%s], aliasing it to [%s]" % (OS_FUNTOO, OS_GENTOO), file=sys.stderr)
+        context.set_os_override(OS_GENTOO, context.os_detect.get_version())
 
 # Determine whether an atom is already satisfied
 def portage_detect_single(atom, exec_fn = read_stdout ):
@@ -113,6 +128,15 @@ class PortageInstaller(PackageManagerInstaller):
         cmd = self.elevate_priv(['emerge'])
         if not atoms:
             return []
+
+        try:
+            numProcessors = multiprocessing.cpu_count()
+            # The emerge command can be threaded.
+            cmd.append('--jobs')
+            # The next command prevents unlimited parallelization
+            cmd.append('--load-average {0}'.format(multiprocessing.cpu_count()))
+        except NotImplementedError :
+            print('WARNING: Unable to count processors. Building will not be threaded.')
 
         if interactive:
             cmd.append('-a')
