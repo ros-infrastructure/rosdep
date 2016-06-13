@@ -298,8 +298,8 @@ def _rosdep_main(args):
                            "/etc/ros/rosdep/sources.list.d/ before the defaults).")
     parser.add_option("--filter-for-installers",
                       action="append", default=[],
-                      help="Affects the 'db' verb. If supplied, the output of the 'db' "
-                           "command is filtered to only list packages whose installer "
+                      help="Affects the 'db' and 'resolve' verbs. If supplied, the output "
+                           "is filtered to only list packages whose installer "
                            "is in the provided list. The option can be supplied "
                            "multiple times. A space separated list of installers can also "
                            "be passed as a string. Example: `--filter-for-installers \"apt pip\"`")
@@ -677,42 +677,10 @@ def _compute_depdb_output(lookup, packages, options):
     return output
     
 def command_db(options):
-    # exact same setup logic as command_resolve, should possibly combine
     lookup = _get_default_RosdepLookup(options)
-    installer_context = create_default_installer_context(verbose=options.verbose)
-    configure_installer_context(installer_context, options)
-    os_name, os_version = installer_context.get_os_name_and_version()
-    try:
-        installer_keys = installer_context.get_os_installer_keys(os_name)
-        default_key = installer_context.get_default_os_installer_key(os_name)
-    except KeyError:
-        raise UnsupportedOs(os_name, installer_context.get_os_keys())
-    installer = installer_context.get_installer(default_key)
-
-    print("OS NAME: %s"%os_name)
-    print("OS VERSION: %s"%os_version)
-    errors = []
-    print("DB [key -> resolution]")
     # db does not leverage the resource-based API
     view = lookup.get_rosdep_view(DEFAULT_VIEW_KEY, verbose=options.verbose)
-    for rosdep_name in view.keys():
-        try:
-            d = view.lookup(rosdep_name)
-            inst_key, rule = d.get_rule_for_platform(os_name, os_version, installer_keys, default_key)
-            if options.filter_for_installers and inst_key not in options.filter_for_installers:
-                continue
-            resolved = installer.resolve(rule)
-            resolved_str = " ".join(resolved)
-            print ("%s -> %s"%(rosdep_name, resolved_str))
-        except ResolutionError as e:
-            errors.append(e)
-
-    #TODO: add command-line option for users to be able to see this.
-    #This is useful for platform bringup, but useless for most users
-    #as the rosdep db contains numerous, platform-specific keys.
-    if 0: 
-        for error in errors:
-            print("WARNING: %s"%(error_to_human_readable(error)), file=sys.stderr)
+    return resolve_and_print(view.keys(), options)
 
 def _print_lookup_errors(lookup):
     for error in lookup.get_errors():
@@ -745,7 +713,7 @@ def command_where_defined(args, options):
         print("ERROR: cannot find definition(s) for [%s]"%(', '.join(args)), file=sys.stderr)
         return 1
 
-def command_resolve(args, options):
+def resolve_and_print(names, options):
     lookup = _get_default_RosdepLookup(options)
     installer_context = create_default_installer_context(verbose=options.verbose)
     configure_installer_context(installer_context, options)
@@ -753,32 +721,48 @@ def command_resolve(args, options):
     installer, installer_keys, default_key, \
             os_name, os_version = get_default_installer(installer_context=installer_context,
                                                         verbose=options.verbose)
+
+    if options.verbose:
+        print("# OS NAME: %s"%os_name, file=sys.stderr)
+        print("# OS VERSION: %s"%os_version, file=sys.stderr)
+        print("# Format: [key:resolution1,resolution2:installer]", file=sys.stderr)
+
     invalid_key_errors = []
-    for rosdep_name in args:
-        if len(args) > 1:
-            print("#ROSDEP[%s]"%rosdep_name)
-
-        view = lookup.get_rosdep_view(DEFAULT_VIEW_KEY, verbose=options.verbose)
+    resolution_errors = []
+    view = lookup.get_rosdep_view(DEFAULT_VIEW_KEY, verbose=options.verbose)
+    for rosdep_name in names:
         try:
-            d = view.lookup(rosdep_name)
-        except KeyError as e:
-            invalid_key_errors.append(e)
-            continue
-        rule_installer, rule = d.get_rule_for_platform(os_name, os_version, installer_keys, default_key)
+            try:
+                d = view.lookup(rosdep_name)
+            except KeyError as e:
+                invalid_key_errors.append(e)
+                continue
+            rule_installer, rule = d.get_rule_for_platform(os_name, os_version, installer_keys, default_key)
+            if options.filter_for_installers and rule_installer not in options.filter_for_installers:
+                continue
 
-        installer = installer_context.get_installer(rule_installer)
-        resolved = installer.resolve(rule)
-        print("#%s"%(rule_installer))
-        print (" ".join([str(r) for r in resolved]))
+            installer = installer_context.get_installer(rule_installer)
+            resolved = installer.resolve(rule)
+            print("%s:%s:%s"%(rosdep_name, ",".join([str(r) for r in resolved]), rule_installer))
+        except ResolutionError as e:
+            resolution_errors.append(e)
 
-    for error in invalid_key_errors:
-        print("ERROR: no rosdep rule for %s"%(error), file=sys.stderr)        
 
-    for error in lookup.get_errors():
-        print("WARNING: %s"%(error_to_human_readable(error)), file=sys.stderr)
+    # always print errors if the number of keys requested is too small
+    if options.verbose or len(names) < 3:
+        for error in invalid_key_errors:
+            print("ERROR: no rosdep rule for %s"%(error), file=sys.stderr)
+
+        for error in resolution_errors:
+            print("ERROR: %s"%(error_to_human_readable(error)), file=sys.stderr)
+
+        _print_lookup_errors(lookup)
 
     if invalid_key_errors:
         return 1 # error exit code
+
+def command_resolve(args, options):
+    return resolve_and_print(args, options)
 
 def command_fix_permissions(options):
     import os
@@ -847,6 +831,3 @@ _command_rosdep_args = ['what-needs', 'what_needs', 'where-defined', 'where_defi
 _command_no_args = ['update', 'init', 'db', 'fix-permissions']
 
 _commands = command_handlers.keys()
-
-
-
