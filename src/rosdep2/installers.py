@@ -314,6 +314,8 @@ class PackageManagerInstaller(Installer):
     def __init__(self, detect_fn, supports_depends=False):
         """
         :param supports_depends: package manager supports dependency key
+        :param detect_fn: function that for a given list of packages determines
+        the list of installed packages.
         """
         self.detect_fn = detect_fn
         self.supports_depends = supports_depends
@@ -356,6 +358,10 @@ class PackageManagerInstaller(Installer):
         return sorted(list(s))
         
     def get_packages_to_install(self, resolved, reinstall=False):
+        '''
+        Return a list of packages (out of *resolved*) that still need to get
+        installed.
+        '''
         if reinstall:
             return resolved
         if not resolved:
@@ -364,6 +370,9 @@ class PackageManagerInstaller(Installer):
             return list(set(resolved) - set(self.detect_fn(resolved)))
 
     def is_installed(self, resolved_item):
+        '''
+        Check if a given package was installed.
+        '''
         return not self.get_packages_to_install([resolved_item])
 
     def get_install_command(self, resolved, interactive=True, reinstall=False, quiet=False):
