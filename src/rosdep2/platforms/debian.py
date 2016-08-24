@@ -30,6 +30,7 @@
 
 from __future__ import print_function
 import sys
+import re
 
 from rospkg.os_detect import OS_DEBIAN, OS_LINARO, OS_UBUNTU, OS_ELEMENTARY, OsDetect
 
@@ -41,6 +42,7 @@ from ..shell_utils import read_stdout
 
 # apt package manager key
 APT_INSTALLER='apt'
+
 
 def register_installers(context):
     context.set_installer(APT_INSTALLER, AptInstaller())
@@ -81,16 +83,86 @@ def register_ubuntu(context):
     context.set_default_os_installer_key(OS_UBUNTU, lambda self: APT_INSTALLER)
     context.set_os_version_type(OS_UBUNTU, OsDetect.get_codename)
 
+
+# detect that apt show indicates that the package is virtual
+APT_PURELY_VIRTUAL_RE = re.compile(
+        r'State: not a real package \(virtual\)',
+        flags=re.DOTALL)
+# detect what lines in apt-cache showpkg show the packages providing a virtual
+# package
+APT_CACHE_REVERSE_PROVIDE_START_RE = re.compile(
+        r'^Reverse Provides:')
+# format of a 'Reverse Provides' line in the apt-cache showpkg output
+APT_CACHE_PROVIDER_RE = re.compile('^(.*) (.*)$')
+
+
+def _is_installed_as_virtual_package(package, exec_fn=None):
+    '''
+    Check whether this is a virtual package and a package providing this
+    virtual package is installed.
+
+    :param exec_fn: see `dpkg_detect`; make sure that exec_fn supports a
+    second, boolean, parameter.
+    '''
+# Note: This can be done much more concise when adding python-apt as a dependency:
+#
+#    import apt
+#    cache = apt.Cache()
+#    if cache.is_virtual_package(package):
+#        for provider in cache.get_providing_packages(package):
+#            if cache[provider].is_installed:
+#                print('Virtual package {} is provided by {}'.format(
+#                    package, provider.name))
+#                return True
+#        return False
+#
+    # check output of `apt show package' for whether it's a virtual
+    # package and if so use `apt-cache showpkg package' to get the providing
+    # packages.  Then check if one of those is installed.
+    cmd = ['apt', 'show', package]
+    if exec_fn is None:
+        exec_fn = read_stdout
+    std_out, std_err = exec_fn(cmd, True) # use stderr as well to hide error message ... not too nice, but hopefully cautious
+    if APT_PURELY_VIRTUAL_RE.search(std_out):
+        print('Package {} seems to be virtual; try to specify a providing package in your rosdep config.'.format(package))
+        cmd = ['apt-cache', 'showpkg', package]
+        std_out = exec_fn(cmd)
+        is_provider = False # true when parsed line contains a povider
+        for line in std_out.split('\n'):
+            if is_provider:
+                match = APT_CACHE_PROVIDER_RE.match(line)
+                if not match:
+                    print('WARNING: The output of {} is strange; unable to determine providers of virtual package {}'.format(
+                        cmd[0] + ' ' + cmd[1], package))
+                else:
+                    provider_name, provider_version = match.groups()
+                    # now that we have the name of the provider, finaly check
+                    # whether the package is provided
+                    if dpkg_detect([provider_name]):
+                        print('Virtual package {} is provided by {}'.format(package, provider_name))
+                        return True
+            if APT_CACHE_REVERSE_PROVIDE_START_RE.match(line):
+                is_provider = True
+                # Note: Set this _after_ possibly parsing the current line to
+                #       not parse the line containing
+                #       APT_CACHE_REVERSE_PROVIDE_START_RE
+        return False # unable to find a provider that was installed
+
+
+
 def dpkg_detect(pkgs, exec_fn=None):
-    """ 
+    """
     Given a list of package, return the list of installed packages.
 
+    :param pkgs: list of package names, optionally followed by a fixed version (`foo=3.0`)
     :param exec_fn: function to execute Popen and read stdout (for testing)
+    :return: list elements in *pkgs* that were found installed on the system
     """
     ret_list = []
     # this is mainly a hack to support version locking for eigen.
     # we strip version-locking syntax, e.g. libeigen3-dev=3.0.1-*.
     # our query does not do the validation on the version itself.
+    # This is a map `package name -> package name optionally with version`.
     version_lock_map = {}
     for p in pkgs:
         if '=' in p:
@@ -109,7 +181,16 @@ def dpkg_detect(pkgs, exec_fn=None):
         pkg_row = pkg.split()
         if len(pkg_row) == 4 and (pkg_row[3] =='installed'):
             ret_list.append( pkg_row[0])
-    return [version_lock_map[r] for r in ret_list]
+    installed_packages = [version_lock_map[r] for r in ret_list]
+
+    # now for the remaining packages check, whether they are installed as
+    # virtual packages
+    for rem in set(pkgs) - set(installed_packages):
+        if _is_installed_as_virtual_package(rem):
+            installed_packages.append(rem)
+
+    return installed_packages
+
 
 
 class AptInstaller(PackageManagerInstaller):
