@@ -1,0 +1,6 @@
+[run]
+include =
+    src/rosinstall_generator/*
+
+[report]
+show_missing = True

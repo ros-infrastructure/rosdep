@@ -1,14 +1,16 @@
 language: python
+sudo: false
+
 python:
   - "2.6"
   - "2.7"
   - "3.3"
-# command to install dependencies
+
 install:
-  - pip install argparse catkin-pkg rosdistro rospkg PyYAML setuptools
-# command to run tests
+  - pip install argparse catkin-pkg rosdistro rospkg PyYAML setuptools coverage
+
 script:
-# This package doesn't have tests yet.
-  - true # - nosetests -s --tests test
+  - nosetests --with-coverage
+
 notifications:
   email: false

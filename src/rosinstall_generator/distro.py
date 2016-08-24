@@ -33,6 +33,7 @@
 
 import logging
 import os
+import re
 import sys
 
 from rosdistro import get_cached_distribution, get_index, get_index_url
@@ -132,26 +133,38 @@ def _generate_rosinstall_for_package(distro, pkg_name, flat=False, tar=False):
 
 
 def _generate_rosinstall(local_name, url, release_tag, tar=False, vcs_type=None):
+    logger = logging.getLogger('rosinstall_generator.generate')
+
     if tar:
-        # the repository name might be different than repo.name coming from rosdistro
-        repo_name = os.path.basename(url[:-4])
-        suffix = '.git'
-        if not url.endswith(suffix):
-            raise RuntimeError("The repository '%s' must end with '%s': %s" % (repo_name, suffix, url))
-        url = url[:-len(suffix)] + '/archive/{0}.tar.gz'.format(release_tag)
-        data = [{
-            'tar': {
-                'local-name': local_name,
-                'uri': url,
-                'version': '{0}-{1}'.format(repo_name, release_tag.replace('/', '-'))
+        # Github tarball:    https://github.com/ros/ros_comm/archive/1.11.20.tar.gz
+        # Bitbucket tarball: https://bitbucket.org/osrf/gazebo/get/gazebo7_7.3.1.tar.gz
+        # Gitlab tarball:    https://gitlab.com/gitlab-org/gitlab-ce/repository/archive.tar.gz?ref=master
+        match = re.match('(?:\w+:\/\/|git@)([\w.-]+)[:/]([\w/-]*)(?:\.git)?$', url)
+
+        if match:
+            server, repo_path = match.groups()
+            url_templates = {
+                'github': 'https://{0}/{1}/archive/{2}.tar.gz',
+                'bitbucket': 'https://{0}/{1}/get/{2}.tar.gz',
+                'gitlab': 'https://{0}/{1}/repository/archive.tar.gz?ref={2}'
             }
-        }]
-    else:
-        data = [{
-            vcs_type or 'git': {
-                'local-name': local_name,
-                'uri': url,
-                'version': release_tag
-            }
-        }]
-    return data
+            for server_key, tarball_url_template in url_templates.items():
+                if server_key in server:
+                    return [{ 'tar': {
+                        'local-name': local_name,
+                        'uri': tarball_url_template.format(server, repo_path, release_tag),
+                        'version': '{0}-{1}'.format(os.path.basename(repo_path), release_tag.replace('/', '-'))
+                    }}]
+            logger.log(logging.WARN, "Tarball requested for repo '{0}', but git server '{1}' is unrecognized.".format(
+                local_name, server))
+        else:
+            logger.log(logging.WARN, "Tarball requested for repo '{0}', but I can't parse git URL '{1}'.".format(
+                local_name, url))
+
+        logger.log(logging.WARN, "Falling back on git clone for repo '{0}'.".format(local_name))
+
+    return [{ vcs_type or 'git': {
+        'local-name': local_name,
+        'uri': url,
+        'version': release_tag
+    }}]
