@@ -49,7 +49,7 @@ else
   exit 1}'
 """
 
-REP112_MD5SUM = '77040d44b0e620c092bce918ac7b4180'
+REP112_MD5SUM = '57cb9faf930e9c4f0822be8b27798248'
 
 def get_test_dir():
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'source'))
@@ -67,7 +67,7 @@ def _subtest_rep112_rdmanifest(resolved):
     assert len(resolved.check_presence_command) == len(rep122_check_presence_command), "%s %s"%(len(resolved.check_presence_command), len(rep122_check_presence_command))
 
     assert resolved.exec_path == 'yaml-cpp-0.2.5'
-    assert resolved.tarball == 'https://yaml-cpp.googlecode.com/files/yaml-cpp-0.2.5.tar.gz'
+    assert resolved.tarball == 'http://download.ros.org/downloads/yaml-cpp-0.2.5.tar.gz'
     assert resolved.alternate_tarball == None
     assert resolved.tarball_md5sum == 'b17dc36055cd2259c88b2602601415d9'
 

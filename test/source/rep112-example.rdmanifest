@@ -1,4 +1,4 @@
-uri: 'https://yaml-cpp.googlecode.com/files/yaml-cpp-0.2.5.tar.gz'
+uri: 'http://download.ros.org/downloads/yaml-cpp-0.2.5.tar.gz'
 md5sum: b17dc36055cd2259c88b2602601415d9
 install-script: |
   #!/bin/bash
