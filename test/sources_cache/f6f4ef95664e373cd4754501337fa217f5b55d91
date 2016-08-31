@@ -7,6 +7,7 @@ paramiko:
   macports: py26-paramiko
   opensuse: python-paramiko
   ubuntu: python-paramiko
+  slackware: paramiko
 testpython:
   arch: python
   cygwin: python
@@ -16,6 +17,7 @@ testpython:
   gentoo: python
   opensuse: python-devel
   rhel: python-devel
+  slackware: python
   ubuntu: python-dev
   osx:
     homebrew:
@@ -30,6 +32,7 @@ python-gtk2:
   opensuse: python-gtk
   pip: pygtk
   rhel: pygtk2
+  slackware: pygtk
   ubuntu: python-gtk2
 python-imaging:
   arch: python-imaging
@@ -39,6 +42,7 @@ python-imaging:
   gentoo: dev-python/imaging
   opensuse: python-imaging
   rhel: python-imaging
+  slackware: python-pillow
   ubuntu: python-imaging
 python-matplotlib:
   arch: python-matplotlib
@@ -48,4 +52,5 @@ python-matplotlib:
   gentoo: dev-python/matplotlib
   opensuse: python-matplotlib
   rhel: python-matplotlib
+  slackware: matplotlib
   ubuntu: python-matplotlib

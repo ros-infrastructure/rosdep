@@ -64,9 +64,10 @@ def create_default_installer_context(verbose=False):
     from .platforms import pip
     from .platforms import gem
     from .platforms import redhat
+    from .platforms import slackware
     from .platforms import source
 
-    platform_mods = [arch, cygwin, debian, gentoo, opensuse, osx, redhat]
+    platform_mods = [arch, cygwin, debian, gentoo, opensuse, osx, redhat, slackware]
     installer_mods = [source, pip, gem] + platform_mods
 
     context = InstallerContext()
