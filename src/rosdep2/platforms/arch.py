@@ -38,14 +38,14 @@ PACMAN_INSTALLER = 'pacman'
 
 def register_installers(context):
     context.set_installer(PACMAN_INSTALLER, PacmanInstaller())
-    
+
 def register_platforms(context):
     context.add_os_installer_key(ARCH_OS_NAME, SOURCE_INSTALLER)
     context.add_os_installer_key(ARCH_OS_NAME, PACMAN_INSTALLER)
     context.set_default_os_installer_key(ARCH_OS_NAME, lambda self: PACMAN_INSTALLER)
 
 def pacman_detect_single(p):
-    return not subprocess.call(['pacman', '-Q', p], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    
+    return not subprocess.call(['pacman', '-Q', p], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 def pacman_detect(packages):
     return [p for p in packages if pacman_detect_single(p)]
@@ -56,9 +56,17 @@ class PacmanInstaller(PackageManagerInstaller):
         super(PacmanInstaller, self).__init__(pacman_detect)
 
     def get_install_command(self, resolved, interactive=True, reinstall=False, quiet=False):
-        #TODO: interactive switch
-        packages = self.get_packages_to_install(resolved, reinstall=reinstall)        
+        packages = self.get_packages_to_install(resolved, reinstall=reinstall)
         if not packages:
             return []
-        else:
-            return [self.elevate_priv(['pacman', '-Sy', '--needed', p]) for p in packages]
+
+        command  = ['pacman', '-S']
+
+        if not interactive:
+            command.append('--noconfirm')
+        if not reinstall:
+            command.append('--needed')
+        if quiet:
+            command.append('-q')
+
+        return [self.elevate_priv(command + packages)]
