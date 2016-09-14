@@ -29,6 +29,7 @@
 
 from __future__ import print_function
 
+import os
 import subprocess
 import traceback
 
@@ -320,7 +321,7 @@ class PackageManagerInstaller(Installer):
         self.detect_fn = detect_fn
         self.supports_depends = supports_depends
         self.as_root = True
-        self.sudo_command = 'sudo -H'
+        self.sudo_command = 'sudo -H' if os.geteuid() != 0 else ""
 
     def elevate_priv(self, cmd):
         """
