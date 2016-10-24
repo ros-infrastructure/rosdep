@@ -30,6 +30,7 @@
 
 from __future__ import print_function
 
+import pkg_resources
 import subprocess
 
 from ..core import InstallFailed
@@ -99,6 +100,15 @@ class PipInstaller(PackageManagerInstaller):
 
     def __init__(self):
         super(PipInstaller, self).__init__(pip_detect, supports_depends=True)
+
+    def get_version(self):
+        pip_version = pkg_resources.get_distribution('pip').version
+        setuptools_version = pkg_resources.get_distribution('setuptools').version
+        version = [
+            'pip version {}'.format(pip_version),
+            'setuptools version {}'.format(setuptools_version),
+        ]
+        return '\n'.join(version)
 
     def get_install_command(self, resolved, interactive=True, reinstall=False, quiet=False):
         if not is_pip_installed():

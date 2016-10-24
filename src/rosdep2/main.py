@@ -321,7 +321,19 @@ def _rosdep_main(args):
 
     options, args = parser.parse_args(args)
     if options.print_version:
-        print(__version__)
+        installers = create_default_installer_context().installers
+        installer_keys = get_default_installer()[1]
+        version_info = ['rosdep version {}'.format(__version__)]
+        for key in installer_keys:
+            installer = installers[key]
+            try:
+                installer_ver = installer.get_version()
+            except Exception:
+                print('{} version unknown'.format(key))
+                continue
+            if installer_ver:
+                version_info.append(installer_ver)
+        print('\n'.join(filter(None, version_info)))
         sys.exit(0)
 
     # flatten list of skipped keys and filter-for-installers

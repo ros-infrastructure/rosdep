@@ -376,6 +376,9 @@ class PackageManagerInstaller(Installer):
         '''
         return not self.get_packages_to_install([resolved_item])
 
+    def get_version(self):
+        raise NotImplementedError('subclasses must implement get_version method')
+
     def get_install_command(self, resolved, interactive=True, reinstall=False, quiet=False):
         raise NotImplementedError('subclasses must implement', resolved, interactive, reinstall, quiet)
 
