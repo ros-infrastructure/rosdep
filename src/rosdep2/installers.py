@@ -487,6 +487,8 @@ class RosdepInstaller(object):
                 previous_installer_key = installer_key
             squashed_uninstalled[-1][1].extend(resolved)
 
+        # sort with priority pip = 100, other 0 (smaller installer runs first)
+        squashed_uninstalled.sort(key = lambda e: {'pip': 100}.get(e[0], 0))
         failures = []
         for installer_key, resolved in squashed_uninstalled:
             try:
