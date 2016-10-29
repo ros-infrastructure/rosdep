@@ -184,6 +184,9 @@ def brew_detect(resolved, exec_fn=None):
             pkg_info = json.loads(std_out)
             pkg_info = pkg_info[0]
             linked_version = pkg_info['linked_keg']
+            keg_only = pkg_info['keg_only']
+            if keg_only:
+                return True
             if not linked_version:
                 return False
             for spec in pkg_info['installed']:
