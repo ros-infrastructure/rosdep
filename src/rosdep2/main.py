@@ -306,7 +306,7 @@ def _rosdep_main(args):
     parser.add_option("--from-paths", dest='from_paths',
                       default=False, action="store_true",
                       help="Affects the 'check', 'keys', and 'install' verbs. "
-                           "If specified the arugments to those verbs will be "
+                           "If specified the arguments to those verbs will be "
                            "considered paths to be searched, acting on all "
                            "catkin packages found there in.")
     parser.add_option("--rosdistro", dest='ros_distro', default=None,
