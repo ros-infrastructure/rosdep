@@ -342,7 +342,8 @@ def generate_rosinstall(distro_name, names,
             wet_distro = get_wet_distro(distro_name)
             _, unreleased_package_names = get_package_names(wet_distro)
             excludes = exclude_names.wet_package_names | deps_up_to_names.wet_package_names | set(unreleased_package_names)
-            result.wet_package_names |= get_recursive_dependencies_of_wet(wet_distro, result.wet_package_names, excludes=excludes, limit_depth=deps_depth)
+            result.wet_package_names |= get_recursive_dependencies_of_wet(wet_distro, result.wet_package_names, excludes=excludes,
+                    limit_depth=deps_depth, source=upstream_source_version)
             logger.debug('Wet packages including dependencies: %s' % ', '.join(sorted(result.wet_package_names)))
 
     # intersect result with recursive dependencies on
@@ -351,7 +352,8 @@ def generate_rosinstall(distro_name, names,
         if deps_up_to_names.wet_package_names:
             wet_distro = get_wet_distro(distro_name)
             # wet depends on do not include the names since they are excluded to stop recursion asap
-            wet_package_names = get_recursive_dependencies_on_of_wet(wet_distro, deps_up_to_names.wet_package_names, excludes=names.wet_package_names, limit=result.wet_package_names)
+            wet_package_names = get_recursive_dependencies_on_of_wet(wet_distro, deps_up_to_names.wet_package_names, excludes=names.wet_package_names,
+                    limit=result.wet_package_names, source=upstream_source_version)
             # keep all names which are already in the result set
             wet_package_names |= result.wet_package_names & names.wet_package_names
             result.wet_package_names = wet_package_names
