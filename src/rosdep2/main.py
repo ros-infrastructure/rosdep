@@ -91,7 +91,9 @@ rosdep db
   generate the dependency database and print it to the console.
 
 rosdep init
-  initialize rosdep sources in /etc/ros/rosdep.  May require sudo.
+  initialize rosdep sources in /etc/ros/rosdep. May require sudo.
+  The default can be overridden using the ROS_ETC_DIR environment
+  variable.
   
 rosdep keys <stacks-and-packages>...
   list the rosdep keys that the packages depend on.
