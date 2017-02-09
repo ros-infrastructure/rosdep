@@ -101,14 +101,14 @@ class PipInstaller(PackageManagerInstaller):
     def __init__(self):
         super(PipInstaller, self).__init__(pip_detect, supports_depends=True)
 
-    def get_version(self):
+    def get_version_strings(self):
         pip_version = pkg_resources.get_distribution('pip').version
         setuptools_version = pkg_resources.get_distribution('setuptools').version
-        version = [
-            'pip version {}'.format(pip_version),
-            'setuptools version {}'.format(setuptools_version),
+        version_strings = [
+            'pip {}'.format(pip_version),
+            'setuptools {}'.format(setuptools_version),
         ]
-        return '\n'.join(version)
+        return version_strings
 
     def get_install_command(self, resolved, interactive=True, reinstall=False, quiet=False):
         if not is_pip_installed():

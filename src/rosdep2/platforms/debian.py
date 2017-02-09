@@ -202,10 +202,10 @@ class AptInstaller(PackageManagerInstaller):
     def __init__(self):
         super(AptInstaller, self).__init__(dpkg_detect)
 
-    def get_version(self):
+    def get_version_strings(self):
         output = subprocess.check_output(['apt-get', '--version'])
         version = output.splitlines()[0].split(' ')[1]
-        return 'apt-get version {}'.format(version)
+        return ['apt-get {}'.format(version)]
 
     def get_install_command(self, resolved, interactive=True, reinstall=False, quiet=False):
         packages = self.get_packages_to_install(resolved, reinstall=reinstall)
