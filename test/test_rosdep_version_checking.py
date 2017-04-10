@@ -6,10 +6,6 @@ import shutil
 import sys
 from nose.tools import with_setup
 
-
-
-
-
 #This test is simply asking to rosdep to install a version of rospy than does not exist
 #if rosdep print that rosdeps have been successfully met it will fail
 
