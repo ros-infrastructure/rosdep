@@ -117,6 +117,33 @@ class RosPkgLoader(RosdepLoader):
             self._loadable_resource_cache = list(self._rospack.list())
         return self._loadable_resource_cache
 
+    def dep_version_checking(self, deps):
+        names_with_version = []
+        for i in (0, len(deps) - 1):
+            version_values = []
+            try:
+                version_values.append(getattr(deps[i], "version_eq"))
+                version_values.append(getattr(deps[i], "version_gt"))
+                version_values.append(getattr(deps[i], "version_gte"))
+                version_values.append(getattr(deps[i], "version_lt"))
+                version_values.append(getattr(deps[i], "version_lte"))
+            except:
+                print("ERROR: Dependencies version checking has failed,")
+                print("if no version tag has been provided this message can be ignored.")
+                return
+
+            for value in version_values:
+                if (value != None):
+                    names_with_version.append(getattr(deps[i], "name"))
+                    break
+
+        if len(names_with_version) > 0:
+           names_with_version = set(names_with_version)
+           print ("WARNING: The following dependencies have a version specified:")
+           for name in names_with_version:
+                print(name)
+                print ("The version tag(s) provided have been ignored by rosdep.")
+
     def get_rosdeps(self, resource_name, implicit=True):
         """
         If *resource_name* is a stack, returns an empty list.
@@ -129,6 +156,7 @@ class RosPkgLoader(RosdepLoader):
                 path = self._rospack.get_path(resource_name)
                 pkg = catkin_pkg.package.parse_package(path)
                 deps = pkg.build_depends + pkg.buildtool_depends + pkg.run_depends + pkg.test_depends
+                self.dep_version_checking(deps)
                 return [d.name for d in deps]
             else:
                 return self._rospack.get_rosdeps(resource_name, implicit=implicit)
