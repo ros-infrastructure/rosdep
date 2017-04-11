@@ -142,9 +142,9 @@ class RosPkgLoader(RosdepLoader):
            print ("WARNING: The following dependencies have a version specified:")
            for name in names_with_version:
                 print(name)
-                print ("The version tag(s) provided have been ignored by rosdep.")
+           print ("The version tag(s) provided have been ignored by rosdep.")
 
-    def get_rosdeps(self, resource_name, implicit=True):
+    def get_rosdeps(self, resource_name, implicit=True, with_version=False):
         """
         If *resource_name* is a stack, returns an empty list.
         
@@ -157,12 +157,16 @@ class RosPkgLoader(RosdepLoader):
                 pkg = catkin_pkg.package.parse_package(path)
                 deps = pkg.build_depends + pkg.buildtool_depends + pkg.run_depends + pkg.test_depends
                 self.dep_version_checking(deps)
-                return [d.name for d in deps]
+                name_list = [d.name for d in deps]
+                if with_version:
+                    return name_list, deps
+                else:
+                    return name_list, None
             else:
-                return self._rospack.get_rosdeps(resource_name, implicit=implicit)
+                return self._rospack.get_rosdeps(resource_name, implicit=implicit) , None
         elif resource_name in self._rosstack.list():
             # stacks currently do not have rosdeps of their own, implicit or otherwise
-            return []
+            return [], None
         else:
             raise rospkg.ResourceNotFound(resource_name)
 
