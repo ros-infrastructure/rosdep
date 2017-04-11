@@ -61,8 +61,9 @@ The repository contains the following files:
 Edit the appropriate file(s) for your change, i.e., if you are
 contributing a Homebrew rule, only edit ``osx-homebrew.yaml``, if you
 are contributing a rule for a Python library, only edit
-``python.yaml``, and, otherwise, put your rule in ``base.yaml``.
-
+``python.yaml``, and, otherwise, put your rule in ``base.yaml``. 
+To edit, change the ``https://`` url to a local path using the format 
+``file:///abs/path``.
 
 Make sure that your rules work
 ------------------------------
