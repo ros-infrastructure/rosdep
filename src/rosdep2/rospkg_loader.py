@@ -36,6 +36,7 @@ from __future__ import print_function
 
 import catkin_pkg.package
 import rospkg
+import traceback
 
 from .loader import RosdepLoader
 
@@ -117,9 +118,33 @@ class RosPkgLoader(RosdepLoader):
             self._loadable_resource_cache = list(self._rospack.list())
         return self._loadable_resource_cache
 
-    def dep_version_checking(self, deps):
+    def dep_version_integrity_check(self, deps):
+        for i in range(0, len(deps)):
+            version_values = []
+            version_tag_provided = 0
+            version_values.append(getattr(deps[i], "version_eq"))
+            version_values.append(getattr(deps[i], "version_gt"))
+            version_values.append(getattr(deps[i], "version_gte"))
+            version_values.append(getattr(deps[i], "version_lt"))
+            version_values.append(getattr(deps[i], "version_lte"))
+            for version_tag in version_values:
+                if version_tag != None:
+                    version_tag_provided += 1
+            if version_tag_provided > 1:
+                dep_name = getattr(deps[i], "name")
+                error_str = "ERROR: Dependency %s is provided with %d version requirement"%(dep_name, version_tag_provided)
+                print(error_str)
+                version_values.append(setattr(deps[i], "version_eq",None))
+                version_values.append(setattr(deps[i], "version_gt", None))
+                version_values.append(setattr(deps[i], "version_gte", None))
+                version_values.append(setattr(deps[i], "version_lt", None))
+                version_values.append(setattr(deps[i], "version_lte", None))
+                error_str = "ERROR: Versions for %s will be ignored"%(dep_name)
+                print (error_str)
+
+    def dep_version_check(self, deps):
         names_with_version = []
-        for i in (0, len(deps) - 1):
+        for i in range(0, len(deps) - 1):
             version_values = []
             try:
                 version_values.append(getattr(deps[i], "version_eq"))
@@ -156,7 +181,8 @@ class RosPkgLoader(RosdepLoader):
                 path = self._rospack.get_path(resource_name)
                 pkg = catkin_pkg.package.parse_package(path)
                 deps = pkg.build_depends + pkg.buildtool_depends + pkg.run_depends + pkg.test_depends
-                self.dep_version_checking(deps)
+                self.dep_version_check(deps)
+                self.dep_version_integrity_check(deps)
                 name_list = [d.name for d in deps]
                 if with_version:
                     return name_list, deps
