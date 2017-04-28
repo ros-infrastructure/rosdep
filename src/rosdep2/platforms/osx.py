@@ -93,6 +93,18 @@ class MacportsInstaller(PackageManagerInstaller):
     def __init__(self):
         super(MacportsInstaller, self).__init__(port_detect)
 
+    def get_version_strings(self):
+        try:
+            p = subprocess.Popen(
+                ['port', 'version'],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE)
+            stdout, stderr = p.communicate()
+            version = stdout.replace('Version: ', '')
+            return ['Macports {}'.format(version.strip())]
+        except OSError:
+            return ['Macports not-found']
+
     def get_install_command(self, resolved, interactive=True, reinstall=False):
         if not is_port_installed():
             raise InstallFailed((MACPORTS_INSTALLER, 'MacPorts is not installed'))
@@ -250,6 +262,17 @@ class HomebrewInstaller(PackageManagerInstaller):
     def __init__(self):
         super(HomebrewInstaller, self).__init__(brew_detect, supports_depends=True)
         self.as_root = False
+
+    def get_version_strings(self):
+        try:
+            p = subprocess.Popen(
+                ['brew', '--version'],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE)
+            stdout, stderr = p.communicate()
+            return stdout.splitlines()
+        except OSError:
+            return ['Homebrew not-found']
 
     def resolve(self, rosdep_args):
         """

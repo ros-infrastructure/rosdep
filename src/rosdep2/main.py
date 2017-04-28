@@ -264,7 +264,9 @@ def _rosdep_main(args):
     parser.add_option("--verbose", "-v", dest="verbose", default=False, 
                       action="store_true", help="verbose display")
     parser.add_option("--version", dest="print_version", default=False, 
-                      action="store_true", help="print version and exit")
+                      action="store_true", help="print just the rosdep version, then exit")
+    parser.add_option("--all-versions", dest="print_all_versions", default=False,
+                      action="store_true", help="print rosdep version and version of installers, then exit")
     parser.add_option("--reinstall", dest="reinstall", default=False, 
                       action="store_true", help="(re)install all dependencies, even if already installed")
     parser.add_option("--default-yes", "-y", dest="default_yes", default=False, 
@@ -320,8 +322,35 @@ def _rosdep_main(args):
                       "Can be specified multiple times.")
 
     options, args = parser.parse_args(args)
-    if options.print_version:
-        print(__version__)
+    if options.print_version or options.print_all_versions:
+        # First print the rosdep version.
+        print('{}'.format(__version__))
+        # If not printing versions of all installers, exit.
+        if not options.print_all_versions:
+            sys.exit(0)
+        # Otherwise, Then collect the versions of the installers and print them.
+        installers = create_default_installer_context().installers
+        installer_keys = get_default_installer()[1]
+        version_strings = []
+        for key in installer_keys:
+            if key is 'source':
+                # Explicitly skip the source installer.
+                continue
+            installer = installers[key]
+            try:
+                installer_version_strings = installer.get_version_strings()
+                assert isinstance(installer_version_strings, list), installer_version_strings
+                version_strings.extend(installer_version_strings)
+            except NotImplementedError:
+                version_strings.append('{} unknown'.format(key))
+                continue
+        if version_strings:
+            print()
+            print("Versions of installers:")
+            print('\n'.join(['  ' + x for x in version_strings if x]))
+        else:
+            print()
+            print("No installers with versions available found.")
         sys.exit(0)
 
     # flatten list of skipped keys and filter-for-installers

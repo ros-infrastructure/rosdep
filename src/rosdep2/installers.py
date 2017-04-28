@@ -376,6 +376,15 @@ class PackageManagerInstaller(Installer):
         '''
         return not self.get_packages_to_install([resolved_item])
 
+    def get_version_strings(self):
+        '''
+        Return a list of version information strings.
+
+        Where each string is of the form "<installer> <version string>".
+        For example, ["apt-get x.y.z"] or ["pip x.y.z", "setuptools x.y.z"].
+        '''
+        raise NotImplementedError('subclasses must implement get_version_strings method')
+
     def get_install_command(self, resolved, interactive=True, reinstall=False, quiet=False):
         raise NotImplementedError('subclasses must implement', resolved, interactive, reinstall, quiet)
 
