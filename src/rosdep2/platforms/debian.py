@@ -94,7 +94,7 @@ APT_PURELY_VIRTUAL_RE = re.compile(
 APT_CACHE_REVERSE_PROVIDE_START_RE = re.compile(
         r'^Reverse Provides:')
 # format of a 'Reverse Provides' line in the apt-cache showpkg output
-APT_CACHE_PROVIDER_RE = re.compile('^(.*) (.*)$')
+APT_CACHE_PROVIDER_RE = re.compile('^(.*?) (.*)$')
 
 
 def _is_installed_as_virtual_package(package, exec_fn=None):
