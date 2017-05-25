@@ -42,6 +42,8 @@ if sys.hexversion > 0x03000000: #Python3
 else:
     python3 = False
 
+env = dict(os.environ)
+env['LANG'] = 'C'
 
 def read_stdout(cmd, capture_stderr=False):
     '''
@@ -56,14 +58,14 @@ def read_stdout(cmd, capture_stderr=False):
     standard error output each as string.
     '''
     if capture_stderr:
-        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
         std_out, std_err = p.communicate()
         if python3:
             return std_out.decode(), std_err.decode()
         else:
             return std_out, std_err
     else:
-        p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, env=env)
         std_out, std_err = p.communicate() # ignore stderr
         if python3:
             return std_out.decode()
