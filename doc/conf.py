@@ -17,7 +17,6 @@ import sys
 sys.path.insert(0, './')
 sys.path.insert(0, '../src')
 
-import catkin_sphinx  # noqa
 from rosdep2 import __version__  # noqa
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -104,8 +103,8 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme_path = [os.path.join(os.path.dirname(catkin_sphinx.__file__), 'theme')]
-html_theme = 'ros-theme'
+# html_theme_path = [os.path.join(os.path.dirname(__file__), 'theme')]
+# html_theme = 'ros-theme'
 html_logo = 'ros.png'
 
 # Theme options are theme-specific and customize the look and feel of a theme
