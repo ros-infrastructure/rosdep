@@ -6,7 +6,7 @@ python:
 # command to install dependencies
 install:
 # develop seems to be required by travis since 02/2013
-  - pip install PyYAML argparse rospkg vcstools catkin_pkg python-dateutil distribute rosdistro
+  - pip install PyYAML argparse rospkg vcstools catkin_pkg python-dateutil rosdistro
   - python setup.py build develop
   - pip install nose coverage
 # command to run tests
