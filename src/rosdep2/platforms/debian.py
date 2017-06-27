@@ -97,6 +97,57 @@ APT_CACHE_REVERSE_PROVIDE_START_RE = re.compile(
 APT_CACHE_PROVIDER_RE = re.compile('^(.*?) (.*)$')
 
 
+def _get_providing_packages(package, exec_fn=None):
+# Note: This can be done much more concise when adding python-apt as a dependency:
+#
+#    import apt
+#    cache = apt.Cache()
+#    return cache.get_providing_packages(package):
+#
+    cmd = ['apt-cache', 'showpkg', package]
+    if exec_fn is None:
+        exec_fn = read_stdout
+    std_out = exec_fn(cmd)
+    is_provider = False # true when parsed line contains a povider
+    for line in std_out.split('\n'):
+        if is_provider:
+            match = APT_CACHE_PROVIDER_RE.match(line)
+            if not match:
+                print('WARNING: The output of {} is strange; unable to determine providers of virtual package {}'.format(
+                    cmd[0] + ' ' + cmd[1], package))
+            else:
+                provider_name, provider_version = match.groups()
+                yield provider_name
+        if APT_CACHE_REVERSE_PROVIDE_START_RE.match(line):
+            is_provider = True
+            # Note: Set this _after_ possibly parsing the current line to
+            #       not parse the line containing
+            #       APT_CACHE_REVERSE_PROVIDE_START_RE
+    return
+
+def _get_installed_providing_package(package, verbose = False, exec_fn=None):
+    for provider_name in _get_providing_packages(package):
+        if dpkg_detect([provider_name], exec_fn):
+            if verbose:
+                print('Virtual package {} is provided by {}'.format(package, provider_name))
+            return provider_name
+    return None # unable to find a provider that was installed
+
+def _is_virtual_package(package, exec_fn=None):
+# Note: This can be done much more concise when adding python-apt as a dependency:
+#
+#    import apt
+#    cache = apt.Cache()
+#    return cache.is_virtual_package(package):
+# check output of `apt show package' for whether it's a virtual
+# package and if so use `apt-cache showpkg package' to get the providing
+# packages.  Then check if one of those is installed.
+    cmd = ['apt', 'show', package]
+    if exec_fn is None:
+        exec_fn = read_stdout
+    std_out, std_err = exec_fn(cmd, True) # use stderr as well to hide error message ... not too nice, but hopefully cautious
+    return APT_PURELY_VIRTUAL_RE.search(std_out) != None
+
 def _is_installed_as_virtual_package(package, exec_fn=None):
     '''
     Check whether this is a virtual package and a package providing this
@@ -105,51 +156,7 @@ def _is_installed_as_virtual_package(package, exec_fn=None):
     :param exec_fn: see `dpkg_detect`; make sure that exec_fn supports a
     second, boolean, parameter.
     '''
-# Note: This can be done much more concise when adding python-apt as a dependency:
-#
-#    import apt
-#    cache = apt.Cache()
-#    if cache.is_virtual_package(package):
-#        for provider in cache.get_providing_packages(package):
-#            if cache[provider].is_installed:
-#                print('Virtual package {} is provided by {}'.format(
-#                    package, provider.name))
-#                return True
-#        return False
-#
-    # check output of `apt show package' for whether it's a virtual
-    # package and if so use `apt-cache showpkg package' to get the providing
-    # packages.  Then check if one of those is installed.
-    cmd = ['apt', 'show', package]
-    if exec_fn is None:
-        exec_fn = read_stdout
-    std_out, std_err = exec_fn(cmd, True) # use stderr as well to hide error message ... not too nice, but hopefully cautious
-    if APT_PURELY_VIRTUAL_RE.search(std_out):
-        print('Package {} seems to be virtual; try to specify a providing package in your rosdep config.'.format(package))
-        cmd = ['apt-cache', 'showpkg', package]
-        std_out = exec_fn(cmd)
-        is_provider = False # true when parsed line contains a povider
-        for line in std_out.split('\n'):
-            if is_provider:
-                match = APT_CACHE_PROVIDER_RE.match(line)
-                if not match:
-                    print('WARNING: The output of {} is strange; unable to determine providers of virtual package {}'.format(
-                        cmd[0] + ' ' + cmd[1], package))
-                else:
-                    provider_name, provider_version = match.groups()
-                    # now that we have the name of the provider, finaly check
-                    # whether the package is provided
-                    if dpkg_detect([provider_name]):
-                        print('Virtual package {} is provided by {}'.format(package, provider_name))
-                        return True
-            if APT_CACHE_REVERSE_PROVIDE_START_RE.match(line):
-                is_provider = True
-                # Note: Set this _after_ possibly parsing the current line to
-                #       not parse the line containing
-                #       APT_CACHE_REVERSE_PROVIDE_START_RE
-        return False # unable to find a provider that was installed
-
-
+    return _is_virtual_package(package, exec_fn) and _get_installed_providing_package(package, True, exec_fn) != None
 
 def dpkg_detect(pkgs, exec_fn=None):
     """
