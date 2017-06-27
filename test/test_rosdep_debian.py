@@ -56,6 +56,16 @@ def test_dpkg_detect():
     assert val == ['apt=1.8', 'python=2.7'], val
 
 
+def test_read_apt_cache_showpkg():
+    from rosdep2.platforms.debian import _read_apt_cache_showpkg
+
+    m = Mock()
+    with open(os.path.join(get_test_dir(), 'showpkg-libcurl-dev'), 'r') as f:
+        m.return_value = f.read()
+
+    virtual, providers = _read_apt_cache_showpkg("libcurl-dev", exec_fn=m)
+    assert virtual, providers
+
 def test_AptInstaller():
     from rosdep2.platforms.debian import AptInstaller
 

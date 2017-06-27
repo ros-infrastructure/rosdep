@@ -557,9 +557,9 @@ class RosdepInstaller(object):
             print("#[%s] Installation commands:"%(installer_key))
             for sub_command in command:
                 if isinstance(sub_command[0], list):
-                    len = len(sub_command)
-                    for cmd, i in enumerate(l):
-                        print("  '%s' (alternative %d/%d)" % (' '.join(cmd), i + 1, len))
+                    sub_cmd_len = len(sub_command)
+                    for cmd, i in enumerate(sub_command):
+                        print("  '%s' (alternative %d/%d)" % (' '.join(cmd), i + 1, sub_cmd_len))
                 else:
                     print('  ' + ' '.join(sub_command))
 

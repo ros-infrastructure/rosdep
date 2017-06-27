@@ -31,7 +31,6 @@
 from __future__ import print_function
 import subprocess
 import sys
-import re
 
 from rospkg.os_detect import OS_DEBIAN, OS_LINARO, OS_UBUNTU, OS_ELEMENTARY, OsDetect
 
@@ -84,72 +83,44 @@ def register_ubuntu(context):
     context.set_default_os_installer_key(OS_UBUNTU, lambda self: APT_INSTALLER)
     context.set_os_version_type(OS_UBUNTU, OsDetect.get_codename)
 
-
-# detect that apt show indicates that the package is virtual
-APT_PURELY_VIRTUAL_RE = re.compile(
-        r'as it is purely virtual',
-        flags=re.DOTALL)
-# detect what lines in apt-cache showpkg show the packages providing a virtual
-# package
-APT_CACHE_REVERSE_PROVIDE_START_RE = re.compile(
-        r'^Reverse Provides:')
-# format of a 'Reverse Provides' line in the apt-cache showpkg output
-APT_CACHE_PROVIDER_RE = re.compile('^(.*?) (.*)$')
-
-
-def _is_installed_as_virtual_package(package, exec_fn=None):
+def _read_apt_cache_showpkg(package, exec_fn=None):
     '''
-    Check whether this is a virtual package and a package providing this
-    virtual package is installed.
-
+    Output whether this is a virtual package and list providing package.
     :param exec_fn: see `dpkg_detect`; make sure that exec_fn supports a
     second, boolean, parameter.
+    :return: is_virtual, providers; For non-exisiting packages is_virtual=False is returned
     '''
-# Note: This can be done much more concise when adding python-apt as a dependency:
-#
-#    import apt
-#    cache = apt.Cache()
-#    if cache.is_virtual_package(package):
-#        for provider in cache.get_providing_packages(package):
-#            if cache[provider].is_installed:
-#                print('Virtual package {} is provided by {}'.format(
-#                    package, provider.name))
-#                return True
-#        return False
-#
-    # check output of `apt show package' for whether it's a virtual
-    # package and if so use `apt-cache showpkg package' to get the providing
-    # packages.  Then check if one of those is installed.
-    cmd = ['apt-cache', 'show', package]
+
+    try:
+        _next = next
+    except NameError:
+        def _next(x):
+            return x.next()
+
+    cmd = ['apt-cache', 'showpkg', package]
     if exec_fn is None:
         exec_fn = read_stdout
-    std_out, std_err = exec_fn(cmd, True) # use stderr as well to hide error message ... not too nice, but hopefully cautious
-    if APT_PURELY_VIRTUAL_RE.search(std_out):
-        print('Package {} seems to be virtual; try to specify a providing package in your rosdep config.'.format(package))
-        cmd = ['apt-cache', 'showpkg', package]
-        std_out = exec_fn(cmd)
-        is_provider = False # true when parsed line contains a povider
-        for line in std_out.split('\n'):
-            if is_provider:
-                match = APT_CACHE_PROVIDER_RE.match(line)
-                if not match:
-                    print('WARNING: The output of {} is strange; unable to determine providers of virtual package {}'.format(
-                        cmd[0] + ' ' + cmd[1], package))
-                else:
-                    provider_name, provider_version = match.groups()
-                    # now that we have the name of the provider, finaly check
-                    # whether the package is provided
-                    if dpkg_detect([provider_name]):
-                        print('Virtual package {} is provided by {}'.format(package, provider_name))
-                        return True
-            if APT_CACHE_REVERSE_PROVIDE_START_RE.match(line):
-                is_provider = True
-                # Note: Set this _after_ possibly parsing the current line to
-                #       not parse the line containing
-                #       APT_CACHE_REVERSE_PROVIDE_START_RE
-        return False # unable to find a provider that was installed
 
+    std_out = exec_fn(cmd).splitlines()
 
+    if len(std_out) == 0:
+        return False, None
+
+    lines = iter(std_out)
+
+    # proceed to versions section
+    while _next(lines) != "Versions: ":
+        pass
+
+    # virtual packages don't have versions
+    if _next(lines) != "":
+        return False, None
+
+    # proceed to reserve provides section
+    while _next(lines) != "Reverse Provides: ":
+        pass
+
+    return True, [line.split(' ', 2)[0] for line in lines]
 
 def dpkg_detect(pkgs, exec_fn=None):
     """
@@ -187,11 +158,27 @@ def dpkg_detect(pkgs, exec_fn=None):
     # now for the remaining packages check, whether they are installed as
     # virtual packages
     for rem in set(pkgs) - set(installed_packages):
-        if _is_installed_as_virtual_package(rem):
+        is_virtual, providers = _read_apt_cache_showpkg(rem)
+        if is_virtual and len(dpkg_detect(providers)) > 0:
             installed_packages.append(rem)
 
     return installed_packages
 
+
+def _iterate_packages(packages, reinstall):
+    for p in packages:
+        is_virtual, providers = _read_apt_cache_showpkg(p)
+        if is_virtual:
+            installed = []
+            if reinstall:
+                installed = dpkg_detect(providers)
+                if len(installed) > 0:
+                    for i in installed:
+                        yield i
+                    continue # don't ouput providers
+            yield providers
+        else:
+            yield p
 
 
 class AptInstaller(PackageManagerInstaller):
@@ -207,15 +194,26 @@ class AptInstaller(PackageManagerInstaller):
         version = output.splitlines()[0].split(' ')[1]
         return ['apt-get {}'.format(version)]
 
+    def _get_install_commands_for_package(self, base_cmd, package_or_list):
+        def pkg_command(p):
+            return self.elevate_priv(base_cmd + [p])
+
+        if isinstance(package_or_list, list):
+            return [pkg_command(p) for p in package_or_list]
+        else:
+            return pkg_command(package_or_list)
+
     def get_install_command(self, resolved, interactive=True, reinstall=False, quiet=False):
         packages = self.get_packages_to_install(resolved, reinstall=reinstall)
         if not packages:
             return []
         if not interactive and quiet:
-            return [self.elevate_priv(['apt-get', 'install', '-y', '-qq', p]) for p in packages]
+            base_cmd = ['apt-get', 'install', '-y', '-qq']
         elif quiet:
-            return [self.elevate_priv(['apt-get', 'install', '-qq', p]) for p in packages]
+            base_cmd = ['apt-get', 'install', '-qq']
         if not interactive:
-            return [self.elevate_priv(['apt-get', 'install', '-y', p]) for p in packages]
+            base_cmd = ['apt-get', 'install', '-y']
         else:
-            return [self.elevate_priv(['apt-get', 'install', p]) for p in packages]
+            base_cmd = ['apt-get', 'install']
+
+        return [ self._get_install_commands_for_package(base_cmd, p) for p in _iterate_packages(packages, reinstall) ]
