@@ -214,15 +214,27 @@ class AptInstaller(PackageManagerInstaller):
         version = output.splitlines()[0].split(' ')[1]
         return ['apt-get {}'.format(version)]
 
+    def _get_install_commands_for_package(self, base_cmd, package, reinstall):
+        def pkg_command(p): return self.elevate_priv(base_cmd + [p])
+        if _is_virtual_package(package):
+            installed = None
+            if reinstall:
+                installed = _get_installed_providing_package(package)
+            if installed is not None:
+                return pkg_command(installed)
+            return [ pkg_command(p) for p in _get_providing_packages(package) ]
+        return pkg_command(package)
+
     def get_install_command(self, resolved, interactive=True, reinstall=False, quiet=False):
         packages = self.get_packages_to_install(resolved, reinstall=reinstall)
         if not packages:
             return []
         if not interactive and quiet:
-            return [self.elevate_priv(['apt-get', 'install', '-y', '-qq', p]) for p in packages]
+            base_cmd = ['apt-get', 'install', '-y', '-qq']
         elif quiet:
-            return [self.elevate_priv(['apt-get', 'install', '-qq', p]) for p in packages]
+            base_cmd = ['apt-get', 'install', '-qq']
         if not interactive:
-            return [self.elevate_priv(['apt-get', 'install', '-y', p]) for p in packages]
+            base_cmd = ['apt-get', 'install', '-y']
         else:
-            return [self.elevate_priv(['apt-get', 'install', p]) for p in packages]
+            base_cmd = ['apt-get', 'install']
+        return [self._get_install_commands_for_package(base_cmd, p, reinstall) for p in packages]
