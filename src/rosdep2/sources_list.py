@@ -309,7 +309,8 @@ def download_default_sources_list(url=DEFAULT_SOURCES_LIST_URL):
 
     :param url: override URL of default sources list file
     :return: raw sources list data, ``str``
-    :raises: :exc:`InvalidData`
+    :raises: :exc:`DownloadFailure` If data cannot be
+            retrieved (e.g. 404, bad YAML format, server down).
     :raises: :exc:`urllib2.URLError` If data cannot be
         retrieved (e.g. 404, server down).
     """
@@ -320,9 +321,12 @@ def download_default_sources_list(url=DEFAULT_SOURCES_LIST_URL):
     data = f.read().decode()
     f.close()
     if not data:
-        raise RuntimeError("cannot download defaults file: empty contents")
+        raise DownloadFailure("cannot download defaults file from %s : empty contents" % url)
     # parse just for validation
-    parse_sources_data(data)
+    try:
+        parse_sources_data(data)
+    except InvalidData as e:
+        raise DownloadFailure("Failed to download valid rosdep sources from %s Contents were:{{{%s}}} Parsing error: %s" % (url, data, e))
     return data
 
 def parse_sources_data(data, origin='<string>', model=None):
