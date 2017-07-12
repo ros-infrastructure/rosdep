@@ -22,7 +22,7 @@ setup(
     classifiers=['Programming Language :: Python',
                  'License :: OSI Approved :: BSD License',
                  'License :: OSI Approved :: MIT License'],
-    description="A tool to generator rosinstall files",
-    long_description="""A tool to generator rosinstall files""",
+    description="A tool for generating rosinstall files",
+    long_description="""A tool for generating rosinstall files""",
     license='BSD'
 )
