@@ -398,6 +398,18 @@ class PackageManagerInstaller(Installer):
             return rosdep_args.get('depends', [])
         return [] # Default return empty list
 
+
+def normalize_uninstalled_to_list(uninstalled):
+    uninstalled_dependencies = []
+    for pkg_or_list in [v for k, v in uninstalled]:
+        if isinstance(pkg_or_list, list):
+            for pkg in pkg_or_list:
+                uninstalled_dependencies.append(str(pkg))
+        else:
+            uninstalled_dependencies.append(str(pkg))
+    return uninstalled_dependencies
+
+
 class RosdepInstaller(object):
 
     def __init__(self, installer_context, lookup):
@@ -484,8 +496,12 @@ class RosdepInstaller(object):
             installer.install(uninstalled)
         """
         if verbose:
-            print("install options: reinstall[%s] simulate[%s] interactive[%s]"%(reinstall, simulate, interactive))
-            print("install: uninstalled keys are %s"%(', '.join([', '.join(pkg) for pkg in [v for k,v in uninstalled]])))
+            print(
+                "install options: reinstall[%s] simulate[%s] interactive[%s]" %
+                (reinstall, simulate, interactive)
+            )
+            uninstalled_list = normalize_uninstalled_to_list(uninstalled)
+            print("install: uninstalled keys are %s" % ', '.join(uninstalled_list))
 
         # Squash uninstalled again, in case some dependencies were already installed
         squashed_uninstalled = []

@@ -60,6 +60,7 @@ import rospkg
 from . import create_default_installer_context, get_default_installer
 from . import __version__
 from .core import RosdepInternalError, InstallFailed, UnsupportedOs, InvalidData, CachePermissionError
+from .installers import normalize_uninstalled_to_list
 from .installers import RosdepInstaller
 from .lookup import RosdepLookup, ResolutionError
 from .rospkg_loader import DEFAULT_VIEW_KEY
@@ -660,7 +661,8 @@ def command_install(lookup, packages, options):
         uninstalled, errors = installer.get_uninstalled(packages, implicit=options.recursive, verbose=options.verbose)
 
     if options.verbose:
-        print("uninstalled dependencies are: [%s]"%(', '.join([', '.join(pkg) for pkg in [v for k,v in uninstalled]])))
+        uninstalled_dependencies = normalize_uninstalled_to_list(uninstalled)
+        print("uninstalled dependencies are: [%s]" % ', '.join(uninstalled_dependencies))
 
     if errors:
         err_msg = ("ERROR: the following packages/stacks could not have their "
