@@ -73,6 +73,7 @@ from .rosdistrohelper import PreRep137Warning
 from .catkin_packages import find_catkin_packages_in
 from .catkin_packages import set_workspace_packages
 from .catkin_packages import get_workspace_packages
+from .catkin_packages import get_conflicted_packages
 
 
 class UsageError(Exception):
@@ -461,6 +462,13 @@ def _package_args_handler(command, parser, options, args):
                 print("Skipping non-existent path " + path)
         set_workspace_packages(ws_pkgs)
 
+    # Print installed conflicting packages
+    workspace_pkgs = get_workspace_packages()
+    conflicted_pkgs = get_conflicted_packages()
+    for package in workspace_pkgs:
+        if package in conflicted_pkgs:
+            print("WARNING: conflicting installed packages: '{0}' is conflicting '{1}'!".format(
+                conflicted_pkgs[package], package))
     lookup = _get_default_RosdepLookup(options)
 
     # Handle the --skip-keys option by pretending that they are packages in the catkin workspace

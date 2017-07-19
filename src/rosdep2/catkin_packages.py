@@ -11,6 +11,8 @@ except ImportError:
     sys.exit(1)
 
 _catkin_workspace_packages = []
+_catkin_replaced_packages = {}
+_catkin_conflicted_packages = {}
 _catkin_packages_cache = {}
 
 
@@ -32,7 +34,21 @@ def find_catkin_packages_in(path, verbose=False):
         return _catkin_packages_cache[path]
     packages = find_packages(path)
     if type(packages) == dict and packages != {}:
-        package_names = [package.name for package in packages.values()]
+        package_names=[]
+        for package in packages.values():
+            package_names.append(package.name)
+            if package.replaces:
+                for replaced in package.replaces:
+                    if replaced.name in _catkin_replaced_packages:
+                        print("WARNING: '{0}' replaces '{1}', but '{1}' is already replaced by '{2}'".format(
+                            package.name, replaced.name,
+                            _catkin_replaced_packages[replaced.name]))
+                    else:
+                        _catkin_replaced_packages[replaced.name] = package.name
+            if package.conflicts:
+                for conflicted in package.conflicts:
+                    if conflicted.name not in _catkin_conflicted_packages:
+                        _catkin_conflicted_packages[conflicted.name] = package.name
         if verbose:
             print("found " + str(len(packages)) + " packages.")
             for package in package_names:
@@ -53,3 +69,13 @@ def set_workspace_packages(packages):
 def get_workspace_packages():
     global _catkin_workspace_packages
     return _catkin_workspace_packages
+
+
+def get_replaced_packages():
+    global _catkin_replaced_packages
+    return _catkin_replaced_packages
+
+
+def get_conflicted_packages():
+    global _catkin_conflicted_packages
+    return _catkin_conflicted_packages
