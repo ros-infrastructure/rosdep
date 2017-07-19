@@ -74,6 +74,7 @@ from .catkin_packages import find_catkin_packages_in
 from .catkin_packages import set_workspace_packages
 from .catkin_packages import get_workspace_packages
 from .catkin_packages import get_conflicted_packages
+from .catkin_packages import get_replaced_packages
 
 
 class UsageError(Exception):
@@ -94,16 +95,16 @@ rosdep db
 
 rosdep init
   initialize rosdep sources in /etc/ros/rosdep.  May require sudo.
-  
+
 rosdep keys <stacks-and-packages>...
   list the rosdep keys that the packages depend on.
 
 rosdep resolve <rosdeps>
   resolve <rosdeps> to system dependencies
-  
+
 rosdep update
   update the local rosdep database based on the rosdep sources.
-  
+
 rosdep what-needs <rosdeps>...
   print a list of packages that declare a rosdep on (at least
   one of) <rosdeps>
@@ -118,6 +119,7 @@ rosdep fix-permissions
   "rosdep update" with sudo accidentally.
 """
 
+
 def _get_default_RosdepLookup(options):
     """
     Helper routine for converting command-line options into
@@ -130,6 +132,7 @@ def _get_default_RosdepLookup(options):
     lookup = RosdepLookup.create_from_rospkg(sources_loader=sources_loader)
     lookup.verbose = options.verbose
     return lookup
+
 
 def rosdep_main(args=None):
     if args is None:
@@ -184,13 +187,14 @@ rosdep version: %s
 %s
 """%(e, __version__, traceback.format_exc()), file=sys.stderr)
         sys.exit(1)
-        
+
+
 def check_for_sources_list_init(sources_cache_dir):
     """
     Check to see if sources list and cache are present.
     *sources_cache_dir* alone is enough to pass as the user has the
     option of passing in a cache dir.
-    
+
     If check fails, tell user how to resolve and sys exit.
     """
     commands = []
@@ -204,7 +208,7 @@ def check_for_sources_list_init(sources_cache_dir):
     if not os.path.exists(sources_list_dir):
         commands.insert(0, 'sudo rosdep init')
     else:
-        filelist = [f for f in os.listdir(sources_list_dir) if f.endswith('.list')]    
+        filelist = [f for f in os.listdir(sources_list_dir) if f.endswith('.list')]
         if not filelist:
             commands.insert(0, 'sudo rosdep init')
 
@@ -212,7 +216,7 @@ def check_for_sources_list_init(sources_cache_dir):
         commands = '\n'.join(["    %s"%c for c in commands])
         print("""
 ERROR: your rosdep installation has not been initialized yet.  Please run:
-        
+
 %s
 """%(commands), file=sys.stderr)
         sys.exit(1)
@@ -254,34 +258,35 @@ def setup_proxy_opener():
             opener = build_opener(proxy, auth, HTTPHandler)
             install_opener(opener)
 
+
 def _rosdep_main(args):
-    # sources cache dir is our local database.  
+    # sources cache dir is our local database.
     default_sources_cache = get_sources_cache_dir()
 
     parser = OptionParser(usage=_usage, prog='rosdep')
-    parser.add_option("--os", dest="os_override", default=None, 
+    parser.add_option("--os", dest="os_override", default=None,
                       metavar="OS_NAME:OS_VERSION", help="Override OS name and version (colon-separated), e.g. ubuntu:lucid")
     parser.add_option("-c", "--sources-cache-dir", dest="sources_cache_dir", default=default_sources_cache,
                       metavar='SOURCES_CACHE_DIR', help="Override %s"%(default_sources_cache))
-    parser.add_option("--verbose", "-v", dest="verbose", default=False, 
+    parser.add_option("--verbose", "-v", dest="verbose", default=False,
                       action="store_true", help="verbose display")
-    parser.add_option("--version", dest="print_version", default=False, 
+    parser.add_option("--version", dest="print_version", default=False,
                       action="store_true", help="print just the rosdep version, then exit")
     parser.add_option("--all-versions", dest="print_all_versions", default=False,
                       action="store_true", help="print rosdep version and version of installers, then exit")
-    parser.add_option("--reinstall", dest="reinstall", default=False, 
+    parser.add_option("--reinstall", dest="reinstall", default=False,
                       action="store_true", help="(re)install all dependencies, even if already installed")
     parser.add_option("--default-yes", "-y", dest="default_yes", default=False, 
                       action="store_true", help="Tell the package manager to default to y or fail when installing")
-    parser.add_option("--simulate", "-s", dest="simulate", default=False, 
+    parser.add_option("--simulate", "-s", dest="simulate", default=False,
                       action="store_true", help="Simulate install")
-    parser.add_option("-r", dest="robust", default=False, 
+    parser.add_option("-r", dest="robust", default=False,
                       action="store_true", help="Continue installing despite errors.")
-    parser.add_option("-q", dest="quiet", default=False, 
+    parser.add_option("-q", dest="quiet", default=False,
                       action="store_true", help="Quiet. Suppress output except for errors.")
-    parser.add_option("-a", "--all", dest="rosdep_all", default=False, 
+    parser.add_option("-a", "--all", dest="rosdep_all", default=False,
                       action="store_true", help="select all packages")
-    parser.add_option("-n", dest="recursive", default=True, 
+    parser.add_option("-n", dest="recursive", default=True,
                       action="store_false", help="Do not consider implicit/recursive dependencies.  Only valid with 'keys', 'check', and 'install' commands.")
     parser.add_option("--ignore-packages-from-source", "--ignore-src", "-i",
                       dest='ignore_src', default=False, action="store_true",
@@ -379,16 +384,18 @@ def _rosdep_main(args):
     if command in _command_rosdep_args:
         return _rosdep_args_handler(command, parser, options, args)
     elif command in _command_no_args:
-        return _no_args_handler(command, parser, options, args)        
+        return _no_args_handler(command, parser, options, args)
     else:
         return _package_args_handler(command, parser, options, args)
+
 
 def _no_args_handler(command, parser, options, args):
     if args:
         parser.error("command [%s] takes no arguments"%(command))
     else:
         return command_handlers[command](options)
-    
+
+
 def _rosdep_args_handler(command, parser, options, args):
 
     # rosdep keys as args
@@ -462,13 +469,20 @@ def _package_args_handler(command, parser, options, args):
                 print("Skipping non-existent path " + path)
         set_workspace_packages(ws_pkgs)
 
-    # Print installed conflicting packages
-    workspace_pkgs = get_workspace_packages()
-    conflicted_pkgs = get_conflicted_packages()
-    for package in workspace_pkgs:
-        if package in conflicted_pkgs:
-            print("WARNING: conflicting installed packages: '{0}' is conflicting '{1}'!".format(
-                conflicted_pkgs[package], package))
+    # Print installed conflicting or replaced packages
+    if command in ['install', 'check'] and (options.ignore_src or options.from_paths):
+        workspace_pkgs = get_workspace_packages()
+        conflicted_pkgs = get_conflicted_packages()
+        replaced_pkgs = get_replaced_packages()
+
+        for package in workspace_pkgs:
+            if package in conflicted_pkgs:
+                print("WARNING: conflicting installed packages: '{0}' is conflicting '{1}'!".format(
+                    conflicted_pkgs[package], package))
+            if package in replaced_pkgs:
+                print("WARNING: '{0}' replaces '{1}', but '{1}' is already installed!".format(
+                    replaced_pkgs[package], package))
+
     lookup = _get_default_RosdepLookup(options)
 
     # Handle the --skip-keys option by pretending that they are packages in the catkin workspace
@@ -483,6 +497,7 @@ def _package_args_handler(command, parser, options, args):
         return
 
     return command_handlers[command](lookup, packages, options)
+
 
 def convert_os_override_option(options_os_override):
     """
@@ -500,7 +515,8 @@ def convert_os_override_option(options_os_override):
     os_name = val[:val.find(':')]
     os_version = val[val.find(':')+1:]
     return os_name, os_version
-    
+
+
 def configure_installer_context(installer_context, options):
     """
     Configure the *installer_context* from *options*.
@@ -518,14 +534,15 @@ def configure_installer_context(installer_context, options):
             installer_context.get_installer(k).as_root = v
         except KeyError:
             raise UsageError("Installer '%s' not defined." % k)
-    
+
+
 def command_init(options):
     try:
         data = download_default_sources_list()
     except URLError as e:
         print("ERROR: cannot download default sources list from:\n%s\nWebsite may be down."%(DEFAULT_SOURCES_LIST_URL))
         return 4
-    # reuse path variable for error message 
+    # reuse path variable for error message
     path = get_sources_list_dir()
     old_umask = os.umask(0o022)
     try:
@@ -547,7 +564,8 @@ def command_init(options):
         return 3
     finally:
         os.umask(old_umask)
-    
+
+
 def command_update(options):
     error_occured = []
     def update_success_handler(data_source):
@@ -565,7 +583,7 @@ def command_update(options):
         print("ERROR: no sources directory exists on the system meaning rosdep has not yet been initialized.\n\nPlease initialize your rosdep with\n\n\tsudo rosdep init\n")
         return 1
 
-    filelist = [f for f in os.listdir(sources_list_dir) if f.endswith('.list')]    
+    filelist = [f for f in os.listdir(sources_list_dir) if f.endswith('.list')]
     if not filelist:
         print("ERROR: no data sources in %s\n\nPlease initialize your rosdep with\n\n\tsudo rosdep init\n"%sources_list_dir, file=sys.stderr)
         return 1
@@ -595,12 +613,13 @@ def command_update(options):
         print("]]]")
         return 1
 
-    
+
 def command_keys(lookup, packages, options):
     lookup = _get_default_RosdepLookup(options)
     rosdep_keys = get_keys(lookup, packages, options.recursive)
     _print_lookup_errors(lookup)
     print('\n'.join(rosdep_keys))
+
 
 def get_keys(lookup, packages, recursive):
     rosdep_keys = []
@@ -609,9 +628,10 @@ def get_keys(lookup, packages, recursive):
         rosdep_keys.extend(deps)
     return set(rosdep_keys)
 
+
 def command_check(lookup, packages, options):
     verbose = options.verbose
-    
+
     installer_context = create_default_installer_context(verbose=verbose)
     configure_installer_context(installer_context, options)
     installer = RosdepInstaller(installer_context, lookup)
@@ -632,11 +652,12 @@ def command_check(lookup, packages, options):
             if isinstance(ex, rospkg.ResourceNotFound):
                 print("ERROR[%s]: resource not found [%s]"%(package_name, ex.args[0]), file=sys.stderr)
             else:
-                print("ERROR[%s]: %s"%(package_name, ex), file=sys.stderr)                
+                print("ERROR[%s]: %s"%(package_name, ex), file=sys.stderr)
     if uninstalled:
         return 1
     else:
         return 0
+
 
 def error_to_human_readable(error):
     if isinstance(error, rospkg.ResourceNotFound):
@@ -645,7 +666,8 @@ def error_to_human_readable(error):
         return "%s"%(error.args[0],)
     else:
         return "%s"%(error,)
-    
+
+
 def command_install(lookup, packages, options):
     # map options
     install_options = dict(interactive=not options.default_yes, verbose=options.verbose,
@@ -701,10 +723,11 @@ def command_install(lookup, packages, options):
         print('\n'.join(["  %s: %s"%(k, m) for k,m in e.failures]), file=sys.stderr)
         return 1
 
+
 def _compute_depdb_output(lookup, packages, options):
     installer_context = create_default_installer_context(verbose=options.verbose)
     os_name, os_version = _detect_os(installer_context, options)
-    
+
     output = "Rosdep dependencies for operating system %s version %s "%(os_name, os_version)
     for stack_name in stacks:
         output += "\nSTACK: %s\n"%(stack_name)
@@ -714,7 +737,8 @@ def _compute_depdb_output(lookup, packages, options):
             resolved = resolve_definition(definition, os_name, os_version)
             output = output + "<<<< %s -> %s >>>>\n"%(rosdep, resolved)
     return output
-    
+
+
 def command_db(options):
     # exact same setup logic as command_resolve, should possibly combine
     lookup = _get_default_RosdepLookup(options)
@@ -749,9 +773,10 @@ def command_db(options):
     #TODO: add command-line option for users to be able to see this.
     #This is useful for platform bringup, but useless for most users
     #as the rosdep db contains numerous, platform-specific keys.
-    if 0: 
+    if 0:
         for error in errors:
             print("WARNING: %s"%(error_to_human_readable(error)), file=sys.stderr)
+
 
 def _print_lookup_errors(lookup):
     for error in lookup.get_errors():
@@ -759,7 +784,8 @@ def _print_lookup_errors(lookup):
             print("WARNING: unable to locate resource %s"%(str(error.args[0])), file=sys.stderr)
         else:
             print("WARNING: %s"%(str(error)), file=sys.stderr)
-            
+
+
 def command_what_needs(args, options):
     lookup = _get_default_RosdepLookup(options)
     packages = []
@@ -768,7 +794,8 @@ def command_what_needs(args, options):
 
     _print_lookup_errors(lookup)
     print('\n'.join(set(packages)))
-    
+
+
 def command_where_defined(args, options):
     lookup = _get_default_RosdepLookup(options)
     locations = []
@@ -783,6 +810,7 @@ def command_where_defined(args, options):
     else:
         print("ERROR: cannot find definition(s) for [%s]"%(', '.join(args)), file=sys.stderr)
         return 1
+
 
 def command_resolve(args, options):
     lookup = _get_default_RosdepLookup(options)
@@ -811,13 +839,14 @@ def command_resolve(args, options):
         print (" ".join([str(r) for r in resolved]))
 
     for error in invalid_key_errors:
-        print("ERROR: no rosdep rule for %s"%(error), file=sys.stderr)        
+        print("ERROR: no rosdep rule for %s"%(error), file=sys.stderr)
 
     for error in lookup.get_errors():
         print("WARNING: %s"%(error_to_human_readable(error)), file=sys.stderr)
 
     if invalid_key_errors:
         return 1 # error exit code
+
 
 def command_fix_permissions(options):
     import os
@@ -877,7 +906,7 @@ command_handlers = {
     # backwards compat
     'what_needs': command_what_needs,
     'where_defined': command_where_defined,
-    'depdb': command_db, 
+    'depdb': command_db,
     }
 
 # commands that accept rosdep names as args
@@ -886,6 +915,4 @@ _command_rosdep_args = ['what-needs', 'what_needs', 'where-defined', 'where_defi
 _command_no_args = ['update', 'init', 'db', 'fix-permissions']
 
 _commands = command_handlers.keys()
-
-
 
