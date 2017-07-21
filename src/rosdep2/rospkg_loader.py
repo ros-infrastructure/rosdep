@@ -120,7 +120,7 @@ class RosPkgLoader(RosdepLoader):
     def get_rosdeps(self, resource_name, implicit=True):
         """
         If *resource_name* is a stack, returns an empty list.
-        
+
         :raises: :exc:`rospkg.ResourceNotFound` if *resource_name* cannot be found.
         """
         if resource_name in self.get_loadable_resources():
@@ -132,6 +132,48 @@ class RosPkgLoader(RosdepLoader):
                 return [d.name for d in deps]
             else:
                 return self._rospack.get_rosdeps(resource_name, implicit=implicit)
+        elif resource_name in self._rosstack.list():
+            # stacks currently do not have rosdeps of their own, implicit or otherwise
+            return []
+        else:
+            raise rospkg.ResourceNotFound(resource_name)
+
+    def get_replaces(self, resource_name):
+        """
+        If *resource_name* is a stack, returns an empty list.
+
+        :raises: :exc:`rospkg.ResourceNotFound` if *resource_name* cannot be found.
+        """
+        if resource_name in self.get_loadable_resources():
+            m = self._rospack.get_manifest(resource_name)
+            if m.is_catkin:
+                path = self._rospack.get_path(resource_name)
+                pkg = catkin_pkg.package.parse_package(path)
+                replaces = pkg.replaces
+                return [r.name for r in replaces]
+            else:
+                return []
+        elif resource_name in self._rosstack.list():
+            # stacks currently do not have rosdeps of their own, implicit or otherwise
+            return []
+        else:
+            raise rospkg.ResourceNotFound(resource_name)
+
+    def get_conflicts(self, resource_name):
+        """
+        If *resource_name* is a stack, returns an empty list.
+
+        :raises: :exc:`rospkg.ResourceNotFound` if *resource_name* cannot be found.
+        """
+        if resource_name in self.get_loadable_resources():
+            m = self._rospack.get_manifest(resource_name)
+            if m.is_catkin:
+                path = self._rospack.get_path(resource_name)
+                pkg = catkin_pkg.package.parse_package(path)
+                conflicts = pkg.conflicts
+                return [c.name for c in conflicts]
+            else:
+                return []
         elif resource_name in self._rosstack.list():
             # stacks currently do not have rosdeps of their own, implicit or otherwise
             return []

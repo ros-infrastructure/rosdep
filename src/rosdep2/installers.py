@@ -36,6 +36,7 @@ import traceback
 from rospkg.os_detect import OsDetect
 
 from .core import rd_debug, RosdepInternalError, InstallFailed, print_bold, InvalidData
+from . import catkin_packages
 
 # kwc: InstallerContext is basically just a bunch of dictionaries with
 # defined lookup methods.  It really encompasses two facets of a
@@ -580,6 +581,7 @@ class RosdepInstaller(object):
             if not installer.is_installed(r):
                 failures.append((installer_key, "Failed to detect successful installation of [%s]"%(r)))
         # finalize result
+        catkin_packages.add_workspace_packages(installer_key)
         if failures:
             raise InstallFailed(failures=failures)
         elif verbose:

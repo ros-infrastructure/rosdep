@@ -247,7 +247,6 @@ def prune_replaced_packages(rosdep_keys, verbose=False):
 
 
 def prune_conflicted_packages(rosdep_keys, verbose=False):
-    workspace_pkgs = catkin_packages.get_workspace_packages()
     conflicted_pkgs = catkin_packages.get_conflicted_packages()
     if not conflicted_pkgs:
         return rosdep_keys
@@ -330,6 +329,22 @@ class RosdepLookup(object):
         """
         return self.loader.get_rosdeps(resource_name, implicit=implicit)
 
+    def get_replaces(self, resource_name):
+        """
+        Get pakages that *resource_name* (e.g. package) replaces.
+
+        :returns: list of rosdep names, ``[str]``
+        """
+        return self.loader.get_replaces(resource_name)
+
+    def get_conflicts(self, resource_name):
+        """
+        Get pakages that *resource_name* (e.g. package) conflict with.
+
+        :returns: list of rosdep names, ``[str]``
+        """
+        return self.loader.get_conflicts(resource_name)
+
     def get_resources_that_need(self, rosdep_name):
         """
         :param rosdep_name: name of rosdep dependency
@@ -381,7 +396,6 @@ class RosdepLookup(object):
         # use dependencies to implement precedence
         view_dependencies = sources_loader.get_loadable_views()
         rosdep_db.set_view_data(underlay_key, {}, view_dependencies, underlay_key)
-
         return lookup
 
     def resolve_all(self, resources, installer_context, implicit=False):
@@ -407,10 +421,21 @@ class RosdepLookup(object):
         for resource_name in resources:
             try:
                 rosdep_keys = self.get_rosdeps(resource_name, implicit=implicit)
+                conflicted_keys = self.get_conflicts(resource_name)
+                replaced_keys = self.get_replaces(resource_name)
+
+                catkin_packages.add_workspace_packages(resource_name)
+                catkin_packages.add_conflicted_packages(resource_name, conflicted_keys)
+                catkin_packages.add_replaced_packages(resource_name, replaced_keys)
                 if self.verbose:
-                    print("resolve_all: resource [%s] requires rosdep keys [%s]"%(resource_name, ', '.join(rosdep_keys)), file=sys.stderr)
+                    print("resolve_all: resource [%s] requires rosdep keys [%s], "%(resource_name, ', '.join(rosdep_keys)) +
+                          "replaces rosdep keys [%s], "%(', '.join(replaced_keys)) +
+                          "conflicts with rosdep keys [%s]"%(', '.join(conflicted_keys)),
+                          file=sys.stderr)
                 rosdep_keys = prune_catkin_packages(rosdep_keys, self.verbose)
                 rosdep_keys = prune_skipped_packages(rosdep_keys, self.skipped_keys, self.verbose)
+                rosdep_keys = prune_conflicted_packages(rosdep_keys, self.verbose)
+                rosdep_keys = prune_replaced_packages(rosdep_keys, self.verbose)
                 for rosdep_key in rosdep_keys:
                     try:
                         installer_key, resolution, dependencies = \
