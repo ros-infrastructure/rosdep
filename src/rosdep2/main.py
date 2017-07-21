@@ -404,7 +404,6 @@ def _rosdep_args_handler(command, parser, options, args):
 def _check_package_replaces_conflicts():
     # Print installed conflicting or replaced packages
     workspace_pkgs = get_workspace_packages()
-    print(workspace_pkgs)
     conflicted_pkgs = get_conflicted_packages()
     replaced_pkgs = get_replaced_packages()
 
