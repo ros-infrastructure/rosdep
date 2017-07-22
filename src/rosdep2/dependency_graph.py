@@ -1,9 +1,9 @@
 # Copyright (c) 2012, Willow Garage, Inc.
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 #     * Redistributions of source code must retain the above copyright
 #       notice, this list of conditions and the following disclaimer.
 #     * Redistributions in binary form must reproduce the above copyright
@@ -12,7 +12,7 @@
 #     * Neither the name of the Willow Garage, Inc. nor the names of its
 #       contributors may be used to endorse or promote products derived from
 #       this software without specific prior written permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -29,6 +29,7 @@
 
 from collections import defaultdict
 
+
 class Resolution(dict):
     """A default dictionary for use in the :class:`DependencyGraph`."""
     def __init__(self):
@@ -38,12 +39,14 @@ class Resolution(dict):
         self['dependencies'] = []
         self['is_root'] = True
 
+
 class DependencyGraph(defaultdict):
     """
     Provides a mechanism for generating a list of resolutions which preserves the dependency order.
 
-    The :class:`DependencyGraph` inherits from a *defaultdict*, so it can be used as such to load the dependency graph data into it.
-    Example:: 
+    The :class:`DependencyGraph` inherits from a *defaultdict*, so it can be used as such to load
+    the dependency graph data into it.
+    Example::
 
         # Dependency graph:: A-B-C
         dg = DependencyGraph()
@@ -61,7 +64,7 @@ class DependencyGraph(defaultdict):
     """
     def __init__(self):
         defaultdict.__init__(self, Resolution)
-    
+
     def detect_cycles(self, rosdep_key, traveled_keys):
         """
         Recursive function to detect cycles in the dependency graph.
@@ -71,14 +74,14 @@ class DependencyGraph(defaultdict):
 
         :raises: :exc:`AssertionError` if the rosdep_key is in the traveled keys, indicating a cycle has occurred.
         """
-        assert rosdep_key not in traveled_keys, "A cycle in the dependency graph occurred with key `%s`."%rosdep_key
+        assert rosdep_key not in traveled_keys, "A cycle in the dependency graph occurred with key `%s`." % rosdep_key
         traveled_keys.append(rosdep_key)
         for dependency in self[rosdep_key]['dependencies']:
             self.detect_cycles(dependency, traveled_keys)
 
     def validate(self):
         """
-        Performs validations on the dependency graph, like cycle detection and invalid rosdep key detection. 
+        Performs validations on the dependency graph, like cycle detection and invalid rosdep key detection.
 
         :raises: :exc:`AssertionError` if a cycle is detected.
         :raises: :exc:`KeyError` if an invalid rosdep_key is found in the dependency graph.
@@ -88,7 +91,9 @@ class DependencyGraph(defaultdict):
             # i.e.: Ensure we aren't pointing to invalid rosdep keys
             for dependency in self[rosdep_key]['dependencies']:
                 if dependency not in self:
-                    raise KeyError("Invalid Graph Structure: rosdep key `%s` does not exist in the dictionary of resolutions."%dependency)
+                    raise KeyError(
+                        "Invalid Graph Structure: rosdep key `%s` does not exist in the dictionary of resolutions."
+                        % dependency)
                 self[dependency]['is_root'] = False
         # Check each entry for cyclical dependencies
         for rosdep_key in self:
@@ -99,7 +104,7 @@ class DependencyGraph(defaultdict):
         Generates an ordered list of dependencies using the dependency graph.
 
         :returns: *[(installer_key, [install_keys])]*, ``[(str, [str])]``.  *installer_key* is the key
-         that denotes which installed the accompanying *install_keys* are for.  *installer_key* are something 
+         that denotes which installed the accompanying *install_keys* are for.  *installer_key* are something
          like ``apt`` or ``homebrew``.  *install_keys* are something like ``boost`` or ``ros-fuerte-ros_comm``.
 
         :raises: :exc:`AssertionError` if a cycle is detected.
