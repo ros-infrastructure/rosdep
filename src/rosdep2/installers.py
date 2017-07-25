@@ -540,12 +540,12 @@ class RosdepInstaller(object):
         if simulate:
             print("#[%s] Installation commands:"%(installer_key))
             for sub_command in command:
-                if type(sub_command[0]) is list:
-                    l = len(sub_command)
-                    for i in range(l):
-                        print('  %s (alternative %d/%d)'%(' '.join(sub_command[i]), i+1,l))
+                if isinstance(sub_command[0], list):
+                    len = len(sub_command)
+                    for cmd, i in enumerate(l):
+                        print("  '%s' (alternative %d/%d)" % (' '.join(cmd), i + 1, len))
                 else:
-                    print('  '+' '.join(sub_command))
+                    print('  ' + ' '.join(sub_command))
 
         # nothing left to do for simulation
         if simulate:
@@ -553,23 +553,23 @@ class RosdepInstaller(object):
         
         def run_command(command, installer_key, failures, verbose):
             # always echo commands to screen
-            print_bold("executing command [%s]"%' '.join(command))
+            print_bold("executing command [%s]" % ' '.join(command))
             result = subprocess.call(command)
             if verbose:
-                print("command return code [%s]: %s"%(' '.join(command), result))
+                print("command return code [%s]: %s" % (' '.join(command), result))
             if result != 0:
-                failures.append((installer_key, 'command [%s] failed'%(' '.join(command))) )
+                failures.append((installer_key, 'command [%s] failed' % (' '.join(command))))
             return result
 
         # run each install command set and collect errors
         failures = []
         for sub_command in command:
-            if type(sub_command[0]) is list: # list of alternatives
+            if isinstance(sub_command[0], list): # list of alternatives
                 alt_failures = []
                 for alt_command in sub_command:
                     result = run_command(alt_command, installer_key, alt_failures, verbose)
-                    if result == 0: # one successsfull command is sufficient
-                        alt_failures = [] # clear failuers from other alternatives
+                    if result == 0:  # one successsfull command is sufficient
+                        alt_failures = []  # clear failuers from other alternatives
                         break
                 failures.extend(alt_failures)
             else:
