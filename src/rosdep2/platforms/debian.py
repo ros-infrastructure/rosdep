@@ -84,127 +84,9 @@ def register_ubuntu(context):
     context.set_default_os_installer_key(OS_UBUNTU, lambda self: APT_INSTALLER)
     context.set_os_version_type(OS_UBUNTU, OsDetect.get_codename)
 
-
-# detect that apt show indicates that the package is virtual
-APT_PURELY_VIRTUAL_RE = re.compile(
-        r'State: not a real package \(virtual\)',
-        flags=re.DOTALL)
-# detect what lines in apt-cache showpkg show the packages providing a virtual
-# package
-APT_CACHE_REVERSE_PROVIDE_START_RE = re.compile(
-        r'^Reverse Provides:')
-# format of a 'Reverse Provides' line in the apt-cache showpkg output
-APT_CACHE_PROVIDER_RE = re.compile('^(.*?) (.*)$')
-
-
-def _get_providing_packages(package, exec_fn=None):
-# Note: This can be done much more concise when adding python-apt as a dependency:
-#
-#    import apt
-#    cache = apt.Cache()
-#    return cache.get_providing_packages(package):
-#
-    cmd = ['apt-cache', 'showpkg', package]
-    if exec_fn is None:
-        exec_fn = read_stdout
-    std_out = exec_fn(cmd)
-    is_provider = False # true when parsed line contains a povider
-    for line in std_out.split('\n'):
-        if is_provider:
-            match = APT_CACHE_PROVIDER_RE.match(line)
-            if not match:
-                print("WARNING: The output of '{0}' is strange; "
-                      "unable to determine providers of virtual package '{1}'"
-                      .format(cmd[0] + ' ' + cmd[1], package))
-            else:
-                provider_name, provider_version = match.groups()
-                yield provider_name
-        if APT_CACHE_REVERSE_PROVIDE_START_RE.match(line):
-            is_provider = True
-            # Note: Set this _after_ possibly parsing the current line to
-            #       not parse the line containing
-            #       APT_CACHE_REVERSE_PROVIDE_START_RE
-    return
-
-def _get_installed_providing_package(package, verbose = False, exec_fn=None):
-    for provider_name in _get_providing_packages(package):
-        if dpkg_detect([provider_name], exec_fn):
-            if verbose:
-                print("Virtual package '{0}' is provided by '{1}'".format(package, provider_name))
-            return provider_name
-    return None  # unable to find a provider that was installed
-
-def _is_virtual_package(package, exec_fn=None):
-# Note: This can be done much more concise when adding python-apt as a dependency:
-#
-#    import apt
-#    cache = apt.Cache()
-#    return cache.is_virtual_package(package):
-# check output of `apt show package' for whether it's a virtual
-# package and if so use `apt-cache showpkg package' to get the providing
-# packages.  Then check if one of those is installed.
-    cmd = ['apt', 'show', package]
-    if exec_fn is None:
-        exec_fn = read_stdout
-    # use stderr as well to hide error message ... not too nice, but hopefully cautious
-    std_out, std_err = exec_fn(cmd, True)
-    return APT_PURELY_VIRTUAL_RE.search(std_out) != None
-
-def _is_installed_as_virtual_package(package, exec_fn=None):
-    '''
-    Check whether this is a virtual package and a package providing this
-    virtual package is installed.
-
-    :param exec_fn: see `dpkg_detect`; make sure that exec_fn supports a
-    second, boolean, parameter.
-    '''
-    return (
-        _is_virtual_package(package, exec_fn) and
-        _get_installed_providing_package(package, True, exec_fn) != None
-    )
-
-def dpkg_detect(pkgs, exec_fn=None):
-    """
-    Given a list of package, return the list of installed packages.
-
-    :param pkgs: list of package names, optionally followed by a fixed version (`foo=3.0`)
-    :param exec_fn: function to execute Popen and read stdout (for testing)
-    :return: list elements in *pkgs* that were found installed on the system
-    """
-    ret_list = []
-    # this is mainly a hack to support version locking for eigen.
-    # we strip version-locking syntax, e.g. libeigen3-dev=3.0.1-*.
-    # our query does not do the validation on the version itself.
-    # This is a map `package name -> package name optionally with version`.
-    version_lock_map = {}
-    for p in pkgs:
-        if '=' in p:
-            version_lock_map[p.split('=')[0]] = p
-        else:
-            version_lock_map[p] = p
-    cmd = ['dpkg-query', '-W', '-f=\'${Package} ${Status}\n\'']
-    cmd.extend(version_lock_map.keys())
-
-    if exec_fn is None:
-        exec_fn = read_stdout
-    std_out = exec_fn(cmd)
-    std_out = std_out.replace('\'','')
-    pkg_list = std_out.split('\n')
-    for pkg in pkg_list:
-        pkg_row = pkg.split()
-        if len(pkg_row) == 4 and (pkg_row[3] =='installed'):
-            ret_list.append( pkg_row[0])
-    installed_packages = [version_lock_map[r] for r in ret_list]
-
-    # now for the remaining packages check, whether they are installed as
-    # virtual packages
-    for rem in set(pkgs) - set(installed_packages):
-        if _is_installed_as_virtual_package(rem):
-            installed_packages.append(rem)
-
-    return installed_packages
-
-
+def get_apt_cache():
+    import apt
+    return apt.Cache()
 
 class AptInstaller(PackageManagerInstaller):
     """
@@ -212,29 +94,73 @@ class AptInstaller(PackageManagerInstaller):
     systems.
     """
     def __init__(self):
-        super(AptInstaller, self).__init__(dpkg_detect)
+        super(AptInstaller, self).__init__(self.apt_detect)
+
+    def is_pkg_installed(self, name, version='', cache=None):
+        """
+        Given a package name and an option version, return if package is installed.
+
+        :param name: package name
+        :param version (optional): package version, e.g. 1.0.0
+        :return: True if package is installed
+        """
+        if cache is None:
+            cache = get_apt_cache()
+
+        try:
+            # check if package is known, package is installed and package version matches
+            if cache[name].installed.version.startswith(version):
+                return True
+        except:
+            if cache.is_virtual_package(name):
+                for p in cache.get_providing_packages(name):
+                    if self.is_pkg_installed(p.name, version, cache):
+                        return True
+        return False
+
+    def apt_detect(self, pkgs):
+        """
+        Given a list of package, return the list of installed packages.
+
+        :param pkgs: list of package names, optionally followed by a fixed version (`foo=3.0`)
+        :return: list elements in *pkgs* that were found installed on the system
+        """
+        installed_packages = []
+        cache = get_apt_cache()
+
+        for p in pkgs:
+            parts = p.split('=')
+            name = parts[0]
+            version = parts[1] if len(parts) > 1 else ''
+            if self.is_pkg_installed(name, version, cache):
+                installed_packages.append(p)
+
+        return installed_packages
+
 
     def get_version_strings(self):
         output = subprocess.check_output(['apt-get', '--version'])
         version = output.splitlines()[0].split(' ')[1]
         return ['apt-get {}'.format(version)]
 
-    def _get_install_commands_for_package(self, base_cmd, package, reinstall):
+    def _get_install_commands_for_package(self, base_cmd, package, reinstall, cache):
         def pkg_command(p):
             return self.elevate_priv(base_cmd + [p])
 
-        if _is_virtual_package(package):
-            installed = None
+        if cache.is_virtual_package(package):
+            providers = [p.name for p in cache.get_providing_packages(package)]
             if reinstall:
-                installed = _get_installed_providing_package(package)
-            if installed is not None:
-                return pkg_command(installed)
-            return [pkg_command(p) for p in _get_providing_packages(package)]
+                for p in providers:
+                    if self.is_pkg_installed(p):
+                        return pkg_command(p)
+            return [pkg_command(p) for p in providers]
 
         return pkg_command(package)
 
     def get_install_command(self, resolved, interactive=True, reinstall=False, quiet=False):
         packages = self.get_packages_to_install(resolved, reinstall=reinstall)
+        cache = get_apt_cache()
+
         if not packages:
             return []
         if not interactive and quiet:
@@ -245,4 +171,4 @@ class AptInstaller(PackageManagerInstaller):
             base_cmd = ['apt-get', 'install', '-y']
         else:
             base_cmd = ['apt-get', 'install']
-        return [self._get_install_commands_for_package(base_cmd, p, reinstall) for p in packages]
+        return [self._get_install_commands_for_package(base_cmd, p, reinstall, cache) for p in packages]
