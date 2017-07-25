@@ -9,7 +9,7 @@ setup(
     packages=['rosdep2', 'rosdep2.platforms'],
     package_dir={'': 'src'},
     install_requires=['catkin_pkg', 'rospkg >= 1.0.37', 'rosdistro >= 0.4.0', 'PyYAML >= 3.1'],
-    extras_require = { 'APT':  ["apt"]},
+    extras_require = { 'APT':  ["python-apt"]},
     test_suite='nose.collector',
     test_requires=['mock', 'nose >= 1.0'],
     scripts=['scripts/rosdep', 'scripts/rosdep-source'],
