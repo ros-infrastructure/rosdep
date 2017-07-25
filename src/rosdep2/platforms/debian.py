@@ -113,8 +113,9 @@ def _get_providing_packages(package, exec_fn=None):
         if is_provider:
             match = APT_CACHE_PROVIDER_RE.match(line)
             if not match:
-                print('WARNING: The output of {} is strange; unable to determine providers of virtual package {}'.format(
-                    cmd[0] + ' ' + cmd[1], package))
+                print("WARNING: The output of '{0}' is strange; "
+                      "unable to determine providers of virtual package '{1}'"
+                      .format(cmd[0] + ' ' + cmd[1], package))
             else:
                 provider_name, provider_version = match.groups()
                 yield provider_name
@@ -129,9 +130,9 @@ def _get_installed_providing_package(package, verbose = False, exec_fn=None):
     for provider_name in _get_providing_packages(package):
         if dpkg_detect([provider_name], exec_fn):
             if verbose:
-                print('Virtual package {} is provided by {}'.format(package, provider_name))
+                print("Virtual package '{0}' is provided by '{1}'".format(package, provider_name))
             return provider_name
-    return None # unable to find a provider that was installed
+    return None  # unable to find a provider that was installed
 
 def _is_virtual_package(package, exec_fn=None):
 # Note: This can be done much more concise when adding python-apt as a dependency:
@@ -145,7 +146,8 @@ def _is_virtual_package(package, exec_fn=None):
     cmd = ['apt', 'show', package]
     if exec_fn is None:
         exec_fn = read_stdout
-    std_out, std_err = exec_fn(cmd, True) # use stderr as well to hide error message ... not too nice, but hopefully cautious
+    # use stderr as well to hide error message ... not too nice, but hopefully cautious
+    std_out, std_err = exec_fn(cmd, True)
     return APT_PURELY_VIRTUAL_RE.search(std_out) != None
 
 def _is_installed_as_virtual_package(package, exec_fn=None):
@@ -156,7 +158,10 @@ def _is_installed_as_virtual_package(package, exec_fn=None):
     :param exec_fn: see `dpkg_detect`; make sure that exec_fn supports a
     second, boolean, parameter.
     '''
-    return _is_virtual_package(package, exec_fn) and _get_installed_providing_package(package, True, exec_fn) != None
+    return (
+        _is_virtual_package(package, exec_fn) and
+        _get_installed_providing_package(package, True, exec_fn) != None
+    )
 
 def dpkg_detect(pkgs, exec_fn=None):
     """
@@ -215,14 +220,17 @@ class AptInstaller(PackageManagerInstaller):
         return ['apt-get {}'.format(version)]
 
     def _get_install_commands_for_package(self, base_cmd, package, reinstall):
-        def pkg_command(p): return self.elevate_priv(base_cmd + [p])
+        def pkg_command(p):
+            return self.elevate_priv(base_cmd + [p])
+
         if _is_virtual_package(package):
             installed = None
             if reinstall:
                 installed = _get_installed_providing_package(package)
             if installed is not None:
                 return pkg_command(installed)
-            return [ pkg_command(p) for p in _get_providing_packages(package) ]
+            return [pkg_command(p) for p in _get_providing_packages(package)]
+
         return pkg_command(package)
 
     def get_install_command(self, resolved, interactive=True, reinstall=False, quiet=False):
