@@ -1,3 +1,4 @@
+dist: trusty
 language: python
 python:
   - "2.6"
@@ -6,8 +7,12 @@ python:
 # command to install dependencies
 install:
 # develop seems to be required by travis since 02/2013
-  - sudo apt-get install python-apt
+  - sudo apt-get install build-essential git-core bzr intltool libapt-pkg-dev
+  - pip install setuptools sphinx
+  - cd /tmp && bzr branch lp:python-distutils-extra && cd python-distutils-extra && python setup.py build install
+  - git clone git://git.launchpad.net/python-apt -b ubuntu/trusty /tmp/python-apt && cd /tmp/python-apt && python setup.py build install
   - pip install PyYAML argparse rospkg vcstools catkin_pkg python-dateutil rosdistro
+  - cd $TRAVIS_BUILD_DIR
   - python setup.py build develop
   - pip install nose coverage
 # command to run tests
