@@ -94,6 +94,11 @@ OS name identifiers and supported package managers
 
    * ``pkg_add`` (default)
    * ``source``
+   
+ * ``gentoo``: Gentoo Linux
+
+   * ``portage`` (default)
+   * ``source``
 
  * ``osx`` : Apple OS X
 
