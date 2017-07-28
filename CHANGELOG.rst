@@ -1,3 +1,28 @@
+0.11.6 (2017-06-27)
+-------------------
+
+- Added resinstall option for ``pip`` installer
+  - https://github.com/ros-infrastructure/rosdep/pull/450
+- Fixed detection and handling of virtual packages in ``apt`` (more changes to follow)
+  - https://github.com/ros-infrastructure/rosdep/pull/468
+  - https://github.com/ros-infrastructure/rosdep/pull/515
+- Added support for Slackware
+  - https://github.com/ros-infrastructure/rosdep/pull/469
+- Fixed flags being passed to pacman on Arch Linux
+  - https://github.com/ros-infrastructure/rosdep/pull/472
+  - https://github.com/ros-infrastructure/rosdep/pull/476
+- No longer uses ``sudo`` when already root
+  - https://github.com/ros-infrastructure/rosdep/pull/474
+- Added more information to ``rosdep --version``
+  - https://github.com/ros-infrastructure/rosdep/pull/481
+  - https://github.com/ros-infrastructure/rosdep/pull/499
+- Fixed bug when using ``--verbose`` with ``rosdep install`` on macOS with Homebrew
+  - https://github.com/ros-infrastructure/rosdep/pull/525
+- Fixed bug with the ``depends:`` part of a stanze not being used to ordered installations correctly
+  - https://github.com/ros-infrastructure/rosdep/pull/529
+- Fixed Python3 bug on macOS
+  - https://github.com/ros-infrastructure/rosdep/pull/441
+
 0.11.5 (2016-05-23)
 -------------------
 
