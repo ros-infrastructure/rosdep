@@ -242,7 +242,7 @@ def test_RosdepLookup_get_rosdeps():
     rospack, rosstack = get_test_rospkgs()
     
     sources_loader = create_test_SourcesListLoader()
-    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rospack,
+    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack,
                                              sources_loader=sources_loader)
     assert lookup.get_loader() is not None
     assert isinstance(lookup.get_loader(), RosdepLoader)
@@ -268,7 +268,7 @@ def test_RosdepLookup_get_resources_that_need():
     rospack, rosstack = get_test_rospkgs()
     
     sources_loader = create_test_SourcesListLoader()
-    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rospack,
+    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack,
                                              sources_loader=sources_loader)
 
     assert lookup.get_resources_that_need('fake') ==  []
