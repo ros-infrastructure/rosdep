@@ -69,7 +69,7 @@ def pkg_info_detect_single(p):
 def pkg_info_detect(packages, warnings=False):
     return [p for p in packages if pkg_info_detect_single(p)]
 
-class PkgAddInstaller(Installer):
+class PkgAddInstaller(PackageManagerInstaller):
     """
     An implementation of the Installer for use on FreeBSD-style
     systems.
