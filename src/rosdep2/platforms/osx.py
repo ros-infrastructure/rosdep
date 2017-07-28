@@ -179,8 +179,12 @@ def brew_detect(resolved, exec_fn_err=None, warnings=False):
     """
     if exec_fn_err is None:
         exec_fn_err = lambda cmd: read_stdout(cmd, capture_stderr=True, return_exitcode=True)
-    output = exec_fn_err(['brew', 'list'])
-    std_out = output[0]
+    std_out, std_err, exitcode = exec_fn_err(['brew', 'list'])
+    if exitcode != 0:
+        raise RosdepInternalError(None, """
+`brew list` failed with exit code '{1}'. Homebrew setup might be broken.
+Check `brew doctor`. Captured `stderr` output:
+{2}""".format(exitcode, std_err))
     installed_formulae = std_out.split()
 
     def is_installed(r):
@@ -194,8 +198,7 @@ def brew_detect(resolved, exec_fn_err=None, warnings=False):
         if not brew_strip_pkg_name(r.package) in installed_formulae:
             return False
 
-        output = exec_fn_err(['brew', 'info', r.package, '--json=v1'])
-        std_out, std_err, exitcode = output
+        std_out, std_err, exitcode = exec_fn_err(['brew', 'info', r.package, '--json=v1'])
         if exitcode != 0:
             raise RosdepInternalError(None, """
 Formula '{0}' is installed, but `brew info` failed with exit code '{1}'.
