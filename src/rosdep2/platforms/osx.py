@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # Copyright (c) 2009, Willow Garage, Inc.
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 #     * Redistributions of source code must retain the above copyright
 #       notice, this list of conditions and the following disclaimer.
 #     * Redistributions in binary form must reproduce the above copyright
@@ -13,7 +13,7 @@
 #     * Neither the name of the Willow Garage, Inc. nor the names of its
 #       contributors may be used to endorse or promote products derived from
 #       this software without specific prior written permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -56,7 +56,7 @@ except NameError:
 def register_installers(context):
     context.set_installer(MACPORTS_INSTALLER, MacportsInstaller())
     context.set_installer(BREW_INSTALLER, HomebrewInstaller())
-    
+
 def register_platforms(context):
     context.add_os_installer_key(OS_OSX, BREW_INSTALLER)
     context.add_os_installer_key(OS_OSX, MACPORTS_INSTALLER)
@@ -71,7 +71,7 @@ def is_port_installed():
         return True
     except OSError:
         return False
-    
+
 def port_detect(pkgs, exec_fn=None):
     ret_list = []
     if not is_port_installed():
@@ -86,7 +86,7 @@ def port_detect(pkgs, exec_fn=None):
     return ret_list
 
 class MacportsInstaller(PackageManagerInstaller):
-    """ 
+    """
     An implementation of the :class:`Installer` API for use on
     macports systems.
     """
@@ -166,6 +166,8 @@ def brew_strip_pkg_name(package):
     :returns: Unqualified package name. E.g. 'foo-pkg' for input
         'ros/hydro/foo-pkg'
     """
+    if not isinstance(package, str): # package is a bytes object
+        package = package.decode()
     return package.split('/')[-1]
 
 
