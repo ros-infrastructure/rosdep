@@ -326,7 +326,9 @@ def download_default_sources_list(url=DEFAULT_SOURCES_LIST_URL):
     try:
         parse_sources_data(data)
     except InvalidData as e:
-        raise DownloadFailure("Failed to download valid rosdep sources from %s Contents were:{{{%s}}} Parsing error: %s" % (url, data, e))
+        raise DownloadFailure("The content downloaded from %s failed to pass validation."
+            " It is likely that the source is invalid unless the data was corrupted during the download."
+            " The contents were:{{{%s}}} The error raised was: %s" % (url, data, e))
     return data
 
 def parse_sources_data(data, origin='<string>', model=None):
