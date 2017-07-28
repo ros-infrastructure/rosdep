@@ -210,8 +210,8 @@ for syntax errors (`brew info {0}`). Captured `stderr` output:
             if not linked_version:
                 if warnings:
                     print("""\
-WARNING: Formula '{0}' is installed, but not linked. You might need to
-         manually call `brew link {0}` or use `rosdep install ... --reinstall`""".format(r.package))
+ERROR: Formula '{0}' is installed, but not linked. You might need to
+       manually call `brew link {0}` or use `rosdep install ... --reinstall`""".format(r.package))
                 return False
             for spec in pkg_info['installed']:
                 if spec['version'] == linked_version:
@@ -231,9 +231,9 @@ WARNING: Formula '{0}' is installed, but not linked. You might need to
         else:
             if warnings:
                 print("""\
-WARNING: Formula '{0}' is installed, but used options '{1}' are not
-         superset of required options '{2}'. You might need to manually
-         call `brew reinstall {0} {2}` or use `rosdep install ... --reinstall`.""".
+ERROR: Formula '{0}' is installed, but used options '{1}' are not
+       superset of required options '{2}'. You might need to manually
+       call `brew reinstall {0} {2}` or use `rosdep install ... --reinstall`.""".
                     format(r.package, " ".join(installed_options), " ".join(r.options)))
             return False
 
