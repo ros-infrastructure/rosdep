@@ -1,0 +1,18 @@
+<package>
+  <name>metapackage_with_deps</name>
+  <version>0.0.0</version>
+  <description>
+    This is a meta-package with depencencies
+  </description>
+  <maintainer email="nobody@example.org">Nobody</maintainer>
+  <license>BSD</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <run_depend>simple_catkin_package</run_depend>
+  <run_depend>another_catkin_package</run_depend>
+
+  <export>
+    <metapackage />
+  </export>
+</package>
