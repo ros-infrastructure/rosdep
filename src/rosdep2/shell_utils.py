@@ -50,39 +50,26 @@ def read_stdout(cmd, capture_stderr=False, return_exitcode=False):
     Execute given command and return stdout and if requested also stderr.
 
     :param cmd: command in a form that Popen understands (list of strings or one string)
-    :param suppress_stderr: If evaluates to True, capture output from stderr as
-    well and return it as well.
-    :return: if `capture_stderr` is evaluates to False, return the stdout of
-    the program as string (Note: stderr will be printed to the running
-    terminal).  If it evaluates to True, tuple of strings: stdout output and
-    standard error output each as string.
+    :param capture_stderr: If evaluates to True, capture output from stderr as
+    well and return it as well. (Note: stderr will be printed to the running terminal otherwise)
+    :param return_exitcode: If evaluates to True, return the exitcode of the subprocess
+    :return: if both `capture_stderr` and `return_exitcode` evaluate to False, return the stdout of
+    the program as string. If one evaluates to True, return tuple with stdout as string,
+    stderr as string and exitcode as int, in that order.
     '''
     if capture_stderr:
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
         std_out, std_err = p.communicate()
-        if python3:
-            result = std_out.decode(), std_err.decode()
-        else:
-            result = std_out, std_err
+        result = [std_out, std_err]
     else:
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, env=env)
-        std_out, std_err = p.communicate() # ignore stderr
-        if python3:
-            result = std_out.decode()
-        else:
-            result = std_out
-    if return_exitcode:
-        result = result + (p.returncode,)
-    return result
-
-
-def read_stdout_err(cmd):
-    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
-    std_out, std_err = p.communicate()
+        std_out, std_err = p.communicate()  # ignore stderr
+        result = [std_out]
     if python3:
-        return std_out.decode(), std_err.decode(), p.returncode
-    else:
-        return std_out, std_err, p.returncode
+        result = [s.decode() for s in result]
+    if return_exitcode:
+        result.append(p.returncode)
+    return tuple(result) if len(result) > 1 else result[0]
 
 
 def create_tempfile_from_string_and_execute(string_script, path=None, exec_fn=None):
