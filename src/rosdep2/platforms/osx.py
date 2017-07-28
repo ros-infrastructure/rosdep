@@ -177,6 +177,12 @@ def brew_detect(resolved, exec_fn_err=None, warnings=False):
     :param resolved: List of HomebrewResolution objects
     :returns: Filtered list of HomebrewResolution objects
     """
+    # TODO: Don't raise RosdepInternalError when calls to `brew` fail.
+    #       Instead use some other exception to inform the user what
+    #       happened, but without the request to file a rosdep bugreport.
+    # TODO: It would be better to not print the errors about failed formula
+    #       installations here, but instead somehow pass them up the call
+    #       chain and properly format and print them in one place.
     if exec_fn_err is None:
         exec_fn_err = lambda cmd: read_stdout(cmd, capture_stderr=True, return_exitcode=True)
     std_out, std_err, exitcode = exec_fn_err(['brew', 'list'])
