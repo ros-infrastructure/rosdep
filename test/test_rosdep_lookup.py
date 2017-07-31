@@ -66,7 +66,8 @@ def get_test_rospkgs():
     test_dir = get_test_tree_dir()
     ros_root = os.path.join(test_dir, 'ros')
     ros_package_path = os.path.join(test_dir, 'stacks')
-    ros_paths = [ros_root, ros_package_path]
+    catkin_package_path = os.path.join(test_dir, 'catkin')
+    ros_paths = [ros_root, ros_package_path, catkin_package_path]
     rospack = RosPack(ros_paths=ros_paths)
     rosstack = RosStack(ros_paths=ros_paths)
     return rospack, rosstack
@@ -242,7 +243,7 @@ def test_RosdepLookup_get_rosdeps():
     rospack, rosstack = get_test_rospkgs()
     
     sources_loader = create_test_SourcesListLoader()
-    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rospack,
+    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack,
                                              sources_loader=sources_loader)
     assert lookup.get_loader() is not None
     assert isinstance(lookup.get_loader(), RosdepLoader)
@@ -263,12 +264,25 @@ def test_RosdepLookup_get_rosdeps():
     assert set(lookup.get_rosdeps('stack1_p2', implicit=False)) == set(['stack1_dep1', 'stack1_dep2', 'stack1_p2_dep1']), set(lookup.get_rosdeps('stack1_p2'))
     assert set(lookup.get_rosdeps('stack1_p2', implicit=True)) == set(['stack1_dep1', 'stack1_dep2', 'stack1_p1_dep1', 'stack1_p1_dep2', 'stack1_p2_dep1']), set(lookup.get_rosdeps('stack1_p2'))    
     
+    # catkin
+    print(lookup.get_rosdeps('simple_catkin_package'))
+    assert set(lookup.get_rosdeps('simple_catkin_package')) == set(['catkin', 'testboost' ])
+    assert set(lookup.get_rosdeps('simple_catkin_package', implicit=False)) == set(['catkin', 'testboost'])
+
+    print(lookup.get_rosdeps('another_catkin_package'))
+    assert set(lookup.get_rosdeps('another_catkin_package')) == set(['catkin', 'simple_catkin_package' ]) # implicit deps won't get included
+    assert set(lookup.get_rosdeps('another_catkin_package', implicit=False)) == set(['catkin', 'simple_catkin_package'])
+
+    print(lookup.get_rosdeps('metapackage_with_deps'))
+    assert set(lookup.get_rosdeps('metapackage_with_deps')) == set(['catkin', 'simple_catkin_package', 'another_catkin_package']) # implicit deps won't get included
+    assert set(lookup.get_rosdeps('metapackage_with_deps', implicit=False)) == set(['catkin', 'simple_catkin_package', 'another_catkin_package'])
+
 def test_RosdepLookup_get_resources_that_need():
     from rosdep2.lookup import RosdepLookup
     rospack, rosstack = get_test_rospkgs()
     
     sources_loader = create_test_SourcesListLoader()
-    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rospack,
+    lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack,
                                              sources_loader=sources_loader)
 
     assert lookup.get_resources_that_need('fake') ==  []

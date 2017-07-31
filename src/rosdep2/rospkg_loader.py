@@ -123,18 +123,24 @@ class RosPkgLoader(RosdepLoader):
         
         :raises: :exc:`rospkg.ResourceNotFound` if *resource_name* cannot be found.
         """
+        def get_catkin_depends(path):
+            pkg = catkin_pkg.package.parse_package(path)
+            deps = pkg.build_depends + pkg.buildtool_depends + pkg.run_depends + pkg.test_depends
+            return [d.name for d in deps]
+
         if resource_name in self.get_loadable_resources():
             m = self._rospack.get_manifest(resource_name)
             if m.is_catkin:
-                path = self._rospack.get_path(resource_name)
-                pkg = catkin_pkg.package.parse_package(path)
-                deps = pkg.build_depends + pkg.buildtool_depends + pkg.run_depends + pkg.test_depends
-                return [d.name for d in deps]
+                return get_catkin_depends(self._rospack.get_path(resource_name))
             else:
                 return self._rospack.get_rosdeps(resource_name, implicit=implicit)
         elif resource_name in self._rosstack.list():
-            # stacks currently do not have rosdeps of their own, implicit or otherwise
-            return []
+            m = self._rosstack.get_manifest(resource_name)
+            if m.is_catkin:
+                return get_catkin_depends(self._rosstack.get_path(resource_name))
+            else:
+                # stacks currently do not have rosdeps of their own, implicit or otherwise
+                return []
         else:
             raise rospkg.ResourceNotFound(resource_name)
 
