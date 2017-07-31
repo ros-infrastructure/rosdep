@@ -597,7 +597,7 @@ def command_keys(lookup, packages, options):
 def get_keys(lookup, packages, recursive):
     rosdep_keys = []
     for package_name in packages:
-        deps = lookup.get_rosdeps(package_name, implicit=recursive)
+        deps, _ = lookup.get_rosdeps(package_name, implicit=recursive)
         rosdep_keys.extend(deps)
     return set(rosdep_keys)
 

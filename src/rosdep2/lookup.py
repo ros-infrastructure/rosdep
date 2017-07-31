@@ -293,7 +293,7 @@ class RosdepLookup(object):
         """
         return self.errors[:]
     
-    def get_rosdeps(self, resource_name, implicit=True):
+    def get_rosdeps(self, resource_name, implicit=True, with_version=False):
         """
         Get rosdeps that *resource_name* (e.g. package) requires.
 
@@ -302,7 +302,7 @@ class RosdepLookup(object):
 
         :returns: list of rosdep names, ``[str]``
         """
-        return self.loader.get_rosdeps(resource_name, implicit=implicit)
+        return self.loader.get_rosdeps(resource_name, implicit=implicit, with_version=with_version)
 
     def get_resources_that_need(self, rosdep_name):
         """
@@ -310,7 +310,7 @@ class RosdepLookup(object):
         
         :returns: list of package names that require rosdep, ``[str]``
         """
-        return [k for k in self.loader.get_loadable_resources() if rosdep_name in self.get_rosdeps(k, implicit=False)]
+        return [k for k in self.loader.get_loadable_resources() if rosdep_name in (self.get_rosdeps(k, implicit=False))[0]]
 
     @staticmethod
     def create_from_rospkg(rospack=None, rosstack=None, 
@@ -358,6 +358,16 @@ class RosdepLookup(object):
 
         return lookup
 
+
+    def get_version_requested(self, dependency, name):
+        """
+
+        :param dependency: depedency object list
+        :param name: name of the exact dependency for wich we want to extract the the version list
+        :return: None or a version for the given name
+        """
+        return None
+
     def resolve_all(self, resources, installer_context, implicit=False):
         """
         Resolve all the rosdep dependencies for *resources* using *installer_context*.
@@ -380,7 +390,9 @@ class RosdepLookup(object):
         # TODO: resolutions dictionary should be replaced with resolution model instead of mapping (undefined) keys.
         for resource_name in resources:
             try:
-                rosdep_keys = self.get_rosdeps(resource_name, implicit=implicit)
+                deps = None
+                rosdep_keys, deps = self.get_rosdeps(resource_name, implicit=implicit, with_version=True)
+
                 if self.verbose:
                     print("resolve_all: resource [%s] requires rosdep keys [%s]"%(resource_name, ', '.join(rosdep_keys)), file=sys.stderr)
                 rosdep_keys = prune_catkin_packages(rosdep_keys, self.verbose)

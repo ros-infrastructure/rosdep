@@ -246,22 +246,28 @@ def test_RosdepLookup_get_rosdeps():
                                              sources_loader=sources_loader)
     assert lookup.get_loader() is not None
     assert isinstance(lookup.get_loader(), RosdepLoader)
-    print(lookup.get_rosdeps('empty_package'))
-    assert lookup.get_rosdeps('empty_package') == []
+    ret_value, _ = lookup.get_rosdeps('empty_package')
+    print(ret_value)
+    assert ret_value == []
 
     try:
         assert lookup.get_rosdeps('not a resource') == []
         assert False, "should have raised"
     except ResourceNotFound:
         pass
-    
-    print(lookup.get_rosdeps('stack1_p1'))
-    assert set(lookup.get_rosdeps('stack1_p1')) == set(['stack1_dep1', 'stack1_p1_dep1', 'stack1_p1_dep2'])
-    assert set(lookup.get_rosdeps('stack1_p1', implicit=False)) == set(['stack1_dep1', 'stack1_p1_dep1', 'stack1_p1_dep2'])
-    
-    print(lookup.get_rosdeps('stack1_p2'))
-    assert set(lookup.get_rosdeps('stack1_p2', implicit=False)) == set(['stack1_dep1', 'stack1_dep2', 'stack1_p2_dep1']), set(lookup.get_rosdeps('stack1_p2'))
-    assert set(lookup.get_rosdeps('stack1_p2', implicit=True)) == set(['stack1_dep1', 'stack1_dep2', 'stack1_p1_dep1', 'stack1_p1_dep2', 'stack1_p2_dep1']), set(lookup.get_rosdeps('stack1_p2'))    
+
+    ret_value, _ = lookup.get_rosdeps('stack1_p1')
+    print(ret_value)
+    assert set(ret_value) == set(['stack1_dep1', 'stack1_p1_dep1', 'stack1_p1_dep2'])
+
+    ret_value, _ = lookup.get_rosdeps('stack1_p1', implicit=False)
+    assert set(ret_value) == set(['stack1_dep1', 'stack1_p1_dep1', 'stack1_p1_dep2'])
+
+    ret_value, _ = lookup.get_rosdeps('stack1_p2')
+    print(ret_value)
+
+    assert set(lookup.get_rosdeps('stack1_p2', implicit=False)[0]) == set(['stack1_dep1', 'stack1_dep2', 'stack1_p2_dep1']), set(lookup.get_rosdeps('stack1_p2')[0])
+    assert set(lookup.get_rosdeps('stack1_p2', implicit=True)[0]) == set(['stack1_dep1', 'stack1_dep2', 'stack1_p1_dep1', 'stack1_p1_dep2', 'stack1_p2_dep1']), set(lookup.get_rosdeps('stack1_p2')[0])
     
 def test_RosdepLookup_get_resources_that_need():
     from rosdep2.lookup import RosdepLookup
