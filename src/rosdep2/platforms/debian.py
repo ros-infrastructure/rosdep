@@ -87,7 +87,7 @@ def register_ubuntu(context):
 
 # detect that apt show indicates that the package is virtual
 APT_PURELY_VIRTUAL_RE = re.compile(
-        r'State: not a real package \(virtual\)',
+        r'as it is purely virtual',
         flags=re.DOTALL)
 # detect what lines in apt-cache showpkg show the packages providing a virtual
 # package
@@ -120,7 +120,7 @@ def _is_installed_as_virtual_package(package, exec_fn=None):
     # check output of `apt show package' for whether it's a virtual
     # package and if so use `apt-cache showpkg package' to get the providing
     # packages.  Then check if one of those is installed.
-    cmd = ['apt', 'show', package]
+    cmd = ['apt-cache', 'show', package]
     if exec_fn is None:
         exec_fn = read_stdout
     std_out, std_err = exec_fn(cmd, True) # use stderr as well to hide error message ... not too nice, but hopefully cautious
