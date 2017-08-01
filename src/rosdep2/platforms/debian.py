@@ -146,7 +146,7 @@ def dpkg_detect(pkgs, exec_fn=None):
 
     if exec_fn is None:
         exec_fn = read_stdout
-    std_out = exec_fn(cmd)
+    std_out, std_err = exec_fn(cmd, True)
     std_out = std_out.replace('\'','')
     pkg_list = std_out.split('\n')
     for pkg in pkg_list:
