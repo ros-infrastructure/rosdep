@@ -1,4 +1,13 @@
-0.11.6 (2017-06-27)
+0.11.6 (2017-08-01)
+-------------------
+- Changed the way virtual packages are checked in apt to use ``apt-cache``
+  - https://github.com/ros-infrastructure/rosdep/pull/533
+- Fixed a bug where the dependencies of metapackages were not being installed
+  - https://github.com/ros-infrastructure/rosdep/pull/531
+- Improved error handling of failed downloads or invalid source files
+  - https://github.com/ros-infrastructure/rosdep/pull/523
+
+0.11.6 (2017-07-27)
 -------------------
 
 - Added resinstall option for ``pip`` installer
