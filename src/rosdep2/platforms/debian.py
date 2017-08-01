@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # Copyright (c) 2009, Willow Garage, Inc.
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 #     * Redistributions of source code must retain the above copyright
 #       notice, this list of conditions and the following disclaimer.
 #     * Redistributions in binary form must reproduce the above copyright
@@ -13,7 +13,7 @@
 #     * Neither the name of the Willow Garage, Inc. nor the names of its
 #       contributors may be used to endorse or promote products derived from
 #       this software without specific prior written permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -41,18 +41,20 @@ from ..installers import PackageManagerInstaller
 from ..shell_utils import read_stdout
 
 # apt package manager key
-APT_INSTALLER='apt'
+APT_INSTALLER = 'apt'
 
 
 def register_installers(context):
     context.set_installer(APT_INSTALLER, AptInstaller())
+
 
 def register_platforms(context):
     register_debian(context)
     register_linaro(context)
     register_ubuntu(context)
     register_elementary(context)
-    
+
+
 def register_debian(context):
     context.add_os_installer_key(OS_DEBIAN, APT_INSTALLER)
     context.add_os_installer_key(OS_DEBIAN, PIP_INSTALLER)
@@ -60,20 +62,27 @@ def register_debian(context):
     context.add_os_installer_key(OS_DEBIAN, SOURCE_INSTALLER)
     context.set_default_os_installer_key(OS_DEBIAN, lambda self: APT_INSTALLER)
     context.set_os_version_type(OS_DEBIAN, OsDetect.get_codename)
-    
+
+
 def register_linaro(context):
-    # Linaro is an alias for Ubuntu. If linaro is detected and it's not set as an override force ubuntu.
+    # Linaro is an alias for Ubuntu. If linaro is detected and it's not set as
+    # an override force ubuntu.
     (os_name, os_version) = context.get_os_name_and_version()
     if os_name == OS_LINARO and not context.os_override:
-        print("rosdep detected OS: [%s] aliasing it to: [%s]" % (OS_LINARO, OS_UBUNTU), file=sys.stderr)
+        print("rosdep detected OS: [%s] aliasing it to: [%s]" %
+              (OS_LINARO, OS_UBUNTU), file=sys.stderr)
         context.set_os_override(OS_UBUNTU, context.os_detect.get_codename())
 
+
 def register_elementary(context):
-    # Elementary is an alias for Ubuntu. If elementary is detected and it's not set as an override force ubuntu.
+    # Elementary is an alias for Ubuntu. If elementary is detected and it's
+    # not set as an override force ubuntu.
     (os_name, os_version) = context.get_os_name_and_version()
     if os_name == OS_ELEMENTARY and not context.os_override:
-        print("rosdep detected OS: [%s] aliasing it to: [%s]" % (OS_ELEMENTARY, OS_UBUNTU), file=sys.stderr)
+        print("rosdep detected OS: [%s] aliasing it to: [%s]" %
+              (OS_ELEMENTARY, OS_UBUNTU), file=sys.stderr)
         context.set_os_override(OS_UBUNTU, context.os_detect.get_codename())
+
 
 def register_ubuntu(context):
     context.add_os_installer_key(OS_UBUNTU, APT_INSTALLER)
@@ -82,6 +91,7 @@ def register_ubuntu(context):
     context.add_os_installer_key(OS_UBUNTU, SOURCE_INSTALLER)
     context.set_default_os_installer_key(OS_UBUNTU, lambda self: APT_INSTALLER)
     context.set_os_version_type(OS_UBUNTU, OsDetect.get_codename)
+
 
 def _read_apt_cache_showpkg(package, exec_fn=None):
     '''
@@ -122,6 +132,7 @@ def _read_apt_cache_showpkg(package, exec_fn=None):
 
     return True, [line.split(' ', 2)[0] for line in lines]
 
+
 def dpkg_detect(pkgs, exec_fn=None):
     """
     Given a list of package, return the list of installed packages.
@@ -147,12 +158,12 @@ def dpkg_detect(pkgs, exec_fn=None):
     if exec_fn is None:
         exec_fn = read_stdout
     std_out, std_err = exec_fn(cmd, True)
-    std_out = std_out.replace('\'','')
+    std_out = std_out.replace('\'', '')
     pkg_list = std_out.split('\n')
     for pkg in pkg_list:
         pkg_row = pkg.split()
-        if len(pkg_row) == 4 and (pkg_row[3] =='installed'):
-            ret_list.append( pkg_row[0])
+        if len(pkg_row) == 4 and (pkg_row[3] == 'installed'):
+            ret_list.append(pkg_row[0])
     installed_packages = [version_lock_map[r] for r in ret_list]
 
     # now for the remaining packages check, whether they are installed as
@@ -175,17 +186,19 @@ def _iterate_packages(packages, reinstall):
                 if len(installed) > 0:
                     for i in installed:
                         yield i
-                    continue # don't ouput providers
+                    continue  # don't ouput providers
             yield providers
         else:
             yield p
 
 
 class AptInstaller(PackageManagerInstaller):
+
     """
     An implementation of the Installer for use on debian style
     systems.
     """
+
     def __init__(self):
         super(AptInstaller, self).__init__(dpkg_detect)
 
@@ -216,4 +229,4 @@ class AptInstaller(PackageManagerInstaller):
         else:
             base_cmd = ['apt-get', 'install']
 
-        return [ self._get_install_commands_for_package(base_cmd, p) for p in _iterate_packages(packages, reinstall) ]
+        return [self._get_install_commands_for_package(base_cmd, p) for p in _iterate_packages(packages, reinstall)]
