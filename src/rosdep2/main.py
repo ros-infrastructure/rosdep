@@ -59,7 +59,7 @@ import rospkg
 
 from . import create_default_installer_context, get_default_installer
 from . import __version__
-from .core import RosdepInternalError, InstallFailed, UnsupportedOs, InvalidData, CachePermissionError
+from .core import RosdepInternalError, InstallFailed, UnsupportedOs, InvalidData, CachePermissionError, DownloadFailure
 from .installers import normalize_uninstalled_to_list
 from .installers import RosdepInstaller
 from .lookup import RosdepLookup, ResolutionError
@@ -517,6 +517,10 @@ def command_init(options):
     except URLError as e:
         print("ERROR: cannot download default sources list from:\n%s\nWebsite may be down."%(DEFAULT_SOURCES_LIST_URL))
         return 4
+    except DownloadFailure as e:
+        print("ERROR: cannot download default sources list from:\n%s\nWebsite may be down."%(DEFAULT_SOURCES_LIST_URL))
+        print(e)
+        return 4
     # reuse path variable for error message 
     path = get_sources_list_dir()
     old_umask = os.umask(0o022)
@@ -878,6 +882,3 @@ _command_rosdep_args = ['what-needs', 'what_needs', 'where-defined', 'where_defi
 _command_no_args = ['update', 'init', 'db', 'fix-permissions']
 
 _commands = command_handlers.keys()
-
-
-
