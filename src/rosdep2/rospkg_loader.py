@@ -144,6 +144,12 @@ class RosPkgLoader(RosdepLoader):
         else:
             raise rospkg.ResourceNotFound(resource_name)
 
+    def is_metapackage(self, resource_name):
+        if resource_name in self._rosstack.list():
+            m = self._rosstack.get_manifest(resource_name)
+            return m.is_catkin;
+        return False
+
     def get_view_key(self, resource_name):
         """
         Map *resource_name* to a view key.  In rospkg, this maps the
@@ -152,7 +158,7 @@ class RosPkgLoader(RosdepLoader):
         :raises: :exc:`rospkg.ResourceNotFound`
         """
         if (resource_name in self.get_loadable_resources() or
-            resource_name in self._rosstack.list()):
+            self.is_metapackage(resource_name)):
             return DEFAULT_VIEW_KEY
         else:
             raise rospkg.ResourceNotFound(resource_name)
