@@ -73,6 +73,8 @@ from .rosdistrohelper import PreRep137Warning
 from .catkin_packages import find_catkin_packages_in
 from .catkin_packages import set_workspace_packages
 from .catkin_packages import get_workspace_packages
+from .catkin_packages import get_conflicted_packages
+from .catkin_packages import get_replaced_packages
 
 
 class UsageError(Exception):
@@ -399,6 +401,20 @@ def _rosdep_args_handler(command, parser, options, args):
         return command_handlers[command](args, options)
 
 
+def _check_package_replaces_conflicts():
+    # Print installed conflicting or replaced packages
+    workspace_pkgs = get_workspace_packages()
+    conflicted_pkgs = get_conflicted_packages()
+    replaced_pkgs = get_replaced_packages()
+
+    for package in workspace_pkgs:
+        if package in conflicted_pkgs:
+            print("WARNING: conflicting installed packages: '{0}' is conflicting '{1}'!".format(
+                conflicted_pkgs[package], package))
+        if package in replaced_pkgs:
+            print("WARNING: '{0}' replaces '{1}', but '{1}' is already installed!".format(
+                replaced_pkgs[package], package))
+
 def _package_args_handler(command, parser, options, args):
     if options.rosdep_all:
         if args:
@@ -473,7 +489,6 @@ def _package_args_handler(command, parser, options, args):
         # possible with empty stacks
         print("No packages in arguments, aborting")
         return
-
     return command_handlers[command](lookup, packages, options)
 
 def convert_os_override_option(options_os_override):
@@ -616,19 +631,23 @@ def command_check(lookup, packages, options):
 
     # pretty print the result
     if [v for k, v in uninstalled if v]:
-        print("System dependencies have not been satisified:")
+        print("System dependencies have not been satisfied:")
         for installer_key, resolved in uninstalled:
             if resolved:
                 for r in resolved:
                     print("%s\t%s"%(installer_key, r))
     else:
-        print("All system dependencies have been satisified")
+        print("All system dependencies have been satisfied")
     if errors:
         for package_name, ex in errors.items():
             if isinstance(ex, rospkg.ResourceNotFound):
                 print("ERROR[%s]: resource not found [%s]"%(package_name, ex.args[0]), file=sys.stderr)
             else:
                 print("ERROR[%s]: %s"%(package_name, ex), file=sys.stderr)                
+
+    # check replaces and conflicts
+    _check_package_replaces_conflicts()
+
     if uninstalled:
         return 1
     else:
@@ -689,6 +708,9 @@ def command_install(lookup, packages, options):
         installer.install(uninstalled, **install_options)
         if not options.simulate:
             print("#All required rosdeps installed successfully")
+
+        # check if there is replaces or conflicts
+        _check_package_replaces_conflicts()
         return 0
     except KeyError as e:
         raise RosdepInternalError(e)
