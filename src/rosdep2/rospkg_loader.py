@@ -73,7 +73,8 @@ class RosPkgLoader(RosdepLoader):
         
         # cache computed list of loadable resources
         self._loadable_resource_cache = None
-        
+        self._catkin_packages_cache = None
+
     def load_view(self, view_name, rosdep_db, verbose=False):
         """
         Load view data into *rosdep_db*. If the view has already
@@ -117,30 +118,31 @@ class RosPkgLoader(RosdepLoader):
             self._loadable_resource_cache = list(self._rospack.list())
         return self._loadable_resource_cache
 
+    def get_catkin_paths(self):
+        if not self._catkin_packages_cache:
+            def find_catkin_paths(src):
+                return map(lambda x: (x, src.get_path(x)),
+                           filter(lambda x: src.get_manifest(x).is_catkin, src.list()))
+            self._catkin_packages_cache = dict(find_catkin_paths(self._rospack))
+            self._catkin_packages_cache.update(find_catkin_paths(self._rosstack))
+        return self._catkin_packages_cache
+
     def get_rosdeps(self, resource_name, implicit=True):
         """
         If *resource_name* is a stack, returns an empty list.
         
         :raises: :exc:`rospkg.ResourceNotFound` if *resource_name* cannot be found.
         """
-        def get_catkin_depends(path):
-            pkg = catkin_pkg.package.parse_package(path)
+
+        if resource_name in self.get_catkin_paths():
+            pkg = catkin_pkg.package.parse_package(self.get_catkin_paths()[resource_name])
             deps = pkg.build_depends + pkg.buildtool_depends + pkg.run_depends + pkg.test_depends
             return [d.name for d in deps]
-
-        if resource_name in self.get_loadable_resources():
-            m = self._rospack.get_manifest(resource_name)
-            if m.is_catkin:
-                return get_catkin_depends(self._rospack.get_path(resource_name))
-            else:
-                return self._rospack.get_rosdeps(resource_name, implicit=implicit)
+        elif resource_name in self.get_loadable_resources():
+            return self._rospack.get_rosdeps(resource_name, implicit=implicit)
         elif resource_name in self._rosstack.list():
-            m = self._rosstack.get_manifest(resource_name)
-            if m.is_catkin:
-                return get_catkin_depends(self._rosstack.get_path(resource_name))
-            else:
-                # stacks currently do not have rosdeps of their own, implicit or otherwise
-                return []
+            # stacks currently do not have rosdeps of their own, implicit or otherwise
+            return []
         else:
             raise rospkg.ResourceNotFound(resource_name)
 
@@ -157,8 +159,8 @@ class RosPkgLoader(RosdepLoader):
 
         :raises: :exc:`rospkg.ResourceNotFound`
         """
-        if (resource_name in self.get_loadable_resources() or
-            self.is_metapackage(resource_name)):
+        if (resource_name in self.get_catkin_paths() or
+            resource_name in self.get_loadable_resources()):
             return DEFAULT_VIEW_KEY
         else:
             raise rospkg.ResourceNotFound(resource_name)
