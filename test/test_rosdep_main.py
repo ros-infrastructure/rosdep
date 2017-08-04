@@ -113,15 +113,30 @@ class TestRosdepMain(unittest.TestCase):
 
             stdout, stderr = b
             assert stdout.getvalue().strip() == "All system dependencies have been satisified", stdout.getvalue()
-            assert not stderr.getvalue(), stderr.getvalue()
+            '''
+            Anytime the following lines appear, we have removed the announcement that something has been aliased,
+            as the aliasing will fail tests on these platforms.
+            '''
+            stderr_without_aliasing = stderr.getvalue().replace("rosdep detected OS: [funtoo], aliasing it to [gentoo]", "")
+            stderr_without_aliasing = stderr_without_aliasing.replace("rosdep detected OS: [linaro], aliasing it to [ubuntu]", "")
+            stderr_without_aliasing = stderr_without_aliasing.replace("rosdep detected OS: [elementary], aliasing it to [ubuntu]", "")
+            assert not stderr_without_aliasing.strip(), stderr_without_aliasing.strip()
         try:
             osd = rospkg.os_detect.OsDetect()
-            override = "%s:%s"%(osd.get_name(), osd.get_codename())
+            if osd.get_name() == "funtoo":
+                override = "gentoo:"
+            elif osd.get_name() == "linaro" or osd.get_name() == "elementary":
+                override = "ubuntulucid"
+            else:
+                override = "%s:%s"%(osd.get_name(), osd.get_codename())
             with fakeout() as b:
                 rosdep_main(['check', 'python_dep', '--os', override]+cmd_extras)
                 stdout, stderr = b
                 assert stdout.getvalue().strip() == "All system dependencies have been satisified"
-                assert not stderr.getvalue(), stderr.getvalue()
+                stderr_without_aliasing = stderr.getvalue().replace("rosdep detected OS: [funtoo], aliasing it to [gentoo]", '')
+                stderr_without_aliasing = stderr_without_aliasing.replace("rosdep detected OS: [linaro], aliasing it to [ubuntu]", "")
+                stderr_without_aliasing = stderr_without_aliasing.replace("rosdep detected OS: [elementary], aliasing it to [ubuntu]", "")
+                assert not stderr_without_aliasing.strip(), stderr_without_aliasing2
         except SystemExit:
             assert False, "system exit occurred"
 
@@ -131,7 +146,10 @@ class TestRosdepMain(unittest.TestCase):
                 rosdep_main(['check', 'packageless']+cmd_extras)
                 stdout, stderr = b
                 assert stdout.getvalue().strip() == "All system dependencies have been satisified"
-                assert not stderr.getvalue(), stderr.getvalue()
+                stderr_without_aliasing = stderr.getvalue().replace("rosdep detected OS: [funtoo], aliasing it to [gentoo]", '')
+                stderr_without_aliasing = stderr_without_aliasing.replace("rosdep detected OS: [linaro], aliasing it to [ubuntu]", "")
+                stderr_without_aliasing = stderr_without_aliasing.replace("rosdep detected OS: [elementary], aliasing it to [ubuntu]", "")
+                assert not stderr_without_aliasing.strip(), stderr_without_aliasing2
         except SystemExit:
             assert False, "system exit occurred"
 
@@ -151,12 +169,18 @@ class TestRosdepMain(unittest.TestCase):
                 rosdep_main(['install', 'python_dep']+cmd_extras)
                 stdout, stderr = b
                 assert "All required rosdeps installed" in stdout.getvalue(), stdout.getvalue()
-                assert not stderr.getvalue(), stderr.getvalue()
+                stderr_without_aliasing = stderr.getvalue().replace("rosdep detected OS: [funtoo], aliasing it to [gentoo]", "")
+                stderr_without_aliasing = stderr_without_aliasing.replace("rosdep detected OS: [linaro], aliasing it to [ubuntu]", "")
+                stderr_without_aliasing = stderr_without_aliasing.replace("rosdep detected OS: [elementary], aliasing it to [ubuntu]", "")
+                assert not stderr_without_aliasing.strip()
             with fakeout() as b:
                 rosdep_main(['install', 'python_dep', '-r']+cmd_extras)
                 stdout, stderr = b
                 assert "All required rosdeps installed" in stdout.getvalue(), stdout.getvalue()
-                assert not stderr.getvalue(), stderr.getvalue()
+                stderr_without_aliasing = stderr.getvalue().replace("rosdep detected OS: [funtoo], aliasing it to [gentoo]", "")
+                stderr_without_aliasing = stderr_without_aliasing.replace("rosdep detected OS: [linaro], aliasing it to [ubuntu]", "")
+                stderr_without_aliasing = stderr_without_aliasing.replace("rosdep detected OS: [elementary], aliasing it to [ubuntu]", "")
+                assert not stderr_without_aliasing.strip()
         except SystemExit:
             assert False, "system exit occurred: "+b[1].getvalue()
         try:
