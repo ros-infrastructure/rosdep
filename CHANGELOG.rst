@@ -1,4 +1,10 @@
-0.11.6 (2017-08-01)
+0.11.8 (2017-08-03)
+-------------------
+- Fix handling of metapackages
+  - https://github.com/ros-infrastructure/rosdep/pull/535
+  - regression of https://github.com/ros-infrastructure/rosdep/pull/531
+
+0.11.7 (2017-08-01)
 -------------------
 - Changed the way virtual packages are checked in apt to use ``apt-cache``
   - https://github.com/ros-infrastructure/rosdep/pull/533
