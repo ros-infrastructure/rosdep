@@ -329,7 +329,10 @@ def test_RosdepLookup_get_rosdep_view_for_resource():
 
     # package not in stack, should return 
     assert lookup.get_rosdep_view_for_resource('just_a_package').name is DEFAULT_VIEW_KEY
-    
+
+    # meta-packages should return default view as well
+    assert lookup.get_rosdep_view_for_resource('metapackage_with_deps').name is DEFAULT_VIEW_KEY
+
 def test_RosdepLookup_get_rosdep_view():
     from rosdep2.lookup import RosdepLookup
     rospack, rosstack = get_test_rospkgs()
