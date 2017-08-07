@@ -147,7 +147,7 @@ class TestRosdepMain(unittest.TestCase):
     def test_install(self):
         sources_cache = get_cache_dir()
         cmd_extras = ['-c', sources_cache]
-        catkin_tree= get_test_catkin_tree_dir()
+        catkin_tree = get_test_catkin_tree_dir()
 
         try:
             # python must have already been installed
@@ -162,9 +162,18 @@ class TestRosdepMain(unittest.TestCase):
                 assert "All required rosdeps installed" in stdout.getvalue(), stdout.getvalue()
                 assert not stderr.getvalue(), stderr.getvalue()
             with fakeout() as b:
-                rosdep_main(['install', '-s', '-i', '--os', 'ubuntu:lucid', '--rosdistro', 'fuerte', '--from-paths', catkin_tree]+cmd_extras)
+                rosdep_main([
+                    'install', '-s', '-i',
+                    '--os', 'ubuntu:lucid',
+                    '--rosdistro', 'fuerte',
+                    '--from-paths', catkin_tree
+                ] + cmd_extras)
                 stdout, stderr = b
-                expected=['#[apt] Installation commands:', '  sudo -H apt-get install ros-fuerte-catkin', '  sudo -H apt-get install libboost1.40-all-dev']
+                expected = [
+                    '#[apt] Installation commands:',
+                    '  sudo -H apt-get install ros-fuerte-catkin',
+                    '  sudo -H apt-get install libboost1.40-all-dev'
+                ]
                 lines = stdout.getvalue().splitlines()
                 assert  set(lines) == set(expected), lines
                 assert not stderr.getvalue(), stderr.getvalue()
