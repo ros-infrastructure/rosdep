@@ -160,7 +160,7 @@ class TestRosdepMain(unittest.TestCase):
         except SystemExit:
             assert False, "system exit occurred: "+b[1].getvalue()
         try:
-            rosdep_main(['check', 'nonexistent'])
+            rosdep_main(['install', 'nonexistent'])
             assert False, "system exit should have occurred"
         except SystemExit:
             pass
