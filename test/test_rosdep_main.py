@@ -166,7 +166,7 @@ class TestRosdepMain(unittest.TestCase):
                 stdout, stderr = b
                 expected=['#[apt] Installation commands:', '  sudo -H apt-get install ros-fuerte-catkin', '  sudo -H apt-get install libboost1.40-all-dev']
                 lines = stdout.getvalue().splitlines()
-                assert  lines == expected, lines
+                assert  set(lines) == set(expected), lines
                 assert not stderr.getvalue(), stderr.getvalue()
         except SystemExit:
             assert False, "system exit occurred: "+b[1].getvalue()
