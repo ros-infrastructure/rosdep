@@ -737,7 +737,7 @@ def command_db(options):
             if options.filter_for_installers and inst_key not in options.filter_for_installers:
                 continue
             resolved = installer.resolve(rule)
-            resolved_str = " ".join(resolved)
+            resolved_str = " ".join([str(r) for r in resolved])
             print ("%s -> %s"%(rosdep_name, resolved_str))
         except ResolutionError as e:
             errors.append(e)
