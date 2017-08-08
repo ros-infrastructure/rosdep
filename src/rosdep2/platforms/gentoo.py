@@ -72,7 +72,7 @@ def portage_detect_single(atom, exec_fn = read_stdout ):
     # Also, todo, figure out if just returning true if two packages are returned is cool..
     return len(std_out) >= 1
 
-def portage_detect(atoms, exec_fn = read_stdout):
+def portage_detect(atoms, exec_fn=read_stdout, warnings=False):
     """
     Given a list of atoms, return a list of which are already installed.
 

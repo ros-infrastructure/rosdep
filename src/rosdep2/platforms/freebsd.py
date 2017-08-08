@@ -66,10 +66,10 @@ def pkg_info_detect_single(p):
     pop = subprocess.Popen("/usr/sbin/pkg_info -qE " + portname, shell=True)
     return os.waitpid(pop.pid, 0)[1] == 0 # pkg_info -E returns 0 if pkg installed, 1 if not
 
-def pkg_info_detect(packages):
+def pkg_info_detect(packages, warnings=False):
     return [p for p in packages if pkg_info_detect_single(p)]
 
-class PkgAddInstaller(Installer):
+class PkgAddInstaller(PackageManagerInstaller):
     """
     An implementation of the Installer for use on FreeBSD-style
     systems.

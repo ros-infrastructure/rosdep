@@ -95,7 +95,7 @@ def slackpkg_available():
 def slackpkg_detect_single(p):
     return not subprocess.call(['slackpkg', 'search', p], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    
 
-def slackpkg_detect(packages):
+def slackpkg_detect(packages, warnings=False):
     return [p for p in packages if slackpkg_detect_single(p)]
 
 class SlackpkgInstaller(PackageManagerInstaller):

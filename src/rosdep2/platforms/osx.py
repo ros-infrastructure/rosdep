@@ -72,7 +72,7 @@ def is_port_installed():
     except OSError:
         return False
 
-def port_detect(pkgs, exec_fn=None):
+def port_detect(pkgs, exec_fn=None, warnings=False):
     ret_list = []
     if not is_port_installed():
         return ret_list
@@ -171,15 +171,26 @@ def brew_strip_pkg_name(package):
     return package.split('/')[-1]
 
 
-def brew_detect(resolved, exec_fn=None):
+def brew_detect(resolved, exec_fn_err=None, warnings=False):
     """Given a list of resolutions, return the list of installed resolutions.
 
     :param resolved: List of HomebrewResolution objects
     :returns: Filtered list of HomebrewResolution objects
     """
-    if exec_fn is None:
-        exec_fn = read_stdout
-    std_out = exec_fn(['brew', 'list'])
+    # TODO: Don't raise RosdepInternalError when calls to `brew` fail.
+    #       Instead use some other exception to inform the user what
+    #       happened, but without the request to file a rosdep bugreport.
+    # TODO: It would be better to not print the errors about failed formula
+    #       installations here, but instead somehow pass them up the call
+    #       chain and properly format and print them in one place.
+    if exec_fn_err is None:
+        exec_fn_err = lambda cmd: read_stdout(cmd, capture_stderr=True, return_exitcode=True)
+    std_out, std_err, exitcode = exec_fn_err(['brew', 'list'])
+    if exitcode != 0:
+        raise RosdepInternalError(None, """
+`brew list` failed with exit code '{1}'. Homebrew setup might be broken.
+Check `brew doctor`. Captured `stderr` output:
+{2}""".format(exitcode, std_err))
     installed_formulae = std_out.split()
 
     def is_installed(r):
@@ -193,12 +204,23 @@ def brew_detect(resolved, exec_fn=None):
         if not brew_strip_pkg_name(r.package) in installed_formulae:
             return False
 
-        std_out = exec_fn(['brew', 'info', r.package, '--json=v1'])
+        std_out, std_err, exitcode = exec_fn_err(['brew', 'info', r.package, '--json=v1'])
+        if exitcode != 0:
+            raise RosdepInternalError(None, """
+Formula '{0}' is installed, but `brew info` failed with exit code '{1}'.
+Likely the formula script is missing or broken. You can try `brew
+update` and `brew tap --repair` as well as checking the formula script
+for syntax errors (`brew info {0}`). Captured `stderr` output:
+{2}""".format(r.package,  exitcode, std_err))
         try:
             pkg_info = json.loads(std_out)
             pkg_info = pkg_info[0]
             linked_version = pkg_info['linked_keg']
             if not linked_version:
+                if warnings:
+                    print("""\
+ERROR: Formula '{0}' is installed, but not linked. You might need to
+       manually call `brew link {0}` or use `rosdep install ... --reinstall`""".format(r.package))
                 return False
             for spec in pkg_info['installed']:
                 if spec['version'] == linked_version:
@@ -216,6 +238,12 @@ def brew_detect(resolved, exec_fn=None):
         if set(r.options) <= set(installed_options):
             return True
         else:
+            if warnings:
+                print("""\
+ERROR: Formula '{0}' is installed, but used options '{1}' are not
+       superset of required options '{2}'. You might need to manually
+       call `brew reinstall {0} {2}` or use `rosdep install ... --reinstall`.""".
+                    format(r.package, " ".join(installed_options), " ".join(r.options)))
             return False
 
     # preserve order

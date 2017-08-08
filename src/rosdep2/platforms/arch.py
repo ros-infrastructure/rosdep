@@ -47,7 +47,7 @@ def register_platforms(context):
 def pacman_detect_single(p):
     return not subprocess.call(['pacman', '-T', p], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-def pacman_detect(packages):
+def pacman_detect(packages, warnings=False):
     return [p for p in packages if pacman_detect_single(p)]
 
 class PacmanInstaller(PackageManagerInstaller):

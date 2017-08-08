@@ -151,7 +151,7 @@ def _is_installed_as_virtual_package(package, exec_fn=None):
 
 
 
-def dpkg_detect(pkgs, exec_fn=None):
+def dpkg_detect(pkgs, exec_fn=None, warnings=False):
     """
     Given a list of package, return the list of installed packages.
 

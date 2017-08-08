@@ -50,7 +50,7 @@ def is_gem_installed():
     except OSError:
         return False
 
-def gem_detect(pkgs, exec_fn=None):
+def gem_detect(pkgs, exec_fn=None, warnings=False):
     """ 
     Given a list of package, return the list of installed packages.
 

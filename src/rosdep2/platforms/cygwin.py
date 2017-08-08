@@ -51,7 +51,7 @@ def cygcheck_detect_single(p):
     std_out = read_stdout(['cygcheck', '-c', p])
     return std_out.count("OK") > 0
 
-def cygcheck_detect(packages):
+def cygcheck_detect(packages, warnings=False):
     return [p for p in packages if cygcheck_detect_single(p)]
 
 class AptCygInstaller(PackageManagerInstaller):
