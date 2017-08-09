@@ -39,10 +39,14 @@ from ..shell_utils import read_stdout
 
 # pip package manager key
 PIP_INSTALLER = 'pip'
+PIP2_INSTALLER = 'pip2'
+PIP3_INSTALLER = 'pip3'
 
 
 def register_installers(context):
-    context.set_installer(PIP_INSTALLER, PipInstaller())
+    context.set_installer(PIP_INSTALLER, PipInstaller(PIP_INSTALLER))
+    context.set_installer(PIP2_INSTALLER, PipInstaller(PIP2_INSTALLER))
+    context.set_installer(PIP3_INSTALLER, PipInstaller(PIP3_INSTALLER))
 
 
 def is_pip_installed():
@@ -98,8 +102,9 @@ class PipInstaller(PackageManagerInstaller):
     :class:`Installer` support for pip.
     """
 
-    def __init__(self):
+    def __init__(self, installer=PIP_INSTALLER):
         super(PipInstaller, self).__init__(pip_detect, supports_depends=True)
+        self._installer = installer
 
     def get_version_strings(self):
         pip_version = pkg_resources.get_distribution('pip').version
@@ -112,11 +117,11 @@ class PipInstaller(PackageManagerInstaller):
 
     def get_install_command(self, resolved, interactive=True, reinstall=False, quiet=False):
         if not is_pip_installed():
-            raise InstallFailed((PIP_INSTALLER, "pip is not installed"))
+            raise InstallFailed((self._installer, "{} is not installed".format(self._installer)))
         packages = self.get_packages_to_install(resolved, reinstall=reinstall)
         if not packages:
             return []
-        cmd = ['pip', 'install', '-U']
+        cmd = [self._installer, 'install', '-U']
         if quiet:
             cmd.append('-q')
         if reinstall:
