@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # Copyright (c) 2009, Willow Garage, Inc.
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 #     * Redistributions of source code must retain the above copyright
 #       notice, this list of conditions and the following disclaimer.
 #     * Redistributions in binary form must reproduce the above copyright
@@ -13,7 +13,7 @@
 #     * Neither the name of the Willow Garage, Inc. nor the names of its
 #       contributors may be used to endorse or promote products derived from
 #       this software without specific prior written permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -36,6 +36,8 @@ import re
 from rospkg.os_detect import OS_DEBIAN, OS_LINARO, OS_UBUNTU, OS_ELEMENTARY, OsDetect
 
 from .pip import PIP_INSTALLER
+from .pip import PIP2_INSTALLER
+from .pip import PIP3_INSTALLER
 from .gem import GEM_INSTALLER
 from .source import SOURCE_INSTALLER
 from ..installers import PackageManagerInstaller
@@ -53,15 +55,17 @@ def register_platforms(context):
     register_linaro(context)
     register_ubuntu(context)
     register_elementary(context)
-    
+
 def register_debian(context):
     context.add_os_installer_key(OS_DEBIAN, APT_INSTALLER)
     context.add_os_installer_key(OS_DEBIAN, PIP_INSTALLER)
+    context.add_os_installer_key(OS_DEBIAN, PIP2_INSTALLER)
+    context.add_os_installer_key(OS_DEBIAN, PIP3_INSTALLER)
     context.add_os_installer_key(OS_DEBIAN, GEM_INSTALLER)
     context.add_os_installer_key(OS_DEBIAN, SOURCE_INSTALLER)
     context.set_default_os_installer_key(OS_DEBIAN, lambda self: APT_INSTALLER)
     context.set_os_version_type(OS_DEBIAN, OsDetect.get_codename)
-    
+
 def register_linaro(context):
     # Linaro is an alias for Ubuntu. If linaro is detected and it's not set as an override force ubuntu.
     (os_name, os_version) = context.get_os_name_and_version()
