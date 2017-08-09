@@ -83,6 +83,8 @@ def register_elementary(context):
 def register_ubuntu(context):
     context.add_os_installer_key(OS_UBUNTU, APT_INSTALLER)
     context.add_os_installer_key(OS_UBUNTU, PIP_INSTALLER)
+    context.add_os_installer_key(OS_UBUNTU, PIP2_INSTALLER)
+    context.add_os_installer_key(OS_UBUNTU, PIP3_INSTALLER)
     context.add_os_installer_key(OS_UBUNTU, GEM_INSTALLER)
     context.add_os_installer_key(OS_UBUNTU, SOURCE_INSTALLER)
     context.set_default_os_installer_key(OS_UBUNTU, lambda self: APT_INSTALLER)
