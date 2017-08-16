@@ -173,6 +173,8 @@ class SourceInstall(object):
 
     def __str__(self):
         return "source: %s"%(self.manifest_url)
+
+    __rep__ = __str__
     
 def is_source_installed(source_item, exec_fn=None):
     return create_tempfile_from_string_and_execute(source_item.check_presence_command, exec_fn=exec_fn)
