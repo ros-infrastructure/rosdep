@@ -368,7 +368,7 @@ class PackageManagerInstaller(Installer):
         if not resolved:
             return []
         else:
-            return list(set(resolved) - set(self.detect_fn(resolved)))
+            return [x for x in resolved if x not in self.detect_fn(resolved)]
 
     def is_installed(self, resolved_item):
         '''
