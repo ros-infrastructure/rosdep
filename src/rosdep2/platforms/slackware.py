@@ -82,10 +82,7 @@ class SbotoolsInstaller(PackageManagerInstaller):
 
         cmd = ['sboinstall']
 
-        if not interactive:
-            cmd.append('-r')
-
-        return [self.elevate_priv(cmd + [p]) for p in packages]
+        return [self.elevate_priv(cmd + [p] + ["-j"]) for p in packages]
 
 def slackpkg_available():
     if not os.path.exists("/usr/sbin/slackpkg"):
