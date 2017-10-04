@@ -75,9 +75,9 @@ class DependencyGraph(defaultdict):
         :raises: :exc:`AssertionError` if the rosdep_key is in the traveled keys, indicating a cycle has occurred.
         """
         assert rosdep_key not in traveled_keys, "A cycle in the dependency graph occurred with key `%s`." % rosdep_key
-        traveled_keys.append(rosdep_key)
+        new_traveled_keys = traveled_keys + rosdep_key
         for dependency in self[rosdep_key]['dependencies']:
-            self.detect_cycles(dependency, traveled_keys)
+            self.detect_cycles(dependency, new_traveled_keys)
 
     def validate(self):
         """
