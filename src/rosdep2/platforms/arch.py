@@ -60,7 +60,7 @@ class PacmanInstaller(PackageManagerInstaller):
         if not packages:
             return []
 
-        command  = ['pacman', '-S']
+        command  = ['yaourt', '-S']
 
         if not interactive:
             command.append('--noconfirm')
