@@ -92,46 +92,62 @@ def register_ubuntu(context):
     context.set_default_os_installer_key(OS_UBUNTU, lambda self: APT_INSTALLER)
     context.set_os_version_type(OS_UBUNTU, OsDetect.get_codename)
 
+try:
+    _next = next
+except NameError:
+    def _next(x):
+        return x.next()
 
-def _read_apt_cache_showpkg(package, exec_fn=None):
+def _read_apt_cache_showpkg(packages, exec_fn=None):
     '''
-    Output whether this is a virtual package and list providing package.
+    Output whether these packages are virtual package list providing package.
+    If one package was not found, it gets returned as non-virtual.
     :param exec_fn: see `dpkg_detect`; make sure that exec_fn supports a
     second, boolean, parameter.
-    :return: is_virtual, providers; For non-exisiting packages is_virtual=False is returned
     '''
 
-    try:
-        _next = next
-    except NameError:
-        def _next(x):
-            return x.next()
-
-    cmd = ['apt-cache', 'showpkg', package]
+    cmd = ['apt-cache', 'showpkg'] + list(packages)
     if exec_fn is None:
         exec_fn = read_stdout
 
     std_out = exec_fn(cmd).splitlines()
 
-    if len(std_out) == 0:
-        return False, None
+    starts = []
+    notfound = set()
+    for p in packages:
+        last_start = starts[-1] if len(starts) > 0 else 0
+        try:
+            starts.append(std_out.index("Package: %s" % p, last_start))
+        except ValueError:
+            notfound.add(p)
+    starts.append(-1)
 
-    lines = iter(std_out)
+    for p in packages:
+        if p in notfound:
+            yield p, False, None
+            continue
+        start = starts.pop(0)
+        lines =  iter(std_out[start:starts[0]])
 
-    # proceed to versions section
-    while _next(lines) != "Versions: ":
-        pass
+        header = "Package: %s" % p
+        # proceed to Package header
+        while _next(lines) != header:
+            pass
 
-    # virtual packages don't have versions
-    if _next(lines) != "":
-        return False, None
+        # proceed to versions section
+        while _next(lines) != "Versions: ":
+            pass
 
-    # proceed to reserve provides section
-    while _next(lines) != "Reverse Provides: ":
-        pass
+        # virtual packages don't have versions
+        if _next(lines) != "":
+            yield p, False, None
+            continue
 
-    return True, [line.split(' ', 2)[0] for line in lines]
+        # proceed to reserve provides section
+        while _next(lines) != "Reverse Provides: ":
+            pass
 
+        yield p, True, [line.split(' ', 2)[0] for line in lines]
 
 def dpkg_detect(pkgs, exec_fn=None):
     """
@@ -168,17 +184,15 @@ def dpkg_detect(pkgs, exec_fn=None):
 
     # now for the remaining packages check, whether they are installed as
     # virtual packages
-    for rem in set(pkgs) - set(installed_packages):
-        is_virtual, providers = _read_apt_cache_showpkg(rem)
-        if is_virtual and len(dpkg_detect(providers)) > 0:
-            installed_packages.append(rem)
+    rem =_read_apt_cache_showpkg(set(pkgs) - set(installed_packages))
+    installed_packages += [ p for p, is_virtual, providers in rem if is_virtual and len(dpkg_detect(providers)) > 0]
 
     return installed_packages
 
 
 def _iterate_packages(packages, reinstall):
-    for p in packages:
-        is_virtual, providers = _read_apt_cache_showpkg(p)
+    for entry  in _read_apt_cache_showpkg(packages):
+        p, is_virtual, providers = entry
         if is_virtual:
             installed = []
             if reinstall:
