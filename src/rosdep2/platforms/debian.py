@@ -98,6 +98,7 @@ except NameError:
     def _next(x):
         return x.next()
 
+
 def _read_apt_cache_showpkg(packages, exec_fn=None):
     '''
     Output whether these packages are virtual package list providing package.
@@ -127,7 +128,7 @@ def _read_apt_cache_showpkg(packages, exec_fn=None):
             yield p, False, None
             continue
         start = starts.pop(0)
-        lines =  iter(std_out[start:starts[0]])
+        lines = iter(std_out[start:starts[0]])
 
         header = "Package: %s" % p
         # proceed to Package header
@@ -148,6 +149,7 @@ def _read_apt_cache_showpkg(packages, exec_fn=None):
             pass
 
         yield p, True, [line.split(' ', 2)[0] for line in lines]
+
 
 def dpkg_detect(pkgs, exec_fn=None):
     """
@@ -184,14 +186,14 @@ def dpkg_detect(pkgs, exec_fn=None):
 
     # now for the remaining packages check, whether they are installed as
     # virtual packages
-    rem =_read_apt_cache_showpkg(set(pkgs) - set(installed_packages))
-    installed_packages += [ p for p, is_virtual, providers in rem if is_virtual and len(dpkg_detect(providers)) > 0]
+    remaining = _read_apt_cache_showpkg(p for p in pkgs if p not in installed_packages)
+    virtual = [ n for (n, v, pr) in remaining if v and len(dpkg_detect(pr)) > 0 ]
 
-    return installed_packages
+    return installed_packages + virtual
 
 
 def _iterate_packages(packages, reinstall):
-    for entry  in _read_apt_cache_showpkg(packages):
+    for entry in _read_apt_cache_showpkg(packages):
         p, is_virtual, providers = entry
         if is_virtual:
             installed = []
