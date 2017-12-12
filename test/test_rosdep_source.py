@@ -30,7 +30,7 @@
 import os
 import yaml
 
-rep122_install_command = """#!/bin/bash
+rep122_install_command = """#!/bin/sh
 set -o errexit
 mkdir -p build
 cd build
@@ -40,7 +40,7 @@ echo "About to run checkinstall make install"
 sudo checkinstall -y --nodoc --pkgname=yaml-cpp-sourcedep make install
 """
 
-rep122_check_presence_command = """#!/bin/bash
+rep122_check_presence_command = """#!/bin/sh
 dpkg-query -W -f='${Package} ${Status}\\n' yaml-cpp-sourcedep | awk '{\\
 if ($4 =="installed")
   exit 0
@@ -133,7 +133,7 @@ def test_SourceInstall():
 def test_is_installed():
     from rosdep2.platforms.source import SourceInstaller, SourceInstall
     resolved = SourceInstall()
-    resolved.check_presence_command = """#!/bin/bash
+    resolved.check_presence_command = """#!/bin/sh
 exit 0
 """
     installer = SourceInstaller()
@@ -142,7 +142,7 @@ exit 0
 def test_source_detect():
     from rosdep2.platforms.source import source_detect, SourceInstall
     resolved = SourceInstall()
-    resolved.check_presence_command = """#!/bin/bash
+    resolved.check_presence_command = """#!/bin/sh
 exit 0
 """
     assert [] == source_detect([])
@@ -165,7 +165,7 @@ def test_SourceInstaller_get_install_command():
 
     resolved = SourceInstall()
     resolved.manifest_url = 'http://fake/foo'
-    resolved.check_presence_command = """#!/bin/bash
+    resolved.check_presence_command = """#!/bin/sh
 exit 1
 """
     commands = installer.get_install_command([resolved])
@@ -174,7 +174,7 @@ exit 1
 
     resolved = SourceInstall()
     resolved.manifest_url = 'http://fake/foo'
-    resolved.check_presence_command = """#!/bin/bash
+    resolved.check_presence_command = """#!/bin/sh
 exit 0
 """
     commands = installer.get_install_command([resolved])
