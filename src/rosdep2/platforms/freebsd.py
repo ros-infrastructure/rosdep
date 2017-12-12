@@ -28,26 +28,31 @@
 
 # Original from cygwin.py by Tingfan Wu tingfan@gmail.com
 # Modified for FreeBSD by Rene Ladan rene@freebsd.org
+# Updated for FreeBSD with pkg by Trenton Schulz trentonw@ifi.Io.no
 
 import os
 import subprocess
 
 from rospkg.os_detect import OS_FREEBSD
 
+from .pip import PIP_INSTALLER
+from .gem import GEM_INSTALLER
 from .source import SOURCE_INSTALLER
-from ..installers import Installer
+from ..installers import PackageManagerInstaller
 
-PKG_ADD_INSTALLER = 'pkg_add'
+PKG_INSTALLER = 'pkg'
 
 def register_installers(context):
-    context.set_installer(PKG_ADD_INSTALLER, PkgAddInstaller())
+    context.set_installer(PKG_INSTALLER, PkgAddInstaller())
     
 def register_platforms(context):
     context.add_os_installer_key(OS_FREEBSD, SOURCE_INSTALLER)
-    context.add_os_installer_key(OS_FREEBSD, PKG_ADD_INSTALLER)
-    context.set_default_os_installer_key(OS_FREEBSD, lambda self: PKG_ADD_INSTALLER)
+    context.add_os_installer_key(OS_FREEBSD, PKG_INSTALLER)
+    context.add_os_installer_key(OS_FREEBSD, PIP_INSTALLER)
+    context.add_os_installer_key(OS_FREEBSD, GEM_INSTALLER)
+    context.set_default_os_installer_key(OS_FREEBSD, lambda self: PKG_INSTALLER)
 
-def pkg_info_detect_single(p):
+def pkg_detect_single(p):
     if p == "builtin":
         return True
     # The next code is a lot of hassle, but there is no
@@ -63,13 +68,13 @@ def pkg_info_detect_single(p):
         portname = "py27-" + p[3:] + "\*"
     else:
         portname = p + "-\*"
-    pop = subprocess.Popen("/usr/sbin/pkg_info -qE " + portname, shell=True)
-    return os.waitpid(pop.pid, 0)[1] == 0 # pkg_info -E returns 0 if pkg installed, 1 if not
+    pop = subprocess.Popen("/usr/sbin/pkg info --exists " + portname, shell=True)
+    return os.waitpid(pop.pid, 0)[1] == 0 # pkg info --exists returns 0 if pkg installed, 1 if not
 
 def pkg_info_detect(packages):
     return [p for p in packages if pkg_info_detect_single(p)]
 
-class PkgAddInstaller(Installer):
+class PkgAddInstaller(PackageManagerInstaller):
     """
     An implementation of the Installer for use on FreeBSD-style
     systems.
@@ -83,5 +88,4 @@ class PkgAddInstaller(Installer):
         if not packages:
             return []
         else:
-            #pkg_add does not have a non-interactive command
-            return [self.elevate_priv(['/usr/sbin/pkg_add', '-r'])+packages]
+            return [self.elevate_priv(['/usr/sbin/pkg', 'install' '-y'])+packages]
