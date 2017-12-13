@@ -49,7 +49,7 @@ else
   exit 1}'
 """
 
-REP112_MD5SUM = '57cb9faf930e9c4f0822be8b27798248'
+REP112_MD5SUM = '4dce04107abcd7a697b64824cf2857c6'
 
 def get_test_dir():
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'source'))
