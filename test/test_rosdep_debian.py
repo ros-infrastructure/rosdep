@@ -34,7 +34,15 @@ from mock import Mock, patch
 def get_test_dir():
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'debian'))
 
+def on_debian():
+    from rospkg import os_detect
+    osname = os_detect.OsDetect().get_name()
+    return osname in [os_detect.OS_UBUNTU, os_detect.OS_DEBIAN, os_detect.OS_MINT, os_detect.OS_ELEMENTARY]
+
 def test_dpkg_detect():
+    if not on_debian():
+        return True
+    
     from rosdep2.platforms.debian import dpkg_detect
     
     m = Mock()
@@ -57,6 +65,9 @@ def test_dpkg_detect():
 
 
 def test_AptInstaller():
+    if not on_debian():
+        return True
+
     from rosdep2.platforms.debian import AptInstaller
 
     @patch.object(AptInstaller, 'get_packages_to_install')
