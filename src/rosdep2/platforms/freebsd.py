@@ -59,20 +59,22 @@ def pkg_detect_single(p):
     # better way in FreeBSD using just the base tools
     portname = p
     if p == "gtk20":
-        portname = "gtk-2.\*"
+        portname = "gtk-2"
+    elif p == "python":
+        portname = "python27"
     elif p == "py-gtk2":
-        portname = "py27-gtk-2.\*"
+        portname = "py27-gtk-2"
     elif p[:9] in ["autoconf2", "automake1"]:
-        portname = p[:8] + "-" + p[8] + "." + p[9:] + "\*"
+        portname = p[:8] + "-" + p[8] + "." + p[9:]
     elif p[:3] == "py-":
-        portname = "py27-" + p[3:] + "\*"
+        portname = "py27-" + p[3:]
     else:
-        portname = p + "-\*"
+        portname = p
     pop = subprocess.Popen("/usr/sbin/pkg info --exists " + portname, shell=True)
     return os.waitpid(pop.pid, 0)[1] == 0 # pkg info --exists returns 0 if pkg installed, 1 if not
 
 def pkg_info_detect(packages):
-    return [p for p in packages if pkg_info_detect_single(p)]
+    return [p for p in packages if pkg_detect_single(p)]
 
 class PkgAddInstaller(PackageManagerInstaller):
     """
@@ -88,4 +90,4 @@ class PkgAddInstaller(PackageManagerInstaller):
         if not packages:
             return []
         else:
-            return [self.elevate_priv(['/usr/sbin/pkg', 'install' '-y'])+packages]
+            return [self.elevate_priv(['/usr/sbin/pkg', 'install', '-y'])+packages]
