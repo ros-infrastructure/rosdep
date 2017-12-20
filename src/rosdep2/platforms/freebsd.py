@@ -39,51 +39,40 @@ from .pip import PIP_INSTALLER
 from .gem import GEM_INSTALLER
 from .source import SOURCE_INSTALLER
 from ..installers import PackageManagerInstaller
+from ..shell_utils import read_stdout
 
 PKG_INSTALLER = 'pkg'
 
 def register_installers(context):
-    context.set_installer(PKG_INSTALLER, PkgAddInstaller())
+    context.set_installer(PKG_INSTALLER, PkgInstaller())
     
 def register_platforms(context):
     context.add_os_installer_key(OS_FREEBSD, SOURCE_INSTALLER)
     context.add_os_installer_key(OS_FREEBSD, PKG_INSTALLER)
     context.add_os_installer_key(OS_FREEBSD, PIP_INSTALLER)
-    context.add_os_installer_key(OS_FREEBSD, GEM_INSTALLER)
     context.set_default_os_installer_key(OS_FREEBSD, lambda self: PKG_INSTALLER)
 
-def pkg_detect_single(p):
+def pkg_detect_single(p, exec_fn):
     if p == "builtin":
         return True
-    # The next code is a lot of hassle, but there is no
-    # better way in FreeBSD using just the base tools
     portname = p
-    if p == "gtk20":
-        portname = "gtk-2"
-    elif p == "python":
-        portname = "python27"
-    elif p == "py-gtk2":
-        portname = "py27-gtk-2"
-    elif p[:9] in ["autoconf2", "automake1"]:
-        portname = p[:8] + "-" + p[8] + "." + p[9:]
-    elif p[:3] == "py-":
-        portname = "py27-" + p[3:]
-    else:
-        portname = p
-    pop = subprocess.Popen("/usr/sbin/pkg info --exists " + portname, shell=True)
-    return os.waitpid(pop.pid, 0)[1] == 0 # pkg info --exists returns 0 if pkg installed, 1 if not
+    cmd = ['/usr/bin/pkg', 'query', '%n', p]
+    std_out = exec_fn(cmd)
+    return std_out.split() != []
 
-def pkg_info_detect(packages):
-    return [p for p in packages if pkg_detect_single(p)]
+def pkg_detect(packages, exec_fn=None):
+    if exec_fn is None:
+        exec_fn = read_stdout
+    return [p for p in packages if pkg_detect_single(p, exec_fn)]
 
-class PkgAddInstaller(PackageManagerInstaller):
+class PkgInstaller(PackageManagerInstaller):
     """
     An implementation of the Installer for use on FreeBSD-style
     systems.
     """
 
     def __init__(self):
-        super(PkgAddInstaller, self).__init__(pkg_info_detect)
+        super(PkgInstaller, self).__init__(pkg_detect)
 
     def get_install_command(self, resolved, interactive=True, reinstall=False, quiet=False):
         packages = self.get_packages_to_install(resolved, reinstall=reinstall)        
