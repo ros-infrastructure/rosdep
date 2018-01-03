@@ -56,7 +56,7 @@ def pkg_detect_single(p, exec_fn):
     if p == "builtin":
         return True
     portname = p
-    cmd = ['/usr/bin/pkg', 'query', '%n', p]
+    cmd = ['/usr/sbin/pkg', 'query', '%n', p]
     std_out = exec_fn(cmd)
     return std_out.split() != []
 
