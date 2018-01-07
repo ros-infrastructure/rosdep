@@ -97,10 +97,10 @@ APT_CACHE_REVERSE_PROVIDE_START_RE = re.compile(
 APT_CACHE_PROVIDER_RE = re.compile('^(.*?) (.*)$')
 
 
-def _is_installed_as_virtual_package(package, exec_fn=None):
+def _is_installed_as_virtual_package(packages, exec_fn=None):
     '''
-    Check whether this is a virtual package and a package providing this
-    virtual package is installed.
+    Check whether these are virtual packages and packages providing them
+    are installed.
 
     :param exec_fn: see `dpkg_detect`; make sure that exec_fn supports a
     second, boolean, parameter.
@@ -120,15 +120,32 @@ def _is_installed_as_virtual_package(package, exec_fn=None):
     # check output of `apt show package' for whether it's a virtual
     # package and if so use `apt-cache showpkg package' to get the providing
     # packages.  Then check if one of those is installed.
-    cmd = ['apt-cache', 'show', package]
+    cmd = ['apt-cache', 'show'] + list(packages)
     if exec_fn is None:
         exec_fn = read_stdout
     std_out, std_err = exec_fn(cmd, True) # use stderr as well to hide error message ... not too nice, but hopefully cautious
-    if APT_PURELY_VIRTUAL_RE.search(std_out):
+
+    # 'apt-cache show' produces blocks separated by empty lines in the same order as the provided packages
+    std_out_parts = std_out.split('\n\n')
+    std_out_parts = filter(None, std_out_parts)
+
+    # Identify all virtual packages
+    virtual_packages = []
+    for part in std_out_parts:
+        if APT_PURELY_VIRTUAL_RE.search(part):
+            # Get package name and add to list
+            # First line of each block has the form 'Package: <pkg_name>\n'
+            eol_idx = part.index('\n')
+            package_name = part[9:eol_idx]
+            virtual_packages.append(package_name)
+
+    # Identify those virtual packages that have providers
+    provided_packages = []
+    for package in virtual_packages:
         print('Package {} seems to be virtual; try to specify a providing package in your rosdep config.'.format(package))
         cmd = ['apt-cache', 'showpkg', package]
         std_out = exec_fn(cmd)
-        is_provider = False # true when parsed line contains a povider
+        is_provider = False # true when parsed line contains a provider
         for line in std_out.split('\n'):
             if is_provider:
                 match = APT_CACHE_PROVIDER_RE.match(line)
@@ -141,13 +158,14 @@ def _is_installed_as_virtual_package(package, exec_fn=None):
                     # whether the package is provided
                     if dpkg_detect([provider_name]):
                         print('Virtual package {} is provided by {}'.format(package, provider_name))
-                        return True
+                        provided_packages.append(package)
+                        break
             if APT_CACHE_REVERSE_PROVIDE_START_RE.match(line):
                 is_provider = True
                 # Note: Set this _after_ possibly parsing the current line to
                 #       not parse the line containing
                 #       APT_CACHE_REVERSE_PROVIDE_START_RE
-        return False # unable to find a provider that was installed
+    return provided_packages
 
 
 
@@ -186,9 +204,9 @@ def dpkg_detect(pkgs, exec_fn=None):
 
     # now for the remaining packages check, whether they are installed as
     # virtual packages
-    for rem in set(pkgs) - set(installed_packages):
-        if _is_installed_as_virtual_package(rem):
-            installed_packages.append(rem)
+    rem = set(pkgs) - set(installed_packages)
+    installed_virtual_packages = _is_installed_as_virtual_package(rem)
+    installed_packages = installed_packages + installed_virtual_packages
 
     return installed_packages
 
