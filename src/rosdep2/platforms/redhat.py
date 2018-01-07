@@ -89,7 +89,7 @@ def rpm_detect_cmd(raw_packages, exec_fn=None):
     cmd.extend(packages)
 
     std_out = exec_fn(cmd)
-    out_lines = std_out.split()
+    out_lines = std_out.split('\n')
     for index, package in enumerate(packages):
         if package in out_lines:
             ret_list.append(raw_packages[index])
@@ -99,6 +99,7 @@ def rpm_detect(packages, exec_fn=None):
     try:
         return rpm_detect_py(packages)
     except ImportError:
+        rd_debug('Failed to import rpm module, falling back to slow method')
         return rpm_detect_cmd(packages, exec_fn)
 
 def rpm_expand_py(macro):
