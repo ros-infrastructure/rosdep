@@ -1,0 +1,354 @@
+Package: curl
+Versions: 
+7.47.0-1ubuntu2.4 (/var/lib/apt/lists/archive.ubuntu.com_ubuntu_dists_xenial-updates_main_binary-amd64_Packages.lz4) (/var/lib/apt/lists/security.ubuntu.com_ubuntu_dists_xenial-security_main_binary-amd64_Packages.lz4)
+ Description Language: 
+                 File: /var/lib/apt/lists/archive.ubuntu.com_ubuntu_dists_xenial_main_binary-amd64_Packages.lz4
+                  MD5: f83293d10df083ae6f7bb7d01642913c
+ Description Language: 
+                 File: /var/lib/apt/lists/archive.ubuntu.com_ubuntu_dists_xenial-updates_main_binary-amd64_Packages.lz4
+                  MD5: f83293d10df083ae6f7bb7d01642913c
+
+7.47.0-1ubuntu2 (/var/lib/apt/lists/archive.ubuntu.com_ubuntu_dists_xenial_main_binary-amd64_Packages.lz4)
+ Description Language: 
+                 File: /var/lib/apt/lists/archive.ubuntu.com_ubuntu_dists_xenial_main_binary-amd64_Packages.lz4
+                  MD5: f83293d10df083ae6f7bb7d01642913c
+ Description Language: 
+                 File: /var/lib/apt/lists/archive.ubuntu.com_ubuntu_dists_xenial-updates_main_binary-amd64_Packages.lz4
+                  MD5: f83293d10df083ae6f7bb7d01642913c
+
+
+Reverse Depends: 
+  plowshare,curl 7.24
+  playonlinux,curl
+  google-perftools,curl
+  drupal7,curl
+  ceph-test,curl
+  pollinate,curl
+  pciutils,curl
+  imagemagick-6.q16,curl
+  ttytter,curl
+  playonlinux,curl
+  ec2-ami-tools,curl
+  bgoffice-dict-downloader,curl
+  astrometry-data-2mass-08-19,curl
+  astrometry-data-2mass-07,curl
+  astrometry-data-2mass-06,curl
+  astrometry-data-2mass-05,curl
+  astrometry-data-2mass-04,curl
+  astrometry-data-2mass-03,curl
+  astrometry-data-2mass-02,curl
+  astrometry-data-2mass-01,curl
+  astrometry-data-2mass-00,curl
+  zescrow-client,curl
+  youtube-dl,curl
+  yorick,curl
+  wsl,curl
+  wsl,curl
+  wmget,curl
+  wakeup,curl
+  vagrant,curl
+  umegaya,curl
+  uhd-host,curl
+  twittering-mode,curl
+  twidge,curl
+  tdiary-contrib,curl
+  sylpheed,curl
+  surfraw,curl
+  surf,curl
+  solr-common,curl
+  smokeping,curl
+  scamp,curl
+  s3curl,curl
+  ruby-build,curl
+  rkhunter,curl
+  python-curtin,curl
+  pybit-svn,curl
+  prey,curl
+  pp-popularity-contest,curl
+  podracer,curl
+  gotmail,curl 7.9.0
+  phablet-tools,curl
+  perlbrew,curl
+  origami,curl
+  openstreetmap-carto-common,curl
+  openstack-resource-agents,curl
+  openssh-known-hosts,curl
+  opennebula-flow,curl
+  opam,curl
+  nomnom,curl
+  myrepos,curl
+  linuxbrew-wrapper,curl
+  libguestfs0,curl
+  libguestfs-tools,curl
+  kino,curl
+  jhbuild,curl
+  jenkins-debian-glue-buildenv,curl
+  ifupdown-extra,curl
+  hydra,curl
+  html2text,curl
+  gwhois,curl
+  groonga-httpd,curl
+  debian-goodies,curl
+  google-perftools,curl
+  git-remote-gcrypt,curl
+  git-ftp,curl
+  git-annex,curl
+  getlive,curl
+  freeipa-client,curl
+  freedombox-setup,curl
+  foomatic-db-engine,curl
+  elastichosts-utils,curl
+  drush,curl
+  drupal7,curl
+  dracut-network,curl
+  dpatch,curl
+  djvulibre-bin,curl
+  diaspora-common,curl
+  di-netboot-assistant,curl
+  dgit,curl
+  debmake,curl
+  debian-cd,curl
+  dbab,curl
+  cpanminus,curl
+  clamav-unofficial-sigs,curl
+  ceph-test,curl
+  cairo-dock-plug-ins,curl
+  bosixnet-webui,curl
+  bosixnet-daemon,curl
+  bibledit-xiphos,curl
+  bibledit-gtk,curl
+  bibledit-bibletime,curl
+  ben,curl
+  awesome-extra,curl
+  atheist,curl
+  astrometry.net,curl
+  arno-iptables-firewall,curl
+  apt-file,curl
+  approx,curl
+  ansiweather,curl
+  anc-api-tools,curl
+  ubuntu-server,curl
+  spamassassin,curl
+  python3-curtin,curl
+  pollinate,curl
+  plainbox-provider-checkbox,curl
+  pciutils,curl
+  imagemagick-6.q16,curl
+  ieee-data,curl
+  gettext,curl
+  devscripts,curl
+Dependencies: 
+7.47.0-1ubuntu2.4 - libc6 (2 2.17) libcurl3-gnutls (5 7.47.0-1ubuntu2.4) zlib1g (2 1:1.1.4) 
+7.47.0-1ubuntu2 - libc6 (2 2.17) libcurl3-gnutls (5 7.47.0-1ubuntu2) zlib1g (2 1:1.1.4) 
+Provides: 
+7.47.0-1ubuntu2.4 - 
+7.47.0-1ubuntu2 - 
+Reverse Provides: 
+Package: wget
+Versions: 
+1.17.1-1ubuntu1.3 (/var/lib/apt/lists/archive.ubuntu.com_ubuntu_dists_xenial-updates_main_binary-amd64_Packages.lz4) (/var/lib/apt/lists/security.ubuntu.com_ubuntu_dists_xenial-security_main_binary-amd64_Packages.lz4)
+ Description Language: 
+                 File: /var/lib/apt/lists/archive.ubuntu.com_ubuntu_dists_xenial_main_binary-amd64_Packages.lz4
+                  MD5: 63a4a740bcd9e8e94bf661e4f1806e02
+ Description Language: 
+                 File: /var/lib/apt/lists/archive.ubuntu.com_ubuntu_dists_xenial-updates_main_binary-amd64_Packages.lz4
+                  MD5: 63a4a740bcd9e8e94bf661e4f1806e02
+
+1.17.1-1ubuntu1 (/var/lib/apt/lists/archive.ubuntu.com_ubuntu_dists_xenial_main_binary-amd64_Packages.lz4)
+ Description Language: 
+                 File: /var/lib/apt/lists/archive.ubuntu.com_ubuntu_dists_xenial_main_binary-amd64_Packages.lz4
+                  MD5: 63a4a740bcd9e8e94bf661e4f1806e02
+ Description Language: 
+                 File: /var/lib/apt/lists/archive.ubuntu.com_ubuntu_dists_xenial-updates_main_binary-amd64_Packages.lz4
+                  MD5: 63a4a740bcd9e8e94bf661e4f1806e02
+
+
+Reverse Depends: 
+  ttf-root-installer,wget 1.9.1-4
+  virtualbox-ext-pack,wget
+  playonlinux,wget
+  pepperflashplugin-nonfree,wget
+  mythtv-backend,wget
+  flashplugin-installer,wget
+  xtables-addons-common,wget
+  sbuild,wget
+  python-curtin,wget
+  ubiquity,wget
+  python3-curtin,wget
+  pciutils,wget
+  maas-rack-controller,wget
+  debootstrap,wget
+  virtualbox-ext-pack,wget
+  usbutils,wget 1.8.1-6
+  susv4,wget
+  susv3,wget
+  susv2,wget
+  snmp-mibs-downloader,wget
+  sdic-gene95,wget
+  rocksndiamonds,wget
+  quake3-data,wget
+  publicfile-installer,wget
+  primesense-nite-nonfree,wget
+  playonlinux,wget
+  pepperflashplugin-nonfree,wget
+  mythtv-backend,wget
+  libdvd-pkg,wget
+  kinect-audio-setup,wget
+  hyperspec,wget
+  googleearth-package,wget
+  google-android-sdk-docs-installer,wget
+  geoip-database-contrib,wget
+  flashplugin-installer,wget
+  firmware-b43legacy-installer,wget
+  firmware-b43-installer,wget
+  cltl,wget
+  zomg,wget
+  youtube-dl,wget
+  xtables-addons-common,wget
+  xdeb,wget
+  wsl,wget 1.13
+  wotsap,wget
+  wmfrog,wget
+  winetricks,wget
+  util-vserver,wget
+  urlview,wget
+  uck,wget
+  ubuntu-touch,wget
+  testdrive-common,wget
+  svn-buildpackage,wget
+  surfraw,wget
+  spacefm-gtk3,wget
+  spacefm,wget
+  simple-cdd,wget
+  shorewall6-lite,wget
+  shorewall-lite,wget
+  screenbin,wget
+  sbuild,wget
+  rrdweather,wget
+  rkhunter,wget
+  rinse,wget
+  rfcdiff,wget
+  qalc,wget
+  q4wine,wget
+  pyxplot,wget
+  python-curtin,wget
+  prism2-usb-firmware-installer,wget
+  podget,wget
+  plait,wget
+  phablet-tools-citrain,wget
+  phablet-tools,wget
+  petitboot-twin,wget
+  petitboot,wget
+  perlbrew,wget
+  osmctools,wget
+  origami,wget
+  openrocket,wget
+  opennebula,wget
+  opam,wget
+  oinkmaster,wget
+  nrss,wget
+  neurodebian,wget
+  mirmon,wget
+  mh-e,wget
+  madison-lite,wget
+  luarocks,wget
+  ltsp-client,wget
+  live-config,wget
+  live-boot,wget
+  liquidsoap,wget
+  libcupt4-1-downloadmethod-wget,wget
+  ktoblzcheck,wget
+  jigdo-file,wget
+  jhbuild,wget
+  inn2,wget
+  hydra,wget
+  html2text,wget
+  gnuhtml2latex,wget
+  gkrellweather,wget
+  gkrellkam,wget
+  git-annex,wget
+  geographiclib-tools,wget
+  freedombox-setup,wget
+  foomatic-db-engine,wget
+  fiaif,wget
+  fex-utils,wget
+  fex,wget
+  e2wm,wget
+  drush,wget
+  dpkg-dev-el,wget
+  dphys-config,wget
+  dokuwiki,wget
+  disc-cover,wget
+  dillo,wget
+  diaspora-installer,wget
+  di-netboot-assistant,wget
+  debmake,wget
+  debian-el,wget
+  dahdi-dkms,wget
+  cpl-plugin-xshoo-calib,wget
+  cpl-plugin-visir-calib,wget
+  cpl-plugin-vimos-calib,wget
+  cpl-plugin-uves-calib,wget
+  cpl-plugin-sinfo-calib,wget
+  cpl-plugin-naco-calib,wget
+  cpl-plugin-muse-calib,wget
+  cpl-plugin-kmos-calib,wget
+  cpl-plugin-hawki-calib,wget
+  cpl-plugin-giraf-calib,wget
+  cpl-plugin-fors-calib,wget
+  cpl-plugin-amber-calib,wget
+  cpanminus,wget
+  collabtive,wget
+  cloud-utils-euca,wget
+  cdebootstrap-static,wget
+  cairo-dock-plug-ins,wget
+  bmt,wget
+  bladerf-fpga-hostedx40,wget
+  bladerf-fpga-hostedx115,wget
+  bladerf-firmware-fx3,wget
+  avfs,wget
+  auto-apt,wget
+  apt-mirror,wget
+  apf-firewall,wget
+  adzapper,wget
+  abcde,wget
+  cloud-image-utils,wget
+  ubuntu-standard,wget
+  ubiquity,wget
+  ssh-import-id,wget
+  python3-curtin,wget
+  printer-driver-foo2zjs,wget
+  pciutils,wget
+  pbuilder,wget
+  maas-rack-controller,wget
+  maas-enlist,wget
+  jigit,wget
+  ieee-data,wget
+  hplip,wget
+  gettext,wget
+  emacs-goodies-el,wget
+  devscripts,wget
+  debootstrap,wget
+Dependencies: 
+1.17.1-1ubuntu1.3 - libc6 (2 2.17) libidn11 (2 1.13) libpcre3 (0 (null)) libssl1.0.0 (2 1.0.1) libuuid1 (2 2.16) zlib1g (2 1:1.1.4) wget-ssl (0 (null)) ca-certificates (0 (null)) 
+1.17.1-1ubuntu1 - libc6 (2 2.17) libidn11 (2 1.13) libpcre3 (0 (null)) libssl1.0.0 (2 1.0.1) libuuid1 (2 2.16) zlib1g (2 1:1.1.4) wget-ssl (0 (null)) ca-certificates (0 (null)) 
+Provides: 
+1.17.1-1ubuntu1.3 - 
+1.17.1-1ubuntu1 - 
+Reverse Provides: 
+Package: libcurl-dev
+Versions: 
+
+Reverse Depends: 
+  libdap-dev,libcurl-dev
+  libnxml0-dev,libcurl-dev
+  libglyr-dev,libcurl-dev
+Dependencies: 
+Provides: 
+Reverse Provides: 
+libcurl4-openssl-dev 7.47.0-1ubuntu2.4 (= )
+libcurl4-nss-dev 7.47.0-1ubuntu2.4 (= )
+libcurl4-gnutls-dev 7.47.0-1ubuntu2.4 (= )
+libcurl4-openssl-dev 7.47.0-1ubuntu2 (= )
+libcurl4-nss-dev 7.47.0-1ubuntu2 (= )
+libcurl4-gnutls-dev 7.47.0-1ubuntu2 (= )
