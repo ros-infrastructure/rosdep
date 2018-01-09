@@ -208,9 +208,6 @@ def test_SourceInstaller_resolve():
     assert dependencies == ['checkinstall'], "Dependencies should resolve to checkinstall listed in the rdmanifest."
     resolved = resolved[0]
 
-    print resolved.install_command
-    print "vs."
-    print rep122_install_command
     assert resolved.install_command == rep122_install_command
     assert resolved.check_presence_command == rep122_check_presence_command
 
