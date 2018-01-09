@@ -28,7 +28,7 @@
 
 # Original from cygwin.py by Tingfan Wu tingfan@gmail.com
 # Modified for FreeBSD by Rene Ladan rene@freebsd.org
-# Updated for FreeBSD with pkg by Trenton Schulz trentonw@ifi.Io.no
+# Updated for FreeBSD with pkg by Trenton Schulz trentonw@ifi.uio.no
 
 import os
 import subprocess
@@ -36,8 +36,6 @@ import subprocess
 from rospkg.os_detect import OS_FREEBSD
 
 from .pip import PIP_INSTALLER
-from .gem import GEM_INSTALLER
-from .source import SOURCE_INSTALLER
 from ..installers import PackageManagerInstaller
 from ..shell_utils import read_stdout
 
@@ -47,7 +45,6 @@ def register_installers(context):
     context.set_installer(PKG_INSTALLER, PkgInstaller())
     
 def register_platforms(context):
-    context.add_os_installer_key(OS_FREEBSD, SOURCE_INSTALLER)
     context.add_os_installer_key(OS_FREEBSD, PKG_INSTALLER)
     context.add_os_installer_key(OS_FREEBSD, PIP_INSTALLER)
     context.set_default_os_installer_key(OS_FREEBSD, lambda self: PKG_INSTALLER)

@@ -49,7 +49,7 @@ else
   exit 1}'
 """
 
-REP112_MD5SUM = '4dce04107abcd7a697b64824cf2857c6'
+REP112_MD5SUM = '57cb9faf930e9c4f0822be8b27798248'
 
 def get_test_dir():
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'source'))
@@ -208,6 +208,9 @@ def test_SourceInstaller_resolve():
     assert dependencies == ['checkinstall'], "Dependencies should resolve to checkinstall listed in the rdmanifest."
     resolved = resolved[0]
 
+    print resolved.install_command
+    print "vs."
+    print rep122_install_command
     assert resolved.install_command == rep122_install_command
     assert resolved.check_presence_command == rep122_check_presence_command
 
@@ -297,7 +300,7 @@ def test_install_source():
     resolved = SourceInstall()
     resolved.tarball = 'https://github.com/ros-infrastructure/rosdep/raw/master/test/source/foo.tar.gz'
     resolved.tarball_md5sum = 'fd34dc39f8f192b97fcc191fe0a6befc'
-    resolved.install_command = """#!/bin/bash
+    resolved.install_command = """#!/bin/sh
 exit 0
 """
     resolved.exec_path = ''

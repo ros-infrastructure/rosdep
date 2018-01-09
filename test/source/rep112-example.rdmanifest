@@ -1,7 +1,7 @@
 uri: 'http://download.ros.org/downloads/yaml-cpp-0.2.5.tar.gz'
 md5sum: b17dc36055cd2259c88b2602601415d9
 install-script: |
-  #!/bin/sh
+  #!/bin/bash
   set -o errexit
   mkdir -p build
   cd build
@@ -10,7 +10,7 @@ install-script: |
   echo "About to run checkinstall make install"
   sudo checkinstall -y --nodoc --pkgname=yaml-cpp-sourcedep make install
 check-presence-script: |
-  #!/bin/sh
+  #!/bin/bash
   dpkg-query -W -f='${Package} ${Status}\n' yaml-cpp-sourcedep | awk '{\
   if ($4 =="installed")
     exit 0
