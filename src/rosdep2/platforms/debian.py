@@ -92,13 +92,6 @@ def register_ubuntu(context):
     context.set_default_os_installer_key(OS_UBUNTU, lambda self: APT_INSTALLER)
     context.set_os_version_type(OS_UBUNTU, OsDetect.get_codename)
 
-try:
-    _next = next
-except NameError:
-    def _next(x):
-        return x.next()
-
-
 def _read_apt_cache_showpkg(packages, exec_fn=None):
     '''
     Output whether these packages are virtual package list providing package.
@@ -132,20 +125,20 @@ def _read_apt_cache_showpkg(packages, exec_fn=None):
 
         header = "Package: %s" % p
         # proceed to Package header
-        while _next(lines) != header:
+        while next(lines) != header:
             pass
 
         # proceed to versions section
-        while _next(lines) != "Versions: ":
+        while next(lines) != "Versions: ":
             pass
 
         # virtual packages don't have versions
-        if _next(lines) != "":
+        if next(lines) != "":
             yield p, False, None
             continue
 
         # proceed to reserve provides section
-        while _next(lines) != "Reverse Provides: ":
+        while next(lines) != "Reverse Provides: ":
             pass
 
         yield p, True, [line.split(' ', 2)[0] for line in lines]
