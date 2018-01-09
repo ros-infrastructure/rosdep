@@ -1,10 +1,10 @@
 uri: 'http://download.ros.org/downloads/yaml-cpp-0.2.5.tar.gz'
 md5sum: b17dc36055cd2259c88b2602601415d9
 install-script: |
-  #!/bin/sh
+  #!/bin/bash
   echo "noop"
 check-presence-script: |
-  #!/bin/sh
+  #!/bin/bash
   exit 0
 exec-path: yaml-cpp-0.2.5
 depends: []

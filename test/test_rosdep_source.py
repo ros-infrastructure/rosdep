@@ -30,7 +30,7 @@
 import os
 import yaml
 
-rep122_install_command = """#!/bin/sh
+rep122_install_command = """#!/bin/bash
 set -o errexit
 mkdir -p build
 cd build
@@ -40,7 +40,7 @@ echo "About to run checkinstall make install"
 sudo checkinstall -y --nodoc --pkgname=yaml-cpp-sourcedep make install
 """
 
-rep122_check_presence_command = """#!/bin/sh
+rep122_check_presence_command = """#!/bin/bash
 dpkg-query -W -f='${Package} ${Status}\\n' yaml-cpp-sourcedep | awk '{\\
 if ($4 =="installed")
   exit 0
@@ -49,7 +49,7 @@ else
   exit 1}'
 """
 
-REP112_MD5SUM = '4dce04107abcd7a697b64824cf2857c6'
+REP112_MD5SUM = '57cb9faf930e9c4f0822be8b27798248'
 
 def get_test_dir():
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'source'))
@@ -133,7 +133,7 @@ def test_SourceInstall():
 def test_is_installed():
     from rosdep2.platforms.source import SourceInstaller, SourceInstall
     resolved = SourceInstall()
-    resolved.check_presence_command = """#!/bin/sh
+    resolved.check_presence_command = """#!/bin/bash
 exit 0
 """
     installer = SourceInstaller()
@@ -142,7 +142,7 @@ exit 0
 def test_source_detect():
     from rosdep2.platforms.source import source_detect, SourceInstall
     resolved = SourceInstall()
-    resolved.check_presence_command = """#!/bin/sh
+    resolved.check_presence_command = """#!/bin/bash
 exit 0
 """
     assert [] == source_detect([])
@@ -165,7 +165,7 @@ def test_SourceInstaller_get_install_command():
 
     resolved = SourceInstall()
     resolved.manifest_url = 'http://fake/foo'
-    resolved.check_presence_command = """#!/bin/sh
+    resolved.check_presence_command = """#!/bin/bash
 exit 1
 """
     commands = installer.get_install_command([resolved])
@@ -174,7 +174,7 @@ exit 1
 
     resolved = SourceInstall()
     resolved.manifest_url = 'http://fake/foo'
-    resolved.check_presence_command = """#!/bin/sh
+    resolved.check_presence_command = """#!/bin/bash
 exit 0
 """
     commands = installer.get_install_command([resolved])
@@ -297,7 +297,7 @@ def test_install_source():
     resolved = SourceInstall()
     resolved.tarball = 'https://github.com/ros-infrastructure/rosdep/raw/master/test/source/foo.tar.gz'
     resolved.tarball_md5sum = 'fd34dc39f8f192b97fcc191fe0a6befc'
-    resolved.install_command = """#!/bin/sh
+    resolved.install_command = """#!/bin/bash
 exit 0
 """
     resolved.exec_path = ''
