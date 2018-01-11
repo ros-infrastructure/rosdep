@@ -104,11 +104,15 @@ def rpm_detect(packages, exec_fn=None):
 
 def rpm_expand_py(macro):
     import rpm
+    if not '%' in macro:
+        return macro
     expanded = rpm.expandMacro(macro)
     rd_debug('Expanded rpm macro in \'%s\' to \'%s\'' % (macro, expanded))
     return expanded
 
 def rpm_expand_cmd(macro, exec_fn=None):
+    if not '%' in macro:
+        return macro
     cmd = ['rpm', '-E', macro]
 
     if exec_fn is None:
@@ -119,8 +123,6 @@ def rpm_expand_cmd(macro, exec_fn=None):
     return expanded
 
 def rpm_expand(package, exec_fn=None):
-    if not '%' in package:
-        return package
     try:
         return rpm_expand_py(package)
     except ImportError:
