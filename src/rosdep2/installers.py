@@ -363,10 +363,10 @@ class PackageManagerInstaller(Installer):
         return sorted(list(s))
 
     def get_packages_to_install(self, resolved, reinstall=False):
-        '''
+        """
         Return a list of packages (out of *resolved*) that still need to get
         installed.
-        '''
+        """
         if reinstall:
             return resolved
         if not resolved:
@@ -375,18 +375,18 @@ class PackageManagerInstaller(Installer):
             return [x for x in resolved if x not in self.detect_fn(resolved)]
 
     def is_installed(self, resolved_item):
-        '''
+        """
         Check if a given package was installed.
-        '''
+        """
         return not self.get_packages_to_install([resolved_item])
 
     def get_version_strings(self):
-        '''
+        """
         Return a list of version information strings.
 
         Where each string is of the form "<installer> <version string>".
         For example, ["apt-get x.y.z"] or ["pip x.y.z", "setuptools x.y.z"].
-        '''
+        """
         raise NotImplementedError('subclasses must implement get_version_strings method')
 
     def get_install_command(self, resolved, interactive=True, reinstall=False, quiet=False):
