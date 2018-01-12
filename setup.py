@@ -5,7 +5,7 @@ exec(open(os.path.join(os.path.dirname(__file__), 'src', 'rosdep2', '_version.py
 
 setup(
     name='rosdep',
-    version=__version__,
+    version=__version__,  # noqa:F821
     packages=['rosdep2', 'rosdep2.platforms'],
     package_dir={'': 'src'},
     install_requires=['catkin_pkg', 'rospkg >= 1.0.37', 'rosdistro >= 0.4.0', 'PyYAML >= 3.1'],
