@@ -104,4 +104,3 @@ def test_PipInstaller():
     except AssertionError:
         traceback.print_exc()
         raise
-

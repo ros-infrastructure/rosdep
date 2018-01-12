@@ -59,4 +59,3 @@ def test_PacmanInstaller():
     except AssertionError:
         traceback.print_exc()
         raise
-

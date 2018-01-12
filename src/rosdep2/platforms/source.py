@@ -315,5 +315,3 @@ def install_source(resolved):
     finally:
         rd_debug("cleaning up tmpdir [%s]"%(tempdir))
         shutil.rmtree(tempdir)
-
-

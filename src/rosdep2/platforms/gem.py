@@ -91,4 +91,3 @@ class GemInstaller(PackageManagerInstaller):
             return []
         else:
             return [self.elevate_priv(['gem', 'install', p]) for p in packages]
-

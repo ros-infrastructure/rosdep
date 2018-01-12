@@ -59,4 +59,3 @@ def test_AptCygInstaller():
     except AssertionError:
         traceback.print_exc()
         raise
-

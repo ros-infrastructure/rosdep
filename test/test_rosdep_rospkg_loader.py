@@ -177,5 +177,3 @@ def test_RosPkgLoader_get_loadable():
     keys = loader.get_loadable_views()
     for s in ['ros', 'empty', 'invalid', 'stack1']:
         assert s in keys
-
-

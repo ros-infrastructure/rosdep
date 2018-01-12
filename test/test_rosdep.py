@@ -45,5 +45,3 @@ def test_create_default_installer_context():
         assert context.get_installer('apt') is not None
         assert 'apt' in context.get_os_installer_keys(OS_UBUNTU)
         assert OsDetect.get_codename == context.get_os_version_type(OS_UBUNTU)
-
-

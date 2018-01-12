@@ -175,4 +175,3 @@ def test_DependencyGraph_Realworld():
 	result = dg.get_ordered_dependency_list()
 	expected = [('homebrew', ['pkg-config']), ('pip', ['matplotlib'])]
 	assert result == expected, "Results did not match expectations: %s == %s"%(str(result),str(expected))
-

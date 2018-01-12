@@ -102,4 +102,3 @@ def create_tempfile_from_string_and_execute(string_script, path=None, exec_fn=No
 
     rd_debug("Return code was: %s"%(result))
     return result == 0
-

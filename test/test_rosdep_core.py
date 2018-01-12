@@ -51,4 +51,3 @@ def test_InvalidData():
         raise InvalidData('hi')
     except InvalidData as ex:
         assert 'hi' in str(ex)
-
