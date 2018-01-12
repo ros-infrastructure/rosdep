@@ -31,23 +31,25 @@ import os
 import traceback
 from mock import Mock, patch
 
+
 def get_test_dir():
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'debian'))
+
 
 def test_dpkg_detect():
     from rosdep2.platforms.debian import dpkg_detect
 
     m = Mock()
-    m.return_value = '',''
+    m.return_value = '', ''
     val = dpkg_detect([], exec_fn=m)
     assert val == [], val
 
     val = dpkg_detect(['tinyxml-dev'], exec_fn=m)
     assert val == [], val
-    #assert m.assert_called_with(['dpkg-query', '-W', '-f=\'${Package} ${Status}\n\''])
+    # assert m.assert_called_with(['dpkg-query', '-W', '-f=\'${Package} ${Status}\n\''])
 
     with open(os.path.join(get_test_dir(), 'dpkg-python-apt'), 'r') as f:
-        m.return_value = f.read(),''
+        m.return_value = f.read(), ''
     val = dpkg_detect(['apt', 'tinyxml-dev', 'python'], exec_fn=m)
     assert val == ['apt', 'python'], val
 
@@ -69,16 +71,17 @@ def test_read_apt_cache_showpkg():
     package, virtual, providers = results[0]
     assert package == 'curl', package
     assert not virtual
-    assert providers == None, providers
+    assert providers is None, providers
 
     package, virtual, providers = results[1]
     assert package == 'wget', package
     assert not virtual
-    assert providers == None, providers
+    assert providers is None, providers
 
     package, virtual, providers = results[2]
     assert package == 'libcurl-dev', package
     assert virtual, providers
+
 
 def test_AptInstaller():
     from rosdep2.platforms.debian import AptInstaller
@@ -93,7 +96,7 @@ def test_AptInstaller():
         expected = [['sudo', '-H', 'apt-get', 'install', '-y', 'a'],
                     ['sudo', '-H', 'apt-get', 'install', '-y', 'b']]
         val = installer.get_install_command(['whatever'], interactive=False)
-        print("VAL", val)
+        print('VAL', val)
         assert val == expected, val
         expected = [['sudo', '-H', 'apt-get', 'install', 'a'],
                     ['sudo', '-H', 'apt-get', 'install', 'b']]

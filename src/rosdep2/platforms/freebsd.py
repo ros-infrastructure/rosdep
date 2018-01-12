@@ -39,35 +39,40 @@ from ..installers import Installer
 
 PKG_ADD_INSTALLER = 'pkg_add'
 
+
 def register_installers(context):
     context.set_installer(PKG_ADD_INSTALLER, PkgAddInstaller())
-    
+
+
 def register_platforms(context):
     context.add_os_installer_key(OS_FREEBSD, SOURCE_INSTALLER)
     context.add_os_installer_key(OS_FREEBSD, PKG_ADD_INSTALLER)
     context.set_default_os_installer_key(OS_FREEBSD, lambda self: PKG_ADD_INSTALLER)
 
+
 def pkg_info_detect_single(p):
-    if p == "builtin":
+    if p == 'builtin':
         return True
     # The next code is a lot of hassle, but there is no
     # better way in FreeBSD using just the base tools
     portname = p
-    if p == "gtk20":
-        portname = "gtk-2.\*"
-    elif p == "py-gtk2":
-        portname = "py27-gtk-2.\*"
-    elif p[:9] in ["autoconf2", "automake1"]:
-        portname = p[:8] + "-" + p[8] + "." + p[9:] + "\*"
-    elif p[:3] == "py-":
-        portname = "py27-" + p[3:] + "\*"
+    if p == 'gtk20':
+        portname = 'gtk-2.\*'
+    elif p == 'py-gtk2':
+        portname = 'py27-gtk-2.\*'
+    elif p[:9] in ['autoconf2', 'automake1']:
+        portname = p[:8] + '-' + p[8] + '.' + p[9:] + '\*'
+    elif p[:3] == 'py-':
+        portname = 'py27-' + p[3:] + '\*'
     else:
-        portname = p + "-\*"
-    pop = subprocess.Popen("/usr/sbin/pkg_info -qE " + portname, shell=True)
-    return os.waitpid(pop.pid, 0)[1] == 0 # pkg_info -E returns 0 if pkg installed, 1 if not
+        portname = p + '-\*'
+    pop = subprocess.Popen('/usr/sbin/pkg_info -qE ' + portname, shell=True)
+    return os.waitpid(pop.pid, 0)[1] == 0  # pkg_info -E returns 0 if pkg installed, 1 if not
+
 
 def pkg_info_detect(packages):
     return [p for p in packages if pkg_info_detect_single(p)]
+
 
 class PkgAddInstaller(Installer):
     """
@@ -79,9 +84,9 @@ class PkgAddInstaller(Installer):
         super(PkgAddInstaller, self).__init__(pkg_info_detect)
 
     def get_install_command(self, resolved, interactive=True, reinstall=False, quiet=False):
-        packages = self.get_packages_to_install(resolved, reinstall=reinstall)        
+        packages = self.get_packages_to_install(resolved, reinstall=reinstall)
         if not packages:
             return []
         else:
-            #pkg_add does not have a non-interactive command
-            return [self.elevate_priv(['/usr/sbin/pkg_add', '-r'])+packages]
+            # pkg_add does not have a non-interactive command
+            return [self.elevate_priv(['/usr/sbin/pkg_add', '-r']) + packages]

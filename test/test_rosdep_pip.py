@@ -1,9 +1,9 @@
 # Copyright (c) 2011, Willow Garage, Inc.
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 #     * Redistributions of source code must retain the above copyright
 #       notice, this list of conditions and the following disclaimer.
 #     * Redistributions in binary form must reproduce the above copyright
@@ -12,7 +12,7 @@
 #     * Neither the name of the Willow Garage, Inc. nor the names of its
 #       contributors may be used to endorse or promote products derived from
 #       this software without specific prior written permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -31,12 +31,14 @@ import os
 import traceback
 from mock import Mock, patch
 
+
 def get_test_dir():
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'pip'))
 
+
 def test_pip_detect():
     from rosdep2.platforms.pip import pip_detect
-    
+
     m = Mock()
 
     # test behavior with empty freeze
@@ -62,7 +64,8 @@ def test_PipInstaller_get_depends():
     from rosdep2.platforms.pip import PipInstaller
     installer = PipInstaller()
     assert ['foo'] == installer.get_depends(dict(depends=['foo']))
-    
+
+
 def test_PipInstaller():
     from rosdep2 import InstallFailed
     from rosdep2.platforms.pip import PipInstaller
@@ -73,11 +76,12 @@ def test_PipInstaller():
         try:
             installer = PipInstaller()
             installer.get_install_command(['whatever'])
-            assert False, "should have raised"
-        except InstallFailed: pass
-    
+            assert False, 'should have raised'
+        except InstallFailed:
+            pass
+
     test_no_pip()
-    
+
     @patch('rosdep2.platforms.pip.is_pip_installed')
     @patch.object(PipInstaller, 'get_packages_to_install')
     def test(mock_method, mock_is_pip_installed):
@@ -101,4 +105,3 @@ def test_PipInstaller():
     except AssertionError:
         traceback.print_exc()
         raise
-    

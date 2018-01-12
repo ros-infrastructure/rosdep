@@ -5,13 +5,15 @@ import unittest
 
 from rosdep2 import main as rdmain
 
+
 class Issue30TestCase(unittest.TestCase):
+
     def testIssue30(self):
         return True
         d = make_temp_dir()
         try:
             cd(d)
-            script = '''#!/bin/bash
+            script = """#!/bin/bash
 mkdir ws
 mkdir ws/src
 mkdir ws/build
@@ -22,32 +24,36 @@ cd build
 cmake ../src > /dev/null
 cd ../src
 git clone -b groovy-devel git://github.com/ros-drivers/joystick_drivers.git > /dev/null
-'''
+"""
             run_script('commands.bash', script)
             source('ws/build/devel/setup.sh')
             lookup = make_lookup()
             keys = rdmain.get_keys(lookup, ['spacenav_node'], recursive=True)
-            expected = '''
+            expected = """
                 geometry_msgs
                 libspnav-dev
                 libx11-dev
                 roscpp
                 sensor_msgs
                 spacenavd
-            '''.split()
+            """.split()
             self.assertEqual(expected, sorted(keys))
         finally:
             sp.call(['rm', '-rf', d])
 
+
 def make_temp_dir():
     return tempfile.mkdtemp()
+
 
 def cd(d):
     os.chdir(d)
 
+
 def write_file(filename, contents):
     with open(filename, 'w') as f:
         f.write(contents)
+
 
 def run_script(filename, contents):
     """
@@ -61,14 +67,17 @@ def run_script(filename, contents):
     return p.stdout.read()
 
 # http://pythonwise.blogspot.com/2010/04/sourcing-shell-script.html
+
+
 def source(script):
     """
     Sources a shell script at a given path, updating the environment.
     """
-    pipe = sp.Popen(". %s; env" % script, stdout=sp.PIPE, shell=True)
+    pipe = sp.Popen('. %s; env' % script, stdout=sp.PIPE, shell=True)
     data = pipe.communicate()[0]
-    env = dict((line.split("=", 1) for line in data.splitlines()))
+    env = dict((line.split('=', 1) for line in data.splitlines()))
     os.environ.update(env)
+
 
 def make_lookup():
     """
@@ -81,6 +90,6 @@ def make_lookup():
         verbose=True)
     return rdl.RosdepLookup.create_from_rospkg(sources_loader=sources_loader)
 
+
 if __name__ == '__main__':
     unittest.main()
-

@@ -64,15 +64,15 @@ def make_resolutions_options(package_list):
 
 
 def brew_command(command):
-    if command[1] == "list":
+    if command[1] == 'list':
         with open(os.path.join(get_test_dir(), 'brew-list-output'), 'r') as f:
             return f.read()
-    elif command[1] == "info":
+    elif command[1] == 'info':
         pkg = command[2]
         with open(os.path.join(get_test_dir(), 'brew-info-output'), 'r') as f:
             output = f.readlines()
         for line in output:
-            res = line.split(":", 1)
+            res = line.split(':', 1)
             if res[0] == pkg:
                 return res[1]
     return ''
@@ -147,14 +147,14 @@ def test_HomebrewInstaller():
         except SyntaxError:
             # Python 3.2, u'...' is not allowed, but string literals are unicode
             mock_get_packages_to_install.return_value = make_resolutions_options(
-                [('subversion', ['f´´ßß', 'öäö'], []), ('bazaar', [], ["tüü"])])
+                [('subversion', ['f´´ßß', 'öäö'], []), ('bazaar', [], ['tüü'])])
         mock_remove_duplicate_dependencies.return_value = mock_get_packages_to_install.return_value
         try:
             expected = eval("[['brew', 'install', 'subversion', u'f´´ßß', u'öäö'], ['brew', 'install', 'bazaar', u'tüü']]")
         except SyntaxError:
             # Python 3.2, u'...' is not allowed, but string literals are unicode
             expected = [['brew', 'install', 'subversion', 'f´´ßß', 'öäö'],
-                        ['brew', 'install', 'bazaar', "tüü"]]
+                        ['brew', 'install', 'bazaar', 'tüü']]
         val = installer.get_install_command(['whatever'])
         assert val == expected, val
     try:

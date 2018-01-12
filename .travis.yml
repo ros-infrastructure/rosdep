@@ -8,7 +8,7 @@ install:
 # develop seems to be required by travis since 02/2013
   - pip install PyYAML argparse rospkg vcstools catkin_pkg python-dateutil rosdistro
   - python setup.py build develop
-  - pip install nose coverage
+  - pip install nose coverage flake8
 # command to run tests
 script:
   - nosetests --with-coverage --cover-package=rosdep2 --with-xunit test

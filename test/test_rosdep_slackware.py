@@ -1,9 +1,9 @@
 # Copyright (c) 2011, Willow Garage, Inc.
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 #     * Redistributions of source code must retain the above copyright
 #       notice, this list of conditions and the following disclaimer.
 #     * Redistributions in binary form must reproduce the above copyright
@@ -12,7 +12,7 @@
 #     * Neither the name of the Willow Garage, Inc. nor the names of its
 #       contributors may be used to endorse or promote products derived from
 #       this software without specific prior written permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -33,54 +33,58 @@ from mock import Mock, patch
 
 import rospkg.os_detect
 
+
 def is_slackware():
     return rospkg.os_detect.Slackware().is_os()
+
 
 def get_test_dir():
     # not used yet
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'slackware'))
 
+
 def test_sbotools_available():
     if not is_slackware():
-        print("Skipping not Slackware")
-        return 
+        print('Skipping not Slackware')
+        return
     from rosdep2.platforms.slackware import sbotools_available
 
     original_exists = os.path.exists
 
     path_overrides = {}
+
     def mock_path(path):
         if path in path_overrides:
             return path_overrides[path]
-        else: 
+        else:
             return original_exists(path)
 
     m = Mock(side_effect=mock_path)
     os.path.exists = m
 
-    #Test with sbotools missing
+    # Test with sbotools missing
     m.reset_mock()
     path_overrides = {}
     path_overrides['/usr/sbin/sboinstall'] = False
 
     val = sbotools_available()
-    assert val==False, "Sbotools should not be available"
+    assert not val, 'Sbotools should not be available'
 
-    #Test with sbotools installed
+    # Test with sbotools installed
     m.reset_mock()
     path_overrides = {}
     path_overrides['/usr/sbin/sboinstall'] = True
 
     val = sbotools_available()
-    assert val==True, "Sbotools should be available"
+    assert val, 'Sbotools should be available'
 
     os.path.exists = original_exists
 
 
 def test_SbotoolsInstaller():
     if not is_slackware():
-        print("Skipping not Slackware")
-        return 
+        print('Skipping not Slackware')
+        return
 
     from rosdep2.platforms.slackware import SbotoolsInstaller
 
@@ -91,7 +95,7 @@ def test_SbotoolsInstaller():
         assert [] == installer.get_install_command(['fake'])
 
         mock_method.return_value = ['a', 'b']
-        
+
         expected = [['sudo', '-H', 'sboinstall', '-r', 'a'],
                     ['sudo', '-H', 'sboinstall', '-r', 'b']]
         val = installer.get_install_command(['whatever'], interactive=False)
@@ -101,53 +105,56 @@ def test_SbotoolsInstaller():
                     ['sudo', '-H', 'sboinstall', 'b']]
         val = installer.get_install_command(['whatever'], interactive=True)
         assert val == expected, val
-        
+
     try:
         test()
     except AssertionError:
         traceback.print_exc()
         raise
-    
+
+
 def test_slackpkg_available():
     if not is_slackware():
-        print("Skipping not Slackware")
-        return 
+        print('Skipping not Slackware')
+        return
     from rosdep2.platforms.slackware import slackpkg_available
 
     original_exists = os.path.exists
 
     path_overrides = {}
+
     def mock_path(path):
         if path in path_overrides:
             return path_overrides[path]
-        else: 
+        else:
             return original_exists(path)
 
     m = Mock(side_effect=mock_path)
     os.path.exists = m
 
-    #Test with sbotools missing
+    # Test with sbotools missing
     m.reset_mock()
     path_overrides = {}
     path_overrides['/usr/sbin/slackpkg'] = False
 
     val = slackpkg_available()
-    assert val==False, "Slackpkg should not be available"
+    assert not val, 'Slackpkg should not be available'
 
-    #Test with sbotools installed
+    # Test with sbotools installed
     m.reset_mock()
     path_overrides = {}
     path_overrides['/usr/sbin/slackpkg'] = True
 
     val = slackpkg_available()
-    assert val==True, "Slackpkg should be available"
+    assert val, 'Slackpkg should be available'
 
     os.path.exists = original_exists
 
+
 def test_SlackpkgInstaller():
     if not is_slackware():
-        print("Skipping not Slackware")
-        return 
+        print('Skipping not Slackware')
+        return
 
     from rosdep2.platforms.slackware import SlackpkgInstaller
 
@@ -158,7 +165,7 @@ def test_SlackpkgInstaller():
         assert [] == installer.get_install_command(['fake'])
 
         mock_method.return_value = ['a', 'b']
-        
+
         expected = [['sudo', '-H', 'slackpkg', 'install', 'a'],
                     ['sudo', '-H', 'slackpkg', 'install', 'b']]
         val = installer.get_install_command(['whatever'], interactive=False)
@@ -168,10 +175,9 @@ def test_SlackpkgInstaller():
                     ['sudo', '-H', 'slackpkg', 'install', 'b']]
         val = installer.get_install_command(['whatever'], interactive=True)
         assert val == expected, val
-        
+
     try:
         test()
     except AssertionError:
         traceback.print_exc()
         raise
-    

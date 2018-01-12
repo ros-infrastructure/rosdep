@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # Copyright (c) 2009, Willow Garage, Inc.
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 #     * Redistributions of source code must retain the above copyright
 #       notice, this list of conditions and the following disclaimer.
 #     * Redistributions in binary form must reproduce the above copyright
@@ -13,7 +13,7 @@
 #     * Neither the name of the Willow Garage, Inc. nor the names of its
 #       contributors may be used to endorse or promote products derived from
 #       this software without specific prior written permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -39,20 +39,25 @@ from ..shell_utils import read_stdout
 
 APT_CYG_INSTALLER = 'apt-cyg'
 
+
 def register_installers(context):
     context.set_installer(APT_CYG_INSTALLER, AptCygInstaller())
-    
+
+
 def register_platforms(context):
     context.add_os_installer_key(OS_CYGWIN, SOURCE_INSTALLER)
     context.add_os_installer_key(OS_CYGWIN, APT_CYG_INSTALLER)
     context.set_default_os_installer_key(OS_CYGWIN, lambda self: APT_CYG_INSTALLER)
 
+
 def cygcheck_detect_single(p):
     std_out = read_stdout(['cygcheck', '-c', p])
-    return std_out.count("OK") > 0
+    return std_out.count('OK') > 0
+
 
 def cygcheck_detect(packages):
     return [p for p in packages if cygcheck_detect_single(p)]
+
 
 class AptCygInstaller(PackageManagerInstaller):
     """
@@ -66,12 +71,13 @@ class AptCygInstaller(PackageManagerInstaller):
         self.sudo_command = 'cygstart --action=runas'
 
     def get_install_command(self, resolved, interactive=True, reinstall=False, quiet=False):
-        packages = self.get_packages_to_install(resolved, reinstall=reinstall)        
-        #TODO: interactive
+        packages = self.get_packages_to_install(resolved, reinstall=reinstall)
+        # TODO: interactive
         if not packages:
             return []
         else:
-            return [self.elevate_priv(['apt-cyg', '-m', 'ftp://sourceware.org/pub/cygwinports', 'install'])+packages]
+            return [self.elevate_priv(['apt-cyg', '-m', 'ftp://sourceware.org/pub/cygwinports', 'install']) + packages]
+
 
 if __name__ == '__main__':
-    print("test cygcheck_detect(true)", cygcheck_detect('cygwin'))
+    print('test cygcheck_detect(true)', cygcheck_detect('cygwin'))
