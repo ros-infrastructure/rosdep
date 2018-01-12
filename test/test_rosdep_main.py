@@ -25,6 +25,7 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from contextlib import contextmanager
 import os
 import sys
 try:
@@ -39,6 +40,11 @@ import unittest
 
 from mock import patch
 from mock import DEFAULT
+
+from rosdep2 import main
+from rosdep2.main import rosdep_main
+from rosdep2.main import setup_proxy_opener
+
 
 GITHUB_BASE_URL = 'https://github.com/ros/rosdistro/raw/master/rosdep/base.yaml'
 GITHUB_PYTHON_URL = 'https://github.com/ros/rosdistro/raw/master/rosdep/python.yaml'
@@ -60,13 +66,6 @@ def get_cache_dir():
     p = os.path.join(get_test_dir(), 'sources_cache')
     assert os.path.isdir(p)
     return p
-
-
-from rosdep2 import main
-from rosdep2.main import rosdep_main
-from rosdep2.main import setup_proxy_opener
-
-from contextlib import contextmanager
 
 
 @contextmanager
