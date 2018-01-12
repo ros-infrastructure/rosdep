@@ -165,6 +165,13 @@ def test_RosdepDefinition():
         # tripwire
         str(e)
 
+    definition = RosdepDefinition('testtinyxml', {'ubuntu': {'precise': ['libtinyxml-dev'], '*': ['libtinyxml2-dev']}}, 'wildcard.txt')
+    val = definition.get_rule_for_platform('ubuntu', 'precise', ['apt', 'source', 'pip'], 'apt')
+    assert val == ('apt', ['libtinyxml-dev']), val
+
+    val = definition.get_rule_for_platform('ubuntu', 'trusty', ['apt', 'source', 'pip'], 'apt')
+    assert val == ('apt', ['libtinyxml2-dev']), val
+
     # test reverse merging OS things (first is default)
     definition = RosdepDefinition('test', {'debian': 'libtest-dev'}, 'fake-1.txt')
     # rule should work as expected before reverse-merge
