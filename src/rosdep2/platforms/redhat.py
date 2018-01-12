@@ -39,10 +39,10 @@ from ..installers import PackageManagerInstaller
 from ..shell_utils import read_stdout
 
 # dnf package manager key
-DNF_INSTALLER='dnf'
+DNF_INSTALLER = 'dnf'
 
 # yum package manager key
-YUM_INSTALLER='yum'
+YUM_INSTALLER = 'yum'
 
 
 def register_installers(context):

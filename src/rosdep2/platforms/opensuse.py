@@ -35,7 +35,7 @@ from .source import SOURCE_INSTALLER
 from ..installers import PackageManagerInstaller
 
 # zypper package manager key
-ZYPPER_INSTALLER='zypper'
+ZYPPER_INSTALLER = 'zypper'
 
 
 def register_installers(context):
@@ -69,6 +69,6 @@ class ZypperInstaller(PackageManagerInstaller):
         if not packages:
             return []
         if not interactive:
-            return [self.elevate_priv(['zypper', 'install', '-yl'])+packages]
+            return [self.elevate_priv(['zypper', 'install', '-yl']) + packages]
         else:
-            return [self.elevate_priv(['zypper', 'install'])+packages]
+            return [self.elevate_priv(['zypper', 'install']) + packages]

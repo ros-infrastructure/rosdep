@@ -76,13 +76,13 @@ def create_default_installer_context(verbose=False):
     # setup installers
     for m in installer_mods:
         if verbose:
-            print("registering installers for %s"%(m.__name__))
+            print("registering installers for %s" % (m.__name__))
         m.register_installers(context)
 
     # setup platforms
     for m in platform_mods:
         if verbose:
-            print("registering platforms for %s"%(m.__name__))
+            print("registering platforms for %s" % (m.__name__))
         m.register_platforms(context)
 
     return context
@@ -92,7 +92,7 @@ from . import gbpdistro_support
 gbpdistro_support.create_default_installer_context = create_default_installer_context
 
 
-#TODO: this was partially abstracted from main() for another library,
+# TODO: this was partially abstracted from main() for another library,
 # but it turned out to be unnecessary. Not sure it's worth maintaining
 # separately, especially in the top-level module.
 

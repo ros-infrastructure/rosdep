@@ -181,7 +181,7 @@ def dpkg_detect(pkgs, exec_fn=None):
     # now for the remaining packages check, whether they are installed as
     # virtual packages
     remaining = _read_apt_cache_showpkg(p for p in pkgs if p not in installed_packages)
-    virtual = [ n for (n, v, pr) in remaining if v and len(dpkg_detect(pr)) > 0 ]
+    virtual = [n for (n, v, pr) in remaining if v and len(dpkg_detect(pr)) > 0]
 
     return installed_packages + virtual
 

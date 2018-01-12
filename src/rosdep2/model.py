@@ -62,7 +62,7 @@ class RosdepDatabase(object):
     """
 
     def __init__(self):
-        self._rosdep_db = {} # {view_name: RosdepDatabaseEntry}
+        self._rosdep_db = {}  # {view_name: RosdepDatabaseEntry}
 
     def is_loaded(self, view_name):
         """

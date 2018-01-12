@@ -142,7 +142,7 @@ def test_RosdepDefinition():
     # test bad resolutions
     try:
         val = definition.get_rule_for_platform('ubuntu', 'hardy', ['apt', 'source', 'pip'], 'apt')
-        assert False, "should have raised: %s"%(str(val))
+        assert False, "should have raised: %s" % (str(val))
     except ResolutionError as e:
         assert e.rosdep_key == 'd2'
         assert e.rosdep_data == d2
@@ -153,7 +153,7 @@ def test_RosdepDefinition():
 
     try:
         val = definition.get_rule_for_platform('fakeos', 'fakeversion', ['apt', 'source', 'pip'], 'apt')
-        assert False, "should have raised: %s"%(str(val))
+        assert False, "should have raised: %s" % (str(val))
     except ResolutionError as e:
         assert e.rosdep_key == 'd2'
         assert e.rosdep_data == d2
@@ -208,7 +208,7 @@ def test_RosdepView_merge():
     view.merge(d)
     assert set(view.keys()) == set(data.keys())
     for k, v in data.items():
-        assert view.lookup(k).data == v, "%s vs. %s"%(view.lookup(k), v)
+        assert view.lookup(k).data == v, "%s vs. %s" % (view.lookup(k), v)
 
     # merge exact same data
     d2 = RosdepDatabaseEntry(data, [], 'origin2')
@@ -277,15 +277,15 @@ def test_RosdepLookup_get_rosdeps():
 
     # catkin
     print(lookup.get_rosdeps('simple_catkin_package'))
-    assert set(lookup.get_rosdeps('simple_catkin_package')) == set(['catkin', 'testboost' ])
+    assert set(lookup.get_rosdeps('simple_catkin_package')) == set(['catkin', 'testboost'])
     assert set(lookup.get_rosdeps('simple_catkin_package', implicit=False)) == set(['catkin', 'testboost'])
 
     print(lookup.get_rosdeps('another_catkin_package'))
-    assert set(lookup.get_rosdeps('another_catkin_package')) == set(['catkin', 'simple_catkin_package' ]) # implicit deps won't get included
+    assert set(lookup.get_rosdeps('another_catkin_package')) == set(['catkin', 'simple_catkin_package'])  # implicit deps won't get included
     assert set(lookup.get_rosdeps('another_catkin_package', implicit=False)) == set(['catkin', 'simple_catkin_package'])
 
     print(lookup.get_rosdeps('metapackage_with_deps'))
-    assert set(lookup.get_rosdeps('metapackage_with_deps')) == set(['catkin', 'simple_catkin_package', 'another_catkin_package']) # implicit deps won't get included
+    assert set(lookup.get_rosdeps('metapackage_with_deps')) == set(['catkin', 'simple_catkin_package', 'another_catkin_package'])  # implicit deps won't get included
     assert set(lookup.get_rosdeps('metapackage_with_deps', implicit=False)) == set(['catkin', 'simple_catkin_package', 'another_catkin_package'])
 
 
@@ -297,10 +297,10 @@ def test_RosdepLookup_get_resources_that_need():
     lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack,
                                              sources_loader=sources_loader)
 
-    assert lookup.get_resources_that_need('fake') ==  []
-    assert set(lookup.get_resources_that_need('stack1_dep1')) ==  set(['stack1_p1', 'stack1_p2'])
-    assert lookup.get_resources_that_need('stack1_dep2') ==  ['stack1_p2']
-    assert lookup.get_resources_that_need('stack1_p1_dep1') ==  ['stack1_p1']
+    assert lookup.get_resources_that_need('fake') == []
+    assert set(lookup.get_resources_that_need('stack1_dep1')) == set(['stack1_p1', 'stack1_p2'])
+    assert lookup.get_resources_that_need('stack1_dep2') == ['stack1_p2']
+    assert lookup.get_resources_that_need('stack1_p1_dep1') == ['stack1_p1']
 
 
 def test_RosdepLookup_create_from_rospkg():
@@ -401,8 +401,8 @@ def test_RosdepLookup_get_errors():
     # force errors
     lookup._load_all_views(lookup.loader)
 
-    #TODO: force errors.  Previous tests relied on bad stack views.
-    #Now we need a bad sources cache.
+    # TODO: force errors.  Previous tests relied on bad stack views.
+    # Now we need a bad sources cache.
 
 
 def test_RosdepLookup_get_views_that_define():

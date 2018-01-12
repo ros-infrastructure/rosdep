@@ -42,7 +42,7 @@ from .loader import RosdepLoader
 # Default view key is the view that packages that are not in stacks
 # see. It is the root of all dependencies.  It is superceded by an
 # explicit underlay_key.
-DEFAULT_VIEW_KEY='*default*'
+DEFAULT_VIEW_KEY = '*default*'
 
 # Implementation details: this API was originally conceived under the
 # rosdep 1 design.  It has since been retrofitted for the rosdep 2
@@ -94,9 +94,9 @@ class RosPkgLoader(RosdepLoader):
         if not view_name in self.get_loadable_views():
             raise rospkg.ResourceNotFound(view_name)
         elif view_name == 'invalid':
-            raise rospkg.ResourceNotFound("FOUND"+ view_name+str(self.get_loadable_views()))
+            raise rospkg.ResourceNotFound("FOUND" + view_name + str(self.get_loadable_views()))
         if verbose:
-            print("loading view [%s] with rospkg loader"%(view_name))
+            print("loading view [%s] with rospkg loader" % (view_name))
         # chain into underlay if set
         if self._underlay_key:
             view_dependencies = [self._underlay_key]

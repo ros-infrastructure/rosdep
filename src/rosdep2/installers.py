@@ -89,7 +89,7 @@ class InstallerContext(object):
         :param os_version: OS version value to use, ``str``
         """
         if self.verbose:
-            print("overriding OS to [%s:%s]"%(os_name, os_version))
+            print("overriding OS to [%s:%s]" % (os_name, os_version))
         self.os_override = os_name, os_version
 
     def get_os_version_type(self, os_name):
@@ -144,7 +144,7 @@ class InstallerContext(object):
         if not isinstance(installer, Installer):
             raise TypeError("installer must be a instance of Installer")
         if self.verbose:
-            print("registering installer [%s]"%(installer_key))
+            print("registering installer [%s]" % (installer_key))
         self.installers[installer_key] = installer
 
     def get_installer(self, installer_key):
@@ -181,7 +181,7 @@ class InstallerContext(object):
         # validate, will throw KeyError
         self.get_installer(installer_key)
         if self.verbose:
-            print("add installer [%s] to OS [%s]"%(installer_key, os_key))
+            print("add installer [%s] to OS [%s]" % (installer_key, os_key))
         if os_key in self.os_installers:
             self.os_installers[os_key].append(installer_key)
         else:
@@ -213,13 +213,13 @@ class InstallerContext(object):
           is not set or if OS for *os_key* has no associated installers.
         """
         if not os_key in self.os_installers:
-            raise KeyError("unknown OS: %s"%(os_key))
+            raise KeyError("unknown OS: %s" % (os_key))
         if not hasattr(installer_key, '__call__'):
             raise ValueError("version type should be a method")
         if not installer_key(self.os_detect) in self.os_installers[os_key]:
-            raise KeyError("installer [%s] is not associated with OS [%s]. call add_os_installer_key() first"%(installer_key(self.os_detect), os_key))
+            raise KeyError("installer [%s] is not associated with OS [%s]. call add_os_installer_key() first" % (installer_key(self.os_detect), os_key))
         if self.verbose:
-            print("set default installer for OS [%s]"%(os_key,))
+            print("set default installer for OS [%s]" % (os_key,))
         self.default_os_installer[os_key] = installer_key
 
     def get_default_os_installer_key(self, os_key):
@@ -232,11 +232,11 @@ class InstallerContext(object):
         :raises: :exc:`KeyError`: if no information for OS *os_key* is registered.
         """
         if not os_key in self.os_installers:
-            raise KeyError("unknown OS: %s"%(os_key))
+            raise KeyError("unknown OS: %s" % (os_key))
         try:
             installer_key = self.default_os_installer[os_key](self.os_detect)
             if not installer_key in self.os_installers[os_key]:
-                raise KeyError("installer [%s] is not associated with OS [%s]. call add_os_installer_key() first"%(installer_key, os_key))
+                raise KeyError("installer [%s] is not associated with OS [%s]. call add_os_installer_key() first" % (installer_key, os_key))
             # validate, will throw KeyError
             self.get_installer(installer_key)
             return installer_key
@@ -276,7 +276,7 @@ class Installer(object):
           necessary if the package manager doesn't handle
           dependencies.
         """
-        return [] # Default return empty list
+        return []  # Default return empty list
 
     def resolve(self, rosdep_args_dict):
         """
@@ -350,7 +350,7 @@ class PackageManagerInstaller(Installer):
         elif type(rosdep_args) == list:
             packages = rosdep_args
         else:
-            raise InvalidData("Invalid rosdep args: %s"%(rosdep_args))
+            raise InvalidData("Invalid rosdep args: %s" % (rosdep_args))
         return packages
 
     def unique(self, *resolved_rules):
@@ -400,7 +400,7 @@ class PackageManagerInstaller(Installer):
         """
         if self.supports_depends and type(rosdep_args) == dict:
             return rosdep_args.get('depends', [])
-        return [] # Default return empty list
+        return []  # Default return empty list
 
 
 def normalize_uninstalled_to_list(uninstalled):
@@ -440,31 +440,31 @@ class RosdepInstaller(object):
 
         # resolutions have been unique()d
         if verbose:
-            print("resolving for resources [%s]"%(', '.join(resources)))
+            print("resolving for resources [%s]" % (', '.join(resources)))
         resolutions, errors = self.lookup.resolve_all(resources, installer_context, implicit=implicit)
 
         # for each installer, figure out what is left to install
         uninstalled = []
         if resolutions == []:
             return uninstalled, errors
-        for installer_key, resolved in resolutions: #py3k
+        for installer_key, resolved in resolutions:  # py3k
             if verbose:
                 print("resolution: %s [%s]" % (installer_key, ', '.join([str(r) for r in resolved])))
             try:
                 installer = installer_context.get_installer(installer_key)
-            except KeyError as e: # lookup has to be buggy to cause this
+            except KeyError as e:  # lookup has to be buggy to cause this
                 raise RosdepInternalError(e)
             try:
                 packages_to_install = installer.get_packages_to_install(resolved)
             except Exception as e:
                 rd_debug(traceback.format_exc())
-                raise RosdepInternalError(e, message="Bad installer [%s]: %s"%(installer_key, e))
+                raise RosdepInternalError(e, message="Bad installer [%s]: %s" % (installer_key, e))
 
             # only create key if there is something to do
             if packages_to_install:
                 uninstalled.append((installer_key, packages_to_install))
             if verbose:
-                print("uninstalled: [%s]"%(', '.join([str(p) for p in packages_to_install])))
+                print("uninstalled: [%s]" % (', '.join([str(p) for p in packages_to_install])))
 
         return uninstalled, errors
 
@@ -526,7 +526,7 @@ class RosdepInstaller(object):
                 if not continue_on_error:
                     raise
                 else:
-                    #accumulate errors
+                    # accumulate errors
                     failures.extend(e.failures)
         if failures:
             raise InstallFailed(failures=failures)
@@ -558,7 +558,7 @@ class RosdepInstaller(object):
             return
 
         if simulate:
-            print("#[%s] Installation commands:"%(installer_key))
+            print("#[%s] Installation commands:" % (installer_key))
             for sub_command in command:
                 if isinstance(sub_command[0], list):
                     sub_cmd_len = len(sub_command)
@@ -584,7 +584,7 @@ class RosdepInstaller(object):
         # run each install command set and collect errors
         failures = []
         for sub_command in command:
-            if isinstance(sub_command[0], list): # list of alternatives
+            if isinstance(sub_command[0], list):  # list of alternatives
                 alt_failures = []
                 for alt_command in sub_command:
                     result = run_command(alt_command, installer_key, alt_failures, verbose)
@@ -601,7 +601,7 @@ class RosdepInstaller(object):
         # test installation of each
         for r in resolved:
             if not installer.is_installed(r):
-                failures.append((installer_key, "Failed to detect successful installation of [%s]"%(r)))
+                failures.append((installer_key, "Failed to detect successful installation of [%s]" % (r)))
         # finalize result
         if failures:
             raise InstallFailed(failures=failures)

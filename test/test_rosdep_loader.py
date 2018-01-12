@@ -29,7 +29,7 @@ from mock import Mock
 
 
 def test_RosdepLoader():
-    #tripwire tests
+    # tripwire tests
     from rosdep2.loader import RosdepLoader
     loader = RosdepLoader()
     try:

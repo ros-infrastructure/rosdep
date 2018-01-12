@@ -170,14 +170,14 @@ def test_gbprepo_to_rosdep_data_on_ok_input():
             'common_msgs': dict(
                 target='all',
                 url='git://github.com/wg-debs/common_msgs.git',
-                packages={ 'foo': 'subdir/foo', 'bar': 'subdir/bar' }),
+                packages={'foo': 'subdir/foo', 'bar': 'subdir/bar'}),
             'gazebo': dict(
                 target=['lucid', 'natty'],
                 url='git://github.com/wg-debs/gazebo.git'),
             'foo-bar': dict(
                 target=['precise'],
                 url='git://github.com/wg-debs/gazebo.git',
-                packages={ 'foo-bar': None }),
+                packages={'foo-bar': None}),
         },
         'type': 'gbp',
     }

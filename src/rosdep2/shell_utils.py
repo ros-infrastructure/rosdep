@@ -37,7 +37,7 @@ import tempfile
 
 from .core import rd_debug
 
-if sys.hexversion > 0x03000000: #Python3
+if sys.hexversion > 0x03000000:  # Python3
     python3 = True
 else:
     python3 = False
@@ -67,7 +67,7 @@ def read_stdout(cmd, capture_stderr=False):
             return std_out, std_err
     else:
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, env=env)
-        std_out, std_err = p.communicate() # ignore stderr
+        std_out, std_err = p.communicate()  # ignore stderr
         if python3:
             return std_out.decode()
         else:
@@ -87,7 +87,7 @@ def create_tempfile_from_string_and_execute(string_script, path=None, exec_fn=No
         fh = tempfile.NamedTemporaryFile('w', delete=False)
         fh.write(string_script)
         fh.close()
-        print("Executing script below with cwd=%s\n{{{\n%s\n}}}\n"%(path, string_script))
+        print("Executing script below with cwd=%s\n{{{\n%s\n}}}\n" % (path, string_script))
         try:
             os.chmod(fh.name, stat.S_IRWXU)
             if exec_fn is None:
@@ -95,10 +95,10 @@ def create_tempfile_from_string_and_execute(string_script, path=None, exec_fn=No
             else:
                 result = exec_fn(fh.name, cwd=path)
         except OSError as ex:
-            print("Execution failed with OSError: %s"%(ex))
+            print("Execution failed with OSError: %s" % (ex))
     finally:
         if os.path.exists(fh.name):
             os.remove(fh.name)
 
-    rd_debug("Return code was: %s"%(result))
+    rd_debug("Return code was: %s" % (result))
     return result == 0

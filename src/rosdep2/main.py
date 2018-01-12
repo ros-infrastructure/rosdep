@@ -65,7 +65,7 @@ from .installers import RosdepInstaller
 from .lookup import RosdepLookup, ResolutionError
 from .rospkg_loader import DEFAULT_VIEW_KEY
 from .sources_list import update_sources_list, get_sources_cache_dir,\
-    download_default_sources_list, SourcesListLoader,CACHE_INDEX,\
+    download_default_sources_list, SourcesListLoader, CACHE_INDEX,\
     get_sources_list_dir, get_default_sources_list_file,\
     DEFAULT_SOURCES_LIST_URL
 from .rosdistrohelper import PreRep137Warning
@@ -144,11 +144,11 @@ def rosdep_main(args=None):
         print("""
 ERROR: Rosdep cannot find all required resources to answer your query
 %s
-"""%(error_to_human_readable(e)), file=sys.stderr)
+""" % (error_to_human_readable(e)), file=sys.stderr)
         sys.exit(1)
     except UsageError as e:
         print(_usage, file=sys.stderr)
-        print("ERROR: %s"%(str(e)), file=sys.stderr)
+        print("ERROR: %s" % (str(e)), file=sys.stderr)
         sys.exit(os.EX_USAGE)
     except RosdepInternalError as e:
         print("""
@@ -159,21 +159,21 @@ Please go to the rosdep page [1] and file a bug report with the message below.
 rosdep version: %s
 
 %s
-"""%(__version__, e.message), file=sys.stderr)
+""" % (__version__, e.message), file=sys.stderr)
         sys.exit(1)
     except ResolutionError as e:
         print("""
 ERROR: %s
 
 %s
-"""%(e.args[0], e), file=sys.stderr)
+""" % (e.args[0], e), file=sys.stderr)
         sys.exit(1)
     except CachePermissionError as e:
         print(str(e))
         print("Try running 'sudo rosdep fix-permissions'")
         sys.exit(1)
     except UnsupportedOs as e:
-        print("Unsupported OS: %s\nSupported OSes are [%s]"%(e.args[0], ', '.join(e.args[1])), file=sys.stderr)
+        print("Unsupported OS: %s\nSupported OSes are [%s]" % (e.args[0], ', '.join(e.args[1])), file=sys.stderr)
         sys.exit(1)
     except Exception as e:
         print("""
@@ -184,7 +184,7 @@ Please go to the rosdep page [1] and file a bug report with the stack trace belo
 rosdep version: %s
 
 %s
-"""%(e, __version__, traceback.format_exc()), file=sys.stderr)
+""" % (e, __version__, traceback.format_exc()), file=sys.stderr)
         sys.exit(1)
 
 
@@ -212,12 +212,12 @@ def check_for_sources_list_init(sources_cache_dir):
             commands.insert(0, 'sudo rosdep init')
 
     if commands:
-        commands = '\n'.join(["    %s"%c for c in commands])
+        commands = '\n'.join(["    %s" % c for c in commands])
         print("""
 ERROR: your rosdep installation has not been initialized yet.  Please run:
 
 %s
-"""%(commands), file=sys.stderr)
+""" % (commands), file=sys.stderr)
         sys.exit(1)
     else:
         return True
@@ -266,7 +266,7 @@ def _rosdep_main(args):
     parser.add_option("--os", dest="os_override", default=None,
                       metavar="OS_NAME:OS_VERSION", help="Override OS name and version (colon-separated), e.g. ubuntu:lucid")
     parser.add_option("-c", "--sources-cache-dir", dest="sources_cache_dir", default=default_sources_cache,
-                      metavar='SOURCES_CACHE_DIR', help="Override %s"%(default_sources_cache))
+                      metavar='SOURCES_CACHE_DIR', help="Override %s" % (default_sources_cache))
     parser.add_option("--verbose", "-v", dest="verbose", default=False,
                       action="store_true", help="verbose display")
     parser.add_option("--version", dest="print_version", default=False,
@@ -367,7 +367,7 @@ def _rosdep_main(args):
         parser.error("Please enter a command")
     command = args[0]
     if not command in _commands:
-        parser.error("Unsupported command %s."%command)
+        parser.error("Unsupported command %s." % command)
     args = args[1:]
 
     if options.ros_distro:
@@ -390,7 +390,7 @@ def _rosdep_main(args):
 
 def _no_args_handler(command, parser, options, args):
     if args:
-        parser.error("command [%s] takes no arguments"%(command))
+        parser.error("command [%s] takes no arguments" % (command))
     else:
         return command_handlers[command](options)
 
@@ -401,7 +401,7 @@ def _rosdep_args_handler(command, parser, options, args):
     if options.rosdep_all:
         parser.error("-a, --all is not a valid option for this command")
     elif len(args) < 1:
-        parser.error("Please enter arguments for '%s'"%command)
+        parser.error("Please enter arguments for '%s'" % command)
     else:
         return command_handlers[command](args, options)
 
@@ -498,7 +498,7 @@ def convert_os_override_option(options_os_override):
     if not ':' in val:
         raise UsageError("OS override must be colon-separated OS_NAME:OS_VERSION, e.g. ubuntu:maverick")
     os_name = val[:val.find(':')]
-    os_version = val[val.find(':')+1:]
+    os_version = val[val.find(':') + 1:]
     return os_name, os_version
 
 
@@ -514,7 +514,7 @@ def configure_installer_context(installer_context, options):
     os_override = convert_os_override_option(options.os_override)
     if os_override is not None:
         installer_context.set_os_override(*os_override)
-    for k,v in options.as_root.items():
+    for k, v in options.as_root.items():
         try:
             installer_context.get_installer(k).as_root = v
         except KeyError:
@@ -525,10 +525,10 @@ def command_init(options):
     try:
         data = download_default_sources_list()
     except URLError as e:
-        print("ERROR: cannot download default sources list from:\n%s\nWebsite may be down."%(DEFAULT_SOURCES_LIST_URL))
+        print("ERROR: cannot download default sources list from:\n%s\nWebsite may be down." % (DEFAULT_SOURCES_LIST_URL))
         return 4
     except DownloadFailure as e:
-        print("ERROR: cannot download default sources list from:\n%s\nWebsite may be down."%(DEFAULT_SOURCES_LIST_URL))
+        print("ERROR: cannot download default sources list from:\n%s\nWebsite may be down." % (DEFAULT_SOURCES_LIST_URL))
         print(e)
         return 4
     # reuse path variable for error message
@@ -539,17 +539,17 @@ def command_init(options):
             os.makedirs(path)
         path = get_default_sources_list_file()
         if os.path.exists(path):
-            print("ERROR: default sources list file already exists:\n\t%s\nPlease delete if you wish to re-initialize"%(path))
+            print("ERROR: default sources list file already exists:\n\t%s\nPlease delete if you wish to re-initialize" % (path))
             return 1
         with open(path, 'w') as f:
             f.write(data)
-        print("Wrote %s"%(path))
+        print("Wrote %s" % (path))
         print("Recommended: please run\n\n\trosdep update\n")
     except IOError as e:
-        print("ERROR: cannot create %s:\n\t%s"%(path, e), file=sys.stderr)
+        print("ERROR: cannot create %s:\n\t%s" % (path, e), file=sys.stderr)
         return 2
     except OSError as e:
-        print("ERROR: cannot create %s:\n\t%s\nPerhaps you need to run 'sudo rosdep init' instead"%(path, e), file=sys.stderr)
+        print("ERROR: cannot create %s:\n\t%s\nPerhaps you need to run 'sudo rosdep init' instead" % (path, e), file=sys.stderr)
         return 3
     finally:
         os.umask(old_umask)
@@ -559,10 +559,10 @@ def command_update(options):
     error_occured = []
 
     def update_success_handler(data_source):
-        print("Hit %s"%(data_source.url))
+        print("Hit %s" % (data_source.url))
 
     def update_error_handler(data_source, exc):
-        error_string = "ERROR: unable to process source [%s]:\n\t%s"%(data_source.url, exc)
+        error_string = "ERROR: unable to process source [%s]:\n\t%s" % (data_source.url, exc)
         print(error_string, file=sys.stderr)
         error_occured.append(error_string)
     sources_list_dir = get_sources_list_dir()
@@ -576,10 +576,10 @@ def command_update(options):
 
     filelist = [f for f in os.listdir(sources_list_dir) if f.endswith('.list')]
     if not filelist:
-        print("ERROR: no data sources in %s\n\nPlease initialize your rosdep with\n\n\tsudo rosdep init\n"%sources_list_dir, file=sys.stderr)
+        print("ERROR: no data sources in %s\n\nPlease initialize your rosdep with\n\n\tsudo rosdep init\n" % sources_list_dir, file=sys.stderr)
         return 1
     try:
-        print("reading in sources list data from %s"%(sources_list_dir))
+        print("reading in sources list data from %s" % (sources_list_dir))
         sources_cache_dir = get_sources_cache_dir()
         try:
             if os.geteuid() == 0:
@@ -590,17 +590,17 @@ def command_update(options):
             pass
         update_sources_list(success_handler=update_success_handler,
                             error_handler=update_error_handler)
-        print("updated cache in %s"%(sources_cache_dir))
+        print("updated cache in %s" % (sources_cache_dir))
     except InvalidData as e:
-        print("ERROR: invalid sources list file:\n\t%s"%(e), file=sys.stderr)
+        print("ERROR: invalid sources list file:\n\t%s" % (e), file=sys.stderr)
         return 1
     except IOError as e:
-        print("ERROR: error loading sources list:\n\t%s"%(e), file=sys.stderr)
+        print("ERROR: error loading sources list:\n\t%s" % (e), file=sys.stderr)
         return 1
     if error_occured:
-        print ("ERROR: Not all sources were able to be updated.\n[[[")
+        print("ERROR: Not all sources were able to be updated.\n[[[")
         for e in error_occured:
-            print (e)
+            print(e)
         print("]]]")
         return 1
 
@@ -635,15 +635,15 @@ def command_check(lookup, packages, options):
         for installer_key, resolved in uninstalled:
             if resolved:
                 for r in resolved:
-                    print("%s\t%s"%(installer_key, r))
+                    print("%s\t%s" % (installer_key, r))
     else:
         print("All system dependencies have been satisified")
     if errors:
         for package_name, ex in errors.items():
             if isinstance(ex, rospkg.ResourceNotFound):
-                print("ERROR[%s]: resource not found [%s]"%(package_name, ex.args[0]), file=sys.stderr)
+                print("ERROR[%s]: resource not found [%s]" % (package_name, ex.args[0]), file=sys.stderr)
             else:
-                print("ERROR[%s]: %s"%(package_name, ex), file=sys.stderr)
+                print("ERROR[%s]: %s" % (package_name, ex), file=sys.stderr)
     if uninstalled:
         return 1
     else:
@@ -652,11 +652,11 @@ def command_check(lookup, packages, options):
 
 def error_to_human_readable(error):
     if isinstance(error, rospkg.ResourceNotFound):
-        return "Missing resource %s"%(error,)
+        return "Missing resource %s" % (error,)
     elif isinstance(error, ResolutionError):
-        return "%s"%(error.args[0],)
+        return "%s" % (error.args[0],)
     else:
-        return "%s"%(error,)
+        return "%s" % (error,)
 
 
 def command_install(lookup, packages, options):
@@ -676,7 +676,7 @@ def command_install(lookup, packages, options):
         try:
             uninstalled, errors = lookup.resolve_all(packages, installer_context, implicit=options.recursive)
         except InvalidData as e:
-            print("ERROR: unable to process all dependencies:\n\t%s"%(e), file=sys.stderr)
+            print("ERROR: unable to process all dependencies:\n\t%s" % (e), file=sys.stderr)
             return 1
     else:
         uninstalled, errors = installer.get_uninstalled(packages, implicit=options.recursive, verbose=options.verbose)
@@ -697,7 +697,7 @@ def command_install(lookup, packages, options):
             )
         print(err_msg + ":", file=sys.stderr)
         for rosdep_key, error in errors.items():
-            print("%s: %s"%(rosdep_key, error_to_human_readable(error)), file=sys.stderr)
+            print("%s: %s" % (rosdep_key, error_to_human_readable(error)), file=sys.stderr)
         if options.robust:
             print("Continuing to install resolvable dependencies...")
         else:
@@ -711,7 +711,7 @@ def command_install(lookup, packages, options):
         raise RosdepInternalError(e)
     except InstallFailed as e:
         print("ERROR: the following rosdeps failed to install", file=sys.stderr)
-        print('\n'.join(["  %s: %s"%(k, m) for k,m in e.failures]), file=sys.stderr)
+        print('\n'.join(["  %s: %s" % (k, m) for k, m in e.failures]), file=sys.stderr)
         return 1
 
 
@@ -719,14 +719,14 @@ def _compute_depdb_output(lookup, packages, options):
     installer_context = create_default_installer_context(verbose=options.verbose)
     os_name, os_version = _detect_os(installer_context, options)
 
-    output = "Rosdep dependencies for operating system %s version %s "%(os_name, os_version)
+    output = "Rosdep dependencies for operating system %s version %s " % (os_name, os_version)
     for stack_name in stacks:
-        output += "\nSTACK: %s\n"%(stack_name)
+        output += "\nSTACK: %s\n" % (stack_name)
         view = lookup.get_stack_rosdep_view(stack_name)
         for rosdep in view.keys():
             definition = view.lookup(rosdep)
             resolved = resolve_definition(definition, os_name, os_version)
-            output = output + "<<<< %s -> %s >>>>\n"%(rosdep, resolved)
+            output = output + "<<<< %s -> %s >>>>\n" % (rosdep, resolved)
     return output
 
 
@@ -743,8 +743,8 @@ def command_db(options):
         raise UnsupportedOs(os_name, installer_context.get_os_keys())
     installer = installer_context.get_installer(default_key)
 
-    print("OS NAME: %s"%os_name)
-    print("OS VERSION: %s"%os_version)
+    print("OS NAME: %s" % os_name)
+    print("OS VERSION: %s" % os_version)
     errors = []
     print("DB [key -> resolution]")
     # db does not leverage the resource-based API
@@ -757,24 +757,24 @@ def command_db(options):
                 continue
             resolved = installer.resolve(rule)
             resolved_str = " ".join([str(r) for r in resolved])
-            print ("%s -> %s"%(rosdep_name, resolved_str))
+            print("%s -> %s" % (rosdep_name, resolved_str))
         except ResolutionError as e:
             errors.append(e)
 
-    #TODO: add command-line option for users to be able to see this.
-    #This is useful for platform bringup, but useless for most users
-    #as the rosdep db contains numerous, platform-specific keys.
+    # TODO: add command-line option for users to be able to see this.
+    # This is useful for platform bringup, but useless for most users
+    # as the rosdep db contains numerous, platform-specific keys.
     if 0:
         for error in errors:
-            print("WARNING: %s"%(error_to_human_readable(error)), file=sys.stderr)
+            print("WARNING: %s" % (error_to_human_readable(error)), file=sys.stderr)
 
 
 def _print_lookup_errors(lookup):
     for error in lookup.get_errors():
         if isinstance(error, rospkg.ResourceNotFound):
-            print("WARNING: unable to locate resource %s"%(str(error.args[0])), file=sys.stderr)
+            print("WARNING: unable to locate resource %s" % (str(error.args[0])), file=sys.stderr)
         else:
-            print("WARNING: %s"%(str(error)), file=sys.stderr)
+            print("WARNING: %s" % (str(error)), file=sys.stderr)
 
 
 def command_what_needs(args, options):
@@ -799,7 +799,7 @@ def command_where_defined(args, options):
             origin = location[1]
             print(origin)
     else:
-        print("ERROR: cannot find definition(s) for [%s]"%(', '.join(args)), file=sys.stderr)
+        print("ERROR: cannot find definition(s) for [%s]" % (', '.join(args)), file=sys.stderr)
         return 1
 
 
@@ -814,7 +814,7 @@ def command_resolve(args, options):
     invalid_key_errors = []
     for rosdep_name in args:
         if len(args) > 1:
-            print("#ROSDEP[%s]"%rosdep_name)
+            print("#ROSDEP[%s]" % rosdep_name)
 
         view = lookup.get_rosdep_view(DEFAULT_VIEW_KEY, verbose=options.verbose)
         try:
@@ -826,17 +826,17 @@ def command_resolve(args, options):
 
         installer = installer_context.get_installer(rule_installer)
         resolved = installer.resolve(rule)
-        print("#%s"%(rule_installer))
-        print (" ".join([str(r) for r in resolved]))
+        print("#%s" % (rule_installer))
+        print(" ".join([str(r) for r in resolved]))
 
     for error in invalid_key_errors:
-        print("ERROR: no rosdep rule for %s"%(error), file=sys.stderr)
+        print("ERROR: no rosdep rule for %s" % (error), file=sys.stderr)
 
     for error in lookup.get_errors():
-        print("WARNING: %s"%(error_to_human_readable(error)), file=sys.stderr)
+        print("WARNING: %s" % (error_to_human_readable(error)), file=sys.stderr)
 
     if invalid_key_errors:
-        return 1 # error exit code
+        return 1  # error exit code
 
 
 def command_fix_permissions(options):

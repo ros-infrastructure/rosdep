@@ -42,7 +42,7 @@ def call(command, pipe=None):
     Copy of call() function from catkin-generate-debian to mimic output
     """
     working_dir = '.'
-    #print('+ cd %s && ' % working_dir + ' '.join(command))
+    # print('+ cd %s && ' % working_dir + ' '.join(command))
     process = Popen(command, stdout=pipe, stderr=pipe, cwd=working_dir)
     output, unused_err = process.communicate()
     retcode = process.poll()
@@ -115,7 +115,7 @@ def get_catkin_view(rosdistro_name, os_name, os_version, update=True):
         raise ValidationFailed("""rosdep database does not have any sources.
 Please make sure you have a valid configuration in:
 \t%s
-"""%(sources_list_dir))
+""" % (sources_list_dir))
 
     # for vestigial reasons, using the roskg loader, but we're only
     # actually using the backend db as resolution is not resource-name based

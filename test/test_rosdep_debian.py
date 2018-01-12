@@ -40,16 +40,16 @@ def test_dpkg_detect():
     from rosdep2.platforms.debian import dpkg_detect
 
     m = Mock()
-    m.return_value = '',''
+    m.return_value = '', ''
     val = dpkg_detect([], exec_fn=m)
     assert val == [], val
 
     val = dpkg_detect(['tinyxml-dev'], exec_fn=m)
     assert val == [], val
-    #assert m.assert_called_with(['dpkg-query', '-W', '-f=\'${Package} ${Status}\n\''])
+    # assert m.assert_called_with(['dpkg-query', '-W', '-f=\'${Package} ${Status}\n\''])
 
     with open(os.path.join(get_test_dir(), 'dpkg-python-apt'), 'r') as f:
-        m.return_value = f.read(),''
+        m.return_value = f.read(), ''
     val = dpkg_detect(['apt', 'tinyxml-dev', 'python'], exec_fn=m)
     assert val == ['apt', 'python'], val
 

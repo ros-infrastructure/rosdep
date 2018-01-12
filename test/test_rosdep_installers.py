@@ -143,7 +143,7 @@ def test_InstallerContext_installers():
     key = 'fake-apt'
     try:
         installer = context.get_installer(key)
-        assert False, "should have raised: %s"%(installer)
+        assert False, "should have raised: %s" % (installer)
     except KeyError: pass
 
     class Foo: pass
@@ -332,13 +332,13 @@ def test_PackageManagerInstaller_resolve():
     assert ['baz'] == installer.resolve(dict(depends=['foo', 'bar'], packages=['baz']))
     assert ['baz', 'bar'] == installer.resolve(dict(packages=['baz', 'bar']))
 
-    #test string logic
+    # test string logic
     assert ['baz'] == installer.resolve(dict(depends=['foo', 'bar'], packages='baz'))
     assert ['baz', 'bar'] == installer.resolve(dict(packages='baz bar'))
     assert ['baz'] == installer.resolve('baz')
     assert ['baz', 'bar'] == installer.resolve('baz bar')
 
-    #test list logic
+    # test list logic
     assert ['baz'] == installer.resolve(['baz'])
     assert ['baz', 'bar'] == installer.resolve(['baz', 'bar'])
 

@@ -84,7 +84,7 @@ def test_RosdepDatabase_get_view_dependencies():
     assert ['foo'] == db.get_view_dependencies('bar')
 
     db.set_view_data('baz', data, ['bar'], 'origin')
-    assert ['foo', 'bar'] ==  db.get_view_dependencies('baz')
+    assert ['foo', 'bar'] == db.get_view_dependencies('baz')
 
     db.set_view_data('rad', data, [], 'origin')
     db.set_view_data('fad', data, ['baz', 'rad'], 'origin')
