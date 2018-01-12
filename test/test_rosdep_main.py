@@ -109,7 +109,7 @@ class TestRosdepMain(unittest.TestCase):
                          ]:
             try:
                 rosdep_main(commands + cmd_extras)
-                assert False, "system exit should have occurred"
+                assert False, 'system exit should have occurred'
             except SystemExit:
                 pass
 
@@ -121,35 +121,35 @@ class TestRosdepMain(unittest.TestCase):
             try:
                 rosdep_main(['check', 'python_dep'] + cmd_extras)
             except SystemExit:
-                assert False, "system exit occurred: %s\n%s" % (b[0].getvalue(), b[1].getvalue())
+                assert False, 'system exit occurred: %s\n%s' % (b[0].getvalue(), b[1].getvalue())
 
             stdout, stderr = b
-            assert stdout.getvalue().strip() == "All system dependencies have been satisified", stdout.getvalue()
+            assert stdout.getvalue().strip() == 'All system dependencies have been satisified', stdout.getvalue()
             assert not stderr.getvalue(), stderr.getvalue()
         try:
             osd = rospkg.os_detect.OsDetect()
-            override = "%s:%s" % (osd.get_name(), osd.get_codename())
+            override = '%s:%s' % (osd.get_name(), osd.get_codename())
             with fakeout() as b:
                 rosdep_main(['check', 'python_dep', '--os', override] + cmd_extras)
                 stdout, stderr = b
-                assert stdout.getvalue().strip() == "All system dependencies have been satisified"
+                assert stdout.getvalue().strip() == 'All system dependencies have been satisified'
                 assert not stderr.getvalue(), stderr.getvalue()
         except SystemExit:
-            assert False, "system exit occurred"
+            assert False, 'system exit occurred'
 
         # this used to abort, but now rosdep assumes validity for even empty stack args
         try:
             with fakeout() as b:
                 rosdep_main(['check', 'packageless'] + cmd_extras)
                 stdout, stderr = b
-                assert stdout.getvalue().strip() == "All system dependencies have been satisified"
+                assert stdout.getvalue().strip() == 'All system dependencies have been satisified'
                 assert not stderr.getvalue(), stderr.getvalue()
         except SystemExit:
-            assert False, "system exit occurred"
+            assert False, 'system exit occurred'
 
         try:
             rosdep_main(['check', 'nonexistent'] + cmd_extras)
-            assert False, "system exit should have occurred"
+            assert False, 'system exit should have occurred'
         except SystemExit:
             pass
 
@@ -163,12 +163,12 @@ class TestRosdepMain(unittest.TestCase):
             with fakeout() as b:
                 rosdep_main(['install', 'python_dep'] + cmd_extras)
                 stdout, stderr = b
-                assert "All required rosdeps installed" in stdout.getvalue(), stdout.getvalue()
+                assert 'All required rosdeps installed' in stdout.getvalue(), stdout.getvalue()
                 assert not stderr.getvalue(), stderr.getvalue()
             with fakeout() as b:
                 rosdep_main(['install', 'python_dep', '-r'] + cmd_extras)
                 stdout, stderr = b
-                assert "All required rosdeps installed" in stdout.getvalue(), stdout.getvalue()
+                assert 'All required rosdeps installed' in stdout.getvalue(), stdout.getvalue()
                 assert not stderr.getvalue(), stderr.getvalue()
             with fakeout() as b:
                 rosdep_main([
@@ -187,10 +187,10 @@ class TestRosdepMain(unittest.TestCase):
                 assert set(lines) == set(expected), lines
                 assert not stderr.getvalue(), stderr.getvalue()
         except SystemExit:
-            assert False, "system exit occurred: " + b[1].getvalue()
+            assert False, 'system exit occurred: ' + b[1].getvalue()
         try:
             rosdep_main(['install', 'nonexistent'])
-            assert False, "system exit should have occurred"
+            assert False, 'system exit should have occurred'
         except SystemExit:
             pass
 
@@ -206,7 +206,7 @@ class TestRosdepMain(unittest.TestCase):
                     output = stdout.getvalue().strip()
                     assert output == expected, output
         except SystemExit:
-            assert False, "system exit occurred"
+            assert False, 'system exit occurred'
 
     def test_what_needs(self):
         try:
@@ -225,7 +225,7 @@ class TestRosdepMain(unittest.TestCase):
                 output = stdout.getvalue().strip()
                 assert output.split('\n') == expected
         except SystemExit:
-            assert False, "system exit occurred"
+            assert False, 'system exit occurred'
 
     def test_keys(self):
         sources_cache = get_cache_dir()
@@ -235,17 +235,17 @@ class TestRosdepMain(unittest.TestCase):
             with fakeout() as b:
                 rosdep_main(['keys', 'rospack_fake'] + cmd_extras)
                 stdout, stderr = b
-                assert stdout.getvalue().strip() == "testtinyxml", stdout.getvalue()
+                assert stdout.getvalue().strip() == 'testtinyxml', stdout.getvalue()
                 assert not stderr.getvalue(), stderr.getvalue()
             with fakeout() as b:
                 rosdep_main(['keys', 'rospack_fake', '--os', 'ubuntu:lucid', '--verbose'] + cmd_extras)
                 stdout, stderr = b
-                assert stdout.getvalue().strip() == "testtinyxml", stdout.getvalue()
+                assert stdout.getvalue().strip() == 'testtinyxml', stdout.getvalue()
         except SystemExit:
-            assert False, "system exit occurred"
+            assert False, 'system exit occurred'
         try:
             rosdep_main(['keys', 'nonexistent'] + cmd_extras)
-            assert False, "system exit should have occurred"
+            assert False, 'system exit should have occurred'
         except SystemExit:
             pass
 

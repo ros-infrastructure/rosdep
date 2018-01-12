@@ -94,9 +94,9 @@ class RosPkgLoader(RosdepLoader):
         if view_name not in self.get_loadable_views():
             raise rospkg.ResourceNotFound(view_name)
         elif view_name == 'invalid':
-            raise rospkg.ResourceNotFound("FOUND" + view_name + str(self.get_loadable_views()))
+            raise rospkg.ResourceNotFound('FOUND' + view_name + str(self.get_loadable_views()))
         if verbose:
-            print("loading view [%s] with rospkg loader" % (view_name))
+            print('loading view [%s] with rospkg loader' % (view_name))
         # chain into underlay if set
         if self._underlay_key:
             view_dependencies = [self._underlay_key]

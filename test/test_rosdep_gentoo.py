@@ -47,7 +47,7 @@ def get_test_dir():
 
 def test_portage_available():
     if not is_gentoo():
-        print("Skipping not Gentoo")
+        print('Skipping not Gentoo')
         return
     from rosdep2.platforms.gentoo import portage_available
 
@@ -71,7 +71,7 @@ def test_portage_available():
     path_overrides['/usr/bin/emerge'] = True
 
     val = portage_available()
-    assert not val, "Portage should not be available without portageq"
+    assert not val, 'Portage should not be available without portageq'
 
     # Test with emerge missing
     m.reset_mock()
@@ -80,7 +80,7 @@ def test_portage_available():
     path_overrides['/usr/bin/emerge'] = False
 
     val = portage_available()
-    assert not val, "Portage should not be available without emerge"
+    assert not val, 'Portage should not be available without emerge'
 
     # Test with nothing missing
     m.reset_mock()
@@ -89,7 +89,7 @@ def test_portage_available():
     path_overrides['/usr/bin/emerge'] = True
 
     val = portage_available()
-    assert val, "Portage should be available"
+    assert val, 'Portage should be available'
 
     os.path.exists = original_exists
 
@@ -98,7 +98,7 @@ def test_portage_available():
 
 def test_portage_detect():
     if not is_gentoo():
-        print("Skipping not Gentoo")
+        print('Skipping not Gentoo')
         return
 
     from rosdep2.platforms.gentoo import portage_detect
@@ -112,19 +112,19 @@ def test_portage_detect():
     # Test checking for a package that we do not have installed
     m = Mock(return_value=[])
     val = portage_detect(['tinyxml[stl]'], exec_fn=m)
-    assert val == [], "Result was actually: %s" % val
+    assert val == [], 'Result was actually: %s' % val
     m.assert_called_with(['portageq', 'match', '/', 'tinyxml[stl]'])
 
     # Test checking for a package that we do have installed
     m = Mock(return_value=['dev-libs/tinyxml-2.6.2-r1'])
     val = portage_detect(['tinyxml[stl]'], exec_fn=m)
-    assert val == ['tinyxml[stl]'], "Result was actually: %s" % val
+    assert val == ['tinyxml[stl]'], 'Result was actually: %s' % val
     m.assert_called_with(['portageq', 'match', '/', 'tinyxml[stl]'])
 
     # Test checking for two packages that we have installed
     m = Mock(side_effect=[['sys-devel/gcc-4.5.3-r2'], ['dev-libs/tinyxml-2.6.2-r1']])
     val = portage_detect(['tinyxml[stl]', 'gcc'], exec_fn=m)
-    assert val == ['gcc', 'tinyxml[stl]'], "Result was actually: %s" % val
+    assert val == ['gcc', 'tinyxml[stl]'], 'Result was actually: %s' % val
     m.assert_any_call(['portageq', 'match', '/', 'tinyxml[stl]'])
     m.assert_any_call(['portageq', 'match', '/', 'gcc'])
 
@@ -132,7 +132,7 @@ def test_portage_detect():
     m = Mock(side_effect=[[], []])
 
     val = portage_detect(['tinyxml[stl]', 'gcc'], exec_fn=m)
-    assert val == [], "Result was actually: %s" % val
+    assert val == [], 'Result was actually: %s' % val
     m.assert_any_call(['portageq', 'match', '/', 'tinyxml[stl]'])
     m.assert_any_call(['portageq', 'match', '/', 'gcc'])
 
@@ -140,7 +140,7 @@ def test_portage_detect():
     m = Mock(side_effect=[['sys-devel/gcc-4.5.3-r2'], []])
 
     val = portage_detect(['tinyxml[stl]', 'gcc'], exec_fn=m)
-    assert val == ['gcc'], "Result was actually: %s" % val
+    assert val == ['gcc'], 'Result was actually: %s' % val
     m.assert_any_call(['portageq', 'match', '/', 'tinyxml[stl]'])
     m.assert_any_call(['portageq', 'match', '/', 'gcc'])
 
@@ -148,7 +148,7 @@ def test_portage_detect():
     m = Mock(side_effect=[[], ['dev-libs/tinyxml-2.6.2-r1']])
 
     val = portage_detect(['tinyxml[stl]', 'gcc'], exec_fn=m)
-    assert val == ['tinyxml[stl]'], "Result was actually: %s" % val
+    assert val == ['tinyxml[stl]'], 'Result was actually: %s' % val
     m.assert_any_call(['portageq', 'match', '/', 'tinyxml[stl]'])
     m.assert_any_call(['portageq', 'match', '/', 'gcc'])
 
@@ -157,20 +157,20 @@ def test_portage_detect():
     m = Mock(side_effect=[['dev-libs/tinyxml-2.6.2-r1'], ['dev-libs/tinyxml-2.6.2-r1']])
 
     val = portage_detect(['tinyxml[stl]', 'tinyxml[stl]'], exec_fn=m)
-    assert val == ['tinyxml[stl]', 'tinyxml[stl]'], "Result was actually: %s" % val
+    assert val == ['tinyxml[stl]', 'tinyxml[stl]'], 'Result was actually: %s' % val
     m.assert_any_call(['portageq', 'match', '/', 'tinyxml[stl]'])
     # and a second of the same, but any_call won't show that.
 
     # Test packages with multiple slot
     m = Mock(side_effect=[['dev-lang/python-2.7.2-r3', 'dev-lang/python-3.2.2']])
     val = portage_detect(['python'], exec_fn=m)
-    assert val == ['python'], "Result was actually: %s" % val
+    assert val == ['python'], 'Result was actually: %s' % val
     m.assert_any_call(['portageq', 'match', '/', 'python'])
 
 
 def test_PortageInstaller():
     if not is_gentoo():
-        print("Skipping not Gentoo")
+        print('Skipping not Gentoo')
         return
 
     from rosdep2.platforms.gentoo import PortageInstaller

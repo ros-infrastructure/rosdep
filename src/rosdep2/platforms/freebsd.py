@@ -51,22 +51,22 @@ def register_platforms(context):
 
 
 def pkg_info_detect_single(p):
-    if p == "builtin":
+    if p == 'builtin':
         return True
     # The next code is a lot of hassle, but there is no
     # better way in FreeBSD using just the base tools
     portname = p
-    if p == "gtk20":
-        portname = "gtk-2.\*"
-    elif p == "py-gtk2":
-        portname = "py27-gtk-2.\*"
-    elif p[:9] in ["autoconf2", "automake1"]:
-        portname = p[:8] + "-" + p[8] + "." + p[9:] + "\*"
-    elif p[:3] == "py-":
-        portname = "py27-" + p[3:] + "\*"
+    if p == 'gtk20':
+        portname = 'gtk-2.\*'
+    elif p == 'py-gtk2':
+        portname = 'py27-gtk-2.\*'
+    elif p[:9] in ['autoconf2', 'automake1']:
+        portname = p[:8] + '-' + p[8] + '.' + p[9:] + '\*'
+    elif p[:3] == 'py-':
+        portname = 'py27-' + p[3:] + '\*'
     else:
-        portname = p + "-\*"
-    pop = subprocess.Popen("/usr/sbin/pkg_info -qE " + portname, shell=True)
+        portname = p + '-\*'
+    pop = subprocess.Popen('/usr/sbin/pkg_info -qE ' + portname, shell=True)
     return os.waitpid(pop.pid, 0)[1] == 0  # pkg_info -E returns 0 if pkg installed, 1 if not
 
 

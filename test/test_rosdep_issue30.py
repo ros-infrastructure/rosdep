@@ -73,9 +73,9 @@ def source(script):
     """
     Sources a shell script at a given path, updating the environment.
     """
-    pipe = sp.Popen(". %s; env" % script, stdout=sp.PIPE, shell=True)
+    pipe = sp.Popen('. %s; env' % script, stdout=sp.PIPE, shell=True)
     data = pipe.communicate()[0]
-    env = dict((line.split("=", 1) for line in data.splitlines()))
+    env = dict((line.split('=', 1) for line in data.splitlines()))
     os.environ.update(env)
 
 

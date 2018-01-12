@@ -110,17 +110,17 @@ def test_RosdepDefinition():
     #  - test w/invalid data
     try:
         RosdepDefinition('dbad', 'foo', 'bad.txt').get_rule_for_platform('ubuntu', 'hardy', ['apt'], 'apt')
-        assert False, "should have failed"
+        assert False, 'should have failed'
     except InvalidData:
         pass
     try:
         RosdepDefinition('dbad', {'ubuntu': 1}, 'bad2.txt').get_rule_for_platform('ubuntu', 'hardy', ['apt'], 'apt')
-        assert False, "should have failed"
+        assert False, 'should have failed'
     except InvalidData:
         pass
     try:
         RosdepDefinition('dbad', {'ubuntu': {'hardy': 1}}, 'bad2.txt').get_rule_for_platform('ubuntu', 'hardy', ['apt'], 'apt')
-        assert False, "should have failed"
+        assert False, 'should have failed'
     except InvalidData:
         pass
 
@@ -145,7 +145,7 @@ def test_RosdepDefinition():
     # test bad resolutions
     try:
         val = definition.get_rule_for_platform('ubuntu', 'hardy', ['apt', 'source', 'pip'], 'apt')
-        assert False, "should have raised: %s" % (str(val))
+        assert False, 'should have raised: %s' % (str(val))
     except ResolutionError as e:
         assert e.rosdep_key == 'd2'
         assert e.rosdep_data == d2
@@ -156,7 +156,7 @@ def test_RosdepDefinition():
 
     try:
         val = definition.get_rule_for_platform('fakeos', 'fakeversion', ['apt', 'source', 'pip'], 'apt')
-        assert False, "should have raised: %s" % (str(val))
+        assert False, 'should have raised: %s' % (str(val))
     except ResolutionError as e:
         assert e.rosdep_key == 'd2'
         assert e.rosdep_data == d2
@@ -172,7 +172,7 @@ def test_RosdepDefinition():
     assert val == ('apt', 'libtest-dev'), val
     try:
         val = definition.get_rule_for_platform('ubuntu', 'precise', ['apt', 'source', 'pip'], 'apt')
-        assert False, "should have failed"
+        assert False, 'should have failed'
     except ResolutionError as e:
         assert e.rosdep_key == 'test'
         assert e.os_name == 'ubuntu'
@@ -202,7 +202,7 @@ def test_RosdepView_merge():
     # make sure lookups fail if not found
     try:
         view.lookup('notfound')
-        assert False, "should have raised KeyError"
+        assert False, 'should have raised KeyError'
     except KeyError as e:
         assert 'notfound' in str(e)
 
@@ -211,7 +211,7 @@ def test_RosdepView_merge():
     view.merge(d)
     assert set(view.keys()) == set(data.keys())
     for k, v in data.items():
-        assert view.lookup(k).data == v, "%s vs. %s" % (view.lookup(k), v)
+        assert view.lookup(k).data == v, '%s vs. %s' % (view.lookup(k), v)
 
     # merge exact same data
     d2 = RosdepDatabaseEntry(data, [], 'origin2')
@@ -266,7 +266,7 @@ def test_RosdepLookup_get_rosdeps():
 
     try:
         assert lookup.get_rosdeps('not a resource') == []
-        assert False, "should have raised"
+        assert False, 'should have raised'
     except ResourceNotFound:
         pass
 
@@ -459,15 +459,15 @@ def test_RosdepLookup_resolve_errors():
 
     try:
         lookup.resolve('testtinyxml', 'rospack_fake', installer_context)
-        assert False, "should have raised"
+        assert False, 'should have raised'
     except ResolutionError as e:
-        assert "Unsupported OS" in str(e), str(e)
+        assert 'Unsupported OS' in str(e), str(e)
 
     try:
         lookup.resolve('fakedep', 'rospack_fake', installer_context)
-        assert False, "should have raised"
+        assert False, 'should have raised'
     except ResolutionError as e:
-        assert "Cannot locate rosdep definition" in str(e), str(e)
+        assert 'Cannot locate rosdep definition' in str(e), str(e)
 
 
 def test_RosdepLookup_resolve():

@@ -46,7 +46,7 @@ def test_url_constants():
             f.read()
             f.close()
         except Exception:
-            assert False, "URL [%s][%s] failed to download" % (url_name, url)
+            assert False, 'URL [%s][%s] failed to download' % (url_name, url)
 
 
 def test_get_gbprepo_as_rosdep_data():
@@ -60,7 +60,7 @@ def test_get_gbprepo_as_rosdep_data():
 
     try:
         get_gbprepo_as_rosdep_data('fooNonExistantDistro')
-        assert False, "should have raised"
+        assert False, 'should have raised'
     except RuntimeError:
         pass
 
@@ -83,13 +83,13 @@ def test_download_gbpdistro_as_rosdep_data():
         download_gbpdistro_as_rosdep_data(
             FUERTE_GBPDISTRO_URL,
             targets_url='http://bad.ros.org/foo.yaml')
-        assert False, "should have raised"
+        assert False, 'should have raised'
     except DownloadFailure:
         pass
     try:
         # use targets URL, which should have a bad format
         download_gbpdistro_as_rosdep_data(REP3_TARGETS_URL)
-        assert False, "should have raised"
+        assert False, 'should have raised'
     except DownloadFailure:
         pass
 
@@ -104,7 +104,7 @@ def test_gbprepo_to_rosdep_data_on_bad_inputs():
     # test bad data
     try:
         gbprepo_to_rosdep_data(simple_gbpdistro, [targets])
-        assert False, "should have raised"
+        assert False, 'should have raised'
     except InvalidData:
         pass
     try:
@@ -112,12 +112,12 @@ def test_gbprepo_to_rosdep_data_on_bad_inputs():
             'targets': 1,
             'repositories': [],
             'type': 'gbp'}, targets)
-        assert False, "should have raised"
+        assert False, 'should have raised'
     except InvalidData:
         pass
     try:
         gbprepo_to_rosdep_data([], targets)
-        assert False, "should have raised"
+        assert False, 'should have raised'
     except InvalidData:
         pass
     # release-name must be in targets
@@ -126,7 +126,7 @@ def test_gbprepo_to_rosdep_data_on_bad_inputs():
             'release-name': 'barte',
             'repositories': [],
             'type': 'gbp'}, targets)
-        assert False, "should have raised"
+        assert False, 'should have raised'
     except InvalidData:
         pass
     # gbp-distros must be list of dicts
@@ -135,7 +135,7 @@ def test_gbprepo_to_rosdep_data_on_bad_inputs():
             'release-name': 'foorte',
             'repositories': [1],
             'type': 'gbp'}, targets)
-        assert False, "should have raised"
+        assert False, 'should have raised'
     except InvalidData:
         pass
     # gbp-distro target must be 'all' or a list of strings
@@ -147,7 +147,7 @@ def test_gbprepo_to_rosdep_data_on_bad_inputs():
             'release-name': 'foorte',
             'repositories': [bad_example],
             'type': 'gbp'}, targets)
-        assert False, "should have raised"
+        assert False, 'should have raised'
     except InvalidData:
         pass
 

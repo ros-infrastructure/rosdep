@@ -83,7 +83,7 @@ def test_RosPkgLoader():
     # test invalid stack
     try:
         loader.load_view('does not exist', rosdep_db)
-        assert False, "should have raised"
+        assert False, 'should have raised'
     except ResourceNotFound as e:
         pass
 
@@ -108,7 +108,7 @@ def test_RosPkgLoader():
     assert loader.get_view_key('stackless') == DEFAULT_VIEW_KEY
     try:
         loader.get_view_key('fake')
-        assert False, "should error"
+        assert False, 'should error'
     except ResourceNotFound:
         pass
 
@@ -139,7 +139,7 @@ def test_RosPkgLoader_with_underlay_key():
     # test invalid stack
     try:
         loader.load_view('does not exist', rosdep_db)
-        assert False, "should have raised"
+        assert False, 'should have raised'
     except ResourceNotFound as e:
         pass
 
@@ -160,7 +160,7 @@ def test_RosPkgLoader_with_underlay_key():
     assert loader.get_view_key('stackless') == DEFAULT_VIEW_KEY
     try:
         loader.get_view_key('fake')
-        assert False, "should error"
+        assert False, 'should error'
     except ResourceNotFound:
         pass
 

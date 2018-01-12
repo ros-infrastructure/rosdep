@@ -217,7 +217,7 @@ def brew_detect(resolved, exec_fn=None):
  * Output of `brew info {0} --json=v1`:
  {1}
  * Error while parsing:
- {2}""".format(r.package, std_out, "".join(traceback.format_exception(e_type, e, tb))))
+ {2}""".format(r.package, std_out, ''.join(traceback.format_exception(e_type, e, tb))))
 
         if set(r.options) <= set(installed_options):
             return True
@@ -325,8 +325,8 @@ class HomebrewInstaller(PackageManagerInstaller):
             options = []
             install_flags = []
             if type(rosdep_args) == dict:
-                options = coerce_to_list(rosdep_args.get("options", []))
-                install_flags = coerce_to_list(rosdep_args.get("install_flags", []))
+                options = coerce_to_list(rosdep_args.get('options', []))
+                install_flags = coerce_to_list(rosdep_args.get('install_flags', []))
 
             options = handle_options(options)
             install_flags = handle_options(install_flags)

@@ -30,8 +30,8 @@ def test_create_tempfile_from_string_and_execute():
     # not sure how to test this just yet, for now just a tripwire
     from rosdep2.shell_utils import create_tempfile_from_string_and_execute
 
-    assert create_tempfile_from_string_and_execute('#!/bin/sh\necho "hello"'), "ls command failed"
-    assert not create_tempfile_from_string_and_execute('bad'), "bad command did not fail"
+    assert create_tempfile_from_string_and_execute('#!/bin/sh\necho "hello"'), 'ls command failed'
+    assert not create_tempfile_from_string_and_execute('bad'), 'bad command did not fail'
 
 
 def test_read_stdout():

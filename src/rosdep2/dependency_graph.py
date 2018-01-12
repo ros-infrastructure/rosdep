@@ -74,7 +74,7 @@ class DependencyGraph(defaultdict):
 
         :raises: :exc:`AssertionError` if the rosdep_key is in the traveled keys, indicating a cycle has occurred.
         """
-        assert rosdep_key not in traveled_keys, "A cycle in the dependency graph occurred with key `%s`." % rosdep_key
+        assert rosdep_key not in traveled_keys, 'A cycle in the dependency graph occurred with key `%s`.' % rosdep_key
         traveled_keys.append(rosdep_key)
         for dependency in self[rosdep_key]['dependencies']:
             self.detect_cycles(dependency, traveled_keys)
@@ -92,7 +92,7 @@ class DependencyGraph(defaultdict):
             for dependency in self[rosdep_key]['dependencies']:
                 if dependency not in self:
                     raise KeyError(
-                        "Invalid Graph Structure: rosdep key `%s` does not exist in the dictionary of resolutions."
+                        'Invalid Graph Structure: rosdep key `%s` does not exist in the dictionary of resolutions.'
                         % dependency)
                 self[dependency]['is_root'] = False
         # Check each entry for cyclical dependencies
