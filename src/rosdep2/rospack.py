@@ -51,6 +51,7 @@ def call_pkg_config(option, pkg_name):
 
 def init_rospack_interface():
     class Options(object):
+
         def __init__(self):
             self.os_override = None
             self.sources_cache_dir = get_sources_cache_dir()

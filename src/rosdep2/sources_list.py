@@ -171,6 +171,7 @@ class DataSource(object):
 
 
 class RosDistroSource(DataSource):
+
     def __init__(self, distro):
         self.type = TYPE_GBPDISTRO
         self.tags = [distro]

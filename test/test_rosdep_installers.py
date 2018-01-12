@@ -544,6 +544,7 @@ def test_RosdepInstaller_get_uninstalled_unconfigured():
 
     # fake/bad installer to test that we re-cast general installer issues
     class BadInstaller(PackageManagerInstaller):
+
         def __init__(self):
             super(BadInstaller, self).__init__(lambda x: x)
 

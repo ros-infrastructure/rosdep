@@ -85,6 +85,7 @@ def fakeout():
 
 
 class TestRosdepMain(unittest.TestCase):
+
     def setUp(self):
         if 'ROSDEP_DEBUG' in os.environ:
             del os.environ['ROSDEP_DEBUG']
