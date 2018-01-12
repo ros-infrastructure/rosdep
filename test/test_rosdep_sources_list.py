@@ -53,12 +53,6 @@ def test_get_sources_cache_dir():
     assert rosdep2.sources_list.get_sources_cache_dir()
 
 
-def test_parse_sources_data():
-    from rosdep2.sources_list import parse_sources_data
-
-    parse_sources_data
-
-
 def test_url_constants():
     from rosdep2.sources_list import DEFAULT_SOURCES_LIST_URL
     for url_name, url in [('DEFAULT_SOURCES_LIST_URL', DEFAULT_SOURCES_LIST_URL)]:

@@ -117,7 +117,6 @@ def test_InstallerContext_os_version_and_name():
     assert val == context.get_os_name_and_version()
 
     from mock import Mock
-    from rospkg.os_detect import OsDetect
     os_detect_mock = Mock(spec=OsDetect)
     os_detect_mock.get_name.return_value = 'fakeos'
     os_detect_mock.get_version.return_value = 'fakeos-version'
@@ -435,7 +434,6 @@ def test_RosdepInstaller_get_uninstalled():
     from rosdep2.installers import RosdepInstaller
     from rosdep2.platforms.debian import APT_INSTALLER
 
-    from rosdep2.lookup import RosdepLookup
     rospack, rosstack = get_test_rospkgs()
 
     # create our test fixture.  use most of the default toolchain, but
@@ -517,7 +515,6 @@ def test_RosdepInstaller_get_uninstalled_unconfigured():
     from rosdep2.installers import RosdepInstaller, PackageManagerInstaller
     from rosdep2.platforms.debian import APT_INSTALLER
 
-    from rosdep2.lookup import RosdepLookup
     rospack, rosstack = get_test_rospkgs()
 
     sources_loader = create_test_SourcesListLoader()
@@ -591,7 +588,6 @@ def test_RosdepInstaller_install_resolved():
     from rosdep2.installers import RosdepInstaller
     from rosdep2.platforms.debian import APT_INSTALLER
 
-    from rosdep2.lookup import RosdepLookup
     rospack, rosstack = get_test_rospkgs()
 
     # create our test fixture.  use most of the default toolchain, but
