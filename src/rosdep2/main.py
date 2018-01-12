@@ -715,21 +715,6 @@ def command_install(lookup, packages, options):
         return 1
 
 
-def _compute_depdb_output(lookup, packages, options):
-    installer_context = create_default_installer_context(verbose=options.verbose)
-    os_name, os_version = _detect_os(installer_context, options)
-
-    output = "Rosdep dependencies for operating system %s version %s " % (os_name, os_version)
-    for stack_name in stacks:
-        output += "\nSTACK: %s\n" % (stack_name)
-        view = lookup.get_stack_rosdep_view(stack_name)
-        for rosdep in view.keys():
-            definition = view.lookup(rosdep)
-            resolved = resolve_definition(definition, os_name, os_version)
-            output = output + "<<<< %s -> %s >>>>\n" % (rosdep, resolved)
-    return output
-
-
 def command_db(options):
     # exact same setup logic as command_resolve, should possibly combine
     lookup = _get_default_RosdepLookup(options)
