@@ -35,6 +35,22 @@ def get_test_dir():
     # not used yet
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'redhat'))
 
+def test_rpm_expand():
+    from rosdep2.platforms.redhat import rpm_expand
+
+    m = Mock()
+    m.return_value = ''
+
+    # Non-macro test, should return the string unmodified
+    val = rpm_expand('test-string', exec_fn=m)
+    assert val == 'test-string', val
+
+    # Macro test, should return expanded rpm tag
+    with open(os.path.join(get_test_dir(), 'rpm-E-fedora'), 'r') as f:
+        m.return_value = f.read()
+    val = rpm_expand('%fedora', exec_fn=m)
+    assert val == '27', val
+
 def test_rpm_detect():
     from rosdep2.platforms.redhat import rpm_detect
 
@@ -44,8 +60,17 @@ def test_rpm_detect():
     val = rpm_detect([], exec_fn=m)
     assert val == [], val
 
+    # Negitive case test. rpms use devel, rather than dev
+    with open(os.path.join(get_test_dir(), 'rpm-q-tinyxml-dev'), 'r') as f:
+        m.return_value = f.read()
     val = rpm_detect(['tinyxml-dev'], exec_fn=m)
     assert val == [], val
+
+    # Positive case test. rpm should always be installed if you're attempting to detect rpms
+    with open(os.path.join(get_test_dir(), 'rpm-q-rpm'), 'r') as f:
+        m.return_value = f.read()
+    val = rpm_detect(['rpm'], exec_fn=m)
+    assert val == ['rpm'], val
 
 def test_DnfInstaller():
     from rosdep2.platforms.redhat import DnfInstaller
