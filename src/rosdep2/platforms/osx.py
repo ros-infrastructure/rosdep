@@ -47,7 +47,7 @@ OSXBREW_OS_NAME = 'osxbrew'
 BREW_INSTALLER = 'homebrew'
 MACPORTS_INSTALLER = 'macports'
 
-#py3k
+# py3k
 try:
     _basestring = basestring
 except NameError:
@@ -82,10 +82,10 @@ def port_detect(pkgs, exec_fn=None):
         return ret_list
     if exec_fn is None:
         exec_fn = read_stdout
-    std_out = exec_fn(['port', 'installed']+pkgs)
+    std_out = exec_fn(['port', 'installed'] + pkgs)
     for pkg in std_out.split('\n'):
         pkg_row = pkg.split()
-        if len(pkg_row) == 3 and pkg_row[0] in pkgs and pkg_row[2] =='(active)':
+        if len(pkg_row) == 3 and pkg_row[0] in pkgs and pkg_row[2] == '(active)':
             ret_list.append(pkg_row[0])
     return ret_list
 
@@ -117,7 +117,7 @@ class MacportsInstaller(PackageManagerInstaller):
         if not packages:
             return []
         else:
-            #TODO: interactive
+            # TODO: interactive
             return [self.elevate_priv(['port', 'install', p]) for p in packages]
 
 
@@ -172,7 +172,7 @@ def brew_strip_pkg_name(package):
     :returns: Unqualified package name. E.g. 'foo-pkg' for input
         'ros/hydro/foo-pkg'
     """
-    if not isinstance(package, str): # package is a bytes object
+    if not isinstance(package, str):  # package is a bytes object
         package = package.decode()
     return package.split('/')[-1]
 
@@ -297,7 +297,7 @@ class HomebrewInstaller(PackageManagerInstaller):
 
         def handle_options(options):
             # if only one package is specified we allow a flat list of options
-            if len(packages) == 1 and options and not isinstance(options[0],list):
+            if len(packages) == 1 and options and not isinstance(options[0], list):
                 options = [options]
             else:
                 options = list(map(coerce_to_list, options))

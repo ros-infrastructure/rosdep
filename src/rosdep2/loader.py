@@ -57,7 +57,7 @@ class RosdepLoader:
         try:
             return yaml.load(yaml_contents)
         except yaml.YAMLError as e:
-            raise InvalidData("Invalid YAML in [%s]: %s"%(origin, e), origin=origin)
+            raise InvalidData("Invalid YAML in [%s]: %s" % (origin, e), origin=origin)
 
     def load_view(self, view_name, rosdep_db, verbose=False):
         """
@@ -70,7 +70,7 @@ class RosdepLoader:
         :raises: :exc:`InvalidData`
         :raises: :exc:`rospkg.ResourceNotFound` if view cannot be located
         """
-        raise NotImplementedError(view_name, rosdep_db, verbose) #pychecker
+        raise NotImplementedError(view_name, rosdep_db, verbose)  # pychecker
 
     def get_loadable_resources(self):
         raise NotImplementedError()
@@ -82,7 +82,7 @@ class RosdepLoader:
         """
         :raises: :exc:`rospkg.ResourceNotFound` if *resource_name* cannot be found.
         """
-        raise NotImplementedError(resource_name, implicit) #pychecker
+        raise NotImplementedError(resource_name, implicit)  # pychecker
 
     def get_view_key(self, resource_name):
         """

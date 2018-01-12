@@ -66,7 +66,7 @@ def _subtest_rep112_rdmanifest(resolved):
     assert resolved.install_command == rep122_install_command
     assert resolved.check_presence_command == rep122_check_presence_command
 
-    assert len(resolved.check_presence_command) == len(rep122_check_presence_command), "%s %s"%(len(resolved.check_presence_command), len(rep122_check_presence_command))
+    assert len(resolved.check_presence_command) == len(rep122_check_presence_command), "%s %s" % (len(resolved.check_presence_command), len(rep122_check_presence_command))
 
     assert resolved.exec_path == 'yaml-cpp-0.2.5'
     assert resolved.tarball == 'http://download.ros.org/downloads/yaml-cpp-0.2.5.tar.gz'
@@ -77,7 +77,7 @@ def _subtest_rep112_rdmanifest(resolved):
 def test_SourceInstall():
     from rosdep2.platforms.source import InvalidRdmanifest, SourceInstall
 
-    #tripwire
+    # tripwire
     SourceInstall()
 
     # test unpacking of dict
@@ -106,7 +106,7 @@ def test_SourceInstall():
     resolved = SourceInstall.from_manifest(manifest, path)
     _subtest_rep112_rdmanifest(resolved)
 
-    #TODO: test depends
+    # TODO: test depends
 
     # test with bad dicts
     manifest = {

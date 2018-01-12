@@ -38,7 +38,7 @@ from .rosdistrohelper import PreRep137Warning
 # location of targets file for processing gbpdistro files
 REP3_TARGETS_URL = 'https://raw.github.com/ros/rosdistro/master/releases/targets.yaml'
 
-#seconds to wait before aborting download of gbpdistro data
+# seconds to wait before aborting download of gbpdistro data
 DOWNLOAD_TIMEOUT = 15.0
 
 
@@ -64,7 +64,7 @@ def download_targets_data(targets_url=None):
         f.close()
         targets_data = yaml.safe_load(text)
     except Exception as e:
-        raise DownloadFailure("Failed to download target platform data for gbpdistro:\n\t%s"%(str(e)))
+        raise DownloadFailure("Failed to download target platform data for gbpdistro:\n\t%s" % (str(e)))
     if type(targets_data) == list:
         # convert to dictionary
         new_targets_data = {}

@@ -72,11 +72,11 @@ class AptCygInstaller(PackageManagerInstaller):
 
     def get_install_command(self, resolved, interactive=True, reinstall=False, quiet=False):
         packages = self.get_packages_to_install(resolved, reinstall=reinstall)
-        #TODO: interactive
+        # TODO: interactive
         if not packages:
             return []
         else:
-            return [self.elevate_priv(['apt-cyg', '-m', 'ftp://sourceware.org/pub/cygwinports', 'install'])+packages]
+            return [self.elevate_priv(['apt-cyg', '-m', 'ftp://sourceware.org/pub/cygwinports', 'install']) + packages]
 
 
 if __name__ == '__main__':

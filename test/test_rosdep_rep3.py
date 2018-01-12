@@ -45,7 +45,7 @@ def test_url_constants():
             f.read()
             f.close()
         except:
-            assert False, "URL [%s][%s] failed to download"%(url_name, url)
+            assert False, "URL [%s][%s] failed to download" % (url_name, url)
 
 
 def test_download_targets_data():

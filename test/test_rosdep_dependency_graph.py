@@ -43,7 +43,7 @@ def test_DependencyGraph_Linear():
 	dg['C']['dependencies'] = []
 	result = dg.get_ordered_dependency_list()
 	expected = [('c_installer', ['c']), ('b_installer', ['b']), ('a_installer', ['a'])]
-	assert result == expected, "Results did not match expectations: %s == %s"%(str(result),str(expected))
+	assert result == expected, "Results did not match expectations: %s == %s" % (str(result), str(expected))
 
 
 def test_DependencyGraph_Cycle():
@@ -64,9 +64,9 @@ def test_DependencyGraph_Cycle():
 		assert False, "Doesn't fail, it should fail with an AssertionError because of the cycle."
 	except AssertionError as e:
 		if not str(e).startswith("A cycle in the dependency graph occurred with key"):
-			assert False, "Throws AssertionError, but with the wrong message. Error was: %s: %s"%(type(e),str(e))
+			assert False, "Throws AssertionError, but with the wrong message. Error was: %s: %s" % (type(e), str(e))
 	except Exception as e:
-		assert False, "Throws and Exception, but not an AssertionError. Error was: %s: %s"%(type(e),str(e))
+		assert False, "Throws and Exception, but not an AssertionError. Error was: %s: %s" % (type(e), str(e))
 
 
 def test_DependencyGraph_Short_Cycle():
@@ -90,9 +90,9 @@ def test_DependencyGraph_Short_Cycle():
 		assert False, "Doesn't fail, it should fail with an AssertionError because of the cycle."
 	except AssertionError as e:
 		if not str(e).startswith("A cycle in the dependency graph occurred with key"):
-			assert False, "Throws AssertionError, but with the wrong message. Error was: %s: %s"%(type(e),str(e))
+			assert False, "Throws AssertionError, but with the wrong message. Error was: %s: %s" % (type(e), str(e))
 	except Exception as e:
-		assert False, "Throws and Exception, but not an AssertionError. Error was: %s: %s"%(type(e),str(e))
+		assert False, "Throws and Exception, but not an AssertionError. Error was: %s: %s" % (type(e), str(e))
 
 
 def test_DependencyGraph_Invalid_Key():
@@ -110,9 +110,9 @@ def test_DependencyGraph_Invalid_Key():
 		assert False, "Doesn't fail, it should fail with an KeyError because of the invalid rosdep key."
 	except KeyError as e:
 		if not str(e).endswith("does not exist in the dictionary of resolutions.'"):
-			assert False, "Throws KeyError, but with the wrong message. Error was: %s: %s"%(type(e),str(e))
+			assert False, "Throws KeyError, but with the wrong message. Error was: %s: %s" % (type(e), str(e))
 	except Exception as e:
-		assert False, "Throws and Exception, but not an KeyError. Error was: %s: %s"%(type(e),str(e))
+		assert False, "Throws and Exception, but not an KeyError. Error was: %s: %s" % (type(e), str(e))
 
 
 def test_DependencyGraph_Invalid_Key2():
@@ -130,9 +130,9 @@ def test_DependencyGraph_Invalid_Key2():
 		assert False, "Doesn't fail, it should fail with an KeyError because of the invalid rosdep key."
 	except KeyError as e:
 		if not str(e).endswith("does not exist in the dictionary of resolutions.'"):
-			assert False, "Throws KeyError, but with the wrong message. Error was: %s: %s"%(type(e),str(e))
+			assert False, "Throws KeyError, but with the wrong message. Error was: %s: %s" % (type(e), str(e))
 	except Exception as e:
-		assert False, "Throws and Exception, but not an KeyError. Error was: %s: %s"%(type(e),str(e))
+		assert False, "Throws and Exception, but not an KeyError. Error was: %s: %s" % (type(e), str(e))
 
 
 def test_DependencyGraph_Multi_Root():
@@ -159,7 +159,7 @@ def test_DependencyGraph_Multi_Root():
 		[('c_installer', ['c']), ('b_installer', ['b']), ('a_installer', ['a']), ('d_installer', ['d'])],
 		[('c_installer', ['c']), ('d_installer', ['d']), ('b_installer', ['b']), ('a_installer', ['a'])],
 	]
-	assert result in expected, "Results did not match expectations: %s == %s"%(str(result),str(expected))
+	assert result in expected, "Results did not match expectations: %s == %s" % (str(result), str(expected))
 
 
 def test_DependencyGraph_Realworld():
@@ -174,4 +174,4 @@ def test_DependencyGraph_Realworld():
 	dg['pkg-config']['dependencies'] = []
 	result = dg.get_ordered_dependency_list()
 	expected = [('homebrew', ['pkg-config']), ('pip', ['matplotlib'])]
-	assert result == expected, "Results did not match expectations: %s == %s"%(str(result),str(expected))
+	assert result == expected, "Results did not match expectations: %s == %s" % (str(result), str(expected))

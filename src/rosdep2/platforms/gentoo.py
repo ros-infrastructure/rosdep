@@ -28,7 +28,7 @@
 #
 # Author Murph Finnicum/murph@murph.cc
 
-### A word on atoms ###
+# A word on atoms
 # We'll be using 'atoms' instead of 'packages' for the majority of the gentoo installer.
 # Atoms can specify a package version (either exactly, or min/max version), flags it has
 # to be built with, and even repositories it has to come from
@@ -63,7 +63,7 @@ def register_platforms(context):
 # Determine whether an atom is already satisfied
 
 
-def portage_detect_single(atom, exec_fn = read_stdout ):
+def portage_detect_single(atom, exec_fn=read_stdout):
     """
     Check if a given atom is installed.
 
@@ -77,7 +77,7 @@ def portage_detect_single(atom, exec_fn = read_stdout ):
     return len(std_out) >= 1
 
 
-def portage_detect(atoms, exec_fn = read_stdout):
+def portage_detect(atoms, exec_fn=read_stdout):
     """
     Given a list of atoms, return a list of which are already installed.
 

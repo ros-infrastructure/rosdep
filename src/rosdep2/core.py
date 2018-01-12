@@ -43,9 +43,9 @@ def print_bold(msg):
     :param msg: message to print, ``str``
     """
     if sys.platform in ['win32']:
-        print('%s'%msg)  #windows console is terrifically boring
+        print('%s' % msg)  # windows console is terrifically boring
     else:
-        print('\033[1m%s\033[0m'%msg)
+        print('\033[1m%s\033[0m' % msg)
 
 
 class InvalidData(Exception):
@@ -106,4 +106,4 @@ class InstallFailed(Exception):
             self.failures = [failure]
 
     def __str__(self):
-        return '\n'.join(['%s: %s'%(key, message) for (key, message) in self.failures])
+        return '\n'.join(['%s: %s' % (key, message) for (key, message) in self.failures])

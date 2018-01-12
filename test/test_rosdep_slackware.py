@@ -62,21 +62,21 @@ def test_sbotools_available():
     m = Mock(side_effect=mock_path)
     os.path.exists = m
 
-    #Test with sbotools missing
+    # Test with sbotools missing
     m.reset_mock()
     path_overrides = {}
     path_overrides['/usr/sbin/sboinstall'] = False
 
     val = sbotools_available()
-    assert val==False, "Sbotools should not be available"
+    assert val == False, "Sbotools should not be available"
 
-    #Test with sbotools installed
+    # Test with sbotools installed
     m.reset_mock()
     path_overrides = {}
     path_overrides['/usr/sbin/sboinstall'] = True
 
     val = sbotools_available()
-    assert val==True, "Sbotools should be available"
+    assert val == True, "Sbotools should be available"
 
     os.path.exists = original_exists
 
@@ -132,21 +132,21 @@ def test_slackpkg_available():
     m = Mock(side_effect=mock_path)
     os.path.exists = m
 
-    #Test with sbotools missing
+    # Test with sbotools missing
     m.reset_mock()
     path_overrides = {}
     path_overrides['/usr/sbin/slackpkg'] = False
 
     val = slackpkg_available()
-    assert val==False, "Slackpkg should not be available"
+    assert val == False, "Slackpkg should not be available"
 
-    #Test with sbotools installed
+    # Test with sbotools installed
     m.reset_mock()
     path_overrides = {}
     path_overrides['/usr/sbin/slackpkg'] = True
 
     val = slackpkg_available()
-    assert val==True, "Slackpkg should be available"
+    assert val == True, "Slackpkg should be available"
 
     os.path.exists = original_exists
 

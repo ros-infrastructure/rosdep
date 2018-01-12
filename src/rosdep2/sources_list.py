@@ -51,7 +51,7 @@ from .gbpdistro_support import get_gbprepo_as_rosdep_data, download_gbpdistro_as
 try:
     import urlparse
 except ImportError:
-    import urllib.parse as urlparse #py3k
+    import urllib.parse as urlparse  # py3k
 
 try:
     import httplib
@@ -68,7 +68,7 @@ from .rosdistrohelper import get_index, get_index_url
 # rosdep
 DEFAULT_SOURCES_LIST_URL = 'https://raw.githubusercontent.com/ros/rosdistro/master/rosdep/sources.list.d/20-default.list'
 
-#seconds to wait before aborting download of rosdep data
+# seconds to wait before aborting download of rosdep data
 DOWNLOAD_TIMEOUT = 15.0
 
 SOURCES_LIST_DIR = 'sources.list.d'
@@ -140,12 +140,12 @@ class DataSource(object):
         """
         # validate inputs
         if not type_ in VALID_TYPES:
-            raise ValueError("type must be one of [%s]"%(','.join(VALID_TYPES)))
+            raise ValueError("type must be one of [%s]" % (','.join(VALID_TYPES)))
         parsed = urlparse.urlparse(url)
         if not parsed.scheme or (parsed.scheme != 'file' and not parsed.netloc) or parsed.path in ('', '/'):
-            raise ValueError("url must be a fully-specified URL with scheme, hostname, and path: %s"%(str(url)))
+            raise ValueError("url must be a fully-specified URL with scheme, hostname, and path: %s" % (str(url)))
         if not type(tags) == list:
-            raise ValueError("tags must be a list: %s"%(str(tags)))
+            raise ValueError("tags must be a list: %s" % (str(tags)))
 
         self.type = type_
         self.tags = tags
@@ -162,9 +162,9 @@ class DataSource(object):
 
     def __str__(self):
         if self.origin:
-            return "[%s]:\n%s %s %s"%(self.origin, self.type, self.url, ' '.join(self.tags))
+            return "[%s]:\n%s %s %s" % (self.origin, self.type, self.url, ' '.join(self.tags))
         else:
-            return "%s %s %s"%(self.type, self.url, ' '.join(self.tags))
+            return "%s %s %s" % (self.type, self.url, ' '.join(self.tags))
 
     def __repr__(self):
         return repr((self.type, self.url, self.tags, self.origin))
@@ -191,12 +191,12 @@ def cache_data_source_loader(sources_cache_dir, verbose=False):
         pickle_filepath = filepath + PICKLE_CACHE_EXT
         if os.path.exists(pickle_filepath):
             if verbose:
-                print("loading cached data source:\n\t%s\n\t%s"%(uri, pickle_filepath), file=sys.stderr)
+                print("loading cached data source:\n\t%s\n\t%s" % (uri, pickle_filepath), file=sys.stderr)
             with open(pickle_filepath, 'rb') as f:
                 rosdep_data = pickle.loads(f.read())
         elif os.path.exists(filepath):
             if verbose:
-                print("loading cached data source:\n\t%s\n\t%s"%(uri, filepath), file=sys.stderr)
+                print("loading cached data source:\n\t%s\n\t%s" % (uri, filepath), file=sys.stderr)
             with open(filepath) as f:
                 rosdep_data = yaml.load(f.read())
         else:
@@ -225,7 +225,7 @@ class CachedDataSource(object):
             return False
 
     def __str__(self):
-        return "%s\n%s"%(self.source, self.rosdep_data)
+        return "%s\n%s" % (self.source, self.rosdep_data)
 
     def __repr__(self):
         return repr((self.type, self.url, self.tags, self.rosdep_data, self.origin))
@@ -271,7 +271,7 @@ class DataSourceMatcher(object):
         :param rosdep_data_source: :class:`DataSource`
         """
         # all of the rosdep_data_source tags must be in our matcher tags
-        return not any(set(rosdep_data_source.tags)-set(self.tags))
+        return not any(set(rosdep_data_source.tags) - set(self.tags))
 
     @staticmethod
     def create_default(os_override=None):
@@ -304,7 +304,7 @@ def download_rosdep_data(url):
         f.close()
         data = yaml.safe_load(text)
         if type(data) != dict:
-            raise DownloadFailure('rosdep data from [%s] is not a YAML dictionary'%(url))
+            raise DownloadFailure('rosdep data from [%s] is not a YAML dictionary' % (url))
         return data
     except (URLError, httplib.HTTPException) as e:
         raise DownloadFailure(str(e) + ' (%s)' % url)
@@ -373,14 +373,14 @@ def parse_sources_data(data, origin='<string>', model=None):
             continue
         splits = line.split(' ')
         if len(splits) < 2:
-            raise InvalidData("invalid line:\n%s"%(line), origin=origin)
+            raise InvalidData("invalid line:\n%s" % (line), origin=origin)
         type_ = splits[0]
         url = splits[1]
         tags = splits[2:]
         try:
             sources.append(model(type_, url, tags, origin=origin))
         except ValueError as e:
-            raise InvalidData("line:\n\t%s\n%s"%(line, e), origin=origin)
+            raise InvalidData("line:\n\t%s\n%s" % (line, e), origin=origin)
     return sources
 
 
@@ -396,7 +396,7 @@ def parse_sources_file(filepath):
         with open(filepath, 'r') as f:
             return parse_sources_data(f.read(), origin=filepath)
     except IOError as e:
-        raise InvalidData("I/O error reading sources file: %s"%(str(e)), origin=filepath)
+        raise InvalidData("I/O error reading sources file: %s" % (str(e)), origin=filepath)
 
 
 def parse_sources_list(sources_list_dir=None):
@@ -623,14 +623,14 @@ class SourcesListLoader(RosdepLoader):
         if matcher is None:
             matcher = DataSourceMatcher.create_default(os_override=os_override)
         if verbose:
-            print("using matcher with tags [%s]"%(', '.join(matcher.tags)), file=sys.stderr)
+            print("using matcher with tags [%s]" % (', '.join(matcher.tags)), file=sys.stderr)
 
         sources = load_cached_sources_list(sources_cache_dir=sources_cache_dir, verbose=verbose)
         if verbose:
-            print("loaded %s sources"%(len(sources)), file=sys.stderr)
+            print("loaded %s sources" % (len(sources)), file=sys.stderr)
         sources = [x for x in sources if matcher.matches(x)]
         if verbose:
-            print("%s sources match current tags"%(len(sources)), file=sys.stderr)
+            print("%s sources match current tags" % (len(sources)), file=sys.stderr)
         return SourcesListLoader(sources)
 
     def load_view(self, view_name, rosdep_db, verbose=False):
@@ -647,7 +647,7 @@ class SourcesListLoader(RosdepLoader):
             return
         source = self.get_source(view_name)
         if verbose:
-            print("loading view [%s] with sources.list loader"%(view_name), file=sys.stderr)
+            print("loading view [%s] with sources.list loader" % (view_name), file=sys.stderr)
         view_dependencies = self.get_view_dependencies(view_name)
         rosdep_db.set_view_data(view_name, source.rosdep_data, view_dependencies, view_name)
 

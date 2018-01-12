@@ -46,7 +46,7 @@ from ..core import rd_debug, InvalidData
 from ..installers import PackageManagerInstaller, InstallFailed
 from ..shell_utils import create_tempfile_from_string_and_execute
 
-SOURCE_INSTALLER='source'
+SOURCE_INSTALLER = 'source'
 
 
 def register_installers(context):
@@ -78,9 +78,9 @@ def _sub_fetch_file(url, md5sum=None):
         fh = urlopen(url)
         contents = fh.read()
         if md5sum is not None:
-            filehash =  hashlib.md5(contents).hexdigest()
+            filehash = hashlib.md5(contents).hexdigest()
             if md5sum and filehash != md5sum:
-                raise DownloadFailed("md5sum didn't match for %s.  Expected %s got %s"%(url, md5sum, filehash))
+                raise DownloadFailed("md5sum didn't match for %s.  Expected %s got %s" % (url, md5sum, filehash))
     except URLError as ex:
         raise DownloadFailed(str(ex))
 
@@ -89,7 +89,7 @@ def _sub_fetch_file(url, md5sum=None):
 
 def get_file_hash(filename):
     md5 = hashlib.md5()
-    with open(filename,'rb') as f:
+    with open(filename, 'rb') as f:
         for chunk in iter(lambda: f.read(8192), b''):
             md5.update(chunk)
     return md5.hexdigest()
@@ -108,7 +108,7 @@ def fetch_file(url, md5sum=None):
         if not isinstance(contents, str):
             contents = contents.decode('utf-8')
     except DownloadFailed as e:
-        rd_debug("Download of file %s failed"%(url))
+        rd_debug("Download of file %s failed" % (url))
         error = str(e)
     return contents, error
 
@@ -120,7 +120,7 @@ def load_rdmanifest(contents):
     try:
         return yaml.load(contents)
     except yaml.scanner.ScannerError as ex:
-        raise InvalidRdmanifest("Failed to parse yaml in %s:  Error: %s"%(contents, ex))
+        raise InvalidRdmanifest("Failed to parse yaml in %s:  Error: %s" % (contents, ex))
 
 
 def download_rdmanifest(url, md5sum, alt_url=None):
@@ -136,11 +136,11 @@ def download_rdmanifest(url, md5sum, alt_url=None):
     """
     # fetch the manifest
     download_url = url
-    error_prefix = "Failed to load a rdmanifest from %s: "%(url)
+    error_prefix = "Failed to load a rdmanifest from %s: " % (url)
     contents, error = fetch_file(download_url, md5sum)
     # - try the backup url
     if not contents and alt_url:
-        error_prefix = "Failed to load a rdmanifest from either %s or %s: "%(url, alt_url)
+        error_prefix = "Failed to load a rdmanifest from either %s or %s: " % (url, alt_url)
         download_url = alt_url
         contents, error = fetch_file(download_url, md5sum)
     if not contents:
@@ -148,7 +148,7 @@ def download_rdmanifest(url, md5sum, alt_url=None):
     manifest = load_rdmanifest(contents)
     return manifest, download_url
 
-#TODO: create SourceInstall instance objects
+# TODO: create SourceInstall instance objects
 
 
 class SourceInstall(object):
@@ -166,7 +166,7 @@ class SourceInstall(object):
         r = SourceInstall()
         r.manifest = manifest
         r.manifest_url = manifest_url
-        rd_debug("Loading manifest:\n{{{%s\n}}}\n"%manifest)
+        rd_debug("Loading manifest:\n{{{%s\n}}}\n" % manifest)
 
         r.install_command = manifest.get("install-script", '')
         r.check_presence_command = manifest.get("check-presence-script", '')
@@ -182,7 +182,7 @@ class SourceInstall(object):
         return r
 
     def __str__(self):
-        return "source: %s"%(self.manifest_url)
+        return "source: %s" % (self.manifest_url)
 
     __repr__ = __str__
 
@@ -221,7 +221,7 @@ class SourceInstaller(PackageManagerInstaller):
         elif alt_url in self._rdmanifest_cache:
             return self._rdmanifest_cache[alt_url]
         try:
-            rd_debug("Downloading manifest [%s], mirror [%s]"%(url, alt_url))
+            rd_debug("Downloading manifest [%s], mirror [%s]" % (url, alt_url))
             manifest, download_url = download_rdmanifest(url, md5sum, alt_url)
             resolved = SourceInstall.from_manifest(manifest, download_url)
             self._rdmanifest_cache[download_url] = [resolved]
@@ -269,9 +269,9 @@ def install_source(resolved):
     import tempfile
 
     tempdir = tempfile.mkdtemp()
-    rd_debug("created tmpdir [%s]"%(tempdir))
+    rd_debug("created tmpdir [%s]" % (tempdir))
 
-    rd_debug("Fetching tarball %s"%resolved.tarball)
+    rd_debug("Fetching tarball %s" % resolved.tarball)
 
     # compute desired download path
     filename = os.path.join(tempdir, os.path.basename(resolved.tarball))
@@ -282,16 +282,16 @@ def install_source(resolved):
         rd_debug("checking md5sum on tarball")
         hash1 = get_file_hash(filename)
         if resolved.tarball_md5sum != hash1:
-            #try backup tarball if it is defined
+            # try backup tarball if it is defined
             if resolved.alternate_tarball:
                 f = urlretrieve(resolved.alternate_tarball)
                 filename = f[0]
                 hash2 = get_file_hash(filename)
                 if resolved.tarball_md5sum != hash2:
-                    failure = (SOURCE_INSTALLER, "md5sum check on %s and %s failed.  Expected %s got %s and %s"%(resolved.tarball, resolved.alternate_tarball, resolved.tarball_md5sum, hash1, hash2))
+                    failure = (SOURCE_INSTALLER, "md5sum check on %s and %s failed.  Expected %s got %s and %s" % (resolved.tarball, resolved.alternate_tarball, resolved.tarball_md5sum, hash1, hash2))
                     raise InstallFailed(failure=failure)
             else:
-                raise InstallFailed((SOURCE_INSTALLER, "md5sum check on %s failed.  Expected %s got %s "%(resolved.tarball, resolved.tarball_md5sum, hash1)))
+                raise InstallFailed((SOURCE_INSTALLER, "md5sum check on %s failed.  Expected %s got %s " % (resolved.tarball, resolved.tarball_md5sum, hash1)))
     else:
         rd_debug("No md5sum defined for tarball, not checking.")
 
@@ -313,5 +313,5 @@ def install_source(resolved):
             raise InstallFailed((SOURCE_INSTALLER, "installation script returned with error code"))
 
     finally:
-        rd_debug("cleaning up tmpdir [%s]"%(tempdir))
+        rd_debug("cleaning up tmpdir [%s]" % (tempdir))
         shutil.rmtree(tempdir)

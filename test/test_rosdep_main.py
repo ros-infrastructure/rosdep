@@ -108,7 +108,7 @@ class TestRosdepMain(unittest.TestCase):
                          ['check', 'rospack_fake', '--os', 'ubuntulucid'],
                          ]:
             try:
-                rosdep_main(commands+cmd_extras)
+                rosdep_main(commands + cmd_extras)
                 assert False, "system exit should have occurred"
             except SystemExit:
                 pass
@@ -119,18 +119,18 @@ class TestRosdepMain(unittest.TestCase):
 
         with fakeout() as b:
             try:
-                rosdep_main(['check', 'python_dep']+cmd_extras)
+                rosdep_main(['check', 'python_dep'] + cmd_extras)
             except SystemExit:
-                assert False, "system exit occurred: %s\n%s"%(b[0].getvalue(), b[1].getvalue())
+                assert False, "system exit occurred: %s\n%s" % (b[0].getvalue(), b[1].getvalue())
 
             stdout, stderr = b
             assert stdout.getvalue().strip() == "All system dependencies have been satisified", stdout.getvalue()
             assert not stderr.getvalue(), stderr.getvalue()
         try:
             osd = rospkg.os_detect.OsDetect()
-            override = "%s:%s"%(osd.get_name(), osd.get_codename())
+            override = "%s:%s" % (osd.get_name(), osd.get_codename())
             with fakeout() as b:
-                rosdep_main(['check', 'python_dep', '--os', override]+cmd_extras)
+                rosdep_main(['check', 'python_dep', '--os', override] + cmd_extras)
                 stdout, stderr = b
                 assert stdout.getvalue().strip() == "All system dependencies have been satisified"
                 assert not stderr.getvalue(), stderr.getvalue()
@@ -140,7 +140,7 @@ class TestRosdepMain(unittest.TestCase):
         # this used to abort, but now rosdep assumes validity for even empty stack args
         try:
             with fakeout() as b:
-                rosdep_main(['check', 'packageless']+cmd_extras)
+                rosdep_main(['check', 'packageless'] + cmd_extras)
                 stdout, stderr = b
                 assert stdout.getvalue().strip() == "All system dependencies have been satisified"
                 assert not stderr.getvalue(), stderr.getvalue()
@@ -148,7 +148,7 @@ class TestRosdepMain(unittest.TestCase):
             assert False, "system exit occurred"
 
         try:
-            rosdep_main(['check', 'nonexistent']+cmd_extras)
+            rosdep_main(['check', 'nonexistent'] + cmd_extras)
             assert False, "system exit should have occurred"
         except SystemExit:
             pass
@@ -161,12 +161,12 @@ class TestRosdepMain(unittest.TestCase):
         try:
             # python must have already been installed
             with fakeout() as b:
-                rosdep_main(['install', 'python_dep']+cmd_extras)
+                rosdep_main(['install', 'python_dep'] + cmd_extras)
                 stdout, stderr = b
                 assert "All required rosdeps installed" in stdout.getvalue(), stdout.getvalue()
                 assert not stderr.getvalue(), stderr.getvalue()
             with fakeout() as b:
-                rosdep_main(['install', 'python_dep', '-r']+cmd_extras)
+                rosdep_main(['install', 'python_dep', '-r'] + cmd_extras)
                 stdout, stderr = b
                 assert "All required rosdeps installed" in stdout.getvalue(), stdout.getvalue()
                 assert not stderr.getvalue(), stderr.getvalue()
@@ -184,10 +184,10 @@ class TestRosdepMain(unittest.TestCase):
                     '  sudo -H apt-get install libboost1.40-all-dev'
                 ]
                 lines = stdout.getvalue().splitlines()
-                assert  set(lines) == set(expected), lines
+                assert set(lines) == set(expected), lines
                 assert not stderr.getvalue(), stderr.getvalue()
         except SystemExit:
-            assert False, "system exit occurred: "+b[1].getvalue()
+            assert False, "system exit occurred: " + b[1].getvalue()
         try:
             rosdep_main(['install', 'nonexistent'])
             assert False, "system exit should have occurred"
@@ -214,13 +214,13 @@ class TestRosdepMain(unittest.TestCase):
             cmd_extras = ['-c', sources_cache]
             expected = ['python_dep']
             with fakeout() as b:
-                rosdep_main(['what-needs', 'testpython']+cmd_extras)
+                rosdep_main(['what-needs', 'testpython'] + cmd_extras)
                 stdout, stderr = b
                 output = stdout.getvalue().strip()
                 assert output.split('\n') == expected
             expected = ['python_dep']
             with fakeout() as b:
-                rosdep_main(['what_needs', 'testpython', '--os', 'ubuntu:lucid', '--verbose']+cmd_extras)
+                rosdep_main(['what_needs', 'testpython', '--os', 'ubuntu:lucid', '--verbose'] + cmd_extras)
                 stdout, stderr = b
                 output = stdout.getvalue().strip()
                 assert output.split('\n') == expected
@@ -233,18 +233,18 @@ class TestRosdepMain(unittest.TestCase):
 
         try:
             with fakeout() as b:
-                rosdep_main(['keys', 'rospack_fake']+cmd_extras)
+                rosdep_main(['keys', 'rospack_fake'] + cmd_extras)
                 stdout, stderr = b
                 assert stdout.getvalue().strip() == "testtinyxml", stdout.getvalue()
                 assert not stderr.getvalue(), stderr.getvalue()
             with fakeout() as b:
-                rosdep_main(['keys', 'rospack_fake', '--os', 'ubuntu:lucid', '--verbose']+cmd_extras)
+                rosdep_main(['keys', 'rospack_fake', '--os', 'ubuntu:lucid', '--verbose'] + cmd_extras)
                 stdout, stderr = b
                 assert stdout.getvalue().strip() == "testtinyxml", stdout.getvalue()
         except SystemExit:
             assert False, "system exit occurred"
         try:
-            rosdep_main(['keys', 'nonexistent']+cmd_extras)
+            rosdep_main(['keys', 'nonexistent'] + cmd_extras)
             assert False, "system exit should have occurred"
         except SystemExit:
             pass

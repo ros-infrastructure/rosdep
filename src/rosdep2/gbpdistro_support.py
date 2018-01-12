@@ -6,7 +6,7 @@ import yaml
 try:
     import urlparse
 except ImportError:
-    import urllib.parse as urlparse #py3k
+    import urllib.parse as urlparse  # py3k
 import os
 
 from rospkg.os_detect import OS_DEBIAN
@@ -25,7 +25,7 @@ from .rep3 import download_targets_data  # deprecated, will output warning
 
 import warnings
 
-#py3k
+# py3k
 try:
     unicode
 except:
@@ -35,7 +35,7 @@ except:
 FUERTE_GBPDISTRO_URL = 'https://raw.github.com/ros/rosdistro/' \
     'master/releases/fuerte.yaml'
 
-#seconds to wait before aborting download of gbpdistro data
+# seconds to wait before aborting download of gbpdistro data
 DOWNLOAD_TIMEOUT = 15.0
 
 
