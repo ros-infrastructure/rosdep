@@ -391,7 +391,7 @@ class RosdepLookup(object):
                 for rosdep_key in rosdep_keys:
                     try:
                         installer_key, resolution, dependencies = \
-                                       self.resolve(rosdep_key, resource_name, installer_context)
+                            self.resolve(rosdep_key, resource_name, installer_context)
                         depend_graph[rosdep_key]['installer_key'] = installer_key
                         depend_graph[rosdep_key]['install_keys'] = list(resolution)
                         depend_graph[rosdep_key]['dependencies'] = list(dependencies)
@@ -401,7 +401,7 @@ class RosdepLookup(object):
                             if depend_rosdep_key in depend_graph:
                                 continue
                             installer_key, resolution, more_dependencies = \
-                                           self.resolve(depend_rosdep_key, resource_name, installer_context)
+                                self.resolve(depend_rosdep_key, resource_name, installer_context)
                             dependencies.extend(more_dependencies)
                             depend_graph[depend_rosdep_key]['installer_key'] = installer_key
                             depend_graph[depend_rosdep_key]['install_keys'] = list(resolution)
@@ -462,9 +462,11 @@ class RosdepLookup(object):
             cache_os_name = cache_value[0]
             cache_os_version = cache_value[1]
             cache_view_name = cache_value[2]
-            if cache_os_name == os_name and \
-                   cache_os_version == os_version and \
-                   cache_view_name == view.name:
+            if (
+                cache_os_name == os_name and
+                cache_os_version == os_version and
+                cache_view_name == view.name
+            ):
                 return cache_value[3:]
 
         # get the rosdep data for the platform

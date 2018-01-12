@@ -155,10 +155,10 @@ class DataSource(object):
 
     def __eq__(self, other):
         return isinstance(other, DataSource) and \
-               self.type == other.type and \
-               self.tags == other.tags and \
-               self.url == other.url and \
-               self.origin == other.origin
+            self.type == other.type and \
+            self.tags == other.tags and \
+            self.url == other.url and \
+            self.origin == other.origin
 
     def __str__(self):
         if self.origin:
@@ -220,7 +220,7 @@ class CachedDataSource(object):
     def __eq__(self, other):
         try:
             return self.source == other.source and \
-                   self.rosdep_data == other.rosdep_data
+                self.rosdep_data == other.rosdep_data
         except AttributeError:
             return False
 
@@ -335,7 +335,8 @@ def download_default_sources_list(url=DEFAULT_SOURCES_LIST_URL):
     try:
         parse_sources_data(data)
     except InvalidData as e:
-        raise DownloadFailure("The content downloaded from %s failed to pass validation."
+        raise DownloadFailure(
+            "The content downloaded from %s failed to pass validation."
             " It is likely that the source is invalid unless the data was corrupted during the download."
             " The contents were:{{{%s}}} The error raised was: %s" % (url, data, e))
     return data

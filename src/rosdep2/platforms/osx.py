@@ -149,8 +149,8 @@ class HomebrewResolution(object):
 
     def __eq__(self, other):
         return other.package == self.package and \
-               other.install_flags == self.install_flags and \
-               other.options == self.options
+            other.install_flags == self.install_flags and \
+            other.options == self.options
 
     def __hash__(self):
         return hash((

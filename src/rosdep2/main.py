@@ -65,9 +65,9 @@ from .installers import RosdepInstaller
 from .lookup import RosdepLookup, ResolutionError
 from .rospkg_loader import DEFAULT_VIEW_KEY
 from .sources_list import update_sources_list, get_sources_cache_dir,\
-     download_default_sources_list, SourcesListLoader,CACHE_INDEX,\
-     get_sources_list_dir, get_default_sources_list_file,\
-     DEFAULT_SOURCES_LIST_URL
+    download_default_sources_list, SourcesListLoader,CACHE_INDEX,\
+    get_sources_list_dir, get_default_sources_list_file,\
+    DEFAULT_SOURCES_LIST_URL
 from .rosdistrohelper import PreRep137Warning
 
 from .catkin_packages import find_catkin_packages_in
@@ -809,8 +809,8 @@ def command_resolve(args, options):
     configure_installer_context(installer_context, options)
 
     installer, installer_keys, default_key, \
-            os_name, os_version = get_default_installer(installer_context=installer_context,
-                                                        verbose=options.verbose)
+        os_name, os_version = get_default_installer(installer_context=installer_context,
+                                                    verbose=options.verbose)
     invalid_key_errors = []
     for rosdep_name in args:
         if len(args) > 1:
@@ -899,7 +899,7 @@ command_handlers = {
     'what_needs': command_what_needs,
     'where_defined': command_where_defined,
     'depdb': command_db,
-    }
+}
 
 # commands that accept rosdep names as args
 _command_rosdep_args = ['what-needs', 'what_needs', 'where-defined', 'where_defined', 'resolve']

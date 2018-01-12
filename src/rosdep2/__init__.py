@@ -38,12 +38,12 @@ from ._version import __version__
 import sys
 
 from .installers import InstallerContext, Installer, \
-        PackageManagerInstaller
+    PackageManagerInstaller
 from .core import RosdepInternalError, InstallFailed, UnsupportedOs, \
-        InvalidData, DownloadFailure
+    InvalidData, DownloadFailure
 from .model import RosdepDatabase, RosdepDatabaseEntry
 from .lookup import RosdepDefinition, RosdepView, RosdepLookup, \
-        ResolutionError
+    ResolutionError
 from .loader import RosdepLoader
 
 # don't let import error take down code as when attempting to compute version number
@@ -51,7 +51,7 @@ try:
     from .rospkg_loader import RosPkgLoader
 except ImportError:
     print("Cannot import rospkg, rosdep will not function properly",
-            file=sys.stderr)
+          file=sys.stderr)
 
 
 def create_default_installer_context(verbose=False):
@@ -117,12 +117,13 @@ def get_default_installer(installer_context=None, verbose=False):
     return installer, installer_keys, default_key, os_name, os_version
 
 
-__all__ = ['InstallerContext', 'Installer', 'PackageManagerInstaller',
-        'RosdepInternalError', 'InstallFailed', 'UnsupportedOs', 'InvalidData',
-        'DownloadFailure',
-        'RosdepDatabase', 'RosdepDatabaseEntry',
-        'RosdepDefinition', 'RosdepView', 'RosdepLookup', 'ResolutionError',
-        'RosdepLoader', 'RosPkgLoader',
-        'get_default_installer',
-        'create_default_installer_context',
-        ]
+__all__ = [
+    'InstallerContext', 'Installer', 'PackageManagerInstaller',
+    'RosdepInternalError', 'InstallFailed', 'UnsupportedOs', 'InvalidData',
+    'DownloadFailure',
+    'RosdepDatabase', 'RosdepDatabaseEntry',
+    'RosdepDefinition', 'RosdepView', 'RosdepLookup', 'ResolutionError',
+    'RosdepLoader', 'RosPkgLoader',
+    'get_default_installer',
+    'create_default_installer_context',
+]
