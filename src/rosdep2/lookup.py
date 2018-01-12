@@ -128,7 +128,9 @@ class RosdepDefinition(object):
                     # version key must be present here for data to be valid
                     # dictionary value.
                     if os_version not in data:
-                        raise ResolutionError(rosdep_key, self.data, os_name, os_version, 'No definition of [%s] for OS version [%s]' % (rosdep_key, os_version))
+                        if '*' not in data:
+                            raise ResolutionError(rosdep_key, self.data, os_name, os_version, 'No definition of [%s] for OS version [%s]' % (rosdep_key, os_version))
+                        os_version = '*'
                     data = data[os_version]
                     if type(data) == dict:
                         for installer_key in installer_keys:
