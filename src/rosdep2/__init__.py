@@ -88,7 +88,7 @@ def create_default_installer_context(verbose=False):
     return context
 
 
-from . import gbpdistro_support
+from . import gbpdistro_support  # noqa
 gbpdistro_support.create_default_installer_context = create_default_installer_context
 
 

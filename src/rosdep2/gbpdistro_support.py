@@ -14,7 +14,6 @@ from rospkg.os_detect import OS_FEDORA
 from rospkg.os_detect import OS_OSX
 from rospkg.os_detect import OS_UBUNTU
 
-create_default_installer_context = None
 from .core import InvalidData, DownloadFailure
 from .platforms.debian import APT_INSTALLER
 from .platforms.osx import BREW_INSTALLER
@@ -24,6 +23,8 @@ from .rosdistrohelper import get_targets, get_release_file, PreRep137Warning
 from .rep3 import download_targets_data  # deprecated, will output warning
 
 import warnings
+
+create_default_installer_context = None
 
 # py3k
 try:

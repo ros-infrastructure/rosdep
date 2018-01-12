@@ -27,6 +27,7 @@
 
 from __future__ import print_function
 
+from contextlib import contextmanager
 import os
 import sys
 try:
@@ -553,9 +554,6 @@ def test_RosdepInstaller_get_uninstalled_unconfigured():
         assert False, "should have raised"
     except RosdepInternalError:
         pass
-
-
-from contextlib import contextmanager
 
 
 @contextmanager
