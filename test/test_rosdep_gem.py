@@ -33,8 +33,10 @@ import os
 import traceback
 from mock import Mock, patch
 
+
 def get_test_dir():
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'gem'))
+
 
 def test_gem_detect():
     from rosdep2.platforms.gem import gem_detect
@@ -64,6 +66,7 @@ def test_GemInstaller_get_depends():
     from rosdep2.platforms.gem import GemInstaller
     installer = GemInstaller()
     assert ['foo'] == installer.get_depends(dict(depends=['foo']))
+
 
 def test_GemInstaller():
     from rosdep2 import InstallFailed

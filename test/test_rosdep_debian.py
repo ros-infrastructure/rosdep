@@ -31,8 +31,10 @@ import os
 import traceback
 from mock import Mock, patch
 
+
 def get_test_dir():
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'debian'))
+
 
 def test_dpkg_detect():
     from rosdep2.platforms.debian import dpkg_detect
@@ -79,6 +81,7 @@ def test_read_apt_cache_showpkg():
     package, virtual, providers = results[2]
     assert package == 'libcurl-dev', package
     assert virtual, providers
+
 
 def test_AptInstaller():
     from rosdep2.platforms.debian import AptInstaller

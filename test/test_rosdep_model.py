@@ -25,6 +25,7 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+
 def test_RosdepDatabaseEntry():
     # not muich to test with container
     from rosdep2.model import RosdepDatabaseEntry
@@ -32,6 +33,7 @@ def test_RosdepDatabaseEntry():
     assert d.rosdep_data == {'a': 1}
     assert d.view_dependencies == []
     assert d.origin == 'foo'
+
 
 def test_RosdepDatabase():
     from rosdep2.model import RosdepDatabase

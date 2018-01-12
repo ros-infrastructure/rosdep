@@ -54,6 +54,7 @@ DEFAULT_VIEW_KEY='*default*'
 # resources and SourcesListLoader would build a *single* view that was
 # no longer resource-dependent.
 
+
 class RosPkgLoader(RosdepLoader):
 
     def __init__(self, rospack=None, rosstack=None, underlay_key=None):

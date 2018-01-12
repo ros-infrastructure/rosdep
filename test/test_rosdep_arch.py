@@ -31,9 +31,11 @@ import os
 import traceback
 from mock import Mock, patch
 
+
 def get_test_dir():
     # not used yet
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'arch'))
+
 
 def test_PacmanInstaller():
     from rosdep2.platforms.arch import PacmanInstaller

@@ -51,8 +51,10 @@ else
 
 REP112_MD5SUM = '57cb9faf930e9c4f0822be8b27798248'
 
+
 def get_test_dir():
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'source'))
+
 
 def _subtest_rep112_rdmanifest(resolved):
     test_dir = get_test_dir()
@@ -70,6 +72,7 @@ def _subtest_rep112_rdmanifest(resolved):
     assert resolved.tarball == 'http://download.ros.org/downloads/yaml-cpp-0.2.5.tar.gz'
     assert resolved.alternate_tarball == None
     assert resolved.tarball_md5sum == 'b17dc36055cd2259c88b2602601415d9'
+
 
 def test_SourceInstall():
     from rosdep2.platforms.source import InvalidRdmanifest, SourceInstall
@@ -130,6 +133,7 @@ def test_SourceInstall():
     assert resolved.alternate_tarball is None
     assert resolved.tarball_md5sum is None
 
+
 def test_is_installed():
     from rosdep2.platforms.source import SourceInstaller, SourceInstall
     resolved = SourceInstall()
@@ -138,6 +142,7 @@ exit 0
 """
     installer = SourceInstaller()
     assert installer.is_installed(resolved)
+
 
 def test_source_detect():
     from rosdep2.platforms.source import source_detect, SourceInstall
@@ -149,6 +154,7 @@ exit 0
     assert [resolved] == source_detect([resolved])
 
     def yes(*args, **kwds): return 0
+
     def no(*args, **kwds): return 1
 
     resolved = [SourceInstall(), SourceInstall(), SourceInstall(), SourceInstall()]
@@ -158,6 +164,7 @@ exit 0
     retval = source_detect(resolved, exec_fn=yes)
     assert resolved == retval, retval
     assert [] == source_detect(resolved, exec_fn=no)
+
 
 def test_SourceInstaller_get_install_command():
     from rosdep2.platforms.source import SourceInstaller, SourceInstall
@@ -179,6 +186,7 @@ exit 0
 """
     commands = installer.get_install_command([resolved])
     assert not(commands)
+
 
 def test_SourceInstaller_resolve():
     from rosdep2.platforms.source import SourceInstaller, InvalidData
@@ -232,10 +240,12 @@ def test_load_rdmanifest():
     except InvalidRdmanifest as e:
         pass
 
+
 def test_get_file_hash():
     from rosdep2.platforms.source import get_file_hash
     path = os.path.join(get_test_dir(), 'rep112-example.rdmanifest')
     assert REP112_MD5SUM == get_file_hash(path)
+
 
 def test_fetch_file():
     test_dir = get_test_dir()
@@ -255,6 +265,7 @@ def test_fetch_file():
     contents, error = fetch_file('http://badhostname.willowgarage.com', 'md5sum')
     assert not contents
     assert bool(error), "should have errored"
+
 
 def test_download_rdmanifest():
     test_dir = get_test_dir()
@@ -291,6 +302,7 @@ def test_install_from_file():
     from rosdep2.platforms.source import install_from_file
     f = os.path.join(get_test_dir(), 'noop-not-installed.rdmanifest')
     install_from_file(f)
+
 
 def test_install_source():
     from rosdep2.platforms.source import install_source, SourceInstall

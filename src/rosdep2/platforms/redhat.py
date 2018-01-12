@@ -44,13 +44,16 @@ DNF_INSTALLER='dnf'
 # yum package manager key
 YUM_INSTALLER='yum'
 
+
 def register_installers(context):
     context.set_installer(DNF_INSTALLER, DnfInstaller())
     context.set_installer(YUM_INSTALLER, YumInstaller())
 
+
 def register_platforms(context):
     register_fedora(context)
     register_rhel(context)
+
 
 def register_fedora(context):
     context.add_os_installer_key(OS_FEDORA, PIP_INSTALLER)
@@ -60,11 +63,13 @@ def register_fedora(context):
     context.set_default_os_installer_key(OS_FEDORA, lambda self: DNF_INSTALLER if self.get_version().isdigit() and int(self.get_version()) > 21 else YUM_INSTALLER)
     context.set_os_version_type(OS_FEDORA, lambda self: self.get_version() if self.get_version().isdigit() and int(self.get_version()) > 20 else self.get_codename())
 
+
 def register_rhel(context):
     context.add_os_installer_key(OS_RHEL, PIP_INSTALLER)
     context.add_os_installer_key(OS_RHEL, YUM_INSTALLER)
     context.add_os_installer_key(OS_RHEL, SOURCE_INSTALLER)
     context.set_default_os_installer_key(OS_RHEL, lambda self: YUM_INSTALLER)
+
 
 def rpm_detect_py(packages):
     ret_list = []
@@ -76,6 +81,7 @@ def rpm_detect_py(packages):
         if len(rpms) > 0:
             ret_list += [raw_req]
     return ret_list
+
 
 def rpm_detect_cmd(raw_packages, exec_fn=None):
     ret_list = []
@@ -95,12 +101,14 @@ def rpm_detect_cmd(raw_packages, exec_fn=None):
             ret_list.append(raw_packages[index])
     return ret_list
 
+
 def rpm_detect(packages, exec_fn=None):
     try:
         return rpm_detect_py(packages)
     except ImportError:
         rd_debug('Failed to import rpm module, falling back to slow method')
         return rpm_detect_cmd(packages, exec_fn)
+
 
 def rpm_expand_py(macro):
     import rpm
@@ -109,6 +117,7 @@ def rpm_expand_py(macro):
     expanded = rpm.expandMacro(macro)
     rd_debug('Expanded rpm macro in \'%s\' to \'%s\'' % (macro, expanded))
     return expanded
+
 
 def rpm_expand_cmd(macro, exec_fn=None):
     if not '%' in macro:
@@ -122,11 +131,13 @@ def rpm_expand_cmd(macro, exec_fn=None):
     rd_debug('Expanded rpm macro in \'%s\' to \'%s\'' % (macro, expanded))
     return expanded
 
+
 def rpm_expand(package, exec_fn=None):
     try:
         return rpm_expand_py(package)
     except ImportError:
         return rpm_expand_cmd(package, exec_fn)
+
 
 class DnfInstaller(PackageManagerInstaller):
     """

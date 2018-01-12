@@ -31,9 +31,11 @@ import os
 import sys
 import traceback
 
+
 def rd_debug(s):
     if "ROSDEP_DEBUG" in os.environ:
         print(s)
+
 
 def print_bold(msg):
     """
@@ -45,6 +47,7 @@ def print_bold(msg):
     else:
         print('\033[1m%s\033[0m'%msg)
 
+
 class InvalidData(Exception):
     """
     Data is not in valid rosdep format.
@@ -54,8 +57,10 @@ class InvalidData(Exception):
         super(InvalidData, self).__init__(message)
         self.origin = origin
 
+
 class UnsupportedOs(Exception):
     pass
+
 
 class RosdepInternalError(Exception):
 
@@ -69,17 +74,20 @@ class RosdepInternalError(Exception):
     def __str__(self):
         return self.message
 
+
 class CachePermissionError(Exception):
 
     """Failure when writing the cache."""
 
     pass
 
+
 class DownloadFailure(Exception):
     """
     Failure downloading sources list data for I/O or other format reasons.
     """
     pass
+
 
 class InstallFailed(Exception):
 

@@ -30,6 +30,7 @@ from __future__ import print_function
 import os
 import sys
 
+
 def test_create_default_installer_context():
     import rosdep2
 

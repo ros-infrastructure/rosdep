@@ -40,8 +40,10 @@ from ..shell_utils import read_stdout
 # gem package manager key
 GEM_INSTALLER = 'gem'
 
+
 def register_installers(context):
     context.set_installer(GEM_INSTALLER, GemInstaller())
+
 
 def is_gem_installed():
     try:
@@ -49,6 +51,7 @@ def is_gem_installed():
         return True
     except OSError:
         return False
+
 
 def gem_detect(pkgs, exec_fn=None):
     """
@@ -66,6 +69,7 @@ def gem_detect(pkgs, exec_fn=None):
         if pkg_row[0] in pkgs:
             ret_list.append( pkg_row[0])
     return ret_list
+
 
 class GemInstaller(PackageManagerInstaller):
     """

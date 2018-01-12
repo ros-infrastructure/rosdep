@@ -41,6 +41,7 @@ REP3_TARGETS_URL = 'https://raw.github.com/ros/rosdistro/master/releases/targets
 #seconds to wait before aborting download of gbpdistro data
 DOWNLOAD_TIMEOUT = 15.0
 
+
 def download_targets_data(targets_url=None):
     """
     Download REP 3 targets file and unmarshal from YAML.

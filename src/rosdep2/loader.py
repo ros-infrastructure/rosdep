@@ -41,6 +41,7 @@ from .core import InvalidData
 
 ROSDEP_YAML = 'rosdep.yaml'
 
+
 class RosdepLoader:
     """
     Base API for loading rosdep information by package or stack name.

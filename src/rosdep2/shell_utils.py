@@ -45,6 +45,7 @@ else:
 env = dict(os.environ)
 env['LANG'] = 'C'
 
+
 def read_stdout(cmd, capture_stderr=False):
     '''
     Execute given command and return stdout and if requested also stderr.

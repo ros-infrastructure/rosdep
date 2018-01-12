@@ -33,14 +33,18 @@ from mock import Mock, patch
 
 import rospkg.os_detect
 
+
 def is_gentoo():
     return rospkg.os_detect.Gentoo().is_os()
+
 
 def get_test_dir():
     # not used yet
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'gentoo'))
 
 # Requires 2.7 @unittest.skipIf(not rospkg.os_detect.Gentoo().is_os(), "not running Gentoo")
+
+
 def test_portage_available():
     if not is_gentoo():
         print("Skipping not Gentoo")
@@ -50,6 +54,7 @@ def test_portage_available():
     original_exists = os.path.exists
 
     path_overrides = {}
+
     def mock_path(path):
         if path in path_overrides:
             return path_overrides[path]
@@ -89,6 +94,7 @@ def test_portage_available():
     os.path.exists = original_exists
 
 # This actually tests portage_detect_single and portage_detect
+
 
 def test_portage_detect():
     if not is_gentoo():
@@ -160,6 +166,7 @@ def test_portage_detect():
     val = portage_detect(['python'], exec_fn=m)
     assert val == ['python'], "Result was actually: %s" % val
     m.assert_any_call(['portageq', 'match', '/', 'python'])
+
 
 def test_PortageInstaller():
     if not is_gentoo():

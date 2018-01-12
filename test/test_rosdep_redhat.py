@@ -31,9 +31,11 @@ import os
 import traceback
 from mock import patch, Mock
 
+
 def get_test_dir():
     # not used yet
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'redhat'))
+
 
 def test_rpm_expand():
     from rosdep2.platforms.redhat import rpm_expand
@@ -50,6 +52,7 @@ def test_rpm_expand():
         m.return_value = f.read()
     val = rpm_expand('%fedora', exec_fn=m)
     assert val == '27', val
+
 
 def test_rpm_detect():
     from rosdep2.platforms.redhat import rpm_detect
@@ -71,6 +74,7 @@ def test_rpm_detect():
         m.return_value = f.read()
     val = rpm_detect(['rpm'], exec_fn=m)
     assert val == ['rpm'], val
+
 
 def test_DnfInstaller():
     from rosdep2.platforms.redhat import DnfInstaller
@@ -101,6 +105,7 @@ def test_DnfInstaller():
         traceback.print_exc()
         raise
 
+
 def test_YumInstaller():
     from rosdep2.platforms.redhat import YumInstaller
 
@@ -130,6 +135,7 @@ def test_YumInstaller():
         traceback.print_exc()
         raise
 
+
 def test_Fedora_variable_installer_key():
     from rosdep2 import InstallerContext
     from rosdep2.platforms import pip, redhat, source
@@ -155,6 +161,7 @@ def test_Fedora_variable_installer_key():
 
     os_detect_mock.get_version.return_value = '22'
     assert DNF_INSTALLER == context.get_default_os_installer_key(OS_FEDORA)
+
 
 def test_Fedora_variable_lookup_key():
     from rosdep2 import InstallerContext

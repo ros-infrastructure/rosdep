@@ -105,12 +105,15 @@ def get_sources_list_dir():
     else:
         return sys_sources_list_dir
 
+
 def get_default_sources_list_file():
     return os.path.join(get_sources_list_dir(), '20-default.list')
+
 
 def get_sources_cache_dir():
     ros_home = rospkg.get_ros_home()
     return os.path.join(ros_home, 'rosdep', SOURCES_CACHE_DIR)
+
 
 # Default rosdep.yaml format.  For now this is the only valid type and
 # is specified for future compatibility.
@@ -118,6 +121,7 @@ TYPE_YAML = 'yaml'
 # git-buildpackage repo list
 TYPE_GBPDISTRO = 'gbpdistro'
 VALID_TYPES = [TYPE_YAML, TYPE_GBPDISTRO]
+
 
 class DataSource(object):
 
@@ -165,6 +169,7 @@ class DataSource(object):
     def __repr__(self):
         return repr((self.type, self.url, self.tags, self.origin))
 
+
 class RosDistroSource(DataSource):
     def __init__(self, distro):
         self.type = TYPE_GBPDISTRO
@@ -176,6 +181,8 @@ class RosDistroSource(DataSource):
 # create function we can pass in as model to parse_source_data.  The
 # function emulates the CachedDataSource constructor but does the
 # necessary full filepath calculation and loading of data.
+
+
 def cache_data_source_loader(sources_cache_dir, verbose=False):
     def create_model(type_, uri, tags, origin=None):
         # compute the filename has from the URL
@@ -196,6 +203,7 @@ def cache_data_source_loader(sources_cache_dir, verbose=False):
             rosdep_data = {}
         return CachedDataSource(type_, uri, tags, rosdep_data, origin=filepath)
     return create_model
+
 
 class CachedDataSource(object):
 
@@ -222,31 +230,34 @@ class CachedDataSource(object):
     def __repr__(self):
         return repr((self.type, self.url, self.tags, self.rosdep_data, self.origin))
 
-
     @property
     def type(self):
         """
         :returns: data source type
         """
         return self.source.type
+
     @property
     def url(self):
         """
         :returns: data source URL
         """
         return self.source.url
+
     @property
     def tags(self):
         """
         :returns: data source tags
         """
         return self.source.tags
+
     @property
     def origin(self):
         """
         :returns: data source origin, if set, or ``None``
         """
         return self.source.origin
+
 
 class DataSourceMatcher(object):
 
@@ -281,6 +292,7 @@ class DataSourceMatcher(object):
         tags = [t for t in (distro_name, os_name, os_codename) if t]
         return DataSourceMatcher(tags)
 
+
 def download_rosdep_data(url):
     """
     :raises: :exc:`DownloadFailure` If data cannot be
@@ -298,6 +310,7 @@ def download_rosdep_data(url):
         raise DownloadFailure(str(e) + ' (%s)' % url)
     except yaml.YAMLError as e:
         raise DownloadFailure(str(e))
+
 
 def download_default_sources_list(url=DEFAULT_SOURCES_LIST_URL):
     """
@@ -326,6 +339,7 @@ def download_default_sources_list(url=DEFAULT_SOURCES_LIST_URL):
             " It is likely that the source is invalid unless the data was corrupted during the download."
             " The contents were:{{{%s}}} The error raised was: %s" % (url, data, e))
     return data
+
 
 def parse_sources_data(data, origin='<string>', model=None):
     """
@@ -368,6 +382,7 @@ def parse_sources_data(data, origin='<string>', model=None):
             raise InvalidData("line:\n\t%s\n%s"%(line, e), origin=origin)
     return sources
 
+
 def parse_sources_file(filepath):
     """
     Parse file on disk
@@ -381,6 +396,7 @@ def parse_sources_file(filepath):
             return parse_sources_data(f.read(), origin=filepath)
     except IOError as e:
         raise InvalidData("I/O error reading sources file: %s"%(str(e)), origin=filepath)
+
 
 def parse_sources_list(sources_list_dir=None):
     """
@@ -487,6 +503,7 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
     # mainly for debugging and testing
     return retval
 
+
 def load_cached_sources_list(sources_cache_dir=None, verbose=False):
     """
     Load cached data based on the sources list.
@@ -570,6 +587,7 @@ def write_atomic(filepath, data, binary=False):
             os.rename(filepath_tmp, filepath)
         except OSError:
             os.unlink(filepath_tmp)
+
 
 class SourcesListLoader(RosdepLoader):
     """
