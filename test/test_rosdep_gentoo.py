@@ -71,7 +71,7 @@ def test_portage_available():
     path_overrides['/usr/bin/emerge'] = True
 
     val = portage_available()
-    assert val == False, "Portage should not be available without portageq"
+    assert not val, "Portage should not be available without portageq"
 
     # Test with emerge missing
     m.reset_mock()
@@ -80,7 +80,7 @@ def test_portage_available():
     path_overrides['/usr/bin/emerge'] = False
 
     val = portage_available()
-    assert val == False, "Portage should not be available without emerge"
+    assert not val, "Portage should not be available without emerge"
 
     # Test with nothing missing
     m.reset_mock()
@@ -89,7 +89,7 @@ def test_portage_available():
     path_overrides['/usr/bin/emerge'] = True
 
     val = portage_available()
-    assert val == True, "Portage should be available"
+    assert val, "Portage should be available"
 
     os.path.exists = original_exists
 

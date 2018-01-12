@@ -111,15 +111,18 @@ def test_RosdepDefinition():
     try:
         RosdepDefinition('dbad', 'foo', 'bad.txt').get_rule_for_platform('ubuntu', 'hardy', ['apt'], 'apt')
         assert False, "should have failed"
-    except InvalidData: pass
+    except InvalidData:
+        pass
     try:
         RosdepDefinition('dbad', {'ubuntu': 1}, 'bad2.txt').get_rule_for_platform('ubuntu', 'hardy', ['apt'], 'apt')
         assert False, "should have failed"
-    except InvalidData: pass
+    except InvalidData:
+        pass
     try:
         RosdepDefinition('dbad', {'ubuntu': {'hardy': 1}}, 'bad2.txt').get_rule_for_platform('ubuntu', 'hardy', ['apt'], 'apt')
         assert False, "should have failed"
-    except InvalidData: pass
+    except InvalidData:
+        pass
 
     #  - test w/valid data
     d2 = yaml.load(FAKE_TINYXML_RULE)['testtinyxml']

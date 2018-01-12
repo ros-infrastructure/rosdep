@@ -66,7 +66,7 @@ def test_url_constants():
             f = urlopen(url)
             f.read()
             f.close()
-        except:
+        except Exception:
             assert False, "URL [%s][%s] failed to download" % (url_name, url)
 
 
@@ -451,10 +451,12 @@ def test_SourcesListLoader_create_default():
     # very simple, always raises RNF
     try:
         loader.get_rosdeps('foo')
-    except rospkg.ResourceNotFound: pass
+    except rospkg.ResourceNotFound:
+        pass
     try:
         loader.get_view_key('foo')
-    except rospkg.ResourceNotFound: pass
+    except rospkg.ResourceNotFound:
+        pass
 
     assert [] == loader.get_loadable_resources()
     all_sources = [x.url for x in loader.sources]
@@ -464,7 +466,8 @@ def test_SourcesListLoader_create_default():
     try:
         loader.get_source('foo')
         assert False, "should have raised"
-    except rospkg.ResourceNotFound: pass
+    except rospkg.ResourceNotFound:
+        pass
     s = loader.get_source(GITHUB_URL)
     assert s.url == GITHUB_URL
 

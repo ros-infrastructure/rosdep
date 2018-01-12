@@ -29,7 +29,7 @@ create_default_installer_context = None
 # py3k
 try:
     unicode
-except:
+except NameError:
     basestring = unicode = str
 
 # location of an example gbpdistro file for reference and testing
@@ -85,7 +85,7 @@ def gbprepo_to_rosdep_data(gbpdistro_data, targets_data, url=''):
 
         # compute the default target data for the release_name
         release_name = gbpdistro_data['release-name']
-        if not release_name in targets_data:
+        if release_name not in targets_data:
             raise InvalidData("targets file does not contain information "
                               "for release [%s]" % (release_name))
         else:
@@ -170,9 +170,9 @@ def get_gbprepo_as_rosdep_data(gbpdistro):
             package_name = package_name.replace('_', '-')
 
             for os_name in distro_file.platforms:
-                if not os_name in rosdep_data[pkg]:
+                if os_name not in rosdep_data[pkg]:
                     rosdep_data[pkg][os_name] = {}
-                if not os_name in default_installers:
+                if os_name not in default_installers:
                     default_installers[os_name] = ctx.get_default_os_installer_key(os_name)
                 for os_code_name in distro_file.platforms[os_name]:
                     rosdep_data[pkg][os_name][os_code_name] = {

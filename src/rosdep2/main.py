@@ -366,7 +366,7 @@ def _rosdep_main(args):
     if len(args) == 0:
         parser.error("Please enter a command")
     command = args[0]
-    if not command in _commands:
+    if command not in _commands:
         parser.error("Unsupported command %s." % command)
     args = args[1:]
 
@@ -376,9 +376,9 @@ def _rosdep_main(args):
     # Convert list of keys to dictionary
     options.as_root = dict((k, str_to_bool(v)) for k, v in key_list_to_dict(options.as_root).items())
 
-    if not command in ['init', 'update', 'fix-permissions']:
+    if command not in ['init', 'update', 'fix-permissions']:
         check_for_sources_list_init(options.sources_cache_dir)
-    elif not command in ['fix-permissions']:
+    elif command not in ['fix-permissions']:
         setup_proxy_opener()
     if command in _command_rosdep_args:
         return _rosdep_args_handler(command, parser, options, args)
@@ -495,7 +495,7 @@ def convert_os_override_option(options_os_override):
     if not options_os_override:
         return None
     val = options_os_override
-    if not ':' in val:
+    if ':' not in val:
         raise UsageError("OS override must be colon-separated OS_NAME:OS_VERSION, e.g. ubuntu:maverick")
     os_name = val[:val.find(':')]
     os_version = val[val.find(':') + 1:]

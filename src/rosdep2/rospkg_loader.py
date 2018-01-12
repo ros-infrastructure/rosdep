@@ -91,7 +91,7 @@ class RosPkgLoader(RosdepLoader):
         """
         if rosdep_db.is_loaded(view_name):
             return
-        if not view_name in self.get_loadable_views():
+        if view_name not in self.get_loadable_views():
             raise rospkg.ResourceNotFound(view_name)
         elif view_name == 'invalid':
             raise rospkg.ResourceNotFound("FOUND" + view_name + str(self.get_loadable_views()))
@@ -150,7 +150,7 @@ class RosPkgLoader(RosdepLoader):
     def is_metapackage(self, resource_name):
         if resource_name in self._rosstack.list():
             m = self._rosstack.get_manifest(resource_name)
-            return m.is_catkin;
+            return m.is_catkin
         return False
 
     def get_view_key(self, resource_name):

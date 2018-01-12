@@ -71,12 +71,12 @@ def test_read_apt_cache_showpkg():
     package, virtual, providers = results[0]
     assert package == 'curl', package
     assert not virtual
-    assert providers == None, providers
+    assert providers is None, providers
 
     package, virtual, providers = results[1]
     assert package == 'wget', package
     assert not virtual
-    assert providers == None, providers
+    assert providers is None, providers
 
     package, virtual, providers = results[2]
     assert package == 'libcurl-dev', package

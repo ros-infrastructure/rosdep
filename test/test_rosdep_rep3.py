@@ -44,7 +44,7 @@ def test_url_constants():
             f = urlopen(url)
             f.read()
             f.close()
-        except:
+        except Exception:
             assert False, "URL [%s][%s] failed to download" % (url_name, url)
 
 

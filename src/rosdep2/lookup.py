@@ -213,7 +213,7 @@ class RosdepView(object):
             # convert data into RosdepDefinition model
             update_definition = RosdepDefinition(dep_name, dep_data, update_entry.origin)
             # First rule wins or override, no rule-merging.
-            if override or not dep_name in db:
+            if override or dep_name not in db:
                 db[dep_name] = update_definition
             elif dep_name in db:
                 db[dep_name].reverse_merge(dep_data, update_entry.origin, verbose=verbose)
