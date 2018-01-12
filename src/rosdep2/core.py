@@ -1,9 +1,9 @@
 # Copyright (c) 2009, Willow Garage, Inc.
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 #     * Redistributions of source code must retain the above copyright
 #       notice, this list of conditions and the following disclaimer.
 #     * Redistributions in binary form must reproduce the above copyright
@@ -12,7 +12,7 @@
 #     * Neither the name of the Willow Garage, Inc. nor the names of its
 #       contributors may be used to endorse or promote products derived from
 #       this software without specific prior written permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -41,10 +41,10 @@ def print_bold(msg):
     :param msg: message to print, ``str``
     """
     if sys.platform in ['win32']:
-        print('%s'%msg)  #windows console is terrifically boring 
+        print('%s'%msg)  #windows console is terrifically boring
     else:
         print('\033[1m%s\033[0m'%msg)
-    
+
 class InvalidData(Exception):
     """
     Data is not in valid rosdep format.
@@ -56,7 +56,7 @@ class InvalidData(Exception):
 
 class UnsupportedOs(Exception):
     pass
-    
+
 class RosdepInternalError(Exception):
 
     def __init__(self, e, message=None):
@@ -74,7 +74,7 @@ class CachePermissionError(Exception):
     """Failure when writing the cache."""
 
     pass
-        
+
 class DownloadFailure(Exception):
     """
     Failure downloading sources list data for I/O or other format reasons.
@@ -86,8 +86,8 @@ class InstallFailed(Exception):
     def __init__(self, failure=None, failures=None):
         """
         One of failure/failures must be set.
-        
-        :param failure: single (installer_key, message) tuple.  
+
+        :param failure: single (installer_key, message) tuple.
         :param failures: list of (installer_key, message) tuples
         """
         if failures is not None:
@@ -96,6 +96,6 @@ class InstallFailed(Exception):
             raise ValueError("failure is None")
         else:
             self.failures = [failure]
-    
+
     def __str__(self):
         return '\n'.join(['%s: %s'%(key, message) for (key, message) in self.failures])

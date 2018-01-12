@@ -1,9 +1,9 @@
 # Copyright (c) 2012, Willow Garage, Inc.
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 #     * Redistributions of source code must retain the above copyright
 #       notice, this list of conditions and the following disclaimer.
 #     * Redistributions in binary form must reproduce the above copyright
@@ -12,7 +12,7 @@
 #     * Neither the name of the Willow Garage, Inc. nor the names of its
 #       contributors may be used to endorse or promote products derived from
 #       this software without specific prior written permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -51,7 +51,7 @@ def test_get_sources_cache_dir():
 
 def test_parse_sources_data():
     from rosdep2.sources_list import parse_sources_data
-    
+
     parse_sources_data
 
 def test_url_constants():
@@ -73,7 +73,7 @@ def test_download_default_sources_list():
         assert False, "should not have succeeded/valdiated"
     except URLError:
         pass
-    
+
 def test_CachedDataSource():
     from rosdep2.sources_list import CachedDataSource, DataSource, TYPE_GBPDISTRO, TYPE_YAML
     type_ = TYPE_GBPDISTRO
@@ -100,8 +100,8 @@ def test_CachedDataSource():
     assert tags[0] in str(cds)
     assert tags[0] in repr(cds)
     assert 'key' in str(cds)
-    assert 'key' in repr(cds)    
-    
+    assert 'key' in repr(cds)
+
 def test_DataSource():
     from rosdep2.sources_list import DataSource
     data_source = DataSource('yaml', 'http://fake/url', ['tag1', 'tag2'])
@@ -115,7 +115,7 @@ def test_DataSource():
     assert data_source_foo != data_source
     assert data_source_foo.origin == 'foo'
     assert '[foo]:\nyaml http://fake/url tag1 tag2' == str(data_source_foo), str(data_source_foo)
-    
+
     assert repr(data_source)
 
     try:
@@ -151,14 +151,14 @@ def test_parse_sources_file():
         sources = parse_sources_file('bad')
     except InvalidData:
         pass
-    
+
 def test_parse_sources_list():
     from rosdep2.sources_list import parse_sources_list
     from rosdep2 import InvalidData
     # test with non-existent dir, should return with empty list as
     # directory is not required to exist.
     assert [] == parse_sources_list(sources_list_dir='/not/a/real/path')
-    
+
     # test with real dir
     path = get_test_dir()
     sources_list = parse_sources_list(sources_list_dir=get_test_dir())
@@ -168,7 +168,7 @@ def test_parse_sources_list():
     assert sources_list[0].origin.endswith('20-default.list')
     assert sources_list[1].origin.endswith('20-default.list')
     assert sources_list[2].origin.endswith('30-nonexistent.list')
-    
+
     # tripwire -- we don't know what the actual return value is, but
     # should not error on a correctly configured test system.
     parse_sources_list()
@@ -180,13 +180,13 @@ def test_write_cache_file():
     except ImportError:
         import pickle
     tempdir = tempfile.mkdtemp()
-    
+
     filepath = write_cache_file(tempdir, 'foo', {'data': 1})  + PICKLE_CACHE_EXT
     computed_path = os.path.join(tempdir, compute_filename_hash('foo')) + PICKLE_CACHE_EXT
     assert os.path.samefile(filepath, computed_path)
     with open(filepath, 'rb') as f:
         assert {'data': 1} == pickle.loads(f.read())
-    
+
 def test_update_sources_list():
     from rosdep2.sources_list import update_sources_list, InvalidData, compute_filename_hash, PICKLE_CACHE_EXT
     try:
@@ -243,24 +243,24 @@ def test_load_cached_sources_list():
 
     # test behavior on empty cache
     assert [] == load_cached_sources_list(sources_cache_dir=tempdir)
-    
+
     # pull in cache data
     sources_list_dir=get_test_dir()
     retval = update_sources_list(sources_list_dir=sources_list_dir,
                                  sources_cache_dir=tempdir, error_handler=None)
     assert retval
-    
+
     # now test with cached data
     retval = load_cached_sources_list(sources_cache_dir=tempdir)
     assert len(retval) == 3, '%s != %s' % ([source0, source1, source2], retval[0:3])
     source0 = retval[0]
     source1 = retval[1]
     source2 = retval[2]
-    
+
     # this should be the 'default' source
     assert 'python' in source1.rosdep_data
     assert not source0.tags
-    
+
     # this should be the 'non-existent' source
     assert source2.rosdep_data == {}
     assert source2.tags == ['ubuntu']
@@ -309,7 +309,7 @@ def test_download_rosdep_data():
             assert False, "should have raised"
         except DownloadFailure as e:
             pass
-    
+
 BADHOSTNAME_URL = 'https://badhostname.willowgarage.com/rosdep.yaml'
 GITHUB_URL = 'https://github.com/ros/rosdistro/raw/master/rosdep/base.yaml'
 GITHUB_PYTHON_URL = 'https://github.com/ros/rosdistro/raw/master/rosdep/python.yaml'
@@ -327,7 +327,7 @@ yaml %s fuerte ubuntu
 """%(GITHUB_URL, GITHUB_FUERTE_URL)
 def test_parse_sources_data():
     from rosdep2.sources_list import parse_sources_data, TYPE_YAML, InvalidData
-    
+
     retval = parse_sources_data(EXAMPLE_SOURCES_DATA, origin='foo')
     assert len(retval) == 1
     sd = retval[0]
@@ -335,7 +335,7 @@ def test_parse_sources_data():
     assert sd.url == GITHUB_URL
     assert sd.tags == ['fuerte', 'ubuntu']
     assert sd.origin == 'foo'
-    
+
     retval = parse_sources_data(EXAMPLE_SOURCES_DATA_NO_TAGS)
     assert len(retval) == 1
     sd = retval[0]
@@ -350,12 +350,12 @@ def test_parse_sources_data():
     assert sd.type == TYPE_YAML
     assert sd.url == GITHUB_URL
     assert sd.tags == []
-    
+
     sd = retval[1]
     assert sd.type == TYPE_YAML
     assert sd.url == GITHUB_FUERTE_URL
     assert sd.tags == ['fuerte', 'ubuntu']
-    
+
     for bad in [EXAMPLE_SOURCES_DATA_BAD_URL,
                 EXAMPLE_SOURCES_DATA_BAD_TYPE,
                 EXAMPLE_SOURCES_DATA_BAD_LEN]:
@@ -364,7 +364,7 @@ def test_parse_sources_data():
             assert False, "should have raised: %s"%(bad)
         except InvalidData as e:
             pass
-        
+
 def test_DataSourceMatcher_create_default():
     distro_name = rospkg.distro.current_distro_codename()
     os_detect = rospkg.os_detect.OsDetect()
@@ -379,7 +379,7 @@ def test_DataSourceMatcher_create_default():
     # matches against current os
     os_data_source = rosdep2.sources_list.DataSource('yaml', 'http://fake/url', [os_name, os_codename])
     assert matcher.matches(os_data_source)
-    
+
     # matches against current distro
     distro_data_source = rosdep2.sources_list.DataSource('yaml', 'http://fake/url', [distro_name])
     assert matcher.matches(distro_data_source)
@@ -388,14 +388,14 @@ def test_DataSourceMatcher_create_default():
     matcher = rosdep2.sources_list.DataSourceMatcher.create_default(os_override=('fubuntu', 'flucid'))
     assert not matcher.matches(os_data_source)
     data_source = rosdep2.sources_list.DataSource('yaml', 'http://fake/url', ['fubuntu'])
-    assert matcher.matches(data_source)    
+    assert matcher.matches(data_source)
     data_source = rosdep2.sources_list.DataSource('yaml', 'http://fake/url', ['flucid'])
-    assert matcher.matches(data_source)    
+    assert matcher.matches(data_source)
     data_source = rosdep2.sources_list.DataSource('yaml', 'http://fake/url', ['flucid', 'fubuntu'])
-    assert matcher.matches(data_source)    
+    assert matcher.matches(data_source)
     data_source = rosdep2.sources_list.DataSource('yaml', 'http://fake/url', ['kubuntu', 'lucid'])
-    assert not matcher.matches(data_source)    
-    
+    assert not matcher.matches(data_source)
+
 def test_SourcesListLoader_create_default():
     from rosdep2.sources_list import update_sources_list, SourcesListLoader, DataSourceMatcher
     # create temp dir for holding sources cache
@@ -406,17 +406,17 @@ def test_SourcesListLoader_create_default():
     retval = update_sources_list(sources_list_dir=sources_list_dir,
                                  sources_cache_dir=tempdir, error_handler=None)
     assert retval
-    
+
     # now test with cached data
     matcher = rosdep2.sources_list.DataSourceMatcher(['ubuntu', 'lucid'])
     loader = SourcesListLoader.create_default(matcher, sources_cache_dir=tempdir)
     assert loader.sources
     sources0 = loader.sources
     assert not any([s for s in loader.sources if not matcher.matches(s)])
-    
+
     loader = SourcesListLoader.create_default(matcher, sources_cache_dir=tempdir)
     assert sources0 == loader.sources
-    
+
     # now test with different matcher
     matcher2 = rosdep2.sources_list.DataSourceMatcher(['python'])
     loader2 = SourcesListLoader.create_default(matcher2, sources_cache_dir=tempdir)
@@ -438,7 +438,7 @@ def test_SourcesListLoader_create_default():
     assert [] == loader.get_loadable_resources()
     all_sources = [x.url for x in loader.sources]
     assert all_sources == loader.get_loadable_views()
-    
+
     # test get_source early to make sure model matches expected
     try:
         loader.get_source('foo')
@@ -451,7 +451,7 @@ def test_SourcesListLoader_create_default():
     # - loader doesn't new view name, so assume everything
     assert all_sources == loader.get_view_dependencies('foo')
     # - actual views don't depend on anything
-    assert [] == loader.get_view_dependencies(GITHUB_URL)    
+    assert [] == loader.get_view_dependencies(GITHUB_URL)
 
     # load_view
     from rosdep2.model import RosdepDatabase

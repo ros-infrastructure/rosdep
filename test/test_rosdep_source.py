@@ -1,9 +1,9 @@
 # Copyright (c) 2011, Willow Garage, Inc.
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 #     * Redistributions of source code must retain the above copyright
 #       notice, this list of conditions and the following disclaimer.
 #     * Redistributions in binary form must reproduce the above copyright
@@ -12,7 +12,7 @@
 #     * Neither the name of the Willow Garage, Inc. nor the names of its
 #       contributors may be used to endorse or promote products derived from
 #       this software without specific prior written permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -120,13 +120,13 @@ def test_SourceInstall():
         assert False, "should have raised"
     except InvalidRdmanifest as e:
         pass
-    
+
     # test defaults
     manifest = dict(uri='http://ros.org/')
     resolved = SourceInstall.from_manifest(manifest, 'foo')
     assert resolved.exec_path == '.'
     assert resolved.install_command == ''
-    assert resolved.check_presence_command == ''    
+    assert resolved.check_presence_command == ''
     assert resolved.alternate_tarball is None
     assert resolved.tarball_md5sum is None
 
@@ -138,7 +138,7 @@ exit 0
 """
     installer = SourceInstaller()
     assert installer.is_installed(resolved)
-    
+
 def test_source_detect():
     from rosdep2.platforms.source import source_detect, SourceInstall
     resolved = SourceInstall()
@@ -154,11 +154,11 @@ exit 0
     resolved = [SourceInstall(), SourceInstall(), SourceInstall(), SourceInstall()]
     for r in resolved:
         r.check_presence_command = ''
-    
+
     retval = source_detect(resolved, exec_fn=yes)
     assert resolved == retval, retval
     assert [] == source_detect(resolved, exec_fn=no)
-    
+
 def test_SourceInstaller_get_install_command():
     from rosdep2.platforms.source import SourceInstaller, SourceInstall
     installer = SourceInstaller()
@@ -179,7 +179,7 @@ exit 0
 """
     commands = installer.get_install_command([resolved])
     assert not(commands)
-    
+
 def test_SourceInstaller_resolve():
     from rosdep2.platforms.source import SourceInstaller, InvalidData
     test_dir = get_test_dir()
@@ -200,7 +200,7 @@ def test_SourceInstaller_resolve():
     except InvalidData:
         pass
     resolved = installer.resolve(dict(uri=url, md5sum=md5sum_good))
-        
+
     assert type(resolved) == list
     assert len(resolved) == 1
     # test for reinstall (to check the depends in rdmanifest)
@@ -219,7 +219,7 @@ def test_SourceInstaller_resolve():
     assert resolved.install_command == rep122_install_command
     assert resolved.check_presence_command == rep122_check_presence_command
 
-        
+
 def test_load_rdmanifest():
     from rosdep2.platforms.source import load_rdmanifest, InvalidRdmanifest
     # load_rdmanifest is just a YAML unmarshaller with an exception change
@@ -236,7 +236,7 @@ def test_get_file_hash():
     from rosdep2.platforms.source import get_file_hash
     path = os.path.join(get_test_dir(), 'rep112-example.rdmanifest')
     assert REP112_MD5SUM == get_file_hash(path)
-    
+
 def test_fetch_file():
     test_dir = get_test_dir()
     with open(os.path.join(test_dir, 'rep112-example.rdmanifest')) as f:
@@ -255,7 +255,7 @@ def test_fetch_file():
     contents, error = fetch_file('http://badhostname.willowgarage.com', 'md5sum')
     assert not contents
     assert bool(error), "should have errored"
-    
+
 def test_download_rdmanifest():
     test_dir = get_test_dir()
     with open(os.path.join(test_dir, 'rep112-example.rdmanifest')) as f:
@@ -286,7 +286,7 @@ def test_download_rdmanifest():
     except DownloadFailed:
         pass
 
-    
+
 def test_install_from_file():
     from rosdep2.platforms.source import install_from_file
     f = os.path.join(get_test_dir(), 'noop-not-installed.rdmanifest')

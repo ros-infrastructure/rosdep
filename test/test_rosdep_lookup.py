@@ -1,9 +1,9 @@
 # Copyright (c) 2011, Willow Garage, Inc.
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 #     * Redistributions of source code must retain the above copyright
 #       notice, this list of conditions and the following disclaimer.
 #     * Redistributions in binary form must reproduce the above copyright
@@ -12,7 +12,7 @@
 #     * Neither the name of the Willow Garage, Inc. nor the names of its
 #       contributors may be used to endorse or promote products derived from
 #       this software without specific prior written permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -49,7 +49,7 @@ def get_cache_dir():
 def create_test_SourcesListLoader():
     from rosdep2.sources_list import SourcesListLoader
     return SourcesListLoader.create_default(sources_cache_dir=get_cache_dir(), verbose=True)
-    
+
 def get_cache_raw():
     cache_rosdep_path = os.path.join(get_cache_dir(), '0a12d6e7b0d47be9b76e7726720e4cb79528cbaa')
     with open(cache_rosdep_path) as f:
@@ -120,7 +120,7 @@ def test_RosdepDefinition():
 
     val = definition.get_rule_for_platform('fedora', 'fake-version', ['yum', 'source', 'pip'], 'yum')
     assert val == ('yum', dict(packages='tinyxml-devel')), val
-    
+
     val = definition.get_rule_for_platform('debian', 'sid', ['apt', 'source', 'pip'], 'apt')
     assert val == ('apt', 'libtinyxml-dev')
 
@@ -176,10 +176,10 @@ def test_RosdepDefinition():
 def test_RosdepView_merge():
     from rosdep2.model import RosdepDatabaseEntry
     from rosdep2.lookup import RosdepView
-    
+
     # rosdep data must be dictionary of dictionaries
     data = dict(a=dict(x=1), b=dict(y=2), c=dict(z=3))
-    
+
     # create empty view and test
     view = RosdepView('common')
     assert len(view.keys()) == 0
@@ -192,14 +192,14 @@ def test_RosdepView_merge():
         assert False, "should have raised KeyError"
     except KeyError as e:
         assert 'notfound' in str(e)
-    
+
     # merge into empty view
     d = RosdepDatabaseEntry(data, [], 'origin')
     view.merge(d)
     assert set(view.keys()) == set(data.keys())
     for k, v in data.items():
         assert view.lookup(k).data == v, "%s vs. %s"%(view.lookup(k), v)
-    
+
     # merge exact same data
     d2 = RosdepDatabaseEntry(data, [], 'origin2')
     view.merge(d2)
@@ -225,7 +225,7 @@ def test_RosdepView_merge():
     assert view.lookup('c').data == dict(z=3)
     assert view.lookup('d').data == dict(o=4)
     assert view.lookup('e').data == dict(p=5)
-    
+
     # - now w/ override
     view.merge(d4, override=True)
     assert view.lookup('a').data == dict(x=2)
@@ -241,7 +241,7 @@ def test_RosdepLookup_get_rosdeps():
     from rosdep2.loader import RosdepLoader
     from rosdep2.lookup import RosdepLookup
     rospack, rosstack = get_test_rospkgs()
-    
+
     sources_loader = create_test_SourcesListLoader()
     lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack,
                                              sources_loader=sources_loader)
@@ -255,15 +255,15 @@ def test_RosdepLookup_get_rosdeps():
         assert False, "should have raised"
     except ResourceNotFound:
         pass
-    
+
     print(lookup.get_rosdeps('stack1_p1'))
     assert set(lookup.get_rosdeps('stack1_p1')) == set(['stack1_dep1', 'stack1_p1_dep1', 'stack1_p1_dep2'])
     assert set(lookup.get_rosdeps('stack1_p1', implicit=False)) == set(['stack1_dep1', 'stack1_p1_dep1', 'stack1_p1_dep2'])
-    
+
     print(lookup.get_rosdeps('stack1_p2'))
     assert set(lookup.get_rosdeps('stack1_p2', implicit=False)) == set(['stack1_dep1', 'stack1_dep2', 'stack1_p2_dep1']), set(lookup.get_rosdeps('stack1_p2'))
-    assert set(lookup.get_rosdeps('stack1_p2', implicit=True)) == set(['stack1_dep1', 'stack1_dep2', 'stack1_p1_dep1', 'stack1_p1_dep2', 'stack1_p2_dep1']), set(lookup.get_rosdeps('stack1_p2'))    
-    
+    assert set(lookup.get_rosdeps('stack1_p2', implicit=True)) == set(['stack1_dep1', 'stack1_dep2', 'stack1_p1_dep1', 'stack1_p1_dep2', 'stack1_p2_dep1']), set(lookup.get_rosdeps('stack1_p2'))
+
     # catkin
     print(lookup.get_rosdeps('simple_catkin_package'))
     assert set(lookup.get_rosdeps('simple_catkin_package')) == set(['catkin', 'testboost' ])
@@ -280,7 +280,7 @@ def test_RosdepLookup_get_rosdeps():
 def test_RosdepLookup_get_resources_that_need():
     from rosdep2.lookup import RosdepLookup
     rospack, rosstack = get_test_rospkgs()
-    
+
     sources_loader = create_test_SourcesListLoader()
     lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack,
                                              sources_loader=sources_loader)
@@ -289,26 +289,26 @@ def test_RosdepLookup_get_resources_that_need():
     assert set(lookup.get_resources_that_need('stack1_dep1')) ==  set(['stack1_p1', 'stack1_p2'])
     assert lookup.get_resources_that_need('stack1_dep2') ==  ['stack1_p2']
     assert lookup.get_resources_that_need('stack1_p1_dep1') ==  ['stack1_p1']
-    
+
 def test_RosdepLookup_create_from_rospkg():
     from rosdep2.lookup import RosdepLookup
     rospack, rosstack = get_test_rospkgs()
 
     # these are just tripwire, can't actually test as it depends on external env
     lookup = RosdepLookup.create_from_rospkg()
-    
+
     lookup = RosdepLookup.create_from_rospkg(rospack=rospack)
     assert rospack == lookup.loader._rospack
-    
+
     lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack)
     assert rospack == lookup.loader._rospack
     assert rosstack == lookup.loader._rosstack
-    
+
 def test_RosdepLookup_get_rosdep_view_for_resource():
     from rosdep2.lookup import RosdepLookup
     from rosdep2.rospkg_loader import DEFAULT_VIEW_KEY, RosPkgLoader
     rospack, rosstack = get_test_rospkgs()
-    
+
     sources_loader = create_test_SourcesListLoader()
     lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack,
                                              sources_loader=sources_loader)
@@ -327,7 +327,7 @@ def test_RosdepLookup_get_rosdep_view_for_resource():
     assert PYTHON_URL == python.origin
     assert py_cache_raw['testpython'] == python.data
 
-    # package not in stack, should return 
+    # package not in stack, should return
     assert lookup.get_rosdep_view_for_resource('just_a_package').name is DEFAULT_VIEW_KEY
 
     # meta-packages should return default view as well
@@ -336,7 +336,7 @@ def test_RosdepLookup_get_rosdep_view_for_resource():
 def test_RosdepLookup_get_rosdep_view():
     from rosdep2.lookup import RosdepLookup
     rospack, rosstack = get_test_rospkgs()
-    
+
     sources_loader = create_test_SourcesListLoader()
     lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack,
                                              sources_loader=sources_loader)
@@ -358,19 +358,19 @@ def test_RosdepLookup_get_rosdep_view():
     libtool = ros_view.lookup('testlibtool')
     assert BASE_URL == libtool.origin
     assert cache_raw['testlibtool'] == libtool.data
-    
+
     # depends on ros
     stack1_view = lookup.get_rosdep_view('stack1')
     stack1_rosdep_path = os.path.join(rosstack.get_path('stack1'), 'rosdep.yaml')
-    
-    # - make sure ros data is available 
+
+    # - make sure ros data is available
     libtool = stack1_view.lookup('testlibtool')
     assert BASE_URL == libtool.origin
     assert cache_raw['testlibtool'] == libtool.data
     python = stack1_view.lookup('testpython')
     assert PYTHON_URL == python.origin
     assert py_cache_raw['testpython'] == python.data
-    
+
 def test_RosdepLookup_get_errors():
     from rosdep2.lookup import RosdepLookup
     rospack, rosstack = get_test_rospkgs()
@@ -384,10 +384,10 @@ def test_RosdepLookup_get_errors():
 
     # force errors
     lookup._load_all_views(lookup.loader)
-    
+
     #TODO: force errors.  Previous tests relied on bad stack views.
     #Now we need a bad sources cache.
-    
+
 def test_RosdepLookup_get_views_that_define():
     from rosdep2.lookup import RosdepLookup
     rospack, rosstack = get_test_rospkgs()
@@ -405,7 +405,7 @@ def test_RosdepLookup_get_views_that_define():
     assert len(val) == 1
     entry = val[0]
     assert entry == (PYTHON_URL, PYTHON_URL), entry
-    
+
 def test_RosdepLookup_resolve_all_errors():
     from rosdep2.installers import InstallerContext
     from rosdep2.lookup import RosdepLookup, ResolutionError
@@ -427,7 +427,7 @@ def test_RosdepLookup_resolve_errors():
     from rosdep2.installers import InstallerContext
     from rosdep2.lookup import RosdepLookup, ResolutionError
     rospack, rosstack = get_test_rospkgs()
-    
+
     sources_loader = create_test_SourcesListLoader()
     lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack,
                                              sources_loader=sources_loader)
@@ -451,7 +451,7 @@ def test_RosdepLookup_resolve():
     from rosdep2 import create_default_installer_context
     from rosdep2.lookup import RosdepLookup
     rospack, rosstack = get_test_rospkgs()
-    
+
     sources_loader = create_test_SourcesListLoader()
     lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack,
                                              sources_loader=sources_loader)
@@ -480,7 +480,7 @@ def test_RosdepLookup_resolve_all():
     from rosdep2 import create_default_installer_context
     from rosdep2.lookup import RosdepLookup
     rospack, rosstack = get_test_rospkgs()
-    
+
     sources_loader = create_test_SourcesListLoader()
     lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack,
                                              sources_loader=sources_loader)
@@ -499,4 +499,4 @@ def test_RosdepLookup_resolve_all():
             if k == 'apt':
                 apt_resolutions.extend(v)
         assert set(apt_resolutions) == set(['libtinyxml-dev', 'libboost1.40-all-dev', 'libtool', 'libltdl-dev']), set(apt_resolutions)
-        
+

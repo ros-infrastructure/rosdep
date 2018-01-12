@@ -1,9 +1,9 @@
 # Copyright (c) 2011, Willow Garage, Inc.
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 #     * Redistributions of source code must retain the above copyright
 #       notice, this list of conditions and the following disclaimer.
 #     * Redistributions in binary form must reproduce the above copyright
@@ -12,7 +12,7 @@
 #     * Neither the name of the Willow Garage, Inc. nor the names of its
 #       contributors may be used to endorse or promote products derived from
 #       this software without specific prior written permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -78,7 +78,7 @@ def test_InstallerContext_ctor():
     assert context.get_os_detect() == detect
     assert len(context.get_installer_keys()) == 0
     assert len(context.get_os_keys()) == 0
-    
+
 def test_InstallerContext_get_os_version_type():
     from rospkg.os_detect import OS_UBUNTU, OsDetect
     from rosdep2.installers import InstallerContext
@@ -93,7 +93,7 @@ def test_InstallerContext_get_os_version_type():
     assert OsDetect.get_version == context.get_os_version_type(OS_UBUNTU)
     context.set_os_version_type(OS_UBUNTU, OsDetect.get_codename)
     assert OsDetect.get_codename == context.get_os_version_type(OS_UBUNTU)
-    
+
 def test_InstallerContext_os_version_and_name():
     from rospkg.os_detect import OsDetect
     from rosdep2.installers import InstallerContext
@@ -102,7 +102,7 @@ def test_InstallerContext_os_version_and_name():
     os_name, os_version = context.get_os_name_and_version()
     assert os_name is not None
     assert os_version is not None
-    
+
     val = ("fakeos", "blah")
     context.set_os_override(*val)
     assert val == context.get_os_name_and_version()
@@ -123,7 +123,7 @@ def test_InstallerContext_os_version_and_name():
     os_name, os_version = context.get_os_name_and_version()
     assert os_name == 'fakeos', os_name
     assert os_version == 'fakeos-version', os_version
-    
+
 def test_InstallerContext_installers():
     from rosdep2.installers import InstallerContext, Installer
     from rospkg.os_detect import OsDetect
@@ -173,7 +173,7 @@ def test_InstallerContext_installers():
     context.set_installer(key, installer2)
     assert context.get_installer(key) == installer2
     assert list(context.get_installer_keys()) == [key]
-    
+
     # repeat with new key
     key2 = 'fake-port'
     context.set_installer(key2, installer2)
@@ -227,7 +227,7 @@ def test_InstallerContext_os_installers():
         context.get_default_os_installer_key('bad-os')
         assert False, "should have raised"
     except KeyError: pass
-    
+
     installer_key1 = 'fake1'
     installer_key2 = 'fake2'
     class FakeInstaller(Installer):
@@ -348,8 +348,8 @@ def test_PackageManagerInstaller_unique():
     assert ['a'] == installer.unique(['a'], [], ['a'])
     assert set(['a', 'b', 'c']) == set(installer.unique(['a', 'b', 'c'], ['a', 'b', 'c']))
     assert set(['a', 'b', 'c']) == set(installer.unique(['a'], ['b'], ['c']))
-    assert set(['a', 'b', 'c']) == set(installer.unique(['a', 'b'], ['c']))    
-    assert set(['a', 'b', 'c']) == set(installer.unique(['a', 'b'], ['c', 'a']))    
+    assert set(['a', 'b', 'c']) == set(installer.unique(['a', 'b'], ['c']))
+    assert set(['a', 'b', 'c']) == set(installer.unique(['a', 'b'], ['c', 'a']))
 
 def test_PackageManagerInstaller_is_installed():
     from rosdep2.installers import PackageManagerInstaller
@@ -368,13 +368,13 @@ def test_PackageManagerInstaller_get_packages_to_install():
     assert [] == installer.get_packages_to_install([])
     assert [] == installer.get_packages_to_install(['a', 'b', 'c'])
     assert set(['a', 'b', 'c']) == set(installer.get_packages_to_install(['a', 'b', 'c'], reinstall=True))
-    
+
     installer = PackageManagerInstaller(detect_fn_empty)
     assert set(['a', 'b', 'c']) == set(installer.get_packages_to_install(['a', 'b', 'c']))
     assert set(['a', 'b', 'c']) == set(installer.get_packages_to_install(['a', 'b', 'c'], reinstall=True))
     installer = PackageManagerInstaller(detect_fn_single)
     assert set(['baba', 'cada']) == set(installer.get_packages_to_install(['a', 'baba', 'b', 'cada', 'c']))
-    
+
 def test_RosdepInstaller_ctor():
     # tripwire/coverage
     from rosdep2 import create_default_installer_context
@@ -384,17 +384,17 @@ def test_RosdepInstaller_ctor():
     context = create_default_installer_context()
     installer = RosdepInstaller(context, lookup)
     assert lookup == installer.lookup
-    assert context == installer.installer_context    
+    assert context == installer.installer_context
 
 def test_RosdepInstaller_get_uninstalled():
     from rosdep2 import create_default_installer_context
     from rosdep2.lookup import RosdepLookup
     from rosdep2.installers import RosdepInstaller
     from rosdep2.platforms.debian import APT_INSTALLER
-    
+
     from rosdep2.lookup import RosdepLookup
     rospack, rosstack = get_test_rospkgs()
-    
+
     # create our test fixture.  use most of the default toolchain, but
     # replace the apt installer with one that we can have more fun
     # with.  we will do all tests with ubuntu lucid keys -- other
@@ -404,7 +404,7 @@ def test_RosdepInstaller_get_uninstalled():
     context = create_default_installer_context()
     context.set_os_override('ubuntu', 'lucid')
     installer = RosdepInstaller(context, lookup)
-    
+
     # in this first test, detect_fn detects everything as installed
     fake_apt = get_fake_apt(lambda x: x)
     context.set_installer(APT_INSTALLER, fake_apt)
@@ -454,7 +454,7 @@ def get_fake_apt(detect_fn):
     # mainly did this to keep coverage results
     from rosdep2.installers import PackageManagerInstaller
     class FakeAptInstaller(PackageManagerInstaller):
-        """ 
+        """
         An implementation of the Installer for use on debian style
         systems.
         """
@@ -470,10 +470,10 @@ def test_RosdepInstaller_get_uninstalled_unconfigured():
     from rosdep2.lookup import RosdepLookup, ResolutionError
     from rosdep2.installers import RosdepInstaller, PackageManagerInstaller
     from rosdep2.platforms.debian import APT_INSTALLER
-    
+
     from rosdep2.lookup import RosdepLookup
     rospack, rosstack = get_test_rospkgs()
-    
+
     sources_loader = create_test_SourcesListLoader()
     # create our test fixture.  we want to setup a fixture that cannot resolve the rosdep data in order to test error conditions
     lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack, sources_loader=sources_loader)
@@ -511,12 +511,12 @@ def test_RosdepInstaller_get_uninstalled_unconfigured():
         assert False, "should have raised"
     except RosdepInternalError as e:
         assert 'apt' in str(e)
-    
+
     # annoying mock to test generally impossible error condition
     from mock import Mock
     lookup = Mock(spec=RosdepLookup)
     lookup.resolve_all.return_value = ([('bad-key', ['stuff'])], [])
-    
+
     installer = RosdepInstaller(context, lookup)
     try:
         installer.get_uninstalled(['roscpp_fake'])
@@ -543,10 +543,10 @@ def test_RosdepInstaller_install_resolved():
     from rosdep2.lookup import RosdepLookup
     from rosdep2.installers import RosdepInstaller
     from rosdep2.platforms.debian import APT_INSTALLER
-    
+
     from rosdep2.lookup import RosdepLookup
     rospack, rosstack = get_test_rospkgs()
-    
+
     # create our test fixture.  use most of the default toolchain, but
     # replace the apt installer with one that we can have more fun
     # with.  we will do all tests with ubuntu lucid keys -- other
@@ -556,13 +556,13 @@ def test_RosdepInstaller_install_resolved():
     context = create_default_installer_context()
     context.set_os_override('ubuntu', 'lucid')
     installer = RosdepInstaller(context, lookup)
-    
+
     with fakeout() as (stdout, stderr):
         installer.install_resolved(APT_INSTALLER, [], simulate=True, verbose=False)
     with fakeout() as (stdout, stderr):
         installer.install_resolved(APT_INSTALLER, [], simulate=True, verbose=True)
     assert stdout.getvalue().strip() == '#No packages to install'
-    with fakeout() as (stdout, stderr):            
+    with fakeout() as (stdout, stderr):
         try:
             installer.install_resolved(APT_INSTALLER, ['rosdep-fake1', 'rosdep-fake2'], simulate=True, verbose=True)
         except OSError as e:

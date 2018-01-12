@@ -1,9 +1,9 @@
 # Copyright (c) 2011, Willow Garage, Inc.
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 #     * Redistributions of source code must retain the above copyright
 #       notice, this list of conditions and the following disclaimer.
 #     * Redistributions in binary form must reproduce the above copyright
@@ -12,7 +12,7 @@
 #     * Neither the name of the Willow Garage, Inc. nor the names of its
 #       contributors may be used to endorse or promote products derived from
 #       this software without specific prior written permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -34,13 +34,13 @@ def test_RosdepInternalError():
     except Exception as e:
         ex = RosdepInternalError(e)
         assert e == ex.error
-    
+
 def test_rd_debug():
     # just tripwire/coverage
     from rosdep2.core import rd_debug
     rd_debug('foo')
     os.environ['ROSDEP_DEBUG'] = '1'
-    rd_debug('foo')    
+    rd_debug('foo')
 
 def test_InvalidData():
     from rosdep2.core import InvalidData
