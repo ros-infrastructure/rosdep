@@ -12,7 +12,7 @@ class Issue30TestCase(unittest.TestCase):
         d = make_temp_dir()
         try:
             cd(d)
-            script = '''#!/bin/bash
+            script = """#!/bin/bash
 mkdir ws
 mkdir ws/src
 mkdir ws/build
@@ -23,19 +23,19 @@ cd build
 cmake ../src > /dev/null
 cd ../src
 git clone -b groovy-devel git://github.com/ros-drivers/joystick_drivers.git > /dev/null
-'''
+"""
             run_script('commands.bash', script)
             source('ws/build/devel/setup.sh')
             lookup = make_lookup()
             keys = rdmain.get_keys(lookup, ['spacenav_node'], recursive=True)
-            expected = '''
+            expected = """
                 geometry_msgs
                 libspnav-dev
                 libx11-dev
                 roscpp
                 sensor_msgs
                 spacenavd
-            '''.split()
+            """.split()
             self.assertEqual(expected, sorted(keys))
         finally:
             sp.call(['rm', '-rf', d])

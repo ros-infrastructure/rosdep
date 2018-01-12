@@ -47,7 +47,7 @@ env['LANG'] = 'C'
 
 
 def read_stdout(cmd, capture_stderr=False):
-    '''
+    """
     Execute given command and return stdout and if requested also stderr.
 
     :param cmd: command in a form that Popen understands (list of strings or one string)
@@ -57,7 +57,7 @@ def read_stdout(cmd, capture_stderr=False):
     the program as string (Note: stderr will be printed to the running
     terminal).  If it evaluates to True, tuple of strings: stdout output and
     standard error output each as string.
-    '''
+    """
     if capture_stderr:
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
         std_out, std_err = p.communicate()

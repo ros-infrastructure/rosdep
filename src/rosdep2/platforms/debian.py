@@ -94,12 +94,12 @@ def register_ubuntu(context):
 
 
 def _read_apt_cache_showpkg(packages, exec_fn=None):
-    '''
+    """
     Output whether these packages are virtual package list providing package.
     If one package was not found, it gets returned as non-virtual.
     :param exec_fn: see `dpkg_detect`; make sure that exec_fn supports a
     second, boolean, parameter.
-    '''
+    """
 
     cmd = ['apt-cache', 'showpkg'] + list(packages)
     if exec_fn is None:
