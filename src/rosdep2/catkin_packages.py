@@ -6,7 +6,7 @@ import sys
 try:
     from catkin_pkg.packages import find_packages
 except ImportError:
-    print("catkin_pkg was not detected, please install it.",
+    print('catkin_pkg was not detected, please install it.',
           file=sys.stderr)
     sys.exit(1)
 
@@ -28,20 +28,20 @@ def find_catkin_packages_in(path, verbose=False):
     path = os.path.abspath(path)
     if path in _catkin_packages_cache:
         if verbose:
-            print("found in cache.", file=sys.stderr)
+            print('found in cache.', file=sys.stderr)
         return _catkin_packages_cache[path]
     packages = find_packages(path)
     if type(packages) == dict and packages != {}:
         package_names = [package.name for package in packages.values()]
         if verbose:
-            print("found " + str(len(packages)) + " packages.")
+            print('found ' + str(len(packages)) + ' packages.')
             for package in package_names:
-                print("    {0}".format(package))
+                print('    {0}'.format(package))
         _catkin_packages_cache[path] = package_names
         return package_names
     else:
         if verbose:
-            print("failed to find packages.", file=sys.stderr)
+            print('failed to find packages.', file=sys.stderr)
         return []
 
 

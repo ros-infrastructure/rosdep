@@ -66,7 +66,7 @@ def _subtest_rep112_rdmanifest(resolved):
     assert resolved.install_command == rep122_install_command
     assert resolved.check_presence_command == rep122_check_presence_command
 
-    assert len(resolved.check_presence_command) == len(rep122_check_presence_command), "%s %s" % (len(resolved.check_presence_command), len(rep122_check_presence_command))
+    assert len(resolved.check_presence_command) == len(rep122_check_presence_command), '%s %s' % (len(resolved.check_presence_command), len(rep122_check_presence_command))
 
     assert resolved.exec_path == 'yaml-cpp-0.2.5'
     assert resolved.tarball == 'http://download.ros.org/downloads/yaml-cpp-0.2.5.tar.gz'
@@ -120,7 +120,7 @@ def test_SourceInstall():
     # uri is required
     try:
         SourceInstall.from_manifest(manifest, 'foo')
-        assert False, "should have raised"
+        assert False, 'should have raised'
     except InvalidRdmanifest as e:
         pass
 
@@ -201,12 +201,12 @@ def test_SourceInstaller_resolve():
     installer = SourceInstaller()
     try:
         installer.resolve({})
-        assert False, "should have raised"
+        assert False, 'should have raised'
     except InvalidData:
         pass
     try:
         installer.resolve(dict(uri=url, md5sum=md5sum_bad))
-        assert False, "should have raised"
+        assert False, 'should have raised'
     except InvalidData:
         pass
     resolved = installer.resolve(dict(uri=url, md5sum=md5sum_good))
@@ -215,7 +215,7 @@ def test_SourceInstaller_resolve():
     assert len(resolved) == 1
     # test for reinstall (to check the depends in rdmanifest)
     dependencies = installer.get_depends(dict(uri=url, md5sum=md5sum_good))
-    assert dependencies == ['checkinstall'], "Dependencies should resolve to checkinstall listed in the rdmanifest."
+    assert dependencies == ['checkinstall'], 'Dependencies should resolve to checkinstall listed in the rdmanifest.'
     resolved = resolved[0]
 
     assert resolved.install_command == rep122_install_command
@@ -223,7 +223,7 @@ def test_SourceInstaller_resolve():
 
     # test again to activate caching
     resolved = installer.resolve(dict(uri=url, md5sum=md5sum_good))
-    assert type(resolved) == list, "Cache should also return a list"
+    assert type(resolved) == list, 'Cache should also return a list'
     assert len(resolved) == 1
     resolved = resolved[0]
     assert resolved.install_command == rep122_install_command
@@ -238,7 +238,7 @@ def test_load_rdmanifest():
 
     try:
         load_rdmanifest(';lkajsdf;klj ;l: a;kljdf;: asdf\n ;asdfl;kj')
-        assert False, "should have raised"
+        assert False, 'should have raised'
     except InvalidRdmanifest as e:
         pass
 
@@ -261,12 +261,12 @@ def test_fetch_file():
     assert contents == expected
 
     contents, error = fetch_file(url, 'badmd5')
-    assert bool(error), "should have errored"
+    assert bool(error), 'should have errored'
     assert not contents
 
     contents, error = fetch_file('http://badhostname.willowgarage.com', 'md5sum')
     assert not contents
-    assert bool(error), "should have errored"
+    assert bool(error), 'should have errored'
 
 
 def test_download_rdmanifest():
@@ -288,14 +288,14 @@ def test_download_rdmanifest():
     # test md5sum validate
     try:
         contents, error = download_rdmanifest(url, 'badmd5')
-        assert False, "should have errored"
+        assert False, 'should have errored'
     except DownloadFailed:
         pass
 
     # test download verify
     try:
         contents, error = download_rdmanifest('http://badhostname.willowgarage.com', 'fakemd5')
-        assert False, "should have errored"
+        assert False, 'should have errored'
     except DownloadFailed:
         pass
 

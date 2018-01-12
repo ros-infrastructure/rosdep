@@ -34,26 +34,26 @@ def test_RosdepLoader():
     loader = RosdepLoader()
     try:
         loader.load_view('foo', Mock())
-        assert False, "should have raised NotImplemented"
+        assert False, 'should have raised NotImplemented'
     except NotImplementedError:
         pass
     try:
         loader.get_loadable_resources()
-        assert False, "should have raised NotImplementedError"
+        assert False, 'should have raised NotImplementedError'
     except NotImplementedError:
         pass
     try:
         loader.get_loadable_views()
-        assert False, "should have raised NotImplementedError"
+        assert False, 'should have raised NotImplementedError'
     except NotImplementedError:
         pass
     try:
         loader.get_view_key('foo')
-        assert False, "should have raised NotImplementedError"
+        assert False, 'should have raised NotImplementedError'
     except NotImplementedError:
         pass
     try:
         loader.get_rosdeps('foo', implicit=False)
-        assert False, "should have raised NotImplementedError"
+        assert False, 'should have raised NotImplementedError'
     except NotImplementedError:
         pass

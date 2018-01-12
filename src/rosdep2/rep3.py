@@ -54,7 +54,7 @@ def download_targets_data(targets_url=None):
     :raises: :exc:`DownloadFailure`
     :raises: :exc:`InvalidData` If targets file does not pass cursory validation checks.
     """
-    warnings.warn("deprecated, use rosdistro instead", PreRep137Warning)
+    warnings.warn('deprecated, use rosdistro instead', PreRep137Warning)
 
     if targets_url is None:
         targets_url = REP3_TARGETS_URL
@@ -64,7 +64,7 @@ def download_targets_data(targets_url=None):
         f.close()
         targets_data = yaml.safe_load(text)
     except Exception as e:
-        raise DownloadFailure("Failed to download target platform data for gbpdistro:\n\t%s" % (str(e)))
+        raise DownloadFailure('Failed to download target platform data for gbpdistro:\n\t%s' % (str(e)))
     if type(targets_data) == list:
         # convert to dictionary
         new_targets_data = {}

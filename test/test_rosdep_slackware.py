@@ -45,7 +45,7 @@ def get_test_dir():
 
 def test_sbotools_available():
     if not is_slackware():
-        print("Skipping not Slackware")
+        print('Skipping not Slackware')
         return
     from rosdep2.platforms.slackware import sbotools_available
 
@@ -68,7 +68,7 @@ def test_sbotools_available():
     path_overrides['/usr/sbin/sboinstall'] = False
 
     val = sbotools_available()
-    assert not val, "Sbotools should not be available"
+    assert not val, 'Sbotools should not be available'
 
     # Test with sbotools installed
     m.reset_mock()
@@ -76,14 +76,14 @@ def test_sbotools_available():
     path_overrides['/usr/sbin/sboinstall'] = True
 
     val = sbotools_available()
-    assert val, "Sbotools should be available"
+    assert val, 'Sbotools should be available'
 
     os.path.exists = original_exists
 
 
 def test_SbotoolsInstaller():
     if not is_slackware():
-        print("Skipping not Slackware")
+        print('Skipping not Slackware')
         return
 
     from rosdep2.platforms.slackware import SbotoolsInstaller
@@ -115,7 +115,7 @@ def test_SbotoolsInstaller():
 
 def test_slackpkg_available():
     if not is_slackware():
-        print("Skipping not Slackware")
+        print('Skipping not Slackware')
         return
     from rosdep2.platforms.slackware import slackpkg_available
 
@@ -138,7 +138,7 @@ def test_slackpkg_available():
     path_overrides['/usr/sbin/slackpkg'] = False
 
     val = slackpkg_available()
-    assert not val, "Slackpkg should not be available"
+    assert not val, 'Slackpkg should not be available'
 
     # Test with sbotools installed
     m.reset_mock()
@@ -146,14 +146,14 @@ def test_slackpkg_available():
     path_overrides['/usr/sbin/slackpkg'] = True
 
     val = slackpkg_available()
-    assert val, "Slackpkg should be available"
+    assert val, 'Slackpkg should be available'
 
     os.path.exists = original_exists
 
 
 def test_SlackpkgInstaller():
     if not is_slackware():
-        print("Skipping not Slackware")
+        print('Skipping not Slackware')
         return
 
     from rosdep2.platforms.slackware import SlackpkgInstaller

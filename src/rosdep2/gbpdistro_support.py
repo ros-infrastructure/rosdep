@@ -71,23 +71,23 @@ def gbprepo_to_rosdep_data(gbpdistro_data, targets_data, url=''):
     :raises: :exc:`InvalidData`
     """
 
-    warnings.warn("deprecated: see REP137 and rosdistro", PreRep137Warning)
+    warnings.warn('deprecated: see REP137 and rosdistro', PreRep137Warning)
     # Error reporting for this isn't nearly as good as it could be
     # (e.g. doesn't separate gbpdistro vs. targets, nor provide
     # origin), but rushing this implementation a bit.
     try:
         if not type(targets_data) == dict:
-            raise InvalidData("targets data must be a dict")
+            raise InvalidData('targets data must be a dict')
         if not type(gbpdistro_data) == dict:
-            raise InvalidData("gbpdistro data must be a dictionary")
+            raise InvalidData('gbpdistro data must be a dictionary')
         if gbpdistro_data['type'] != 'gbp':
             raise InvalidData('gbpdistro must be of type "gbp"')
 
         # compute the default target data for the release_name
         release_name = gbpdistro_data['release-name']
         if release_name not in targets_data:
-            raise InvalidData("targets file does not contain information "
-                              "for release [%s]" % (release_name))
+            raise InvalidData('targets file does not contain information '
+                              'for release [%s]' % (release_name))
         else:
             # take the first match
             target_data = targets_data[release_name]
@@ -97,11 +97,11 @@ def gbprepo_to_rosdep_data(gbpdistro_data, targets_data, url=''):
         gbp_repos = gbpdistro_data['repositories']
         # Ensure gbp_repos is a dict
         if type(gbp_repos) != dict:
-            raise InvalidData("invalid repo spec in gbpdistro data: " + str(gbp_repos) +
-                              ". Invalid repositories entry, must be dict.")
+            raise InvalidData('invalid repo spec in gbpdistro data: ' + str(gbp_repos) +
+                              '. Invalid repositories entry, must be dict.')
         for rosdep_key, repo in gbp_repos.items():
             if type(repo) != dict:
-                raise InvalidData("invalid repo spec in gbpdistro data: " +
+                raise InvalidData('invalid repo spec in gbpdistro data: ' +
                                   str(repo))
 
             for pkg in repo.get('packages', {rosdep_key: None}):
@@ -127,7 +127,7 @@ def gbprepo_to_rosdep_data(gbpdistro_data, targets_data, url=''):
 
                 for t in repo_targets:
                     if not isinstance(t, basestring):
-                        raise InvalidData("invalid target spec: %s" % (t))
+                        raise InvalidData('invalid target spec: %s' % (t))
                     # rosdep_data[pkg][OS_UBUNTU][t] = {
                     rosdep_data[pkg][OS_UBUNTU][t] = {
                         APT_INSTALLER: {'packages': [deb_package_name]}
@@ -136,7 +136,7 @@ def gbprepo_to_rosdep_data(gbpdistro_data, targets_data, url=''):
                 rosdep_data[pkg]['_is_ros'] = True
         return rosdep_data
     except KeyError as e:
-        raise InvalidData("Invalid GBP-distro/targets format: missing key: " +
+        raise InvalidData('Invalid GBP-distro/targets format: missing key: ' +
                           str(e))
 
 
@@ -210,5 +210,5 @@ def download_gbpdistro_as_rosdep_data(gbpdistro_url, targets_url=None):
                                       targets_data,
                                       gbpdistro_url)
     except Exception as e:
-        raise DownloadFailure("Failed to download target platform data "
-                              "for gbpdistro:\n\t" + str(e))
+        raise DownloadFailure('Failed to download target platform data '
+                              'for gbpdistro:\n\t' + str(e))

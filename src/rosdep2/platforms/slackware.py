@@ -56,7 +56,7 @@ def register_platforms(context):
 
 
 def sbotools_available():
-    if not os.path.exists("/usr/sbin/sboinstall"):
+    if not os.path.exists('/usr/sbin/sboinstall'):
         return False
     return True
 
@@ -79,7 +79,7 @@ class SbotoolsInstaller(PackageManagerInstaller):
 
     def get_install_command(self, resolved, interactive=True, reinstall=False, quiet=False):
         if not sbotools_available():
-            raise InstallFailed((SBOTOOLS_INSTALLER, "sbotools is not installed"))
+            raise InstallFailed((SBOTOOLS_INSTALLER, 'sbotools is not installed'))
 
         packages = self.get_packages_to_install(resolved, reinstall=reinstall)
         if not packages:
@@ -87,11 +87,11 @@ class SbotoolsInstaller(PackageManagerInstaller):
 
         cmd = ['sboinstall']
 
-        return [self.elevate_priv(cmd + [p] + ["-j"]) for p in packages]
+        return [self.elevate_priv(cmd + [p] + ['-j']) for p in packages]
 
 
 def slackpkg_available():
-    if not os.path.exists("/usr/sbin/slackpkg"):
+    if not os.path.exists('/usr/sbin/slackpkg'):
         return False
     return True
 

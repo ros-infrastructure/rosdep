@@ -52,7 +52,7 @@ def register_platforms(context):
 
 def cygcheck_detect_single(p):
     std_out = read_stdout(['cygcheck', '-c', p])
-    return std_out.count("OK") > 0
+    return std_out.count('OK') > 0
 
 
 def cygcheck_detect(packages):
@@ -80,4 +80,4 @@ class AptCygInstaller(PackageManagerInstaller):
 
 
 if __name__ == '__main__':
-    print("test cygcheck_detect(true)", cygcheck_detect('cygwin'))
+    print('test cygcheck_detect(true)', cygcheck_detect('cygwin'))

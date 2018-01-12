@@ -69,7 +69,7 @@ def register_linaro(context):
     # an override force ubuntu.
     (os_name, os_version) = context.get_os_name_and_version()
     if os_name == OS_LINARO and not context.os_override:
-        print("rosdep detected OS: [%s] aliasing it to: [%s]" %
+        print('rosdep detected OS: [%s] aliasing it to: [%s]' %
               (OS_LINARO, OS_UBUNTU), file=sys.stderr)
         context.set_os_override(OS_UBUNTU, context.os_detect.get_codename())
 
@@ -79,7 +79,7 @@ def register_elementary(context):
     # not set as an override force ubuntu.
     (os_name, os_version) = context.get_os_name_and_version()
     if os_name == OS_ELEMENTARY and not context.os_override:
-        print("rosdep detected OS: [%s] aliasing it to: [%s]" %
+        print('rosdep detected OS: [%s] aliasing it to: [%s]' %
               (OS_ELEMENTARY, OS_UBUNTU), file=sys.stderr)
         context.set_os_override(OS_UBUNTU, context.os_detect.get_codename())
 
@@ -112,7 +112,7 @@ def _read_apt_cache_showpkg(packages, exec_fn=None):
     for p in packages:
         last_start = starts[-1] if len(starts) > 0 else 0
         try:
-            starts.append(std_out.index("Package: %s" % p, last_start))
+            starts.append(std_out.index('Package: %s' % p, last_start))
         except ValueError:
             notfound.add(p)
     starts.append(-1)
@@ -124,22 +124,22 @@ def _read_apt_cache_showpkg(packages, exec_fn=None):
         start = starts.pop(0)
         lines = iter(std_out[start:starts[0]])
 
-        header = "Package: %s" % p
+        header = 'Package: %s' % p
         # proceed to Package header
         while next(lines) != header:
             pass
 
         # proceed to versions section
-        while next(lines) != "Versions: ":
+        while next(lines) != 'Versions: ':
             pass
 
         # virtual packages don't have versions
-        if next(lines) != "":
+        if next(lines) != '':
             yield p, False, None
             continue
 
         # proceed to reserve provides section
-        while next(lines) != "Reverse Provides: ":
+        while next(lines) != 'Reverse Provides: ':
             pass
 
         yield p, True, [line.split(' ', 2)[0] for line in lines]

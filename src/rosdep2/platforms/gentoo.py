@@ -95,10 +95,10 @@ def portage_detect(atoms, exec_fn=read_stdout):
 
 
 def portage_available():
-    if not os.path.exists("/usr/bin/portageq"):
+    if not os.path.exists('/usr/bin/portageq'):
         return False
 
-    if not os.path.exists("/usr/bin/emerge"):
+    if not os.path.exists('/usr/bin/emerge'):
         return False
 
     # We only use standard, defined portage features.

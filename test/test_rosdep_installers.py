@@ -94,7 +94,7 @@ def test_InstallerContext_get_os_version_type():
 
     try:
         context.set_os_version_type(OS_UBUNTU, 'bad')
-        assert False, "should check type"
+        assert False, 'should check type'
     except ValueError:
         pass
 
@@ -112,7 +112,7 @@ def test_InstallerContext_os_version_and_name():
     assert os_name is not None
     assert os_version is not None
 
-    val = ("fakeos", "blah")
+    val = ('fakeos', 'blah')
     context.set_os_override(*val)
     assert val == context.get_os_name_and_version()
 
@@ -143,7 +143,7 @@ def test_InstallerContext_installers():
     key = 'fake-apt'
     try:
         installer = context.get_installer(key)
-        assert False, "should have raised: %s" % (installer)
+        assert False, 'should have raised: %s' % (installer)
     except KeyError:
         pass
 
@@ -159,18 +159,18 @@ def test_InstallerContext_installers():
     # test TypeError on set_installer
     try:
         context.set_installer(key, 1)
-        assert False, "should have raised"
+        assert False, 'should have raised'
     except TypeError:
         pass
     try:
         context.set_installer(key, Foo())
-        assert False, "should have raised"
+        assert False, 'should have raised'
     except TypeError:
         pass
     try:
         # must be instantiated
         context.set_installer(key, FakeInstaller)
-        assert False, "should have raised"
+        assert False, 'should have raised'
     except TypeError:
         pass
 
@@ -220,32 +220,32 @@ def test_InstallerContext_os_installers():
     os_key = 'ubuntu'
     try:
         context.get_os_installer_keys(os_key)
-        assert False, "should have raised"
+        assert False, 'should have raised'
     except KeyError:
         pass
     try:
         context.get_default_os_installer_key(os_key)
-        assert False, "should have raised"
+        assert False, 'should have raised'
     except KeyError:
         pass
     try:
         context.add_os_installer_key(os_key, 'fake-key')
-        assert False, "should have raised"
+        assert False, 'should have raised'
     except KeyError:
         pass
     try:
         context.set_default_os_installer_key(os_key, 'non-method')
-        assert False, "should have raised"
+        assert False, 'should have raised'
     except KeyError:
         pass
     try:
         context.set_default_os_installer_key(os_key, lambda self: 'fake-key')
-        assert False, "should have raised"
+        assert False, 'should have raised'
     except KeyError:
         pass
     try:
         context.get_default_os_installer_key('bad-os')
-        assert False, "should have raised"
+        assert False, 'should have raised'
     except KeyError:
         pass
 
@@ -269,7 +269,7 @@ def test_InstallerContext_os_installers():
     # retest set_default_os_installer_key, now with installer_key not configured on os
     try:
         context.set_default_os_installer_key(os_key, lambda self: installer_key2)
-        assert False, "should have raised"
+        assert False, 'should have raised'
     except KeyError as e:
         assert 'add_os_installer' in str(e), e
 
@@ -287,7 +287,7 @@ def test_InstallerContext_os_installers():
     # retest set_default_os_installer_key, now with invalid os
     try:
         context.set_default_os_installer_key('bad-os', lambda self: installer_key1)
-        assert False, "should have raised"
+        assert False, 'should have raised'
     except KeyError:
         pass
 
@@ -360,7 +360,7 @@ def test_PackageManagerInstaller_resolve():
     # test invalid data
     try:
         installer.resolve(0)
-        assert False, "should have raised"
+        assert False, 'should have raised'
     except InvalidData:
         pass
 
@@ -549,11 +549,11 @@ def test_RosdepInstaller_get_uninstalled_unconfigured():
             super(BadInstaller, self).__init__(lambda x: x)
 
         def get_packages_to_install(*args):
-            raise Exception("deadbeef")
+            raise Exception('deadbeef')
     context.set_installer(APT_INSTALLER, BadInstaller())
     try:
         installer.get_uninstalled(['roscpp_fake'])
-        assert False, "should have raised"
+        assert False, 'should have raised'
     except RosdepInternalError as e:
         assert 'apt' in str(e)
 
@@ -565,7 +565,7 @@ def test_RosdepInstaller_get_uninstalled_unconfigured():
     installer = RosdepInstaller(context, lookup)
     try:
         installer.get_uninstalled(['roscpp_fake'])
-        assert False, "should have raised"
+        assert False, 'should have raised'
     except RosdepInternalError:
         pass
 

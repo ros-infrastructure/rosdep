@@ -33,7 +33,7 @@ import traceback
 
 
 def rd_debug(s):
-    if "ROSDEP_DEBUG" in os.environ:
+    if 'ROSDEP_DEBUG' in os.environ:
         print(s)
 
 
@@ -101,7 +101,7 @@ class InstallFailed(Exception):
         if failures is not None:
             self.failures = failures
         elif not failure:
-            raise ValueError("failure is None")
+            raise ValueError('failure is None')
         else:
             self.failures = [failure]
 

@@ -87,7 +87,7 @@ def create_tempfile_from_string_and_execute(string_script, path=None, exec_fn=No
         fh = tempfile.NamedTemporaryFile('w', delete=False)
         fh.write(string_script)
         fh.close()
-        print("Executing script below with cwd=%s\n{{{\n%s\n}}}\n" % (path, string_script))
+        print('Executing script below with cwd=%s\n{{{\n%s\n}}}\n' % (path, string_script))
         try:
             os.chmod(fh.name, stat.S_IRWXU)
             if exec_fn is None:
@@ -95,10 +95,10 @@ def create_tempfile_from_string_and_execute(string_script, path=None, exec_fn=No
             else:
                 result = exec_fn(fh.name, cwd=path)
         except OSError as ex:
-            print("Execution failed with OSError: %s" % (ex))
+            print('Execution failed with OSError: %s' % (ex))
     finally:
         if os.path.exists(fh.name):
             os.remove(fh.name)
 
-    rd_debug("Return code was: %s" % (result))
+    rd_debug('Return code was: %s' % (result))
     return result == 0

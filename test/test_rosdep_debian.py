@@ -96,7 +96,7 @@ def test_AptInstaller():
         expected = [['sudo', '-H', 'apt-get', 'install', '-y', 'a'],
                     ['sudo', '-H', 'apt-get', 'install', '-y', 'b']]
         val = installer.get_install_command(['whatever'], interactive=False)
-        print("VAL", val)
+        print('VAL', val)
         assert val == expected, val
         expected = [['sudo', '-H', 'apt-get', 'install', 'a'],
                     ['sudo', '-H', 'apt-get', 'install', 'b']]
