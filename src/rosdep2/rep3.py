@@ -1,9 +1,9 @@
 # Copyright (c) 2012, Willow Garage, Inc.
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 #     * Redistributions of source code must retain the above copyright
 #       notice, this list of conditions and the following disclaimer.
 #     * Redistributions in binary form must reproduce the above copyright
@@ -12,7 +12,7 @@
 #     * Neither the name of the Willow Garage, Inc. nor the names of its
 #       contributors may be used to endorse or promote products derived from
 #       this software without specific prior written permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -38,8 +38,9 @@ from .rosdistrohelper import PreRep137Warning
 # location of targets file for processing gbpdistro files
 REP3_TARGETS_URL = 'https://raw.github.com/ros/rosdistro/master/releases/targets.yaml'
 
-#seconds to wait before aborting download of gbpdistro data
+# seconds to wait before aborting download of gbpdistro data
 DOWNLOAD_TIMEOUT = 15.0
+
 
 def download_targets_data(targets_url=None):
     """
@@ -53,7 +54,7 @@ def download_targets_data(targets_url=None):
     :raises: :exc:`DownloadFailure`
     :raises: :exc:`InvalidData` If targets file does not pass cursory validation checks.
     """
-    warnings.warn("deprecated, use rosdistro instead", PreRep137Warning)
+    warnings.warn('deprecated, use rosdistro instead', PreRep137Warning)
 
     if targets_url is None:
         targets_url = REP3_TARGETS_URL
@@ -63,7 +64,7 @@ def download_targets_data(targets_url=None):
         f.close()
         targets_data = yaml.safe_load(text)
     except Exception as e:
-        raise DownloadFailure("Failed to download target platform data for gbpdistro:\n\t%s"%(str(e)))
+        raise DownloadFailure('Failed to download target platform data for gbpdistro:\n\t%s' % (str(e)))
     if type(targets_data) == list:
         # convert to dictionary
         new_targets_data = {}

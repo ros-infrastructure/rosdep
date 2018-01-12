@@ -1,9 +1,9 @@
 # Copyright (c) 2011, Willow Garage, Inc.
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 #     * Redistributions of source code must retain the above copyright
 #       notice, this list of conditions and the following disclaimer.
 #     * Redistributions in binary form must reproduce the above copyright
@@ -12,7 +12,7 @@
 #     * Neither the name of the Willow Garage, Inc. nor the names of its
 #       contributors may be used to endorse or promote products derived from
 #       this software without specific prior written permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -51,8 +51,10 @@ else
 
 REP112_MD5SUM = '57cb9faf930e9c4f0822be8b27798248'
 
+
 def get_test_dir():
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'source'))
+
 
 def _subtest_rep112_rdmanifest(resolved):
     test_dir = get_test_dir()
@@ -64,17 +66,18 @@ def _subtest_rep112_rdmanifest(resolved):
     assert resolved.install_command == rep122_install_command
     assert resolved.check_presence_command == rep122_check_presence_command
 
-    assert len(resolved.check_presence_command) == len(rep122_check_presence_command), "%s %s"%(len(resolved.check_presence_command), len(rep122_check_presence_command))
+    assert len(resolved.check_presence_command) == len(rep122_check_presence_command), '%s %s' % (len(resolved.check_presence_command), len(rep122_check_presence_command))
 
     assert resolved.exec_path == 'yaml-cpp-0.2.5'
     assert resolved.tarball == 'http://download.ros.org/downloads/yaml-cpp-0.2.5.tar.gz'
-    assert resolved.alternate_tarball == None
+    assert resolved.alternate_tarball is None
     assert resolved.tarball_md5sum == 'b17dc36055cd2259c88b2602601415d9'
+
 
 def test_SourceInstall():
     from rosdep2.platforms.source import InvalidRdmanifest, SourceInstall
 
-    #tripwire
+    # tripwire
     SourceInstall()
 
     # test unpacking of dict
@@ -86,7 +89,7 @@ def test_SourceInstall():
         'uri': 'http://ros.org/',
         'alternate-uri': 'http://turtlebot.com/',
         'depends': ['foo', 'bar'],
-        }
+    }
     resolved = SourceInstall.from_manifest(manifest, 'fake-url')
     assert resolved.manifest == manifest
     assert resolved.manifest_url == 'fake-url'
@@ -103,7 +106,7 @@ def test_SourceInstall():
     resolved = SourceInstall.from_manifest(manifest, path)
     _subtest_rep112_rdmanifest(resolved)
 
-    #TODO: test depends
+    # TODO: test depends
 
     # test with bad dicts
     manifest = {
@@ -113,22 +116,23 @@ def test_SourceInstall():
         'check-presence-script': 'hello there',
         'alternate-uri': 'http://turtlebot.com/',
         'depends': ['foo', 'bar'],
-        }
+    }
     # uri is required
     try:
         SourceInstall.from_manifest(manifest, 'foo')
-        assert False, "should have raised"
+        assert False, 'should have raised'
     except InvalidRdmanifest as e:
         pass
-    
+
     # test defaults
     manifest = dict(uri='http://ros.org/')
     resolved = SourceInstall.from_manifest(manifest, 'foo')
     assert resolved.exec_path == '.'
     assert resolved.install_command == ''
-    assert resolved.check_presence_command == ''    
+    assert resolved.check_presence_command == ''
     assert resolved.alternate_tarball is None
     assert resolved.tarball_md5sum is None
+
 
 def test_is_installed():
     from rosdep2.platforms.source import SourceInstaller, SourceInstall
@@ -138,7 +142,8 @@ exit 0
 """
     installer = SourceInstaller()
     assert installer.is_installed(resolved)
-    
+
+
 def test_source_detect():
     from rosdep2.platforms.source import source_detect, SourceInstall
     resolved = SourceInstall()
@@ -148,17 +153,21 @@ exit 0
     assert [] == source_detect([])
     assert [resolved] == source_detect([resolved])
 
-    def yes(*args, **kwds): return 0
-    def no(*args, **kwds): return 1
+    def yes(*args, **kwds):
+        return 0
+
+    def no(*args, **kwds):
+        return 1
 
     resolved = [SourceInstall(), SourceInstall(), SourceInstall(), SourceInstall()]
     for r in resolved:
         r.check_presence_command = ''
-    
+
     retval = source_detect(resolved, exec_fn=yes)
     assert resolved == retval, retval
     assert [] == source_detect(resolved, exec_fn=no)
-    
+
+
 def test_SourceInstaller_get_install_command():
     from rosdep2.platforms.source import SourceInstaller, SourceInstall
     installer = SourceInstaller()
@@ -179,7 +188,8 @@ exit 0
 """
     commands = installer.get_install_command([resolved])
     assert not(commands)
-    
+
+
 def test_SourceInstaller_resolve():
     from rosdep2.platforms.source import SourceInstaller, InvalidData
     test_dir = get_test_dir()
@@ -191,21 +201,21 @@ def test_SourceInstaller_resolve():
     installer = SourceInstaller()
     try:
         installer.resolve({})
-        assert False, "should have raised"
+        assert False, 'should have raised'
     except InvalidData:
         pass
     try:
         installer.resolve(dict(uri=url, md5sum=md5sum_bad))
-        assert False, "should have raised"
+        assert False, 'should have raised'
     except InvalidData:
         pass
     resolved = installer.resolve(dict(uri=url, md5sum=md5sum_good))
-        
+
     assert type(resolved) == list
     assert len(resolved) == 1
     # test for reinstall (to check the depends in rdmanifest)
     dependencies = installer.get_depends(dict(uri=url, md5sum=md5sum_good))
-    assert dependencies == ['checkinstall'], "Dependencies should resolve to checkinstall listed in the rdmanifest."
+    assert dependencies == ['checkinstall'], 'Dependencies should resolve to checkinstall listed in the rdmanifest.'
     resolved = resolved[0]
 
     assert resolved.install_command == rep122_install_command
@@ -213,13 +223,13 @@ def test_SourceInstaller_resolve():
 
     # test again to activate caching
     resolved = installer.resolve(dict(uri=url, md5sum=md5sum_good))
-    assert type(resolved) == list, "Cache should also return a list"
+    assert type(resolved) == list, 'Cache should also return a list'
     assert len(resolved) == 1
     resolved = resolved[0]
     assert resolved.install_command == rep122_install_command
     assert resolved.check_presence_command == rep122_check_presence_command
 
-        
+
 def test_load_rdmanifest():
     from rosdep2.platforms.source import load_rdmanifest, InvalidRdmanifest
     # load_rdmanifest is just a YAML unmarshaller with an exception change
@@ -228,15 +238,17 @@ def test_load_rdmanifest():
 
     try:
         load_rdmanifest(';lkajsdf;klj ;l: a;kljdf;: asdf\n ;asdfl;kj')
-        assert False, "should have raised"
+        assert False, 'should have raised'
     except InvalidRdmanifest as e:
         pass
+
 
 def test_get_file_hash():
     from rosdep2.platforms.source import get_file_hash
     path = os.path.join(get_test_dir(), 'rep112-example.rdmanifest')
     assert REP112_MD5SUM == get_file_hash(path)
-    
+
+
 def test_fetch_file():
     test_dir = get_test_dir()
     with open(os.path.join(test_dir, 'rep112-example.rdmanifest')) as f:
@@ -249,13 +261,14 @@ def test_fetch_file():
     assert contents == expected
 
     contents, error = fetch_file(url, 'badmd5')
-    assert bool(error), "should have errored"
+    assert bool(error), 'should have errored'
     assert not contents
 
     contents, error = fetch_file('http://badhostname.willowgarage.com', 'md5sum')
     assert not contents
-    assert bool(error), "should have errored"
-    
+    assert bool(error), 'should have errored'
+
+
 def test_download_rdmanifest():
     test_dir = get_test_dir()
     with open(os.path.join(test_dir, 'rep112-example.rdmanifest')) as f:
@@ -275,22 +288,23 @@ def test_download_rdmanifest():
     # test md5sum validate
     try:
         contents, error = download_rdmanifest(url, 'badmd5')
-        assert False, "should have errored"
+        assert False, 'should have errored'
     except DownloadFailed:
         pass
 
     # test download verify
     try:
         contents, error = download_rdmanifest('http://badhostname.willowgarage.com', 'fakemd5')
-        assert False, "should have errored"
+        assert False, 'should have errored'
     except DownloadFailed:
         pass
 
-    
+
 def test_install_from_file():
     from rosdep2.platforms.source import install_from_file
     f = os.path.join(get_test_dir(), 'noop-not-installed.rdmanifest')
     install_from_file(f)
+
 
 def test_install_source():
     from rosdep2.platforms.source import install_source, SourceInstall

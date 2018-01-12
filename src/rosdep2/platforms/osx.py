@@ -47,15 +47,17 @@ OSXBREW_OS_NAME = 'osxbrew'
 BREW_INSTALLER = 'homebrew'
 MACPORTS_INSTALLER = 'macports'
 
-#py3k
+# py3k
 try:
     _basestring = basestring
 except NameError:
     _basestring = str
 
+
 def register_installers(context):
     context.set_installer(MACPORTS_INSTALLER, MacportsInstaller())
     context.set_installer(BREW_INSTALLER, HomebrewInstaller())
+
 
 def register_platforms(context):
     context.add_os_installer_key(OS_OSX, BREW_INSTALLER)
@@ -65,6 +67,7 @@ def register_platforms(context):
     context.set_default_os_installer_key(OS_OSX, lambda self: BREW_INSTALLER)
     context.set_os_version_type(OS_OSX, OsDetect.get_codename)
 
+
 def is_port_installed():
     try:
         subprocess.Popen(['port'], stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
@@ -72,18 +75,20 @@ def is_port_installed():
     except OSError:
         return False
 
+
 def port_detect(pkgs, exec_fn=None):
     ret_list = []
     if not is_port_installed():
         return ret_list
     if exec_fn is None:
         exec_fn = read_stdout
-    std_out = exec_fn(['port', 'installed']+pkgs)
+    std_out = exec_fn(['port', 'installed'] + pkgs)
     for pkg in std_out.split('\n'):
         pkg_row = pkg.split()
-        if len(pkg_row) == 3 and pkg_row[0] in pkgs and pkg_row[2] =='(active)':
+        if len(pkg_row) == 3 and pkg_row[0] in pkgs and pkg_row[2] == '(active)':
             ret_list.append(pkg_row[0])
     return ret_list
+
 
 class MacportsInstaller(PackageManagerInstaller):
     """
@@ -112,8 +117,9 @@ class MacportsInstaller(PackageManagerInstaller):
         if not packages:
             return []
         else:
-            #TODO: interactive
+            # TODO: interactive
             return [self.elevate_priv(['port', 'install', p]) for p in packages]
+
 
 def is_brew_installed():
     try:
@@ -143,8 +149,8 @@ class HomebrewResolution(object):
 
     def __eq__(self, other):
         return other.package == self.package and \
-               other.install_flags == self.install_flags and \
-               other.options == self.options
+            other.install_flags == self.install_flags and \
+            other.options == self.options
 
     def __hash__(self):
         return hash((
@@ -166,7 +172,7 @@ def brew_strip_pkg_name(package):
     :returns: Unqualified package name. E.g. 'foo-pkg' for input
         'ros/hydro/foo-pkg'
     """
-    if not isinstance(package, str): # package is a bytes object
+    if not isinstance(package, str):  # package is a bytes object
         package = package.decode()
     return package.split('/')[-1]
 
@@ -211,7 +217,7 @@ def brew_detect(resolved, exec_fn=None):
  * Output of `brew info {0} --json=v1`:
  {1}
  * Error while parsing:
- {2}""".format(r.package, std_out, "".join(traceback.format_exception(e_type, e, tb))))
+ {2}""".format(r.package, std_out, ''.join(traceback.format_exception(e_type, e, tb))))
 
         if set(r.options) <= set(installed_options):
             return True
@@ -291,7 +297,7 @@ class HomebrewInstaller(PackageManagerInstaller):
 
         def handle_options(options):
             # if only one package is specified we allow a flat list of options
-            if len(packages) == 1 and options and not isinstance(options[0],list):
+            if len(packages) == 1 and options and not isinstance(options[0], list):
                 options = [options]
             else:
                 options = list(map(coerce_to_list, options))
@@ -319,8 +325,8 @@ class HomebrewInstaller(PackageManagerInstaller):
             options = []
             install_flags = []
             if type(rosdep_args) == dict:
-                options = coerce_to_list(rosdep_args.get("options", []))
-                install_flags = coerce_to_list(rosdep_args.get("install_flags", []))
+                options = coerce_to_list(rosdep_args.get('options', []))
+                install_flags = coerce_to_list(rosdep_args.get('install_flags', []))
 
             options = handle_options(options)
             install_flags = handle_options(install_flags)

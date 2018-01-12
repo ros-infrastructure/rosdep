@@ -1,9 +1,9 @@
 # Copyright (c) 2009, Willow Garage, Inc.
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 #     * Redistributions of source code must retain the above copyright
 #       notice, this list of conditions and the following disclaimer.
 #     * Redistributions in binary form must reproduce the above copyright
@@ -12,7 +12,7 @@
 #     * Neither the name of the Willow Garage, Inc. nor the names of its
 #       contributors may be used to endorse or promote products derived from
 #       this software without specific prior written permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -35,22 +35,26 @@ from .source import SOURCE_INSTALLER
 from ..installers import PackageManagerInstaller
 
 # zypper package manager key
-ZYPPER_INSTALLER='zypper'
+ZYPPER_INSTALLER = 'zypper'
+
 
 def register_installers(context):
     context.set_installer(ZYPPER_INSTALLER, ZypperInstaller())
+
 
 def register_platforms(context):
     context.add_os_installer_key(OS_OPENSUSE, SOURCE_INSTALLER)
     context.add_os_installer_key(OS_OPENSUSE, ZYPPER_INSTALLER)
     context.set_default_os_installer_key(OS_OPENSUSE, lambda self: ZYPPER_INSTALLER)
-    
+
+
 def rpm_detect(packages):
     installed = []
     for p in packages:
         if not subprocess.call(['rpm', '-q', p]):
             installed.append(p)
     return installed
+
 
 class ZypperInstaller(PackageManagerInstaller):
     """
@@ -65,6 +69,6 @@ class ZypperInstaller(PackageManagerInstaller):
         if not packages:
             return []
         if not interactive:
-            return [self.elevate_priv(['zypper', 'install', '-yl'])+packages]
+            return [self.elevate_priv(['zypper', 'install', '-yl']) + packages]
         else:
-            return [self.elevate_priv(['zypper', 'install'])+packages]
+            return [self.elevate_priv(['zypper', 'install']) + packages]

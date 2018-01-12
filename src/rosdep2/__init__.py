@@ -1,9 +1,9 @@
 # Copyright (c) 2009, Willow Garage, Inc.
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 #     * Redistributions of source code must retain the above copyright
 #       notice, this list of conditions and the following disclaimer.
 #     * Redistributions in binary form must reproduce the above copyright
@@ -12,7 +12,7 @@
 #     * Neither the name of the Willow Garage, Inc. nor the names of its
 #       contributors may be used to endorse or promote products derived from
 #       this software without specific prior written permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -38,20 +38,20 @@ from ._version import __version__
 import sys
 
 from .installers import InstallerContext, Installer, \
-        PackageManagerInstaller
+    PackageManagerInstaller
 from .core import RosdepInternalError, InstallFailed, UnsupportedOs, \
-        InvalidData, DownloadFailure
+    InvalidData, DownloadFailure
 from .model import RosdepDatabase, RosdepDatabaseEntry
 from .lookup import RosdepDefinition, RosdepView, RosdepLookup, \
-        ResolutionError
+    ResolutionError
 from .loader import RosdepLoader
 
 # don't let import error take down code as when attempting to compute version number
 try:
     from .rospkg_loader import RosPkgLoader
 except ImportError:
-    print("Cannot import rospkg, rosdep will not function properly", 
-            file=sys.stderr)
+    print('Cannot import rospkg, rosdep will not function properly',
+          file=sys.stderr)
 
 
 def create_default_installer_context(verbose=False):
@@ -76,31 +76,33 @@ def create_default_installer_context(verbose=False):
     # setup installers
     for m in installer_mods:
         if verbose:
-            print("registering installers for %s"%(m.__name__))
+            print('registering installers for %s' % (m.__name__))
         m.register_installers(context)
 
     # setup platforms
     for m in platform_mods:
         if verbose:
-            print("registering platforms for %s"%(m.__name__))
+            print('registering platforms for %s' % (m.__name__))
         m.register_platforms(context)
 
     return context
 
-from . import gbpdistro_support
+
+from . import gbpdistro_support  # noqa
 gbpdistro_support.create_default_installer_context = create_default_installer_context
 
 
-#TODO: this was partially abstracted from main() for another library,
+# TODO: this was partially abstracted from main() for another library,
 # but it turned out to be unnecessary. Not sure it's worth maintaining
 # separately, especially in the top-level module.
+
 def get_default_installer(installer_context=None, verbose=False):
     """
     Based on the active OS and installer context configuration, get
     the installer to use and the necessary configuration state
     (installer keys, OS name/version).
-    
-    :returns: installer, installer_keys, default_key, os_name, os_version. 
+
+    :returns: installer, installer_keys, default_key, os_name, os_version.
     """
     if installer_context is None:
         installer_context = create_default_installer_context(verbose=verbose)
@@ -114,12 +116,14 @@ def get_default_installer(installer_context=None, verbose=False):
     installer = installer_context.get_installer(default_key)
     return installer, installer_keys, default_key, os_name, os_version
 
-__all__ = ['InstallerContext', 'Installer', 'PackageManagerInstaller',
-        'RosdepInternalError', 'InstallFailed', 'UnsupportedOs', 'InvalidData',
-        'DownloadFailure',
-        'RosdepDatabase', 'RosdepDatabaseEntry',
-        'RosdepDefinition', 'RosdepView', 'RosdepLookup', 'ResolutionError',
-        'RosdepLoader', 'RosPkgLoader',
-        'get_default_installer', 
-        'create_default_installer_context',
-        ]
+
+__all__ = [
+    'InstallerContext', 'Installer', 'PackageManagerInstaller',
+    'RosdepInternalError', 'InstallFailed', 'UnsupportedOs', 'InvalidData',
+    'DownloadFailure',
+    'RosdepDatabase', 'RosdepDatabaseEntry',
+    'RosdepDefinition', 'RosdepView', 'RosdepLookup', 'ResolutionError',
+    'RosdepLoader', 'RosPkgLoader',
+    'get_default_installer',
+    'create_default_installer_context',
+]

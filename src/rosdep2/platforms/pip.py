@@ -67,7 +67,7 @@ def pip_detect(pkgs, exec_fn=None):
 
     ret_list = []
     for pkg in pkg_list:
-        pkg_row = pkg.split("==")
+        pkg_row = pkg.split('==')
         if pkg_row[0] in pkgs:
             ret_list.append(pkg_row[0])
 
@@ -112,7 +112,7 @@ class PipInstaller(PackageManagerInstaller):
 
     def get_install_command(self, resolved, interactive=True, reinstall=False, quiet=False):
         if not is_pip_installed():
-            raise InstallFailed((PIP_INSTALLER, "pip is not installed"))
+            raise InstallFailed((PIP_INSTALLER, 'pip is not installed'))
         packages = self.get_packages_to_install(resolved, reinstall=reinstall)
         if not packages:
             return []

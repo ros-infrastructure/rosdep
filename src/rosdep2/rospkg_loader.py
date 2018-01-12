@@ -1,9 +1,9 @@
 # Copyright (c) 2011, Willow Garage, Inc.
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 #     * Redistributions of source code must retain the above copyright
 #       notice, this list of conditions and the following disclaimer.
 #     * Redistributions in binary form must reproduce the above copyright
@@ -12,7 +12,7 @@
 #     * Neither the name of the Willow Garage, Inc. nor the names of its
 #       contributors may be used to endorse or promote products derived from
 #       this software without specific prior written permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -42,7 +42,7 @@ from .loader import RosdepLoader
 # Default view key is the view that packages that are not in stacks
 # see. It is the root of all dependencies.  It is superceded by an
 # explicit underlay_key.
-DEFAULT_VIEW_KEY='*default*'
+DEFAULT_VIEW_KEY = '*default*'
 
 # Implementation details: this API was originally conceived under the
 # rosdep 1 design.  It has since been retrofitted for the rosdep 2
@@ -54,8 +54,9 @@ DEFAULT_VIEW_KEY='*default*'
 # resources and SourcesListLoader would build a *single* view that was
 # no longer resource-dependent.
 
+
 class RosPkgLoader(RosdepLoader):
-    
+
     def __init__(self, rospack=None, rosstack=None, underlay_key=None):
         """
         :param underlay_key: If set, all views loaded by this loader
@@ -70,7 +71,7 @@ class RosPkgLoader(RosdepLoader):
         self._rosstack = rosstack
         self._rosdep_yaml_cache = {}
         self._underlay_key = underlay_key
-        
+
         # cache computed list of loadable resources
         self._loadable_resource_cache = None
         self._catkin_packages_cache = None
@@ -90,12 +91,12 @@ class RosPkgLoader(RosdepLoader):
         """
         if rosdep_db.is_loaded(view_name):
             return
-        if not view_name in self.get_loadable_views():
+        if view_name not in self.get_loadable_views():
             raise rospkg.ResourceNotFound(view_name)
         elif view_name == 'invalid':
-            raise rospkg.ResourceNotFound("FOUND"+ view_name+str(self.get_loadable_views()))
+            raise rospkg.ResourceNotFound('FOUND' + view_name + str(self.get_loadable_views()))
         if verbose:
-            print("loading view [%s] with rospkg loader"%(view_name))
+            print('loading view [%s] with rospkg loader' % (view_name))
         # chain into underlay if set
         if self._underlay_key:
             view_dependencies = [self._underlay_key]
@@ -130,7 +131,7 @@ class RosPkgLoader(RosdepLoader):
     def get_rosdeps(self, resource_name, implicit=True):
         """
         If *resource_name* is a stack, returns an empty list.
-        
+
         :raises: :exc:`rospkg.ResourceNotFound` if *resource_name* cannot be found.
         """
 
@@ -149,7 +150,7 @@ class RosPkgLoader(RosdepLoader):
     def is_metapackage(self, resource_name):
         if resource_name in self._rosstack.list():
             m = self._rosstack.get_manifest(resource_name)
-            return m.is_catkin;
+            return m.is_catkin
         return False
 
     def get_view_key(self, resource_name):
@@ -159,8 +160,10 @@ class RosPkgLoader(RosdepLoader):
 
         :raises: :exc:`rospkg.ResourceNotFound`
         """
-        if (resource_name in self.get_catkin_paths() or
-            resource_name in self.get_loadable_resources()):
+        if (
+            resource_name in self.get_catkin_paths() or
+            resource_name in self.get_loadable_resources()
+        ):
             return DEFAULT_VIEW_KEY
         else:
             raise rospkg.ResourceNotFound(resource_name)

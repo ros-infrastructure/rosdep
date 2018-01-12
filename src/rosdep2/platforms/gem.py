@@ -2,10 +2,10 @@
 # Copyright (c) 2009, Willow Garage, Inc.
 # Copyright (c) 2012, Intermodalics, BVBA.
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 #     * Redistributions of source code must retain the above copyright
 #       notice, this list of conditions and the following disclaimer.
 #     * Redistributions in binary form must reproduce the above copyright
@@ -14,7 +14,7 @@
 #     * Neither the name of the Willow Garage, Inc. nor the names of its
 #       contributors may be used to endorse or promote products derived from
 #       this software without specific prior written permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -40,8 +40,10 @@ from ..shell_utils import read_stdout
 # gem package manager key
 GEM_INSTALLER = 'gem'
 
+
 def register_installers(context):
     context.set_installer(GEM_INSTALLER, GemInstaller())
+
 
 def is_gem_installed():
     try:
@@ -50,8 +52,9 @@ def is_gem_installed():
     except OSError:
         return False
 
+
 def gem_detect(pkgs, exec_fn=None):
-    """ 
+    """
     Given a list of package, return the list of installed packages.
 
     :param exec_fn: function to execute Popen and read stdout (for testing)
@@ -62,13 +65,14 @@ def gem_detect(pkgs, exec_fn=None):
 
     ret_list = []
     for pkg in pkg_list:
-        pkg_row = pkg.split(" ")
+        pkg_row = pkg.split(' ')
         if pkg_row[0] in pkgs:
-            ret_list.append( pkg_row[0])
+            ret_list.append(pkg_row[0])
     return ret_list
 
+
 class GemInstaller(PackageManagerInstaller):
-    """ 
+    """
     :class:`Installer` support for gem.
     """
 
@@ -81,10 +85,9 @@ class GemInstaller(PackageManagerInstaller):
 
     def get_install_command(self, resolved, interactive=True, reinstall=False, quiet=False):
         if not is_gem_installed():
-            raise InstallFailed((GEM_INSTALLER, "gem is not installed"))
+            raise InstallFailed((GEM_INSTALLER, 'gem is not installed'))
         packages = self.get_packages_to_install(resolved, reinstall=reinstall)
         if not packages:
             return []
         else:
             return [self.elevate_priv(['gem', 'install', p]) for p in packages]
-            

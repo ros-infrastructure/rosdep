@@ -1,9 +1,9 @@
 # Copyright (c) 2011, Willow Garage, Inc.
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 #     * Redistributions of source code must retain the above copyright
 #       notice, this list of conditions and the following disclaimer.
 #     * Redistributions in binary form must reproduce the above copyright
@@ -12,7 +12,7 @@
 #     * Neither the name of the Willow Garage, Inc. nor the names of its
 #       contributors may be used to endorse or promote products derived from
 #       this software without specific prior written permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -38,11 +38,12 @@ combine these rosdep dependency maps and view dependencies together
 into a combined view on which queries can be made.
 """
 
+
 class RosdepDatabaseEntry(object):
     """
     Stores rosdep data and metadata for a single view.
     """
-    
+
     def __init__(self, rosdep_data, view_dependencies, origin):
         """
         :param rosdep_data: raw rosdep dictionary map for view
@@ -53,14 +54,15 @@ class RosdepDatabaseEntry(object):
         self.rosdep_data = rosdep_data
         self.view_dependencies = view_dependencies
         self.origin = origin
-                
+
+
 class RosdepDatabase(object):
     """
     Stores loaded rosdep data for multiple views.
     """
-    
+
     def __init__(self):
-        self._rosdep_db = {} # {view_name: RosdepDatabaseEntry}
+        self._rosdep_db = {}  # {view_name: RosdepDatabaseEntry}
 
     def is_loaded(self, view_name):
         """
@@ -77,7 +79,7 @@ class RosdepDatabase(object):
         :param view_name: name of view to mark as loaded
         """
         self.set_view_data(view_name, {}, [], None)
-        
+
     def set_view_data(self, view_name, rosdep_data, view_dependencies, origin):
         """
         Set data associated with view.  This will create a new
@@ -94,7 +96,7 @@ class RosdepDatabase(object):
         :returns: list of view names that are loaded into this database.
         """
         return self._rosdep_db.keys()
-    
+
     def get_view_data(self, view_name):
         """
         :returns: :class:`RosdepDatabaseEntry` of given view.
@@ -102,7 +104,7 @@ class RosdepDatabase(object):
         :raises: :exc:`KeyError` if no entry for *view_name*
         """
         return self._rosdep_db[view_name]
-    
+
     def get_view_dependencies(self, view_name):
         """
         :raises: :exc:`KeyError` if *view_name* is not an entry, or if
@@ -117,6 +119,6 @@ class RosdepDatabase(object):
         # make unique preserving order
         unique_deps = []
         for d in dependencies:
-            if not d in unique_deps:
+            if d not in unique_deps:
                 unique_deps.append(d)
         return unique_deps
