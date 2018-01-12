@@ -260,7 +260,7 @@ def test_load_cached_sources_list():
 
     # now test with cached data
     retval = load_cached_sources_list(sources_cache_dir=tempdir)
-    assert len(retval) == 3, '%s != %s' % ([source0, source1, source2], retval[0:3])
+    assert len(retval) == 3, 'len(%s) != 3' % retval
     source0 = retval[0]
     source1 = retval[1]
     source2 = retval[2]
