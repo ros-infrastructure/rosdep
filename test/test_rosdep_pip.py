@@ -77,7 +77,8 @@ def test_PipInstaller():
             installer = PipInstaller()
             installer.get_install_command(['whatever'])
             assert False, "should have raised"
-        except InstallFailed: pass
+        except InstallFailed:
+            pass
 
     test_no_pip()
 

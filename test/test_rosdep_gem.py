@@ -79,7 +79,8 @@ def test_GemInstaller():
             installer = GemInstaller()
             installer.get_install_command(['whatever'])
             assert False, "should have raised"
-        except InstallFailed: pass
+        except InstallFailed:
+            pass
 
     test_no_gem()
 

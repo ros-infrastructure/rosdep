@@ -70,7 +70,7 @@ def _subtest_rep112_rdmanifest(resolved):
 
     assert resolved.exec_path == 'yaml-cpp-0.2.5'
     assert resolved.tarball == 'http://download.ros.org/downloads/yaml-cpp-0.2.5.tar.gz'
-    assert resolved.alternate_tarball == None
+    assert resolved.alternate_tarball is None
     assert resolved.tarball_md5sum == 'b17dc36055cd2259c88b2602601415d9'
 
 
@@ -153,9 +153,11 @@ exit 0
     assert [] == source_detect([])
     assert [resolved] == source_detect([resolved])
 
-    def yes(*args, **kwds): return 0
+    def yes(*args, **kwds):
+        return 0
 
-    def no(*args, **kwds): return 1
+    def no(*args, **kwds):
+        return 1
 
     resolved = [SourceInstall(), SourceInstall(), SourceInstall(), SourceInstall()]
     for r in resolved:

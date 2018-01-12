@@ -212,7 +212,7 @@ class InstallerContext(object):
         :raises: :exc:`KeyError`: if installer for *installer_key*
           is not set or if OS for *os_key* has no associated installers.
         """
-        if not os_key in self.os_installers:
+        if os_key not in self.os_installers:
             raise KeyError("unknown OS: %s" % (os_key))
         if not hasattr(installer_key, '__call__'):
             raise ValueError("version type should be a method")
@@ -231,11 +231,11 @@ class InstallerContext(object):
         :returns: :class:`Installer`
         :raises: :exc:`KeyError`: if no information for OS *os_key* is registered.
         """
-        if not os_key in self.os_installers:
+        if os_key not in self.os_installers:
             raise KeyError("unknown OS: %s" % (os_key))
         try:
             installer_key = self.default_os_installer[os_key](self.os_detect)
-            if not installer_key in self.os_installers[os_key]:
+            if installer_key not in self.os_installers[os_key]:
                 raise KeyError("installer [%s] is not associated with OS [%s]. call add_os_installer_key() first" % (installer_key, os_key))
             # validate, will throw KeyError
             self.get_installer(installer_key)
@@ -343,9 +343,9 @@ class PackageManagerInstaller(Installer):
         packages = None
         if type(rosdep_args) == dict:
             packages = rosdep_args.get("packages", [])
-            if type(packages) == type("string"):
+            if isinstance(packages, str):
                 packages = packages.split()
-        elif type(rosdep_args) == type('str'):
+        elif isinstance(rosdep_args, str):
             packages = rosdep_args.split(' ')
         elif type(rosdep_args) == list:
             packages = rosdep_args

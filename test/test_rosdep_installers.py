@@ -145,9 +145,11 @@ def test_InstallerContext_installers():
     try:
         installer = context.get_installer(key)
         assert False, "should have raised: %s" % (installer)
-    except KeyError: pass
+    except KeyError:
+        pass
 
-    class Foo: pass
+    class Foo:
+        pass
 
     class FakeInstaller(Installer):
         pass
@@ -159,16 +161,19 @@ def test_InstallerContext_installers():
     try:
         context.set_installer(key, 1)
         assert False, "should have raised"
-    except TypeError: pass
+    except TypeError:
+        pass
     try:
         context.set_installer(key, Foo())
         assert False, "should have raised"
-    except TypeError: pass
+    except TypeError:
+        pass
     try:
         # must be instantiated
         context.set_installer(key, FakeInstaller)
         assert False, "should have raised"
-    except TypeError: pass
+    except TypeError:
+        pass
 
     installer = FakeInstaller()
     installer2 = FakeInstaller2()
@@ -227,19 +232,23 @@ def test_InstallerContext_os_installers():
     try:
         context.add_os_installer_key(os_key, 'fake-key')
         assert False, "should have raised"
-    except KeyError: pass
+    except KeyError:
+        pass
     try:
         context.set_default_os_installer_key(os_key, 'non-method')
         assert False, "should have raised"
-    except KeyError: pass
+    except KeyError:
+        pass
     try:
         context.set_default_os_installer_key(os_key, lambda self: 'fake-key')
         assert False, "should have raised"
-    except KeyError: pass
+    except KeyError:
+        pass
     try:
         context.get_default_os_installer_key('bad-os')
         assert False, "should have raised"
-    except KeyError: pass
+    except KeyError:
+        pass
 
     installer_key1 = 'fake1'
     installer_key2 = 'fake2'
@@ -270,7 +279,7 @@ def test_InstallerContext_os_installers():
     assert set(context.get_os_installer_keys(os_key)) == set([installer_key1, installer_key2])
 
     # test default
-    assert None == context.get_default_os_installer_key(os_key)
+    assert context.get_default_os_installer_key(os_key) is None
     context.set_default_os_installer_key(os_key, lambda self: installer_key1)
     assert installer_key1 == context.get_default_os_installer_key(os_key)
     context.set_default_os_installer_key(os_key, lambda self: installer_key2)
@@ -280,7 +289,8 @@ def test_InstallerContext_os_installers():
     try:
         context.set_default_os_installer_key('bad-os', lambda self: installer_key1)
         assert False, "should have raised"
-    except KeyError: pass
+    except KeyError:
+        pass
 
 
 def test_Installer_tripwire():
@@ -288,19 +298,23 @@ def test_Installer_tripwire():
     try:
         Installer().is_installed('foo')
         assert False
-    except NotImplementedError: pass
+    except NotImplementedError:
+        pass
     try:
         Installer().get_install_command('foo')
         assert False
-    except NotImplementedError: pass
+    except NotImplementedError:
+        pass
     try:
         Installer().resolve({})
         assert False
-    except NotImplementedError: pass
+    except NotImplementedError:
+        pass
     try:
         Installer().unique([])
         assert False
-    except NotImplementedError: pass
+    except NotImplementedError:
+        pass
     assert Installer().get_depends({}) == []
 
 
@@ -322,7 +336,8 @@ def test_PackageManagerInstaller():
     try:
         PackageManagerInstaller(detect_fn_all).get_install_command(['foo'])
         assert False
-    except NotImplementedError: pass
+    except NotImplementedError:
+        pass
 
 
 def test_PackageManagerInstaller_resolve():
@@ -347,7 +362,8 @@ def test_PackageManagerInstaller_resolve():
     try:
         installer.resolve(0)
         assert False, "should have raised"
-    except InvalidData: pass
+    except InvalidData:
+        pass
 
 
 def test_PackageManagerInstaller_depends():
@@ -380,10 +396,10 @@ def test_PackageManagerInstaller_is_installed():
 
     installer = PackageManagerInstaller(detect_fn_all)
     for r in ['a', 'b', 'c']:
-        assert True == installer.is_installed(r), installer.is_installed(r)
+        assert installer.is_installed(r), installer.is_installed(r)
     installer = PackageManagerInstaller(detect_fn_empty)
     for r in ['a', 'b', 'c']:
-        assert False == installer.is_installed(r), installer.is_installed(r)
+        assert not installer.is_installed(r), installer.is_installed(r)
 
 
 def test_PackageManagerInstaller_get_packages_to_install():

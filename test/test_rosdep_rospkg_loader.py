@@ -109,7 +109,8 @@ def test_RosPkgLoader():
     try:
         loader.get_view_key('fake')
         assert False, "should error"
-    except ResourceNotFound: pass
+    except ResourceNotFound:
+        pass
 
 
 def test_RosPkgLoader_with_underlay_key():
@@ -160,7 +161,8 @@ def test_RosPkgLoader_with_underlay_key():
     try:
         loader.get_view_key('fake')
         assert False, "should error"
-    except ResourceNotFound: pass
+    except ResourceNotFound:
+        pass
 
 
 def test_RosPkgLoader_get_loadable():

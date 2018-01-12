@@ -119,6 +119,6 @@ class RosdepDatabase(object):
         # make unique preserving order
         unique_deps = []
         for d in dependencies:
-            if not d in unique_deps:
+            if d not in unique_deps:
                 unique_deps.append(d)
         return unique_deps

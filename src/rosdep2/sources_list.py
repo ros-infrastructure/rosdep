@@ -139,7 +139,7 @@ class DataSource(object):
         :raises: :exc:`ValueError` if parameters do not validate
         """
         # validate inputs
-        if not type_ in VALID_TYPES:
+        if type_ not in VALID_TYPES:
             raise ValueError("type must be one of [%s]" % (','.join(VALID_TYPES)))
         parsed = urlparse.urlparse(url)
         if not parsed.scheme or (parsed.scheme != 'file' and not parsed.netloc) or parsed.path in ('', '/'):
