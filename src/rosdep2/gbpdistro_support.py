@@ -86,7 +86,7 @@ def gbprepo_to_rosdep_data(gbpdistro_data, targets_data, url=''):
         release_name = gbpdistro_data['release-name']
         if not release_name in targets_data:
             raise InvalidData("targets file does not contain information "
-                            + "for release [%s]" % (release_name))
+                              "for release [%s]" % (release_name))
         else:
             # take the first match
             target_data = targets_data[release_name]
@@ -96,12 +96,12 @@ def gbprepo_to_rosdep_data(gbpdistro_data, targets_data, url=''):
         gbp_repos = gbpdistro_data['repositories']
         # Ensure gbp_repos is a dict
         if type(gbp_repos) != dict:
-            raise InvalidData("invalid repo spec in gbpdistro data: " + str(gbp_repos)
-                            + ". Invalid repositories entry, must be dict.")
+            raise InvalidData("invalid repo spec in gbpdistro data: " + str(gbp_repos) +
+                              ". Invalid repositories entry, must be dict.")
         for rosdep_key, repo in gbp_repos.items():
             if type(repo) != dict:
-                raise InvalidData("invalid repo spec in gbpdistro data: "
-                                + str(repo))
+                raise InvalidData("invalid repo spec in gbpdistro data: " +
+                                  str(repo))
 
             for pkg in repo.get('packages', {rosdep_key: None}):
                 rosdep_data[pkg] = {}
@@ -135,8 +135,8 @@ def gbprepo_to_rosdep_data(gbpdistro_data, targets_data, url=''):
                 rosdep_data[pkg]['_is_ros'] = True
         return rosdep_data
     except KeyError as e:
-        raise InvalidData("Invalid GBP-distro/targets format: missing key: "
-                        + str(e))
+        raise InvalidData("Invalid GBP-distro/targets format: missing key: " +
+                          str(e))
 
 
 # REP137 compliant
@@ -210,4 +210,4 @@ def download_gbpdistro_as_rosdep_data(gbpdistro_url, targets_url=None):
                                       gbpdistro_url)
     except Exception as e:
         raise DownloadFailure("Failed to download target platform data "
-                            + "for gbpdistro:\n\t" + str(e))
+                              "for gbpdistro:\n\t" + str(e))

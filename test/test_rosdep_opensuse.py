@@ -59,4 +59,3 @@ def test_ZypperInstaller():
     except AssertionError:
         traceback.print_exc()
         raise
-

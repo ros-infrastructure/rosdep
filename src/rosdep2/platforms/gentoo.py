@@ -127,5 +127,3 @@ class PortageInstaller(PackageManagerInstaller):
         cmd.extend(atoms)
 
         return [cmd]
-
-

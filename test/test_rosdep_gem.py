@@ -106,4 +106,3 @@ def test_GemInstaller():
     except AssertionError:
         traceback.print_exc()
         raise
-

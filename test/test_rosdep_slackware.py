@@ -181,4 +181,3 @@ def test_SlackpkgInstaller():
     except AssertionError:
         traceback.print_exc()
         raise
-

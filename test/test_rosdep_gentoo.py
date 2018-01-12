@@ -198,4 +198,3 @@ def test_PortageInstaller():
     except AssertionError:
         traceback.print_exc()
         raise
-

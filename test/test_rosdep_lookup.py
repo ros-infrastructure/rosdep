@@ -519,4 +519,3 @@ def test_RosdepLookup_resolve_all():
             if k == 'apt':
                 apt_resolutions.extend(v)
         assert set(apt_resolutions) == set(['libtinyxml-dev', 'libboost1.40-all-dev', 'libtool', 'libltdl-dev']), set(apt_resolutions)
-
