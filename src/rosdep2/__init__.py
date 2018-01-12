@@ -87,6 +87,7 @@ def create_default_installer_context(verbose=False):
 
     return context
 
+
 from . import gbpdistro_support
 gbpdistro_support.create_default_installer_context = create_default_installer_context
 
@@ -94,6 +95,7 @@ gbpdistro_support.create_default_installer_context = create_default_installer_co
 #TODO: this was partially abstracted from main() for another library,
 # but it turned out to be unnecessary. Not sure it's worth maintaining
 # separately, especially in the top-level module.
+
 def get_default_installer(installer_context=None, verbose=False):
     """
     Based on the active OS and installer context configuration, get
@@ -113,6 +115,7 @@ def get_default_installer(installer_context=None, verbose=False):
         raise UnsupportedOs(os_name, installer_context.get_os_keys())
     installer = installer_context.get_installer(default_key)
     return installer, installer_keys, default_key, os_name, os_version
+
 
 __all__ = ['InstallerContext', 'Installer', 'PackageManagerInstaller',
         'RosdepInternalError', 'InstallFailed', 'UnsupportedOs', 'InvalidData',

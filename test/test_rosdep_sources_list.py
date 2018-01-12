@@ -40,19 +40,24 @@ import rosdep2.sources_list
 
 GITHUB_BASE_URL = 'https://raw.github.com/ros/rosdistro/master/rosdep/base.yaml'
 
+
 def get_test_dir():
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'sources.list.d'))
+
 
 def test_get_sources_list_dir():
     assert rosdep2.sources_list.get_sources_list_dir()
 
+
 def test_get_sources_cache_dir():
     assert rosdep2.sources_list.get_sources_cache_dir()
+
 
 def test_parse_sources_data():
     from rosdep2.sources_list import parse_sources_data
 
     parse_sources_data
+
 
 def test_url_constants():
     from rosdep2.sources_list import DEFAULT_SOURCES_LIST_URL
@@ -64,6 +69,7 @@ def test_url_constants():
         except:
             assert False, "URL [%s][%s] failed to download"%(url_name, url)
 
+
 def test_download_default_sources_list():
     from rosdep2.sources_list import download_default_sources_list
     data = download_default_sources_list()
@@ -73,6 +79,7 @@ def test_download_default_sources_list():
         assert False, "should not have succeeded/valdiated"
     except URLError:
         pass
+
 
 def test_CachedDataSource():
     from rosdep2.sources_list import CachedDataSource, DataSource, TYPE_GBPDISTRO, TYPE_YAML
@@ -101,6 +108,7 @@ def test_CachedDataSource():
     assert tags[0] in repr(cds)
     assert 'key' in str(cds)
     assert 'key' in repr(cds)
+
 
 def test_DataSource():
     from rosdep2.sources_list import DataSource
@@ -139,6 +147,7 @@ def test_DataSource():
     except ValueError:
         pass
 
+
 def test_parse_sources_file():
     from rosdep2.sources_list import parse_sources_file
     from rosdep2 import InvalidData
@@ -151,6 +160,7 @@ def test_parse_sources_file():
         sources = parse_sources_file('bad')
     except InvalidData:
         pass
+
 
 def test_parse_sources_list():
     from rosdep2.sources_list import parse_sources_list
@@ -173,6 +183,7 @@ def test_parse_sources_list():
     # should not error on a correctly configured test system.
     parse_sources_list()
 
+
 def test_write_cache_file():
     from rosdep2.sources_list import write_cache_file, compute_filename_hash, PICKLE_CACHE_EXT
     try:
@@ -186,6 +197,7 @@ def test_write_cache_file():
     assert os.path.samefile(filepath, computed_path)
     with open(filepath, 'rb') as f:
         assert {'data': 1} == pickle.loads(f.read())
+
 
 def test_update_sources_list():
     from rosdep2.sources_list import update_sources_list, InvalidData, compute_filename_hash, PICKLE_CACHE_EXT
@@ -206,6 +218,7 @@ def test_update_sources_list():
     tempdir = os.path.join(tempdir, 'newdir')
 
     errors = []
+
     def error_handler(loc, e):
         errors.append((loc, e))
     retval = update_sources_list(sources_list_dir=sources_list_dir,
@@ -237,6 +250,7 @@ def test_update_sources_list():
                "yaml %s ubuntu"%(GITHUB_URL, GITHUB_PYTHON_URL, BADHOSTNAME_URL)
     assert expected == index, "\n[%s]\nvs\n[%s]"%(expected, index)
 
+
 def test_load_cached_sources_list():
     from rosdep2.sources_list import load_cached_sources_list, update_sources_list
     tempdir = tempfile.mkdtemp()
@@ -265,6 +279,7 @@ def test_load_cached_sources_list():
     assert source2.rosdep_data == {}
     assert source2.tags == ['ubuntu']
 
+
 def test_DataSourceMatcher():
     empty_data_source = rosdep2.sources_list.DataSource('yaml', 'http://fake/url', [])
     assert empty_data_source == rosdep2.sources_list.DataSource('yaml', 'http://fake/url', [])
@@ -285,6 +300,7 @@ def test_DataSourceMatcher():
     assert matcher.matches(empty_data_source)
     matcher = rosdep2.sources_list.DataSourceMatcher(['tag1'])
     assert not matcher.matches(data_source)
+
 
 def test_download_rosdep_data():
     from rosdep2.sources_list import download_rosdep_data
@@ -310,6 +326,7 @@ def test_download_rosdep_data():
         except DownloadFailure as e:
             pass
 
+
 BADHOSTNAME_URL = 'https://badhostname.willowgarage.com/rosdep.yaml'
 GITHUB_URL = 'https://github.com/ros/rosdistro/raw/master/rosdep/base.yaml'
 GITHUB_PYTHON_URL = 'https://github.com/ros/rosdistro/raw/master/rosdep/python.yaml'
@@ -325,6 +342,8 @@ EXAMPLE_SOURCES_DATA_MULTILINE = """
 yaml %s
 yaml %s fuerte ubuntu
 """%(GITHUB_URL, GITHUB_FUERTE_URL)
+
+
 def test_parse_sources_data():
     from rosdep2.sources_list import parse_sources_data, TYPE_YAML, InvalidData
 
@@ -365,6 +384,7 @@ def test_parse_sources_data():
         except InvalidData as e:
             pass
 
+
 def test_DataSourceMatcher_create_default():
     distro_name = rospkg.distro.current_distro_codename()
     os_detect = rospkg.os_detect.OsDetect()
@@ -395,6 +415,7 @@ def test_DataSourceMatcher_create_default():
     assert matcher.matches(data_source)
     data_source = rosdep2.sources_list.DataSource('yaml', 'http://fake/url', ['kubuntu', 'lucid'])
     assert not matcher.matches(data_source)
+
 
 def test_SourcesListLoader_create_default():
     from rosdep2.sources_list import update_sources_list, SourcesListLoader, DataSourceMatcher

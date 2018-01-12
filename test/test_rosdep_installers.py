@@ -36,20 +36,25 @@ except ImportError:
 
 from rospkg import RosPack, RosStack
 
+
 def get_test_dir():
     return os.path.abspath(os.path.dirname(__file__))
+
 
 def get_cache_dir():
     p = os.path.join(get_test_dir(), 'sources_cache')
     assert os.path.isdir(p)
     return p
 
+
 def create_test_SourcesListLoader():
     from rosdep2.sources_list import SourcesListLoader
     return SourcesListLoader.create_default(sources_cache_dir=get_cache_dir(), verbose=True)
 
+
 def get_test_tree_dir():
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'tree'))
+
 
 def get_test_rospkgs():
     test_dir = get_test_tree_dir()
@@ -59,6 +64,7 @@ def get_test_rospkgs():
     rospack = RosPack(ros_paths=ros_paths)
     rosstack = RosStack(ros_paths=ros_paths)
     return rospack, rosstack
+
 
 def test_InstallerContext_ctor():
     from rosdep2.installers import InstallerContext
@@ -79,6 +85,7 @@ def test_InstallerContext_ctor():
     assert len(context.get_installer_keys()) == 0
     assert len(context.get_os_keys()) == 0
 
+
 def test_InstallerContext_get_os_version_type():
     from rospkg.os_detect import OS_UBUNTU, OsDetect
     from rosdep2.installers import InstallerContext
@@ -93,6 +100,7 @@ def test_InstallerContext_get_os_version_type():
     assert OsDetect.get_version == context.get_os_version_type(OS_UBUNTU)
     context.set_os_version_type(OS_UBUNTU, OsDetect.get_codename)
     assert OsDetect.get_codename == context.get_os_version_type(OS_UBUNTU)
+
 
 def test_InstallerContext_os_version_and_name():
     from rospkg.os_detect import OsDetect
@@ -124,6 +132,7 @@ def test_InstallerContext_os_version_and_name():
     assert os_name == 'fakeos', os_name
     assert os_version == 'fakeos-version', os_version
 
+
 def test_InstallerContext_installers():
     from rosdep2.installers import InstallerContext, Installer
     from rospkg.os_detect import OsDetect
@@ -138,8 +147,10 @@ def test_InstallerContext_installers():
     except KeyError: pass
 
     class Foo: pass
+
     class FakeInstaller(Installer):
         pass
+
     class FakeInstaller2(Installer):
         pass
 
@@ -193,6 +204,7 @@ def test_InstallerContext_installers():
         pass
     assert set(context.get_installer_keys()) == set([key, key2])
 
+
 def test_InstallerContext_os_installers():
     from rosdep2.installers import InstallerContext, Installer
     from rospkg.os_detect import OsDetect
@@ -230,8 +242,10 @@ def test_InstallerContext_os_installers():
 
     installer_key1 = 'fake1'
     installer_key2 = 'fake2'
+
     class FakeInstaller(Installer):
         pass
+
     class FakeInstaller2(Installer):
         pass
 
@@ -288,11 +302,16 @@ def test_Installer_tripwire():
     except NotImplementedError: pass
     assert Installer().get_depends({}) == []
 
+
 def detect_fn_empty(packages):
     return []
+
+
 def detect_fn_all(packages):
     return packages
 # return any packages that are string length 1
+
+
 def detect_fn_single(packages):
     return [p for p in packages if len(p) == 1]
 
@@ -303,6 +322,7 @@ def test_PackageManagerInstaller():
         PackageManagerInstaller(detect_fn_all).get_install_command(['foo'])
         assert False
     except NotImplementedError: pass
+
 
 def test_PackageManagerInstaller_resolve():
     from rosdep2 import InvalidData
@@ -328,6 +348,7 @@ def test_PackageManagerInstaller_resolve():
         assert False, "should have raised"
     except InvalidData: pass
 
+
 def test_PackageManagerInstaller_depends():
     from rosdep2.installers import PackageManagerInstaller
 
@@ -335,6 +356,7 @@ def test_PackageManagerInstaller_depends():
     assert ['foo', 'bar'] == installer.get_depends(dict(depends=['foo', 'bar'], packages=['baz']))
     installer = PackageManagerInstaller(detect_fn_all, supports_depends=False)
     assert [] == installer.get_depends(dict(depends=['foo', 'bar'], packages=['baz']))
+
 
 def test_PackageManagerInstaller_unique():
     from rosdep2.installers import PackageManagerInstaller
@@ -351,6 +373,7 @@ def test_PackageManagerInstaller_unique():
     assert set(['a', 'b', 'c']) == set(installer.unique(['a', 'b'], ['c']))
     assert set(['a', 'b', 'c']) == set(installer.unique(['a', 'b'], ['c', 'a']))
 
+
 def test_PackageManagerInstaller_is_installed():
     from rosdep2.installers import PackageManagerInstaller
 
@@ -360,6 +383,7 @@ def test_PackageManagerInstaller_is_installed():
     installer = PackageManagerInstaller(detect_fn_empty)
     for r in ['a', 'b', 'c']:
         assert False == installer.is_installed(r), installer.is_installed(r)
+
 
 def test_PackageManagerInstaller_get_packages_to_install():
     from rosdep2.installers import PackageManagerInstaller
@@ -375,6 +399,7 @@ def test_PackageManagerInstaller_get_packages_to_install():
     installer = PackageManagerInstaller(detect_fn_single)
     assert set(['baba', 'cada']) == set(installer.get_packages_to_install(['a', 'baba', 'b', 'cada', 'c']))
 
+
 def test_RosdepInstaller_ctor():
     # tripwire/coverage
     from rosdep2 import create_default_installer_context
@@ -385,6 +410,7 @@ def test_RosdepInstaller_ctor():
     installer = RosdepInstaller(context, lookup)
     assert lookup == installer.lookup
     assert context == installer.installer_context
+
 
 def test_RosdepInstaller_get_uninstalled():
     from rosdep2 import create_default_installer_context
@@ -450,9 +476,11 @@ def test_RosdepInstaller_get_uninstalled():
         assert apt_uninstalled == expected, uninstalled
         assert not errors
 
+
 def get_fake_apt(detect_fn):
     # mainly did this to keep coverage results
     from rosdep2.installers import PackageManagerInstaller
+
     class FakeAptInstaller(PackageManagerInstaller):
         """
         An implementation of the Installer for use on debian style
@@ -464,6 +492,7 @@ def get_fake_apt(detect_fn):
         def get_install_command(self, resolved, interactive=True, reinstall=False):
             return [[resolved, interactive, reinstall]]
     return FakeAptInstaller()
+
 
 def test_RosdepInstaller_get_uninstalled_unconfigured():
     from rosdep2 import create_default_installer_context, RosdepInternalError
@@ -503,6 +532,7 @@ def test_RosdepInstaller_get_uninstalled_unconfigured():
     class BadInstaller(PackageManagerInstaller):
         def __init__(self):
             super(BadInstaller, self).__init__(lambda x: x)
+
         def get_packages_to_install(*args):
             raise Exception("deadbeef")
     context.set_installer(APT_INSTALLER, BadInstaller())
@@ -526,6 +556,8 @@ def test_RosdepInstaller_get_uninstalled_unconfigured():
 
 
 from contextlib import contextmanager
+
+
 @contextmanager
 def fakeout():
     realstdout = sys.stdout
@@ -537,6 +569,7 @@ def fakeout():
     yield fakestdout, fakestderr
     sys.stdout = realstdout
     sys.stderr = realstderr
+
 
 def test_RosdepInstaller_install_resolved():
     from rosdep2 import create_default_installer_context

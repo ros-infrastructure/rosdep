@@ -27,6 +27,7 @@
 
 import os
 
+
 def test_RosdepInternalError():
     from rosdep2.core import RosdepInternalError
     try:
@@ -35,12 +36,14 @@ def test_RosdepInternalError():
         ex = RosdepInternalError(e)
         assert e == ex.error
 
+
 def test_rd_debug():
     # just tripwire/coverage
     from rosdep2.core import rd_debug
     rd_debug('foo')
     os.environ['ROSDEP_DEBUG'] = '1'
     rd_debug('foo')
+
 
 def test_InvalidData():
     from rosdep2.core import InvalidData

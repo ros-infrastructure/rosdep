@@ -45,6 +45,7 @@ from .sources_list import SourcesListLoader
 
 from . import catkin_packages
 
+
 class RosdepDefinition(object):
     """
     Single rosdep dependency definition.  This data is stored as the
@@ -144,6 +145,7 @@ class RosdepDefinition(object):
     def __str__(self):
         return "%s:\n%s"%(self.origin, yaml.dump(self.data, default_flow_style=False))
 
+
 class ResolutionError(Exception):
 
     def __init__(self, rosdep_key, rosdep_data, os_name, os_version, message):
@@ -163,6 +165,7 @@ class ResolutionError(Exception):
 \tOS name    : %s
 \tOS version : %s
 \tData: %s"""%(self.args[0], self.rosdep_key, self.os_name, self.os_version, pretty_data)
+
 
 class RosdepView(object):
     """

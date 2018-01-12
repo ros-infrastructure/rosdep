@@ -53,9 +53,11 @@ try:
 except NameError:
     _basestring = str
 
+
 def register_installers(context):
     context.set_installer(MACPORTS_INSTALLER, MacportsInstaller())
     context.set_installer(BREW_INSTALLER, HomebrewInstaller())
+
 
 def register_platforms(context):
     context.add_os_installer_key(OS_OSX, BREW_INSTALLER)
@@ -65,12 +67,14 @@ def register_platforms(context):
     context.set_default_os_installer_key(OS_OSX, lambda self: BREW_INSTALLER)
     context.set_os_version_type(OS_OSX, OsDetect.get_codename)
 
+
 def is_port_installed():
     try:
         subprocess.Popen(['port'], stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
         return True
     except OSError:
         return False
+
 
 def port_detect(pkgs, exec_fn=None):
     ret_list = []
@@ -84,6 +88,7 @@ def port_detect(pkgs, exec_fn=None):
         if len(pkg_row) == 3 and pkg_row[0] in pkgs and pkg_row[2] =='(active)':
             ret_list.append(pkg_row[0])
     return ret_list
+
 
 class MacportsInstaller(PackageManagerInstaller):
     """
@@ -114,6 +119,7 @@ class MacportsInstaller(PackageManagerInstaller):
         else:
             #TODO: interactive
             return [self.elevate_priv(['port', 'install', p]) for p in packages]
+
 
 def is_brew_installed():
     try:

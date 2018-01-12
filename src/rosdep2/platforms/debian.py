@@ -92,6 +92,7 @@ def register_ubuntu(context):
     context.set_default_os_installer_key(OS_UBUNTU, lambda self: APT_INSTALLER)
     context.set_os_version_type(OS_UBUNTU, OsDetect.get_codename)
 
+
 def _read_apt_cache_showpkg(packages, exec_fn=None):
     '''
     Output whether these packages are virtual package list providing package.

@@ -43,25 +43,32 @@ from mock import DEFAULT
 GITHUB_BASE_URL = 'https://github.com/ros/rosdistro/raw/master/rosdep/base.yaml'
 GITHUB_PYTHON_URL = 'https://github.com/ros/rosdistro/raw/master/rosdep/python.yaml'
 
+
 def get_test_dir():
     return os.path.abspath(os.path.dirname(__file__))
+
 
 def get_test_tree_dir():
     return os.path.abspath(os.path.join(get_test_dir(), 'tree'))
 
+
 def get_test_catkin_tree_dir():
     return os.path.abspath(os.path.join(get_test_tree_dir(), 'catkin'))
+
 
 def get_cache_dir():
     p = os.path.join(get_test_dir(), 'sources_cache')
     assert os.path.isdir(p)
     return p
 
+
 from rosdep2 import main
 from rosdep2.main import rosdep_main
 from rosdep2.main import setup_proxy_opener
 
 from contextlib import contextmanager
+
+
 @contextmanager
 def fakeout():
     realstdout = sys.stdout
@@ -76,6 +83,8 @@ def fakeout():
 
 # the goal of these tests is only to test that we are wired into the
 # APIs.  More exhaustive tests are at the unit level.
+
+
 class TestRosdepMain(unittest.TestCase):
     def setUp(self):
         if 'ROSDEP_DEBUG' in os.environ:

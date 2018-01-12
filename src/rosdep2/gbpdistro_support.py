@@ -61,6 +61,7 @@ def get_owner_name(url):
 
 
 # For compatability url defaults to ''
+
 def gbprepo_to_rosdep_data(gbpdistro_data, targets_data, url=''):
     """
     DEPRECATED: the rosdistro file format has changed according to REP137
@@ -139,6 +140,7 @@ def gbprepo_to_rosdep_data(gbpdistro_data, targets_data, url=''):
 
 
 # REP137 compliant
+
 def get_gbprepo_as_rosdep_data(gbpdistro):
     """
     :raises: :exc:`InvalidData`

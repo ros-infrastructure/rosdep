@@ -48,8 +48,10 @@ from ..shell_utils import create_tempfile_from_string_and_execute
 
 SOURCE_INSTALLER='source'
 
+
 def register_installers(context):
     context.set_installer(SOURCE_INSTALLER, SourceInstaller())
+
 
 class InvalidRdmanifest(Exception):
     """
@@ -57,11 +59,13 @@ class InvalidRdmanifest(Exception):
     """
     pass
 
+
 class DownloadFailed(Exception):
     """
     File download failed either due to i/o issues or md5sum validation.
     """
     pass
+
 
 def _sub_fetch_file(url, md5sum=None):
     """
@@ -82,12 +86,14 @@ def _sub_fetch_file(url, md5sum=None):
 
     return contents
 
+
 def get_file_hash(filename):
     md5 = hashlib.md5()
     with open(filename,'rb') as f:
         for chunk in iter(lambda: f.read(8192), b''):
             md5.update(chunk)
     return md5.hexdigest()
+
 
 def fetch_file(url, md5sum=None):
     """
@@ -106,6 +112,7 @@ def fetch_file(url, md5sum=None):
         error = str(e)
     return contents, error
 
+
 def load_rdmanifest(contents):
     """
     :raises: :exc:`InvalidRdmanifest`
@@ -114,6 +121,7 @@ def load_rdmanifest(contents):
         return yaml.load(contents)
     except yaml.scanner.ScannerError as ex:
         raise InvalidRdmanifest("Failed to parse yaml in %s:  Error: %s"%(contents, ex))
+
 
 def download_rdmanifest(url, md5sum, alt_url=None):
     """
@@ -141,6 +149,8 @@ def download_rdmanifest(url, md5sum, alt_url=None):
     return manifest, download_url
 
 #TODO: create SourceInstall instance objects
+
+
 class SourceInstall(object):
 
     def __init__(self):
@@ -176,11 +186,14 @@ class SourceInstall(object):
 
     __repr__ = __str__
 
+
 def is_source_installed(source_item, exec_fn=None):
     return create_tempfile_from_string_and_execute(source_item.check_presence_command, exec_fn=exec_fn)
 
+
 def source_detect(pkgs, exec_fn=None):
     return [x for x in pkgs if is_source_installed(x, exec_fn=exec_fn)]
+
 
 class SourceInstaller(PackageManagerInstaller):
 
@@ -237,15 +250,18 @@ class SourceInstaller(PackageManagerInstaller):
             deps.extend(r.dependencies)
         return deps
 
+
 def install_from_file(rdmanifest_file):
     with open(rdmanifest_file, 'r') as f:
         contents = f.read()
     manifest = load_rdmanifest(contents)
     install_source(SourceInstall.from_manifest(manifest, rdmanifest_file))
 
+
 def install_from_url(rdmanifest_url):
     manifest, download_url = download_rdmanifest(rdmanifest_url, None, None)
     install_source(SourceInstall.from_manifest(manifest, download_url))
+
 
 def install_source(resolved):
     import shutil

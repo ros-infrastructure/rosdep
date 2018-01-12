@@ -35,20 +35,25 @@ from rospkg import RosPack, RosStack, ResourceNotFound
 BASE_URL = 'https://github.com/ros/rosdistro/raw/master/rosdep/base.yaml'
 PYTHON_URL = 'https://github.com/ros/rosdistro/raw/master/rosdep/python.yaml'
 
+
 def get_test_dir():
     return os.path.abspath(os.path.dirname(__file__))
 
+
 def get_test_tree_dir():
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'tree'))
+
 
 def get_cache_dir():
     p = os.path.join(get_test_dir(), 'sources_cache')
     assert os.path.isdir(p)
     return p
 
+
 def create_test_SourcesListLoader():
     from rosdep2.sources_list import SourcesListLoader
     return SourcesListLoader.create_default(sources_cache_dir=get_cache_dir(), verbose=True)
+
 
 def get_cache_raw():
     cache_rosdep_path = os.path.join(get_cache_dir(), '0a12d6e7b0d47be9b76e7726720e4cb79528cbaa')
@@ -56,11 +61,13 @@ def get_cache_raw():
         cache_raw = yaml.load(f.read())
     return cache_raw
 
+
 def get_cache_raw_python():
     cache_rosdep_path = os.path.join(get_cache_dir(), 'f6f4ef95664e373cd4754501337fa217f5b55d91')
     with open(cache_rosdep_path) as f:
         cache_raw = yaml.load(f.read())
     return cache_raw
+
 
 def get_test_rospkgs():
     test_dir = get_test_tree_dir()
@@ -71,6 +78,7 @@ def get_test_rospkgs():
     rospack = RosPack(ros_paths=ros_paths)
     rosstack = RosStack(ros_paths=ros_paths)
     return rospack, rosstack
+
 
 FAKE_TINYXML_RULE = """testtinyxml:
   ubuntu:
@@ -85,6 +93,7 @@ FAKE_TINYXML_RULE = """testtinyxml:
   fedora:
     yum:
       packages: tinyxml-devel"""
+
 
 def test_RosdepDefinition():
     from rosdep2.lookup import RosdepDefinition, ResolutionError, InvalidData
@@ -173,6 +182,7 @@ def test_RosdepDefinition():
     val = definition.get_rule_for_platform('debian', 'sid', ['apt', 'source', 'pip'], 'apt')
     assert val == ('apt', 'libtest-dev'), val
 
+
 def test_RosdepView_merge():
     from rosdep2.model import RosdepDatabaseEntry
     from rosdep2.lookup import RosdepView
@@ -237,6 +247,7 @@ def test_RosdepView_merge():
     # - tripwire
     str(view)
 
+
 def test_RosdepLookup_get_rosdeps():
     from rosdep2.loader import RosdepLoader
     from rosdep2.lookup import RosdepLookup
@@ -277,6 +288,7 @@ def test_RosdepLookup_get_rosdeps():
     assert set(lookup.get_rosdeps('metapackage_with_deps')) == set(['catkin', 'simple_catkin_package', 'another_catkin_package']) # implicit deps won't get included
     assert set(lookup.get_rosdeps('metapackage_with_deps', implicit=False)) == set(['catkin', 'simple_catkin_package', 'another_catkin_package'])
 
+
 def test_RosdepLookup_get_resources_that_need():
     from rosdep2.lookup import RosdepLookup
     rospack, rosstack = get_test_rospkgs()
@@ -289,6 +301,7 @@ def test_RosdepLookup_get_resources_that_need():
     assert set(lookup.get_resources_that_need('stack1_dep1')) ==  set(['stack1_p1', 'stack1_p2'])
     assert lookup.get_resources_that_need('stack1_dep2') ==  ['stack1_p2']
     assert lookup.get_resources_that_need('stack1_p1_dep1') ==  ['stack1_p1']
+
 
 def test_RosdepLookup_create_from_rospkg():
     from rosdep2.lookup import RosdepLookup
@@ -303,6 +316,7 @@ def test_RosdepLookup_create_from_rospkg():
     lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack)
     assert rospack == lookup.loader._rospack
     assert rosstack == lookup.loader._rosstack
+
 
 def test_RosdepLookup_get_rosdep_view_for_resource():
     from rosdep2.lookup import RosdepLookup
@@ -332,6 +346,7 @@ def test_RosdepLookup_get_rosdep_view_for_resource():
 
     # meta-packages should return default view as well
     assert lookup.get_rosdep_view_for_resource('metapackage_with_deps').name is DEFAULT_VIEW_KEY
+
 
 def test_RosdepLookup_get_rosdep_view():
     from rosdep2.lookup import RosdepLookup
@@ -371,6 +386,7 @@ def test_RosdepLookup_get_rosdep_view():
     assert PYTHON_URL == python.origin
     assert py_cache_raw['testpython'] == python.data
 
+
 def test_RosdepLookup_get_errors():
     from rosdep2.lookup import RosdepLookup
     rospack, rosstack = get_test_rospkgs()
@@ -387,6 +403,7 @@ def test_RosdepLookup_get_errors():
 
     #TODO: force errors.  Previous tests relied on bad stack views.
     #Now we need a bad sources cache.
+
 
 def test_RosdepLookup_get_views_that_define():
     from rosdep2.lookup import RosdepLookup
@@ -406,6 +423,7 @@ def test_RosdepLookup_get_views_that_define():
     entry = val[0]
     assert entry == (PYTHON_URL, PYTHON_URL), entry
 
+
 def test_RosdepLookup_resolve_all_errors():
     from rosdep2.installers import InstallerContext
     from rosdep2.lookup import RosdepLookup, ResolutionError
@@ -422,6 +440,7 @@ def test_RosdepLookup_resolve_all_errors():
 
     resolutions, errors = lookup.resolve_all(['not_a_resource'], installer_context)
     assert 'not_a_resource' in errors, errors
+
 
 def test_RosdepLookup_resolve_errors():
     from rosdep2.installers import InstallerContext
@@ -446,6 +465,7 @@ def test_RosdepLookup_resolve_errors():
         assert False, "should have raised"
     except ResolutionError as e:
         assert "Cannot locate rosdep definition" in str(e), str(e)
+
 
 def test_RosdepLookup_resolve():
     from rosdep2 import create_default_installer_context

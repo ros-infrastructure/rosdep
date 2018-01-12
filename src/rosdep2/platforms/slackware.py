@@ -46,6 +46,7 @@ def register_installers(context):
     context.set_installer(SBOTOOLS_INSTALLER, SbotoolsInstaller())
     context.set_installer(SLACKPKG_INSTALLER, SlackpkgInstaller())
 
+
 def register_platforms(context):
     context.add_os_installer_key(SLACKWARE_OS_NAME, SBOTOOLS_INSTALLER)
     context.add_os_installer_key(SLACKWARE_OS_NAME, PIP_INSTALLER)
@@ -53,10 +54,12 @@ def register_platforms(context):
     context.add_os_installer_key(SLACKWARE_OS_NAME, SLACKPKG_INSTALLER)
     context.set_default_os_installer_key(SLACKWARE_OS_NAME, lambda self: SBOTOOLS_INSTALLER)
 
+
 def sbotools_available():
     if not os.path.exists("/usr/sbin/sboinstall"):
         return False
     return True
+
 
 def sbotools_detect_single(p):
     pkg_list = read_stdout(['ls', '/var/log/packages'])
@@ -64,8 +67,10 @@ def sbotools_detect_single(p):
     p.communicate(pkg_list)
     return not p.returncode
 
+
 def sbotools_detect(packages):
     return [p for p in packages if sbotools_detect_single(p)]
+
 
 class SbotoolsInstaller(PackageManagerInstaller):
 
@@ -84,16 +89,20 @@ class SbotoolsInstaller(PackageManagerInstaller):
 
         return [self.elevate_priv(cmd + [p] + ["-j"]) for p in packages]
 
+
 def slackpkg_available():
     if not os.path.exists("/usr/sbin/slackpkg"):
         return False
     return True
 
+
 def slackpkg_detect_single(p):
     return not subprocess.call(['slackpkg', 'search', p], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
+
 def slackpkg_detect(packages):
     return [p for p in packages if slackpkg_detect_single(p)]
+
 
 class SlackpkgInstaller(PackageManagerInstaller):
 

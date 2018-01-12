@@ -33,12 +33,15 @@ from mock import Mock, patch
 
 import rospkg.os_detect
 
+
 def is_slackware():
     return rospkg.os_detect.Slackware().is_os()
+
 
 def get_test_dir():
     # not used yet
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'slackware'))
+
 
 def test_sbotools_available():
     if not is_slackware():
@@ -49,6 +52,7 @@ def test_sbotools_available():
     original_exists = os.path.exists
 
     path_overrides = {}
+
     def mock_path(path):
         if path in path_overrides:
             return path_overrides[path]
@@ -108,6 +112,7 @@ def test_SbotoolsInstaller():
         traceback.print_exc()
         raise
 
+
 def test_slackpkg_available():
     if not is_slackware():
         print("Skipping not Slackware")
@@ -117,6 +122,7 @@ def test_slackpkg_available():
     original_exists = os.path.exists
 
     path_overrides = {}
+
     def mock_path(path):
         if path in path_overrides:
             return path_overrides[path]
@@ -143,6 +149,7 @@ def test_slackpkg_available():
     assert val==True, "Slackpkg should be available"
 
     os.path.exists = original_exists
+
 
 def test_SlackpkgInstaller():
     if not is_slackware():

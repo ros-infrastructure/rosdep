@@ -33,8 +33,10 @@ import yaml
 from mock import Mock
 from rospkg import RosPack, RosStack
 
+
 def get_test_dir():
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'tree'))
+
 
 def get_rospkg():
     # configure inside of the test tree
@@ -45,6 +47,7 @@ def get_rospkg():
     rospack = RosPack(ros_paths=ros_paths)
     rosstack = RosStack(ros_paths=ros_paths)
     return rospack, rosstack
+
 
 def test_RosPkgLoader():
     from rospkg import ResourceNotFound
@@ -108,6 +111,7 @@ def test_RosPkgLoader():
         assert False, "should error"
     except ResourceNotFound: pass
 
+
 def test_RosPkgLoader_with_underlay_key():
     from rospkg import ResourceNotFound
 
@@ -157,6 +161,7 @@ def test_RosPkgLoader_with_underlay_key():
         loader.get_view_key('fake')
         assert False, "should error"
     except ResourceNotFound: pass
+
 
 def test_RosPkgLoader_get_loadable():
     from rosdep2.rospkg_loader import RosPkgLoader

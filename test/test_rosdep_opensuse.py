@@ -31,9 +31,11 @@ import os
 import traceback
 from mock import patch
 
+
 def get_test_dir():
     # not used yet
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'opensuse'))
+
 
 def test_ZypperInstaller():
     from rosdep2.platforms.opensuse import ZypperInstaller

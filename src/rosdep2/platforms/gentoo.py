@@ -50,8 +50,10 @@ from ..shell_utils import read_stdout
 
 PORTAGE_INSTALLER = 'portage'
 
+
 def register_installers(context):
     context.set_installer(PORTAGE_INSTALLER, PortageInstaller())
+
 
 def register_platforms(context):
     context.add_os_installer_key(OS_GENTOO, PORTAGE_INSTALLER)
@@ -59,6 +61,8 @@ def register_platforms(context):
     context.set_default_os_installer_key(OS_GENTOO, lambda self: PORTAGE_INSTALLER)
 
 # Determine whether an atom is already satisfied
+
+
 def portage_detect_single(atom, exec_fn = read_stdout ):
     """
     Check if a given atom is installed.
@@ -71,6 +75,7 @@ def portage_detect_single(atom, exec_fn = read_stdout ):
     # TODO consdier checking the name of the package returned
     # Also, todo, figure out if just returning true if two packages are returned is cool..
     return len(std_out) >= 1
+
 
 def portage_detect(atoms, exec_fn = read_stdout):
     """
@@ -87,6 +92,8 @@ def portage_detect(atoms, exec_fn = read_stdout):
     return [a for a in atoms if portage_detect_single(a, exec_fn)]
 
 # Check portage and needed tools for existence and compatibility
+
+
 def portage_available():
     if not os.path.exists("/usr/bin/portageq"):
         return False
@@ -101,11 +108,11 @@ def portage_available():
 
     return True
 
+
 class PortageInstaller(PackageManagerInstaller):
 
     def __init__(self):
         super(PortageInstaller, self).__init__(portage_detect)
-
 
     def get_install_command(self, resolved, interactive=True, reinstall=False, quiet=False):
         atoms = self.get_packages_to_install(resolved, reinstall=reinstall)

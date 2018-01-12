@@ -38,6 +38,7 @@ combine these rosdep dependency maps and view dependencies together
 into a combined view on which queries can be made.
 """
 
+
 class RosdepDatabaseEntry(object):
     """
     Stores rosdep data and metadata for a single view.
@@ -53,6 +54,7 @@ class RosdepDatabaseEntry(object):
         self.rosdep_data = rosdep_data
         self.view_dependencies = view_dependencies
         self.origin = origin
+
 
 class RosdepDatabase(object):
     """

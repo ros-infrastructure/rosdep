@@ -37,13 +37,16 @@ from ..installers import PackageManagerInstaller
 # zypper package manager key
 ZYPPER_INSTALLER='zypper'
 
+
 def register_installers(context):
     context.set_installer(ZYPPER_INSTALLER, ZypperInstaller())
+
 
 def register_platforms(context):
     context.add_os_installer_key(OS_OPENSUSE, SOURCE_INSTALLER)
     context.add_os_installer_key(OS_OPENSUSE, ZYPPER_INSTALLER)
     context.set_default_os_installer_key(OS_OPENSUSE, lambda self: ZYPPER_INSTALLER)
+
 
 def rpm_detect(packages):
     installed = []
@@ -51,6 +54,7 @@ def rpm_detect(packages):
         if not subprocess.call(['rpm', '-q', p]):
             installed.append(p)
     return installed
+
 
 class ZypperInstaller(PackageManagerInstaller):
     """

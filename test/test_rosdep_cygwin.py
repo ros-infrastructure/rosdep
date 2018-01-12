@@ -31,9 +31,11 @@ import os
 import traceback
 from mock import patch
 
+
 def get_test_dir():
     # not used yet
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'cygwin'))
+
 
 def test_AptCygInstaller():
     from rosdep2.platforms.cygwin import AptCygInstaller

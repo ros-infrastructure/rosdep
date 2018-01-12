@@ -39,20 +39,25 @@ from ..shell_utils import read_stdout
 
 APT_CYG_INSTALLER = 'apt-cyg'
 
+
 def register_installers(context):
     context.set_installer(APT_CYG_INSTALLER, AptCygInstaller())
+
 
 def register_platforms(context):
     context.add_os_installer_key(OS_CYGWIN, SOURCE_INSTALLER)
     context.add_os_installer_key(OS_CYGWIN, APT_CYG_INSTALLER)
     context.set_default_os_installer_key(OS_CYGWIN, lambda self: APT_CYG_INSTALLER)
 
+
 def cygcheck_detect_single(p):
     std_out = read_stdout(['cygcheck', '-c', p])
     return std_out.count("OK") > 0
 
+
 def cygcheck_detect(packages):
     return [p for p in packages if cygcheck_detect_single(p)]
+
 
 class AptCygInstaller(PackageManagerInstaller):
     """
@@ -72,6 +77,7 @@ class AptCygInstaller(PackageManagerInstaller):
             return []
         else:
             return [self.elevate_priv(['apt-cyg', '-m', 'ftp://sourceware.org/pub/cygwinports', 'install'])+packages]
+
 
 if __name__ == '__main__':
     print("test cygcheck_detect(true)", cygcheck_detect('cygwin'))

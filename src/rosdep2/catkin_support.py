@@ -32,8 +32,10 @@ from .rosdistrohelper import get_targets
 from .rospkg_loader import DEFAULT_VIEW_KEY
 from .sources_list import get_sources_list_dir, DataSourceMatcher, SourcesListLoader
 
+
 class ValidationFailed(Exception):
     pass
+
 
 def call(command, pipe=None):
     """
@@ -48,6 +50,7 @@ def call(command, pipe=None):
         raise CalledProcessError(retcode, command)
     if pipe:
         return output
+
 
 def get_ubuntu_targets(rosdistro):
     """
@@ -64,11 +67,13 @@ def get_ubuntu_targets(rosdistro):
         targets_data['electric'] = {'ubuntu': legacy_targets['electric']}
     return targets_data[rosdistro]['ubuntu']
 
+
 def get_installer(installer_name):
     """ Expected installers APT_INSTALLER, YUM_INSTALLER, ..."""
 
     installer_context = create_default_installer_context()
     return installer_context.get_installer(installer_name)
+
 
 def resolve_for_os(rosdep_key, view, installer, os_name, os_version):
     """

@@ -5,6 +5,7 @@ import unittest
 
 from rosdep2 import main as rdmain
 
+
 class Issue30TestCase(unittest.TestCase):
     def testIssue30(self):
         return True
@@ -39,15 +40,19 @@ git clone -b groovy-devel git://github.com/ros-drivers/joystick_drivers.git > /d
         finally:
             sp.call(['rm', '-rf', d])
 
+
 def make_temp_dir():
     return tempfile.mkdtemp()
+
 
 def cd(d):
     os.chdir(d)
 
+
 def write_file(filename, contents):
     with open(filename, 'w') as f:
         f.write(contents)
+
 
 def run_script(filename, contents):
     """
@@ -61,6 +66,8 @@ def run_script(filename, contents):
     return p.stdout.read()
 
 # http://pythonwise.blogspot.com/2010/04/sourcing-shell-script.html
+
+
 def source(script):
     """
     Sources a shell script at a given path, updating the environment.
@@ -69,6 +76,7 @@ def source(script):
     data = pipe.communicate()[0]
     env = dict((line.split("=", 1) for line in data.splitlines()))
     os.environ.update(env)
+
 
 def make_lookup():
     """
@@ -80,6 +88,7 @@ def make_lookup():
         sources_cache_dir=sl.get_sources_cache_dir(),
         verbose=True)
     return rdl.RosdepLookup.create_from_rospkg(sources_loader=sources_loader)
+
 
 if __name__ == '__main__':
     unittest.main()

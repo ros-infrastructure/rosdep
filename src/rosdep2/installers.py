@@ -45,6 +45,8 @@ from .core import rd_debug, RosdepInternalError, InstallFailed, print_bold, Inva
 # though there are some touch points over how this interfaces with the
 # rospkg.os_detect library, i.e. how platforms can tweak these
 # detectors and how the higher-level APIs can override them.
+
+
 class InstallerContext(object):
     """
     :class:`InstallerContext` manages the context of execution for rosdep as it
@@ -241,6 +243,7 @@ class InstallerContext(object):
         except KeyError:
             return None
 
+
 class Installer(object):
     """
     The :class:`Installer` API is designed around opaque *resolved*
@@ -298,6 +301,7 @@ class Installer(object):
           arguments must all be from this :class:`Installer` instance.
         """
         raise NotImplementedError("Base class unique", resolved_rules)
+
 
 class PackageManagerInstaller(Installer):
     """

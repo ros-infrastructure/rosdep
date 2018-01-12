@@ -31,8 +31,10 @@ import os
 import traceback
 from mock import Mock, patch
 
+
 def get_test_dir():
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'pip'))
+
 
 def test_pip_detect():
     from rosdep2.platforms.pip import pip_detect
@@ -62,6 +64,7 @@ def test_PipInstaller_get_depends():
     from rosdep2.platforms.pip import PipInstaller
     installer = PipInstaller()
     assert ['foo'] == installer.get_depends(dict(depends=['foo']))
+
 
 def test_PipInstaller():
     from rosdep2 import InstallFailed

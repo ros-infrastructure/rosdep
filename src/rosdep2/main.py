@@ -78,6 +78,7 @@ from .catkin_packages import get_workspace_packages
 class UsageError(Exception):
     pass
 
+
 _usage = """usage: rosdep [options] <command> <args>
 
 Commands:
@@ -117,6 +118,7 @@ rosdep fix-permissions
   "rosdep update" with sudo accidentally.
 """
 
+
 def _get_default_RosdepLookup(options):
     """
     Helper routine for converting command-line options into
@@ -129,6 +131,7 @@ def _get_default_RosdepLookup(options):
     lookup = RosdepLookup.create_from_rospkg(sources_loader=sources_loader)
     lookup.verbose = options.verbose
     return lookup
+
 
 def rosdep_main(args=None):
     if args is None:
@@ -183,6 +186,7 @@ rosdep version: %s
 %s
 """%(e, __version__, traceback.format_exc()), file=sys.stderr)
         sys.exit(1)
+
 
 def check_for_sources_list_init(sources_cache_dir):
     """
@@ -252,6 +256,7 @@ def setup_proxy_opener():
             auth = HTTPBasicAuthHandler()
             opener = build_opener(proxy, auth, HTTPHandler)
             install_opener(opener)
+
 
 def _rosdep_main(args):
     # sources cache dir is our local database.
@@ -382,11 +387,13 @@ def _rosdep_main(args):
     else:
         return _package_args_handler(command, parser, options, args)
 
+
 def _no_args_handler(command, parser, options, args):
     if args:
         parser.error("command [%s] takes no arguments"%(command))
     else:
         return command_handlers[command](options)
+
 
 def _rosdep_args_handler(command, parser, options, args):
 
@@ -476,6 +483,7 @@ def _package_args_handler(command, parser, options, args):
 
     return command_handlers[command](lookup, packages, options)
 
+
 def convert_os_override_option(options_os_override):
     """
     Convert os_override option flag to ``(os_name, os_version)`` tuple, or
@@ -492,6 +500,7 @@ def convert_os_override_option(options_os_override):
     os_name = val[:val.find(':')]
     os_version = val[val.find(':')+1:]
     return os_name, os_version
+
 
 def configure_installer_context(installer_context, options):
     """
@@ -510,6 +519,7 @@ def configure_installer_context(installer_context, options):
             installer_context.get_installer(k).as_root = v
         except KeyError:
             raise UsageError("Installer '%s' not defined." % k)
+
 
 def command_init(options):
     try:
@@ -544,10 +554,13 @@ def command_init(options):
     finally:
         os.umask(old_umask)
 
+
 def command_update(options):
     error_occured = []
+
     def update_success_handler(data_source):
         print("Hit %s"%(data_source.url))
+
     def update_error_handler(data_source, exc):
         error_string = "ERROR: unable to process source [%s]:\n\t%s"%(data_source.url, exc)
         print(error_string, file=sys.stderr)
@@ -598,12 +611,14 @@ def command_keys(lookup, packages, options):
     _print_lookup_errors(lookup)
     print('\n'.join(rosdep_keys))
 
+
 def get_keys(lookup, packages, recursive):
     rosdep_keys = []
     for package_name in packages:
         deps = lookup.get_rosdeps(package_name, implicit=recursive)
         rosdep_keys.extend(deps)
     return set(rosdep_keys)
+
 
 def command_check(lookup, packages, options):
     verbose = options.verbose
@@ -634,6 +649,7 @@ def command_check(lookup, packages, options):
     else:
         return 0
 
+
 def error_to_human_readable(error):
     if isinstance(error, rospkg.ResourceNotFound):
         return "Missing resource %s"%(error,)
@@ -641,6 +657,7 @@ def error_to_human_readable(error):
         return "%s"%(error.args[0],)
     else:
         return "%s"%(error,)
+
 
 def command_install(lookup, packages, options):
     # map options
@@ -697,6 +714,7 @@ def command_install(lookup, packages, options):
         print('\n'.join(["  %s: %s"%(k, m) for k,m in e.failures]), file=sys.stderr)
         return 1
 
+
 def _compute_depdb_output(lookup, packages, options):
     installer_context = create_default_installer_context(verbose=options.verbose)
     os_name, os_version = _detect_os(installer_context, options)
@@ -710,6 +728,7 @@ def _compute_depdb_output(lookup, packages, options):
             resolved = resolve_definition(definition, os_name, os_version)
             output = output + "<<<< %s -> %s >>>>\n"%(rosdep, resolved)
     return output
+
 
 def command_db(options):
     # exact same setup logic as command_resolve, should possibly combine
@@ -749,12 +768,14 @@ def command_db(options):
         for error in errors:
             print("WARNING: %s"%(error_to_human_readable(error)), file=sys.stderr)
 
+
 def _print_lookup_errors(lookup):
     for error in lookup.get_errors():
         if isinstance(error, rospkg.ResourceNotFound):
             print("WARNING: unable to locate resource %s"%(str(error.args[0])), file=sys.stderr)
         else:
             print("WARNING: %s"%(str(error)), file=sys.stderr)
+
 
 def command_what_needs(args, options):
     lookup = _get_default_RosdepLookup(options)
@@ -764,6 +785,7 @@ def command_what_needs(args, options):
 
     _print_lookup_errors(lookup)
     print('\n'.join(set(packages)))
+
 
 def command_where_defined(args, options):
     lookup = _get_default_RosdepLookup(options)
@@ -779,6 +801,7 @@ def command_where_defined(args, options):
     else:
         print("ERROR: cannot find definition(s) for [%s]"%(', '.join(args)), file=sys.stderr)
         return 1
+
 
 def command_resolve(args, options):
     lookup = _get_default_RosdepLookup(options)
@@ -814,6 +837,7 @@ def command_resolve(args, options):
 
     if invalid_key_errors:
         return 1 # error exit code
+
 
 def command_fix_permissions(options):
     import os
@@ -857,6 +881,7 @@ def command_fix_permissions(options):
             print("Try with sudo?")
         else:
             print("Done.")
+
 
 command_handlers = {
     'db': command_db,

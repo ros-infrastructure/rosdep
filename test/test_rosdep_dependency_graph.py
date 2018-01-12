@@ -27,6 +27,7 @@
 
 # Author William Woodall/wjwwood@gmail.com
 
+
 def test_DependencyGraph_Linear():
 	from rosdep2.dependency_graph import DependencyGraph
 	# Normal A-B-C
@@ -43,6 +44,7 @@ def test_DependencyGraph_Linear():
 	result = dg.get_ordered_dependency_list()
 	expected = [('c_installer', ['c']), ('b_installer', ['b']), ('a_installer', ['a'])]
 	assert result == expected, "Results did not match expectations: %s == %s"%(str(result),str(expected))
+
 
 def test_DependencyGraph_Cycle():
 	from rosdep2.dependency_graph import DependencyGraph
@@ -65,6 +67,7 @@ def test_DependencyGraph_Cycle():
 			assert False, "Throws AssertionError, but with the wrong message. Error was: %s: %s"%(type(e),str(e))
 	except Exception as e:
 		assert False, "Throws and Exception, but not an AssertionError. Error was: %s: %s"%(type(e),str(e))
+
 
 def test_DependencyGraph_Short_Cycle():
 	from rosdep2.dependency_graph import DependencyGraph
@@ -91,6 +94,7 @@ def test_DependencyGraph_Short_Cycle():
 	except Exception as e:
 		assert False, "Throws and Exception, but not an AssertionError. Error was: %s: %s"%(type(e),str(e))
 
+
 def test_DependencyGraph_Invalid_Key():
 	from rosdep2.dependency_graph import DependencyGraph
 	# Invalid graph A-B-C where C doesn't exist
@@ -110,6 +114,7 @@ def test_DependencyGraph_Invalid_Key():
 	except Exception as e:
 		assert False, "Throws and Exception, but not an KeyError. Error was: %s: %s"%(type(e),str(e))
 
+
 def test_DependencyGraph_Invalid_Key2():
 	from rosdep2.dependency_graph import DependencyGraph
 	# Invalid graph A-B-C where B doesn't exist
@@ -128,6 +133,7 @@ def test_DependencyGraph_Invalid_Key2():
 			assert False, "Throws KeyError, but with the wrong message. Error was: %s: %s"%(type(e),str(e))
 	except Exception as e:
 		assert False, "Throws and Exception, but not an KeyError. Error was: %s: %s"%(type(e),str(e))
+
 
 def test_DependencyGraph_Multi_Root():
 	from rosdep2.dependency_graph import DependencyGraph
@@ -154,6 +160,7 @@ def test_DependencyGraph_Multi_Root():
 		[('c_installer', ['c']), ('d_installer', ['d']), ('b_installer', ['b']), ('a_installer', ['a'])],
 	]
 	assert result in expected, "Results did not match expectations: %s == %s"%(str(result),str(expected))
+
 
 def test_DependencyGraph_Realworld():
 	from rosdep2.dependency_graph import DependencyGraph
