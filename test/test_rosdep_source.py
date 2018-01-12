@@ -89,7 +89,7 @@ def test_SourceInstall():
         'uri': 'http://ros.org/',
         'alternate-uri': 'http://turtlebot.com/',
         'depends': ['foo', 'bar'],
-        }
+    }
     resolved = SourceInstall.from_manifest(manifest, 'fake-url')
     assert resolved.manifest == manifest
     assert resolved.manifest_url == 'fake-url'
@@ -116,7 +116,7 @@ def test_SourceInstall():
         'check-presence-script': 'hello there',
         'alternate-uri': 'http://turtlebot.com/',
         'depends': ['foo', 'bar'],
-        }
+    }
     # uri is required
     try:
         SourceInstall.from_manifest(manifest, 'foo')

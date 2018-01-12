@@ -40,7 +40,7 @@ def get_test_dir():
 def test_url_constants():
     from rosdep2.gbpdistro_support import FUERTE_GBPDISTRO_URL
     for url_name, url in [
-                          ('FUERTE_GBPDISTRO_URL', FUERTE_GBPDISTRO_URL)]:
+            ('FUERTE_GBPDISTRO_URL', FUERTE_GBPDISTRO_URL)]:
         try:
             f = urlopen(url)
             f.read()
@@ -80,7 +80,8 @@ def test_download_gbpdistro_as_rosdep_data():
     # try with bad url to trigger exception handling
     try:
         # override targets URL with bad URL
-        download_gbpdistro_as_rosdep_data(FUERTE_GBPDISTRO_URL,
+        download_gbpdistro_as_rosdep_data(
+            FUERTE_GBPDISTRO_URL,
             targets_url='http://bad.ros.org/foo.yaml')
         assert False, "should have raised"
     except DownloadFailure:
@@ -163,22 +164,23 @@ def test_gbprepo_to_rosdep_data_on_ok_input():
     assert rosdep_data is not None
     assert {} == rosdep_data
 
-    gbpdistro_data = {'release-name': 'foorte',
-                      'repositories': {
-                          'common_msgs': dict(
-                               target='all',
-                               url='git://github.com/wg-debs/common_msgs.git',
-                               packages={ 'foo': 'subdir/foo', 'bar': 'subdir/bar' }),
-                          'gazebo': dict(
-                               target=['lucid', 'natty'],
-                               url='git://github.com/wg-debs/gazebo.git'),
-                          'foo-bar': dict(
-                               target=['precise'],
-                               url='git://github.com/wg-debs/gazebo.git',
-                               packages={ 'foo-bar': None }),
-                          },
-                      'type': 'gbp',
-                      }
+    gbpdistro_data = {
+        'release-name': 'foorte',
+        'repositories': {
+            'common_msgs': dict(
+                target='all',
+                url='git://github.com/wg-debs/common_msgs.git',
+                packages={ 'foo': 'subdir/foo', 'bar': 'subdir/bar' }),
+            'gazebo': dict(
+                target=['lucid', 'natty'],
+                url='git://github.com/wg-debs/gazebo.git'),
+            'foo-bar': dict(
+                target=['precise'],
+                url='git://github.com/wg-debs/gazebo.git',
+                packages={ 'foo-bar': None }),
+        },
+        'type': 'gbp',
+    }
 
     rosdep_data = gbprepo_to_rosdep_data(gbpdistro_data, targets)
     for k in ['foo', 'bar', 'gazebo', 'foo-bar']:
@@ -220,10 +222,10 @@ def test_get_owner_name_homebrew():
     empty_url = ''
     assert get_owner_name(empty_url) == 'ros', 'url: ' + empty_url
     https_test_url = 'https://github.com/' \
-                    + 'ros/rosdistro/raw/master/releases/fuerte.yaml'
+        'ros/rosdistro/raw/master/releases/fuerte.yaml'
     assert get_owner_name(https_test_url) == 'ros', 'url: ' + https_test_url
     user_test_url = 'https://github.com/' \
-                    + 'zklapow/rosdistro/raw/master/releases/fuerte.yaml'
+        'zklapow/rosdistro/raw/master/releases/fuerte.yaml'
     assert get_owner_name(user_test_url) == 'zklapow', 'url: ' + user_test_url
     non_github_url = 'https://ros.org/files/releases/fuerte.yaml'
     assert get_owner_name(non_github_url) == 'ros', 'url: ' + non_github_url

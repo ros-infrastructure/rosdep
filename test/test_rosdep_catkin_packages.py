@@ -41,4 +41,4 @@ def test_find_catkin_packages_in():
         create_package_xml('src/baz', '0.2.0')
         pkgs = find_catkin_packages_in('src')
         assert sorted(pkgs) == sorted(['foo', 'bar', 'baz']), \
-               'actually: ' + str(sorted(pkgs))
+            'actually: ' + str(sorted(pkgs))

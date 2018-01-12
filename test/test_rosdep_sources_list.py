@@ -319,7 +319,7 @@ def test_download_rosdep_data():
     for url in [
         'https://code.ros.org/svn/release/trunk/distros/',
         'https://code.ros.org/svn/release/trunk/distros/manifest.xml',
-        ]:
+    ]:
         try:
             data = download_rosdep_data(url)
             assert False, "should have raised"

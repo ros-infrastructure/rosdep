@@ -160,8 +160,10 @@ class RosPkgLoader(RosdepLoader):
 
         :raises: :exc:`rospkg.ResourceNotFound`
         """
-        if (resource_name in self.get_catkin_paths() or
-            resource_name in self.get_loadable_resources()):
+        if (
+            resource_name in self.get_catkin_paths() or
+            resource_name in self.get_loadable_resources()
+        ):
             return DEFAULT_VIEW_KEY
         else:
             raise rospkg.ResourceNotFound(resource_name)
