@@ -1,9 +1,9 @@
 # Copyright (c) 2012, Willow Garage, Inc.
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 #     * Redistributions of source code must retain the above copyright
 #       notice, this list of conditions and the following disclaimer.
 #     * Redistributions in binary form must reproduce the above copyright
@@ -12,7 +12,7 @@
 #     * Neither the name of the Willow Garage, Inc. nor the names of its
 #       contributors may be used to endorse or promote products derived from
 #       this software without specific prior written permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -73,7 +73,7 @@ def fakeout():
     yield fakestdout, fakestderr
     sys.stdout = realstdout
     sys.stderr = realstderr
-    
+
 # the goal of these tests is only to test that we are wired into the
 # APIs.  More exhaustive tests are at the unit level.
 class TestRosdepMain(unittest.TestCase):
@@ -103,7 +103,7 @@ class TestRosdepMain(unittest.TestCase):
                 assert False, "system exit should have occurred"
             except SystemExit:
                 pass
-        
+
     def test_check(self):
         sources_cache = get_cache_dir()
         cmd_extras = ['-c', sources_cache]
@@ -188,7 +188,7 @@ class TestRosdepMain(unittest.TestCase):
     def test_where_defined(self):
         try:
             sources_cache = get_cache_dir()
-            expected = GITHUB_PYTHON_URL 
+            expected = GITHUB_PYTHON_URL
             for command in (['where_defined', 'testpython'], ['where_defined', 'testpython']):
                 with fakeout() as b:
                     # set os to ubuntu so this test works on different platforms
@@ -198,7 +198,7 @@ class TestRosdepMain(unittest.TestCase):
                     assert output == expected, output
         except SystemExit:
             assert False, "system exit occurred"
-        
+
     def test_what_needs(self):
         try:
             sources_cache = get_cache_dir()

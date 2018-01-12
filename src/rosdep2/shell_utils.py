@@ -1,9 +1,9 @@
 # Copyright (c) 2009, Willow Garage, Inc.
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 #     * Redistributions of source code must retain the above copyright
 #       notice, this list of conditions and the following disclaimer.
 #     * Redistributions in binary form must reproduce the above copyright
@@ -12,7 +12,7 @@
 #     * Neither the name of the Willow Garage, Inc. nor the names of its
 #       contributors may be used to endorse or promote products derived from
 #       this software without specific prior written permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -80,7 +80,7 @@ def create_tempfile_from_string_and_execute(string_script, path=None, exec_fn=No
     """
     if path is None:
         path = tempfile.gettempdir()
-        
+
     result = 1
     try:
         fh = tempfile.NamedTemporaryFile('w', delete=False)
@@ -92,13 +92,13 @@ def create_tempfile_from_string_and_execute(string_script, path=None, exec_fn=No
             if exec_fn is None:
                 result = subprocess.call(fh.name, cwd=path)
             else:
-                result = exec_fn(fh.name, cwd=path)                
+                result = exec_fn(fh.name, cwd=path)
         except OSError as ex:
             print("Execution failed with OSError: %s"%(ex))
     finally:
         if os.path.exists(fh.name):
             os.remove(fh.name)
-    
+
     rd_debug("Return code was: %s"%(result))
     return result == 0
 

@@ -73,7 +73,7 @@ def get_installer(installer_name):
 def resolve_for_os(rosdep_key, view, installer, os_name, os_version):
     """
     Resolve rosdep key to dependencies.
-    
+
     :param os_name: OS name, e.g. 'ubuntu'
 
     :raises: :exc:`rosdep2.ResolutionError`
@@ -111,7 +111,7 @@ def get_catkin_view(rosdistro_name, os_name, os_version, update=True):
 Please make sure you have a valid configuration in:
 \t%s
 """%(sources_list_dir))
-    
+
     # for vestigial reasons, using the roskg loader, but we're only
     # actually using the backend db as resolution is not resource-name based
     lookup = RosdepLookup.create_from_rospkg(sources_loader=sources_loader)

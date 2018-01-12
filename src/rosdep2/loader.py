@@ -1,9 +1,9 @@
 # Copyright (c) 2011, Willow Garage, Inc.
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 #     * Redistributions of source code must retain the above copyright
 #       notice, this list of conditions and the following disclaimer.
 #     * Redistributions in binary form must reproduce the above copyright
@@ -12,7 +12,7 @@
 #     * Neither the name of the Willow Garage, Inc. nor the names of its
 #       contributors may be used to endorse or promote products derived from
 #       this software without specific prior written permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -43,9 +43,9 @@ ROSDEP_YAML = 'rosdep.yaml'
 
 class RosdepLoader:
     """
-    Base API for loading rosdep information by package or stack name.  
+    Base API for loading rosdep information by package or stack name.
     """
-    
+
     def load_rosdep_yaml(self, yaml_contents, origin):
         """
         Utility routine for unmarshalling rosdep data encoded as YAML.
@@ -82,7 +82,7 @@ class RosdepLoader:
         :raises: :exc:`rospkg.ResourceNotFound` if *resource_name* cannot be found.
         """
         raise NotImplementedError(resource_name, implicit) #pychecker
-    
+
     def get_view_key(self, resource_name):
         """
         Map *resource_name* to a view key.  In rospkg, this maps a ROS
@@ -92,4 +92,4 @@ class RosdepLoader:
         :returns: Name of view that *resource_name* is in, ``None`` if no associated view.
         :raises: :exc:`rospkg.ResourceNotFound` if *resource_name* cannot be found.
         """
-        raise NotImplementedError(resource_name) 
+        raise NotImplementedError(resource_name)

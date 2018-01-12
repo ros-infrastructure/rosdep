@@ -1,9 +1,9 @@
 # Copyright (c) 2011, Willow Garage, Inc.
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 #     * Redistributions of source code must retain the above copyright
 #       notice, this list of conditions and the following disclaimer.
 #     * Redistributions in binary form must reproduce the above copyright
@@ -12,7 +12,7 @@
 #     * Neither the name of the Willow Garage, Inc. nor the names of its
 #       contributors may be used to endorse or promote products derived from
 #       this software without specific prior written permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -41,7 +41,7 @@ def test_RosdepDatabase():
 
     data = {'a': 1}
     db.set_view_data('foo', data, [], 'origin1')
-    assert db.is_loaded('foo')    
+    assert db.is_loaded('foo')
     entry = db.get_view_data('foo')
     assert entry.rosdep_data == data
     assert entry.origin == 'origin1'
@@ -49,10 +49,10 @@ def test_RosdepDatabase():
     # make sure data is copy
     data['a'] = 2
     assert entry.rosdep_data != data
-    
+
     data = {'b': 2}
     db.set_view_data('bar', data, ['foo'], 'origin2')
-    assert db.is_loaded('bar')    
+    assert db.is_loaded('bar')
     entry = db.get_view_data('bar')
     assert entry.rosdep_data == data
     assert entry.origin == 'origin2'
@@ -60,21 +60,21 @@ def test_RosdepDatabase():
 
     # override entry for bar
     data = {'b': 3}
-    assert db.is_loaded('bar')    
+    assert db.is_loaded('bar')
     db.set_view_data('bar', data, ['baz', 'blah'], 'origin3')
-    assert db.is_loaded('bar')    
+    assert db.is_loaded('bar')
     entry = db.get_view_data('bar')
     assert entry.rosdep_data == data
     assert entry.origin == 'origin3'
     assert set(entry.view_dependencies) == set(['baz', 'blah'])
-    
+
 
 def test_RosdepDatabase_get_view_dependencies():
     from rosdep2.model import RosdepDatabase
 
     data = {'a': 1}
     db = RosdepDatabase()
-    
+
     db.set_view_data('foo', data, [], 'origin')
     assert [] == db.get_view_dependencies('foo')
 

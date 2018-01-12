@@ -1,9 +1,9 @@
 # Copyright (c) 2009, Willow Garage, Inc.
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 #     * Redistributions of source code must retain the above copyright
 #       notice, this list of conditions and the following disclaimer.
 #     * Redistributions in binary form must reproduce the above copyright
@@ -12,7 +12,7 @@
 #     * Neither the name of the Willow Garage, Inc. nor the names of its
 #       contributors may be used to endorse or promote products derived from
 #       this software without specific prior written permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -51,7 +51,7 @@ class InstallerContext(object):
     relates to the installers, OS detectors, and other extensible
     APIs.
     """
-    
+
     def __init__(self, os_detect=None):
         """
         :param os_detect: (optional)
@@ -74,10 +74,10 @@ class InstallerContext(object):
         self.os_override = None
 
         self.verbose = False
-        
+
     def set_verbose(self, verbose):
         self.verbose = verbose
-        
+
     def set_os_override(self, os_name, os_version):
         """
         Override the OS detector with *os_name* and *os_version*.  See
@@ -97,7 +97,7 @@ class InstallerContext(object):
         if not hasattr(version_type, '__call__'):
             raise ValueError("version type should be a method")
         self.os_version_type[os_name] = version_type
-        
+
     def get_os_name_and_version(self):
         """
         Get the OS name and version key to use for resolution and
@@ -114,7 +114,7 @@ class InstallerContext(object):
             os_key = self.get_os_version_type(os_name)
             os_version = os_key(self.os_detect)
             return os_name, os_version
-        
+
     def get_os_detect(self):
         """
         :returns os_detect: :class:`OsDetect` instance used for
@@ -144,7 +144,7 @@ class InstallerContext(object):
         if self.verbose:
             print("registering installer [%s]"%(installer_key))
         self.installers[installer_key] = installer
-        
+
     def get_installer(self, installer_key):
         """
         :returns: :class:`Installer` class associated with *installer_key*.
@@ -164,13 +164,13 @@ class InstallerContext(object):
         :returns: list of OS keys that have registered with this context, ``[str]``
         """
         return self.os_installers.keys()
-    
+
     def add_os_installer_key(self, os_key, installer_key):
         """
         Register an installer for the specified OS.  This will fail
         with a :exc:`KeyError` if no :class:`Installer` can be found
         with the associated *installer_key*.
-        
+
         :param os_key: Key for OS
         :param installer_key: Key for installer to add to OS
         :raises: :exc:`KeyError`: if installer for *installer_key*
@@ -190,7 +190,7 @@ class InstallerContext(object):
         Get list of installer keys registered for the specified OS.
         These keys can be resolved by calling
         :meth:`InstallerContext.get_installer`.
-        
+
         :param os_key: Key for OS
         :raises: :exc:`KeyError`: if no information for OS *os_key* is registered.
         """
@@ -256,8 +256,8 @@ class Installer(object):
         :returns: ``True`` if all of the *resolved* items are installed on
           the local system
         """
-        raise NotImplementedError("is_installed", resolved_item) 
-        
+        raise NotImplementedError("is_installed", resolved_item)
+
     def get_install_command(self, resolved, interactive=True, reinstall=False, quiet=False):
         """
         :param resolved: list of resolved installation items, ``[opaque]``
@@ -267,8 +267,8 @@ class Installer(object):
         """
         raise NotImplementedError("get_package_install_command", resolved, interactive, reinstall, quiet)
 
-    def get_depends(self, rosdep_args): 
-        """ 
+    def get_depends(self, rosdep_args):
+        """
         :returns: list of dependencies on other rosdep keys.  Only
           necessary if the package manager doesn't handle
           dependencies.
@@ -298,7 +298,7 @@ class Installer(object):
           arguments must all be from this :class:`Installer` instance.
         """
         raise NotImplementedError("Base class unique", resolved_rules)
-    
+
 class PackageManagerInstaller(Installer):
     """
     General form of a package manager :class:`Installer`
@@ -308,7 +308,7 @@ class PackageManagerInstaller(Installer):
      - a detect function exists that can return a list of packages that are installed
 
     Also, if *supports_depends* is set to ``True``:
-    
+
      - installer rosdep args spec can also include dependency specification with the key "depends"
     """
 
@@ -357,7 +357,7 @@ class PackageManagerInstaller(Installer):
         for resolved in resolved_rules:
             s.update(resolved)
         return sorted(list(s))
-        
+
     def get_packages_to_install(self, resolved, reinstall=False):
         '''
         Return a list of packages (out of *resolved*) that still need to get
@@ -388,8 +388,8 @@ class PackageManagerInstaller(Installer):
     def get_install_command(self, resolved, interactive=True, reinstall=False, quiet=False):
         raise NotImplementedError('subclasses must implement', resolved, interactive, reinstall, quiet)
 
-    def get_depends(self, rosdep_args): 
-        """ 
+    def get_depends(self, rosdep_args):
+        """
         :returns: list of dependencies on other rosdep keys.  Only
           necessary if the package manager doesn't handle
           dependencies.
@@ -415,7 +415,7 @@ class RosdepInstaller(object):
     def __init__(self, installer_context, lookup):
         self.installer_context = installer_context
         self.lookup = lookup
-        
+
     def get_uninstalled(self, resources, implicit=False, verbose=False):
         """
         Get list of system dependencies that have not been installed
@@ -431,7 +431,7 @@ class RosdepInstaller(object):
           Uninstalled is a dictionary with the installer_key as the key.
         :raises: :exc:`RosdepInternalError`
         """
-        
+
         installer_context = self.installer_context
 
         # resolutions have been unique()d
@@ -461,9 +461,9 @@ class RosdepInstaller(object):
                 uninstalled.append((installer_key, packages_to_install))
             if verbose:
                 print("uninstalled: [%s]"%(', '.join([str(p) for p in packages_to_install])))
-        
+
         return uninstalled, errors
-    
+
     def install(self, uninstalled, interactive=True, simulate=False,
                 continue_on_error=False, reinstall=False, verbose=False, quiet=False):
         """
@@ -489,7 +489,7 @@ class RosdepInstaller(object):
           and *continue_on_error* is ``False``.
         :raises: :exc:`KeyError` If *uninstalled* value has invalid
           installer keys
-        
+
         Example::
 
             uninstalled, errors = installer.get_uninstalled(packages)
@@ -533,7 +533,7 @@ class RosdepInstaller(object):
         Lower-level API for installing a rosdep dependency.  The
         rosdep keys have already been resolved to *installer_key* and
         *resolved* via :exc:`RosdepLookup` or other means.
-        
+
         :param installer_key: Key for installer to apply to *resolved*, ``str``
         :param resolved: Opaque resolution list from :class:`RosdepLookup`.
         :param interactive: If ``True``, allow interactive prompts (default ``True``)
@@ -542,7 +542,7 @@ class RosdepInstaller(object):
           already installed (default ``False``).
         :param verbose: If ``True``, print verbose output to screen (default ``False``)
         :param quiet: If ``True``, supress output except for errors (default ``False``)
-        
+
         :raises: :exc:`InstallFailed` if any of *resolved* fail to install.
         """
         installer_context = self.installer_context
@@ -566,7 +566,7 @@ class RosdepInstaller(object):
         # nothing left to do for simulation
         if simulate:
             return
-        
+
         def run_command(command, installer_key, failures, verbose):
             # always echo commands to screen
             print_bold("executing command [%s]" % ' '.join(command))

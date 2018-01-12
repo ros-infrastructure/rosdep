@@ -41,7 +41,7 @@ PKG_ADD_INSTALLER = 'pkg_add'
 
 def register_installers(context):
     context.set_installer(PKG_ADD_INSTALLER, PkgAddInstaller())
-    
+
 def register_platforms(context):
     context.add_os_installer_key(OS_FREEBSD, SOURCE_INSTALLER)
     context.add_os_installer_key(OS_FREEBSD, PKG_ADD_INSTALLER)
@@ -79,7 +79,7 @@ class PkgAddInstaller(Installer):
         super(PkgAddInstaller, self).__init__(pkg_info_detect)
 
     def get_install_command(self, resolved, interactive=True, reinstall=False, quiet=False):
-        packages = self.get_packages_to_install(resolved, reinstall=reinstall)        
+        packages = self.get_packages_to_install(resolved, reinstall=reinstall)
         if not packages:
             return []
         else:

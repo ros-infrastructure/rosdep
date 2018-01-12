@@ -1,9 +1,9 @@
 # Copyright (c) 2011, Willow Garage, Inc.
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 #     * Redistributions of source code must retain the above copyright
 #       notice, this list of conditions and the following disclaimer.
 #     * Redistributions in binary form must reproduce the above copyright
@@ -12,7 +12,7 @@
 #     * Neither the name of the Willow Garage, Inc. nor the names of its
 #       contributors may be used to endorse or promote products derived from
 #       this software without specific prior written permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -35,7 +35,7 @@ from rospkg import RosPack, RosStack
 
 def get_test_dir():
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'tree'))
-    
+
 def get_rospkg():
     # configure inside of the test tree
     test_dir = get_test_dir()
@@ -52,10 +52,10 @@ def test_RosPkgLoader():
     from rosdep2.model import RosdepDatabase
     from rosdep2.rospkg_loader import RosPkgLoader, DEFAULT_VIEW_KEY
     from rosdep2.loader import InvalidData
-    
+
     # Due to rosdep 2/REP 125 changes, this test is a bit overbuilt.
     # All stacks return the same.
-    
+
     # tripwire
     loader = RosPkgLoader()
     assert loader._rospack is not None
@@ -66,7 +66,7 @@ def test_RosPkgLoader():
     ros_root = rosstack.get_path('ros')
     loader = RosPkgLoader(rospack, rosstack)
     assert loader._rospack == rospack
-    assert loader._rosstack == rosstack    
+    assert loader._rosstack == rosstack
 
     # test with mock db
     rosdep_db = Mock(spec=RosdepDatabase)
@@ -87,8 +87,8 @@ def test_RosPkgLoader():
     # Test with default view key
     loader.load_view(DEFAULT_VIEW_KEY, rosdep_db)
     rosdep_db.set_view_data.assert_called_with(DEFAULT_VIEW_KEY, {}, [], '<nodata>')
-    
-    # test with complicated ros stack.  
+
+    # test with complicated ros stack.
     loader.load_view('ros', rosdep_db)
     rosdep_db.is_loaded.assert_called_with('ros')
     rosdep_db.set_view_data.assert_called_with('ros', {}, [], '<nodata>')
@@ -107,20 +107,20 @@ def test_RosPkgLoader():
         loader.get_view_key('fake')
         assert False, "should error"
     except ResourceNotFound: pass
-        
+
 def test_RosPkgLoader_with_underlay_key():
     from rospkg import ResourceNotFound
 
     from rosdep2.model import RosdepDatabase
     from rosdep2.rospkg_loader import RosPkgLoader, DEFAULT_VIEW_KEY
     from rosdep2.loader import InvalidData
-    
+
     # configure inside of the test tree
     rospack, rosstack = get_rospkg()
     ros_root = rosstack.get_path('ros')
     loader = RosPkgLoader(rospack, rosstack, underlay_key='underlay-key')
     assert loader._rospack == rospack
-    assert loader._rosstack == rosstack    
+    assert loader._rosstack == rosstack
 
     # test with mock db
     rosdep_db = Mock(spec=RosdepDatabase)
@@ -138,7 +138,7 @@ def test_RosPkgLoader_with_underlay_key():
     except ResourceNotFound as e:
         pass
 
-    # test with complicated ros stack.  
+    # test with complicated ros stack.
     loader.load_view('ros', rosdep_db)
     rosdep_db.is_loaded.assert_called_with('ros')
     rosdep_db.set_view_data.assert_called_with('ros', {}, ['underlay-key'], '<nodata>')
@@ -160,16 +160,16 @@ def test_RosPkgLoader_with_underlay_key():
 
 def test_RosPkgLoader_get_loadable():
     from rosdep2.rospkg_loader import RosPkgLoader
-    
+
     rospack, rosstack = get_rospkg()
     loader = RosPkgLoader(rospack, rosstack)
     assert loader._rospack == rospack
-    assert loader._rosstack == rosstack    
+    assert loader._rosstack == rosstack
 
     keys = loader.get_loadable_resources()
     for p in ['stack1_p1', 'stack1_p2', 'stack1_p3']:
         assert p in keys
-    keys = loader.get_loadable_views()        
+    keys = loader.get_loadable_views()
     for s in ['ros', 'empty', 'invalid', 'stack1']:
         assert s in keys
 

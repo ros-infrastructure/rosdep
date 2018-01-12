@@ -1,9 +1,9 @@
 # Copyright (c) 2011, Willow Garage, Inc.
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 #     * Redistributions of source code must retain the above copyright
 #       notice, this list of conditions and the following disclaimer.
 #     * Redistributions in binary form must reproduce the above copyright
@@ -12,7 +12,7 @@
 #     * Neither the name of the Willow Garage, Inc. nor the names of its
 #       contributors may be used to endorse or promote products derived from
 #       this software without specific prior written permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -66,7 +66,7 @@ class DownloadFailed(Exception):
 def _sub_fetch_file(url, md5sum=None):
     """
     Sub-routine of _fetch_file
-    
+
     :raises: :exc:`DownloadFailed`
     """
     contents = ''
@@ -80,7 +80,7 @@ def _sub_fetch_file(url, md5sum=None):
     except URLError as ex:
         raise DownloadFailed(str(ex))
 
-    return contents    
+    return contents
 
 def get_file_hash(filename):
     md5 = hashlib.md5()
@@ -114,7 +114,7 @@ def load_rdmanifest(contents):
         return yaml.load(contents)
     except yaml.scanner.ScannerError as ex:
         raise InvalidRdmanifest("Failed to parse yaml in %s:  Error: %s"%(contents, ex))
-    
+
 def download_rdmanifest(url, md5sum, alt_url=None):
     """
     :param url: URL to download rdmanifest from
@@ -131,7 +131,7 @@ def download_rdmanifest(url, md5sum, alt_url=None):
     error_prefix = "Failed to load a rdmanifest from %s: "%(url)
     contents, error = fetch_file(download_url, md5sum)
     # - try the backup url
-    if not contents and alt_url: 
+    if not contents and alt_url:
         error_prefix = "Failed to load a rdmanifest from either %s or %s: "%(url, alt_url)
         download_url = alt_url
         contents, error = fetch_file(download_url, md5sum)
@@ -150,14 +150,14 @@ class SourceInstall(object):
         self.tarball = self.alternate_tarball = None
         self.tarball_md5sum = None
         self.dependencies = None
-    
+
     @staticmethod
     def from_manifest(manifest, manifest_url):
         r = SourceInstall()
         r.manifest = manifest
         r.manifest_url = manifest_url
         rd_debug("Loading manifest:\n{{{%s\n}}}\n"%manifest)
-        
+
         r.install_command = manifest.get("install-script", '')
         r.check_presence_command = manifest.get("check-presence-script", '')
 
@@ -165,7 +165,7 @@ class SourceInstall(object):
         try:
             r.tarball = manifest["uri"]
         except KeyError:
-            raise InvalidRdmanifest("uri required for source rosdeps") 
+            raise InvalidRdmanifest("uri required for source rosdeps")
         r.alternate_tarball = manifest.get("alternate-uri")
         r.tarball_md5sum = manifest.get("md5sum")
         r.dependencies = manifest.get("depends", [])
@@ -175,10 +175,10 @@ class SourceInstall(object):
         return "source: %s"%(self.manifest_url)
 
     __repr__ = __str__
-    
+
 def is_source_installed(source_item, exec_fn=None):
     return create_tempfile_from_string_and_execute(source_item.check_presence_command, exec_fn=exec_fn)
-            
+
 def source_detect(pkgs, exec_fn=None):
     return [x for x in pkgs if is_source_installed(x, exec_fn=exec_fn)]
 
@@ -187,7 +187,7 @@ class SourceInstaller(PackageManagerInstaller):
     def __init__(self):
         super(SourceInstaller, self).__init__(source_detect, supports_depends=True)
         self._rdmanifest_cache = {}
-    
+
     def resolve(self, rosdep_args):
         """
         :raises: :exc:`InvalidData` If format invalid or unable
@@ -197,7 +197,7 @@ class SourceInstaller(PackageManagerInstaller):
         try:
             url = rosdep_args["uri"]
         except KeyError:
-            raise InvalidData("'uri' key required for source rosdeps") 
+            raise InvalidData("'uri' key required for source rosdeps")
         alt_url = rosdep_args.get("alternate-uri", None)
         md5sum = rosdep_args.get("md5sum", None)
 
@@ -215,7 +215,7 @@ class SourceInstaller(PackageManagerInstaller):
             return [resolved]
         except DownloadFailed as ex:
             # not sure this should be masked this way
-            raise InvalidData(str(ex))            
+            raise InvalidData(str(ex))
         except InvalidRdmanifest as ex:
             raise InvalidData(str(ex))
 
@@ -231,7 +231,7 @@ class SourceInstaller(PackageManagerInstaller):
             commands.append(['rosdep-source', 'install', p.manifest_url])
         return commands
 
-    def get_depends(self, rosdep_args): 
+    def get_depends(self, rosdep_args):
         deps = rosdep_args.get('depends', [])
         for r in self.resolve(rosdep_args):
             deps.extend(r.dependencies)
@@ -242,7 +242,7 @@ def install_from_file(rdmanifest_file):
         contents = f.read()
     manifest = load_rdmanifest(contents)
     install_source(SourceInstall.from_manifest(manifest, rdmanifest_file))
-    
+
 def install_from_url(rdmanifest_url):
     manifest, download_url = download_rdmanifest(rdmanifest_url, None, None)
     install_source(SourceInstall.from_manifest(manifest, download_url))
@@ -287,7 +287,7 @@ def install_source(resolved):
             tarf = tarfile.open(filename)
             tarf.extractall(tempdir)
         else:
-            rd_debug("Bypassing tarball extraction as it is a dmg")            
+            rd_debug("Bypassing tarball extraction as it is a dmg")
         rd_debug("Running installation script")
         success = create_tempfile_from_string_and_execute(resolved.install_command, os.path.join(tempdir, resolved.exec_path))
 
@@ -300,4 +300,4 @@ def install_source(resolved):
         rd_debug("cleaning up tmpdir [%s]"%(tempdir))
         shutil.rmtree(tempdir)
 
-    
+
