@@ -165,7 +165,17 @@ def test_RosdepDefinition():
         # tripwire
         str(e)
 
-    definition = RosdepDefinition('testtinyxml', {'ubuntu': {'precise': ['libtinyxml-dev'], '*': ['libtinyxml2-dev']}}, 'wildcard.txt')
+    definition = RosdepDefinition('testtinyxml', {'ubuntu': {'lucid': None, 'precise': ['libtinyxml-dev'], '*': ['libtinyxml2-dev']}}, 'wildcard.txt')
+    try:
+        val = definition.get_rule_for_platform('ubuntu', 'lucid', ['apt', 'source', 'pip'], 'apt')
+        assert False, 'should have raised: %s' % (str(val))
+    except ResolutionError as e:
+        assert e.rosdep_key == 'testtinyxml'
+        assert e.os_name == 'ubuntu'
+        assert e.os_version == 'lucid'
+        # tripwire
+        str(e)
+
     val = definition.get_rule_for_platform('ubuntu', 'precise', ['apt', 'source', 'pip'], 'apt')
     assert val == ('apt', ['libtinyxml-dev']), val
 
