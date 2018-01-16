@@ -27,6 +27,7 @@ from .platforms.debian import APT_INSTALLER
 from .platforms.osx import BREW_INSTALLER
 from .platforms.pip import PIP_INSTALLER
 from .platforms.redhat import YUM_INSTALLER
+from .platforms.freebsd import PKG_INSTALLER
 from .rep3 import download_targets_data
 from .rosdistrohelper import get_targets
 from .rospkg_loader import DEFAULT_VIEW_KEY
