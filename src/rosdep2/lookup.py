@@ -127,8 +127,15 @@ class RosdepDefinition(object):
                     # we've already checked for PACKAGE_MANAGER_KEY, so
                     # version key must be present here for data to be valid
                     # dictionary value.
-                    if os_version not in data:
+                    # if the os_version is not defined and there is no wildcard
+                    if os_version not in data and '*' not in data:
                         raise ResolutionError(rosdep_key, self.data, os_name, os_version, 'No definition of [%s] for OS version [%s]' % (rosdep_key, os_version))
+                    # if the os_version has the value None
+                    if os_version in data and data[os_version] is None:
+                        raise ResolutionError(rosdep_key, self.data, os_name, os_version, 'Null definition of [%s] for OS version [%s]' % (rosdep_key, os_version))
+                    # if os version is not defined (and there is a wildcard) fallback to the wildcard
+                    if os_version not in data:
+                        os_version = '*'
                     data = data[os_version]
                     if type(data) == dict:
                         for installer_key in installer_keys:
