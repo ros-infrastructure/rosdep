@@ -1,3 +1,28 @@
+0.12.0 (2018-02-07)
+-------------------
+- Support for wildcard OS versions as specified in the updated REP 111
+  - https://github.com/ros-infrastructure/rosdep/pull/573
+- Add conflict with Debian package python-rosdep2
+  - https://github.com/ros-infrastructure/rosdep/pull/579
+- Remove redundant dependency checks
+  - https://github.com/ros-infrastructure/rosdep/pull/556
+- Update the FreeBSD installer
+  - https://github.com/ros-infrastructure/rosdep/pull/574
+- Fix detection of installed rpms and warn if slow method is being used
+  - https://github.com/ros-infrastructure/rosdep/pull/568
+- Support for installing virtual packages (Debian)
+  - https://github.com/ros-infrastructure/rosdep/pull/521
+- Remove non-interactive mode in slackware
+  - https://github.com/ros-infrastructure/rosdep/pull/553
+- Use ROS_ETC_DIR environment variable
+  - https://github.com/ros-infrastructure/rosdep/pull/551
+- Add __repr__ for SourceInstall
+  - https://github.com/ros-infrastructure/rosdep/pull/543
+- Keep dependencies order
+  - https://github.com/ros-infrastructure/rosdep/pull/545
+- Fix db command on OS X
+  - https://github.com/ros-infrastructure/rosdep/pull/541
+
 0.11.8 (2017-08-03)
 -------------------
 - Fix handling of metapackages
