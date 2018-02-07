@@ -132,7 +132,7 @@ class RosdepDefinition(object):
                         raise ResolutionError(rosdep_key, self.data, os_name, os_version, 'No definition of [%s] for OS version [%s]' % (rosdep_key, os_version))
                     # if the os_version has the value None
                     if os_version in data and data[os_version] is None:
-                        raise ResolutionError(rosdep_key, self.data, os_name, os_version, 'Null definition of [%s] for OS version [%s]' % (rosdep_key, os_version))
+                        raise ResolutionError(rosdep_key, self.data, os_name, os_version, '[%s] defined as "not available" for OS version [%s]' % (rosdep_key, os_version))
                     # if os version is not defined (and there is a wildcard) fallback to the wildcard
                     if os_version not in data:
                         os_version = '*'
