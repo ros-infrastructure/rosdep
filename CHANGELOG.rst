@@ -1,3 +1,8 @@
+0.12.1 (2018-02-08)
+-------------------
+- Revert "Use ROS_ETC_DIR environment variable" to fix regression introduced in 0.12.0
+  - https://github.com/ros-infrastructure/rosdep/pull/584
+
 0.12.0 (2018-02-07)
 -------------------
 - Support for wildcard OS versions as specified in the updated REP 111
