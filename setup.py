@@ -4,7 +4,7 @@ import os
 import sys
 from setuptools import setup, find_packages
 
-install_requires=['catkin_pkg >= 0.1.28', 'rosdistro >= 0.5.0', 'rospkg', 'PyYAML', 'setuptools']
+install_requires=['catkin_pkg >= 0.1.28', 'rosdistro >= 0.6.8', 'rospkg', 'PyYAML', 'setuptools']
 
 # argparse is a part of the standard library since python 2.7
 if sys.version_info[0] == 2 and sys.version_info[1] <= 6:

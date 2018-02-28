@@ -87,20 +87,26 @@ def _classify_repo_names(distro_name, repo_names):
     return names, unknown_names
 
 
-def _get_packages_for_repos(distro_name, repo_names):
+def _get_packages_for_repos(distro_name, repo_names, source=False):
     package_names = set([])
     unreleased_repo_names = set([])
     wet_distro = get_wet_distro(distro_name)
     for repo_name in repo_names:
-        release_repo = wet_distro.repositories[repo_name].release_repository
-        if release_repo:
-            package_names.update(release_repo.package_names)
+        if source:
+            # Returns a mapping of package names to package XML strings in particular repo.
+            source_package_xmls = wet_distro.get_source_repo_package_xmls(repo_name)
+        if source and source_package_xmls:
+            package_names.update(source_package_xmls.keys())
         else:
-            unreleased_repo_names.add(repo_name)
+            release_repo = wet_distro.repositories[repo_name].release_repository
+            if release_repo:
+                package_names.update(release_repo.package_names)
+            else:
+                unreleased_repo_names.add(repo_name)
     return package_names, unreleased_repo_names
 
 
-def _classify_names(distro_name, names):
+def _classify_names(distro_name, names, source=False):
     unknown_names = set(names or [])
 
     wet_package_names = set([])
@@ -110,8 +116,9 @@ def _classify_names(distro_name, names):
     # identify wet packages
     if unknown_names:
         wet_distro = get_wet_distro(distro_name)
+        packages = wet_distro.source_packages if source and wet_distro.source_packages else wet_distro.release_packages
         for name in unknown_names:
-            if name in wet_distro.release_packages:
+            if name in packages:
                 wet_package_names.add(name)
         unknown_names -= wet_package_names
 
@@ -246,7 +253,7 @@ def generate_rosinstall(distro_name, names,
     repo_names, unknown_repo_names = _classify_repo_names(distro_name, repo_names)
     if unknown_repo_names:
         logger.warn('The following unknown repositories will be ignored: %s' % (', '.join(sorted(unknown_repo_names))))
-    wet_package_names, unreleased_repo_names = _get_packages_for_repos(distro_name, repo_names)
+    wet_package_names, unreleased_repo_names = _get_packages_for_repos(distro_name, repo_names, source=upstream_source_version)
     names.update(wet_package_names)
     if unreleased_repo_names and not upstream_version_tag and not upstream_source_version:
         logger.warn('The following unreleased repositories will be ignored: %s' % ', '.join(sorted(unreleased_repo_names)))
@@ -254,11 +261,11 @@ def generate_rosinstall(distro_name, names,
         logger.warn('The dependencies of the following unreleased repositories are unknown and will be ignored: %s' % ', '.join(sorted(unreleased_repo_names)))
     has_repos = ((repo_names - unreleased_repo_names) and (upstream_version_tag or upstream_source_version)) or (unreleased_repo_names and upstream_source_version)
 
-    names, unknown_names = _classify_names(distro_name, names)
+    names, unknown_names = _classify_names(distro_name, names, source=upstream_source_version)
     if unknown_names:
         logger.warn('The following not released packages/stacks will be ignored: %s' % (', '.join(sorted(unknown_names))))
     if keywords:
-        expanded_names, unknown_names = _classify_names(distro_name, _expand_keywords(distro_name, keywords))
+        expanded_names, unknown_names = _classify_names(distro_name, _expand_keywords(distro_name, keywords), source=upstream_source_version)
         if unknown_names:
             logger.warn('The following not released packages/stacks from the %s will be ignored: %s' % (ROS_PACKAGE_PATH, ', '.join(sorted(unknown_names))))
         names.update(expanded_names)
@@ -271,11 +278,11 @@ def generate_rosinstall(distro_name, names,
 
     # classify deps-up-to
     deps_up_to_names, keywords = _split_special_keywords(deps_up_to or [])
-    deps_up_to_names, unknown_names = _classify_names(distro_name, deps_up_to_names)
+    deps_up_to_names, unknown_names = _classify_names(distro_name, deps_up_to_names, source=upstream_source_version)
     if unknown_names:
         logger.warn("The following not released '--deps-up-to' packages/stacks will be ignored: %s" % (', '.join(sorted(unknown_names))))
     if keywords:
-        expanded_names, unknown_names = _classify_names(distro_name, _expand_keywords(distro_name, keywords))
+        expanded_names, unknown_names = _classify_names(distro_name, _expand_keywords(distro_name, keywords), source=upstream_source_version)
         if unknown_names:
             logger.warn("The following not released '--deps-up-to' packages/stacks from the %s will be ignored: %s" % (ROS_PACKAGE_PATH, ', '.join(sorted(unknown_names))))
         deps_up_to_names.update(expanded_names)
@@ -289,11 +296,11 @@ def generate_rosinstall(distro_name, names,
         [exclude_names_from_path.update(_get_package_names(exclude_path)) for exclude_path in exclude_paths]
         logger.debug("The following wet packages found in '--exclude-path' will be excluded: %s" % ', '.join(sorted(exclude_names_from_path)))
         exclude_names.update(exclude_names_from_path)
-    exclude_names, unknown_names = _classify_names(distro_name, exclude_names)
+    exclude_names, unknown_names = _classify_names(distro_name, exclude_names, source=upstream_source_version)
     if unknown_names:
         logger.warn("The following not released '--exclude' packages/stacks will be ignored: %s" % (', '.join(sorted(unknown_names))))
     if keywords:
-        expanded_names, unknown_names = _classify_names(distro_name, _expand_keywords(distro_name, keywords))
+        expanded_names, unknown_names = _classify_names(distro_name, _expand_keywords(distro_name, keywords), source=upstream_source_version)
         exclude_names.update(expanded_names)
     if excludes:
         logger.debug('Excluded packages/stacks: %s' % ', '.join(sorted(exclude_names.wet_package_names | exclude_names.dry_stack_names)))
@@ -402,12 +409,16 @@ def generate_rosinstall(distro_name, names,
             # determine repositories based on package names and passed in repository names
             repos = {}
             for pkg_name in result.wet_package_names:
-                pkg = wet_distro.release_packages[pkg_name]
-                if pkg.repository_name not in repos:
-                    repo = wet_distro.repositories[pkg.repository_name]
-                    release_repo = repo.release_repository
-                    assert not upstream_version_tag or release_repo.version is not None, "Package '%s' in repository '%s' does not have a release version" % (pkg_name, pkg.repository_name)
-                    repos[pkg.repository_name] = repo
+                if upstream_source_version and wet_distro.source_packages:
+                    pkg = wet_distro.source_packages[pkg_name]
+                    repos[pkg.repository_name] = wet_distro.repositories[pkg.repository_name]
+                else:
+                    pkg = wet_distro.release_packages[pkg_name]
+                    if pkg.repository_name not in repos:
+                        repo = wet_distro.repositories[pkg.repository_name]
+                        release_repo = repo.release_repository
+                        assert not upstream_version_tag or release_repo.version is not None, "Package '%s' in repository '%s' does not have a release version" % (pkg_name, pkg.repository_name)
+                        repos[pkg.repository_name] = repo
             for repo_name in repo_names:
                 if repo_name not in repos:
                     repos[repo_name] = wet_distro.repositories[repo_name]
