@@ -20,7 +20,7 @@ setup(
     classifiers=[
         'Programming Language :: Python',
         'License :: OSI Approved :: BSD License'],
-    description='rosdep package manager abstrction tool for ROS',
+    description='rosdep package manager abstraction tool for ROS',
     long_description='Command-line tool for installing system '
                      'dependencies on a variety of platforms.',
     license='BSD'
