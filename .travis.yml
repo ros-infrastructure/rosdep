@@ -9,10 +9,10 @@ matrix:
       python: 3.4
     - os: osx
       language: generic
-      env: TRAVIS_PYTHON_VERSION=2.7
+      env: TRAVIS_PYTHON_VERSION=2.7.14
     - os: osx
       language: generic
-      env: TRAVIS_PYTHON_VERSION=3.4.8
+      env: TRAVIS_PYTHON_VERSION=3.6.4
 
 # command to install dependencies
 install:
