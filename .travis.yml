@@ -1,14 +1,27 @@
 language: python
-python:
-  - "2.6"
-  - "2.7"
-  - "3.4"
+matrix:
+  include:
+    - os: linux
+      python: 2.6
+    - os: linux
+      python: 2.7
+    - os: linux
+      python: 3.4
+    - os: osx
+      language: generic
+      env: TRAVIS_PYTHON_VERSION=2.7
+    - os: osx
+      language: generic
+      env: TRAVIS_PYTHON_VERSION=3.4.8
+
 # command to install dependencies
 install:
+  - source .travis/install.sh
+  - python --version
 # develop seems to be required by travis since 02/2013
   - pip install PyYAML argparse rospkg vcstools catkin_pkg python-dateutil rosdistro
   - python setup.py build develop
-  - pip install nose coverage flake8
+  - pip install nose coverage flake8 mock
 # command to run tests
 script:
   - nosetests --with-coverage --cover-package=rosdep2 --with-xunit test
