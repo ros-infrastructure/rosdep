@@ -25,5 +25,7 @@ install:
 # command to run tests
 script:
   - nosetests --with-coverage --cover-package=rosdep2 --with-xunit test
+after_script:
+  - codecov
 notifications:
   email: false
