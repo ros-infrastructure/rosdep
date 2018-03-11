@@ -9,18 +9,20 @@ matrix:
       python: 3.4
     - os: osx
       language: generic
-      env: TRAVIS_PYTHON_VERSION=2.7.14
+      env: PYTHON_INSTALLER=brew
     - os: osx
       language: generic
-      env: TRAVIS_PYTHON_VERSION=3.6.4
+      env: PYTHON_INSTALLER=pyenv TRAVIS_PYTHON_VERSION=2.7.14
+    - os: osx
+      language: generic
+      env: PYTHON_INSTALLER=pyenv TRAVIS_PYTHON_VERSION=3.6.4
 
 # command to install dependencies
 install:
   - source .travis/install.sh
   - python --version
-# develop seems to be required by travis since 02/2013
   - pip install PyYAML argparse rospkg vcstools catkin_pkg python-dateutil rosdistro
-  - python setup.py build develop
+  - pip install -e .
   - pip install nose coverage flake8 mock
 # command to run tests
 script:
