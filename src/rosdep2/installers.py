@@ -561,9 +561,11 @@ class RosdepInstaller(object):
         if simulate:
             print('#[%s] Installation commands:' % (installer_key))
             for sub_command in command:
+                if not sub_command:
+                    continue
                 if isinstance(sub_command[0], list):
                     sub_cmd_len = len(sub_command)
-                    for cmd, i in enumerate(sub_command):
+                    for i, cmd in enumerate(sub_command):
                         print("  '%s' (alternative %d/%d)" % (' '.join(cmd), i + 1, sub_cmd_len))
                 else:
                     print('  ' + ' '.join(sub_command))
@@ -585,6 +587,9 @@ class RosdepInstaller(object):
         # run each install command set and collect errors
         failures = []
         for sub_command in command:
+            if not sub_command:
+                continue
+            result = 0
             if isinstance(sub_command[0], list):  # list of alternatives
                 alt_failures = []
                 for alt_command in sub_command:
