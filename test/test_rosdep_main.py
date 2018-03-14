@@ -153,12 +153,27 @@ class TestRosdepMain(unittest.TestCase):
         except SystemExit:
             pass
 
-    def test_install(self):
+    @patch('rosdep2.platforms.debian.read_stdout')
+    def test_install(self, mock_read_stdout):
         sources_cache = get_cache_dir()
         cmd_extras = ['-c', sources_cache]
         catkin_tree = get_test_catkin_tree_dir()
 
+        def read_stdout(cmd, capture_stderr=False):
+            if cmd[0] == 'apt-cache' and cmd[1] == 'showpkg':
+                result = ''
+            elif cmd[0] == 'dpkg-query':
+                if cmd[-1] == 'python-dev':
+                    result = '\'python-dev install ok installed\n\''
+                else:
+                    result = '\n'.join(["dpkg-query: no packages found matching %s" % f for f in cmd[3:]])
+
+            if capture_stderr:
+                return result, ''
+            return result
+
         try:
+            mock_read_stdout.side_effect = read_stdout
             # python must have already been installed
             with fakeout() as b:
                 rosdep_main(['install', 'python_dep'] + cmd_extras)

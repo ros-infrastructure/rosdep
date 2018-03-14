@@ -29,7 +29,7 @@
 
 import os
 import traceback
-from mock import Mock, patch
+from mock import Mock, patch, call
 
 
 def get_test_dir():
@@ -39,23 +39,41 @@ def get_test_dir():
 def test_dpkg_detect():
     from rosdep2.platforms.debian import dpkg_detect
 
-    m = Mock()
-    m.return_value = '', ''
-    val = dpkg_detect([], exec_fn=m)
-    assert val == [], val
+    with patch('rosdep2.platforms.debian.read_stdout') as mock_read_stdout:
+        mock_read_stdout.side_effect = [('', ''), '']
+        val = dpkg_detect([])
+        assert val == [], val
+        assert mock_read_stdout.call_count == 2
+        assert mock_read_stdout.call_args_list[0] == call(['dpkg-query', '-W', "-f='${Package} ${Status}\n'"], True)
+        assert mock_read_stdout.call_args_list[1] == call(['apt-cache', 'showpkg'])
 
-    val = dpkg_detect(['tinyxml-dev'], exec_fn=m)
-    assert val == [], val
-    # assert m.assert_called_with(['dpkg-query', '-W', '-f=\'${Package} ${Status}\n\''])
+    with patch('rosdep2.platforms.debian.read_stdout') as mock_read_stdout:
+        mock_read_stdout.side_effect = [('', ''), '']
+        val = dpkg_detect(['tinyxml-dev'])
+        assert val == [], val
+        assert mock_read_stdout.call_count == 2
+        assert mock_read_stdout.call_args_list[0] == call(['dpkg-query', '-W', "-f='${Package} ${Status}\n'",
+                                                           'tinyxml-dev'], True)
+        assert mock_read_stdout.call_args_list[1] == call(['apt-cache', 'showpkg', 'tinyxml-dev'])
 
     with open(os.path.join(get_test_dir(), 'dpkg-python-apt'), 'r') as f:
-        m.return_value = f.read(), ''
-    val = dpkg_detect(['apt', 'tinyxml-dev', 'python'], exec_fn=m)
-    assert val == ['apt', 'python'], val
+        dpkg_python_apt_test_content = f.read()
+
+    with patch('rosdep2.platforms.debian.read_stdout') as mock_read_stdout:
+        mock_read_stdout.side_effect = [(dpkg_python_apt_test_content, ''), '']
+        val = dpkg_detect(['apt', 'tinyxml-dev', 'python'])
+        assert val == ['apt', 'python'], val
+        assert mock_read_stdout.call_count == 2
+        print(mock_read_stdout.call_args_list[0])
+        assert mock_read_stdout.call_args_list[1] == call(['apt-cache', 'showpkg', 'tinyxml-dev'])
 
     # test version lock code (should be filtered out w/o validation)
-    val = dpkg_detect(['apt=1.8', 'tinyxml-dev', 'python=2.7'], exec_fn=m)
-    assert val == ['apt=1.8', 'python=2.7'], val
+    with patch('rosdep2.platforms.debian.read_stdout') as mock_read_stdout:
+        mock_read_stdout.side_effect = [(dpkg_python_apt_test_content, ''), '']
+        val = dpkg_detect(['apt=1.8', 'tinyxml-dev', 'python=2.7'])
+        assert val == ['apt=1.8', 'python=2.7'], val
+        assert mock_read_stdout.call_count == 2
+        assert mock_read_stdout.call_args_list[1] == call(['apt-cache', 'showpkg', 'tinyxml-dev'])
 
 
 def test_read_apt_cache_showpkg():
@@ -86,13 +104,15 @@ def test_read_apt_cache_showpkg():
 def test_AptInstaller():
     from rosdep2.platforms.debian import AptInstaller
 
+    @patch('rosdep2.platforms.debian.read_stdout')
     @patch.object(AptInstaller, 'get_packages_to_install')
-    def test(mock_method):
+    def test(mock_get_packages_to_install, mock_read_stdout):
         installer = AptInstaller()
-        mock_method.return_value = []
+        mock_get_packages_to_install.return_value = []
+        mock_read_stdout.return_value = ''
         assert [] == installer.get_install_command(['fake'])
 
-        mock_method.return_value = ['a', 'b']
+        mock_get_packages_to_install.return_value = ['a', 'b']
         expected = [['sudo', '-H', 'apt-get', 'install', '-y', 'a'],
                     ['sudo', '-H', 'apt-get', 'install', '-y', 'b']]
         val = installer.get_install_command(['whatever'], interactive=False)
