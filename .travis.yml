@@ -9,19 +9,26 @@ matrix:
       python: 3.4
     - os: osx
       language: generic
-      env: TRAVIS_PYTHON_VERSION=2.7.14
+      env: PYTHON_INSTALLER=brew
     - os: osx
       language: generic
-      env: TRAVIS_PYTHON_VERSION=3.6.4
+      env: PYTHON_INSTALLER=pyenv TRAVIS_PYTHON_VERSION=2.7.14
+    - os: osx
+      language: generic
+      env: PYTHON_INSTALLER=pyenv TRAVIS_PYTHON_VERSION=3.6.4
 
 # command to install dependencies
 install:
   - source .travis/install.sh
   - python --version
-# develop seems to be required by travis since 02/2013
   - pip install PyYAML argparse rospkg vcstools catkin_pkg python-dateutil rosdistro
-  - python setup.py build develop
+  - pip install -e .
   - pip install nose coverage flake8 mock codecov
+before_script:
+  # stop the build if there are Python syntax errors or undefined names
+  - if [ "${TRAVIS_PYTHON_VERSION}" != "2.6" ] ; then flake8 . --count --select=E901,E999,F821,F822,F823 --show-source --statistics; fi
+  # exit-zero treats all errors as warnings.  The GitHub editor is 127 chars wide
+  - if [ "${TRAVIS_PYTHON_VERSION}" != "2.6" ] ; then flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics; fi
 # command to run tests
 script:
   - nosetests --with-coverage --cover-package=rosdep2 --with-xunit test
