@@ -352,3 +352,11 @@ libcurl4-gnutls-dev 7.47.0-1ubuntu2.4 (= )
 libcurl4-openssl-dev 7.47.0-1ubuntu2 (= )
 libcurl4-nss-dev 7.47.0-1ubuntu2 (= )
 libcurl4-gnutls-dev 7.47.0-1ubuntu2 (= )
+Package: ros-kinetic-rc-genicam-api
+Versions: 
+
+Reverse Depends: 
+  ros-kinetic-rc-visard-driver,ros-kinetic-rc-genicam-api
+Dependencies: 
+Provides: 
+Reverse Provides: 
