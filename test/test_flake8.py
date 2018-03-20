@@ -43,6 +43,7 @@ def test_flake8():
             'N802',  # ignore presence of upper case in function names
         ],
         max_line_length=200,
+        max_complexity=10,
         show_source=True,
     )
 
