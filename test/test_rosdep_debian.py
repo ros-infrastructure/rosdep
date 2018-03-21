@@ -82,9 +82,9 @@ def test_read_apt_cache_showpkg():
     m = Mock()
     with open(os.path.join(get_test_dir(), 'showpkg-curl-wget-libcurl-dev'), 'r') as f:
         m.return_value = f.read()
-
-    results = list(_read_apt_cache_showpkg(['curl', 'wget', 'libcurl-dev'], exec_fn=m))
-    assert len(results) == 3, results
+    pkgs = ['curl', 'wget', '_not_existing', 'libcurl-dev', 'ros-kinetic-rc-genicam-api']
+    results = list(_read_apt_cache_showpkg(pkgs, exec_fn=m))
+    assert len(results) == len(pkgs), results
 
     package, virtual, providers = results[0]
     assert package == 'curl', package
@@ -97,8 +97,18 @@ def test_read_apt_cache_showpkg():
     assert providers is None, providers
 
     package, virtual, providers = results[2]
+    assert package == '_not_existing', package
+    assert not virtual
+    assert providers is None, providers
+
+    package, virtual, providers = results[3]
     assert package == 'libcurl-dev', package
     assert virtual, providers
+
+    package, virtual, providers = results[4]
+    assert package == 'ros-kinetic-rc-genicam-api', package
+    assert not virtual
+    assert providers is None, providers
 
 
 def test_AptInstaller():

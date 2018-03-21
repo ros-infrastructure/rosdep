@@ -101,7 +101,7 @@ def _read_apt_cache_showpkg(packages, exec_fn=None):
     second, boolean, parameter.
     """
 
-    cmd = ['apt-cache', 'showpkg'] + list(packages)
+    cmd = ['apt-cache', 'showpkg'] + packages
     if exec_fn is None:
         exec_fn = read_stdout
 
@@ -115,7 +115,7 @@ def _read_apt_cache_showpkg(packages, exec_fn=None):
             starts.append(std_out.index('Package: %s' % p, last_start))
         except ValueError:
             notfound.add(p)
-    starts.append(-1)
+    starts.append(None)
 
     for p in packages:
         if p in notfound:
@@ -142,7 +142,11 @@ def _read_apt_cache_showpkg(packages, exec_fn=None):
         while next(lines) != 'Reverse Provides: ':
             pass
 
-        yield p, True, [line.split(' ', 2)[0] for line in lines]
+        pr = [line.split(' ', 2)[0] for line in lines]
+        if pr:
+            yield p, True, pr
+        else:
+            yield p, False, None
 
 
 def dpkg_detect(pkgs, exec_fn=None):
@@ -180,7 +184,7 @@ def dpkg_detect(pkgs, exec_fn=None):
 
     # now for the remaining packages check, whether they are installed as
     # virtual packages
-    remaining = _read_apt_cache_showpkg(p for p in pkgs if p not in installed_packages)
+    remaining = _read_apt_cache_showpkg(list(p for p in pkgs if p not in installed_packages))
     virtual = [n for (n, v, pr) in remaining if v and len(dpkg_detect(pr)) > 0]
 
     return installed_packages + virtual

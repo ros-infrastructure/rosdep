@@ -563,7 +563,7 @@ class RosdepInstaller(object):
             for sub_command in command:
                 if isinstance(sub_command[0], list):
                     sub_cmd_len = len(sub_command)
-                    for cmd, i in enumerate(sub_command):
+                    for i, cmd in enumerate(sub_command):
                         print("  '%s' (alternative %d/%d)" % (' '.join(cmd), i + 1, sub_cmd_len))
                 else:
                     print('  ' + ' '.join(sub_command))
