@@ -1,3 +1,8 @@
+0.12.2 (2018-03-21)
+-------------------
+- Fix bug introduced in https://github.com/ros-infrastructure/rosdep/pull/521, reported in https://github.com/ros-infrastructure/rosdep/issues/589
+  - https://github.com/ros-infrastructure/rosdep/pull/585
+
 0.12.1 (2018-02-08)
 -------------------
 - Revert "Use ROS_ETC_DIR environment variable" to fix regression introduced in 0.12.0
