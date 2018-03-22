@@ -73,6 +73,7 @@ from .rosdistrohelper import PreRep137Warning
 from .catkin_packages import find_catkin_packages_in
 from .catkin_packages import set_workspace_packages
 from .catkin_packages import get_workspace_packages
+from catkin_pkg.package import InvalidPackage
 
 
 class UsageError(Exception):
@@ -174,6 +175,9 @@ ERROR: %s
         sys.exit(1)
     except UnsupportedOs as e:
         print('Unsupported OS: %s\nSupported OSes are [%s]' % (e.args[0], ', '.join(e.args[1])), file=sys.stderr)
+        sys.exit(1)
+    except InvalidPackage as e:
+        print(str(e))
         sys.exit(1)
     except Exception as e:
         print("""
