@@ -64,4 +64,4 @@ def test_flake8():
             .format_map(locals()), file=sys.stderr)
 
     assert not report.total_errors, \
-        'flake8 reported {report.total_errors} errors'.format_map(locals())
+        'flake8 reported {report.total_errors} errors'.format(**locals())
