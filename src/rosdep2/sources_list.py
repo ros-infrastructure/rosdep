@@ -66,7 +66,8 @@ from .rosdistrohelper import get_index, get_index_url
 
 # default file to download with 'init' command in order to bootstrap
 # rosdep
-DEFAULT_SOURCES_LIST_URL = 'https://raw.githubusercontent.com/ros/rosdistro/master/rosdep/sources.list.d/20-default.list'
+DEFAULT_SOURCES_LIST_URL_PY2 = 'https://raw.githubusercontent.com/ros/rosdistro/master/rosdep/sources.list.d/20-default.list'
+DEFAULT_SOURCES_LIST_URL_PY3 = 'https://raw.githubusercontent.com/ros/rosdistro/master/rosdep/sources.list.d/20-default-py3.list'
 
 # seconds to wait before aborting download of rosdep data
 DOWNLOAD_TIMEOUT = 15.0
@@ -112,6 +113,20 @@ def get_sources_list_dir():
 
 def get_default_sources_list_file():
     return os.path.join(get_sources_list_dir(), '20-default.list')
+
+
+def get_default_sources_list_url():
+    if 'ROS_PYTHON_VERSION' in os.environ:
+        pyversion = os.environ['ROS_PYTHON_VERSION']
+    else:
+        pyversion = "2"
+
+    if pyversion == "2":
+        return DEFAULT_SOURCES_LIST_URL_PY2
+    elif pyversion == "3":
+        return DEFAULT_SOURCES_LIST_URL_PY3
+    else:
+        raise ValueError('ROS_PYTHON_VERSION must be either "2" or "3"')
 
 
 def get_sources_cache_dir():
@@ -317,7 +332,7 @@ def download_rosdep_data(url):
         raise DownloadFailure(str(e))
 
 
-def download_default_sources_list(url=DEFAULT_SOURCES_LIST_URL):
+def download_default_sources_list(url=None):
     """
     Download (and validate) contents of default sources list.
 
@@ -328,6 +343,10 @@ def download_default_sources_list(url=DEFAULT_SOURCES_LIST_URL):
     :raises: :exc:`urllib2.URLError` If data cannot be
         retrieved (e.g. 404, server down).
     """
+
+    if url is None:
+        url = get_default_sources_list_url()
+
     try:
         f = urlopen(url, timeout=DOWNLOAD_TIMEOUT)
     except (URLError, httplib.HTTPException) as e:

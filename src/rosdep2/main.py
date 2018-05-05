@@ -67,7 +67,7 @@ from .rospkg_loader import DEFAULT_VIEW_KEY
 from .sources_list import update_sources_list, get_sources_cache_dir,\
     download_default_sources_list, SourcesListLoader, CACHE_INDEX,\
     get_sources_list_dir, get_default_sources_list_file,\
-    DEFAULT_SOURCES_LIST_URL
+    get_default_sources_list_url
 from .rosdistrohelper import PreRep137Warning
 
 from .catkin_packages import find_catkin_packages_in
@@ -525,10 +525,10 @@ def command_init(options):
     try:
         data = download_default_sources_list()
     except URLError as e:
-        print('ERROR: cannot download default sources list from:\n%s\nWebsite may be down.' % (DEFAULT_SOURCES_LIST_URL))
+        print('ERROR: cannot download default sources list from:\n%s\nWebsite may be down.' % (get_default_sources_list_url()))
         return 4
     except DownloadFailure as e:
-        print('ERROR: cannot download default sources list from:\n%s\nWebsite may be down.' % (DEFAULT_SOURCES_LIST_URL))
+        print('ERROR: cannot download default sources list from:\n%s\nWebsite may be down.' % (get_default_sources_list_url()))
         print(e)
         return 4
     # reuse path variable for error message

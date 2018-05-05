@@ -54,14 +54,41 @@ def test_get_sources_cache_dir():
 
 
 def test_url_constants():
-    from rosdep2.sources_list import DEFAULT_SOURCES_LIST_URL
-    for url_name, url in [('DEFAULT_SOURCES_LIST_URL', DEFAULT_SOURCES_LIST_URL)]:
+    from rosdep2.sources_list import get_default_sources_list_url
+
+    # We'll be playing around with the ROS_PYTHON_VERSION environment variable,
+    # so save it off here.
+    orig_env = None
+    if 'ROS_PYTHON_VERSION' in os.environ:
+        orig_env = os.environ['ROS_PYTHON_VERSION']
+
+    # TODO: once we have the Python3 version of the default sources list
+    # up on rosdistro, we can enable the test for both 2 and 3.
+    #for version in ['2', '3']:
+    for version in ['2']:
+        os.environ['ROS_PYTHON_VERSION'] = version
         try:
-            f = urlopen(url)
+            f = urlopen(get_default_sources_list_url())
             f.read()
             f.close()
         except Exception:
-            assert False, 'URL [%s][%s] failed to download' % (url_name, url)
+            assert False, 'URL [%s] failed to download' % (url)
+
+    # Try setting a bogus python version
+    os.environ['ROS_PYTHON_VERSION'] = 'foo'
+    try:
+        get_default_sources_list_url()
+        assert False, 'get_default_sources_list_url() should have failed with invalid python version'
+    except ValueError:
+        pass
+
+    # Reset the ROS_PYTHON_VERSION environment variable to its default.  If
+    # orig_env is None, it means that there was no entry for it originally
+    # so we delete it.
+    if orig_env is None:
+        del os.environ['ROS_PYTHON_VERSION']
+    else:
+        os.environ['ROS_PYTHON_VERSION'] = orig_env
 
 
 def test_download_default_sources_list():
