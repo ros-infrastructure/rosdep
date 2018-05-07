@@ -15,7 +15,6 @@ setup(
     author='Tully Foote, Ken Conley',
     author_email='tfoote@osrfoundation.org',
     url='http://wiki.ros.org/rosdep',
-    download_url='http://download.ros.org/downloads/rosdep/',
     keywords=['ROS'],
     classifiers=[
         'Programming Language :: Python',
