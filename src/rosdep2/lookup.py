@@ -179,7 +179,7 @@ class RosdepView(object):
     View of :class:`RosdepDatabase`.  Unlike :class:`RosdepDatabase`,
     which stores :class:`RosdepDatabaseEntry` data for all stacks, a
     view merges entries for a particular stack.  This view can then be
-    queries to lookup and resolve individual rosdep dependencies.
+    queried to lookup and resolve individual rosdep dependencies.
     """
 
     def __init__(self, name):
