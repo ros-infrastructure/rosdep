@@ -64,11 +64,12 @@ def test_url_constants():
 
     # TODO: once we have the Python3 version of the default sources list
     # up on rosdistro, we can enable the test for both 2 and 3.
-    #for version in ['2', '3']:
+    # for version in ['2', '3']:
     for version in ['2']:
         os.environ['ROS_PYTHON_VERSION'] = version
+        url = get_default_sources_list_url()
         try:
-            f = urlopen(get_default_sources_list_url())
+            f = urlopen(url)
             f.read()
             f.close()
         except Exception:
