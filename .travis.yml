@@ -26,6 +26,8 @@ install:
   - pip install nose coverage flake8 mock codecov
 # command to run tests
 script:
+  - pip --version
+  - pip list
   - nosetests --with-coverage --cover-package=rosdep2 --with-xunit test
 after_script:
   - codecov
