@@ -38,7 +38,7 @@ import rospkg.os_detect
 
 import unittest
 
-from mock import patch, call
+from mock import patch
 from mock import DEFAULT
 
 from rosdep2 import main
