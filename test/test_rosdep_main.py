@@ -275,3 +275,15 @@ class TestRosdepMain(unittest.TestCase):
         with patch.dict('os.environ', {'https_proxy': 'somethings'}, clear=True):
             setup_proxy_opener()
             proxy.assert_called_with({'https': 'somethings'})
+
+    def test_invalid_package_message(self):
+        with fakeout() as b:
+            test_package_dir = os.path.abspath(os.path.join(get_test_dir(), 'main', 'invalid_package_version'))
+            with patch('rosdep2.main.sys.exit') as exit_mock:
+                rosdep_main(['install', '--from-path', test_package_dir])
+                exit_mock.assert_called_with(1)
+            stdout, stderr = b
+            output = stdout.getvalue().splitlines()
+            assert len(output) == 2
+            assert test_package_dir in output[0]
+            assert 'Package version ":{version}" does not follow version conventions' in output[1]

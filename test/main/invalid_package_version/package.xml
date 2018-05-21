@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<package>
+  <name>foo</name>
+  <version>:{version}</version>
+  <description>Package Foo</description>
+  <license>BSD</license>
+  <maintainer email="foo@bar.com">Foo Bar</maintainer>
+</package>
