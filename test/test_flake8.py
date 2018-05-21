@@ -17,18 +17,10 @@ from __future__ import print_function
 import os
 import sys
 
-# flake8 doesn't support Python < 2.7 anymore
-if sys.version_info[0] > 2 or sys.version_info[1] >= 7:
-    from flake8.api.legacy import get_style_guide
-else:
-    get_style_guide = None
+from flake8.api.legacy import get_style_guide
 
 
 def test_flake8():
-    if get_style_guide is None:
-        # skip test on Python 2.6 and older
-        return
-
     style_guide = get_style_guide(
         exclude=['conf.py'],
         ignore=[
