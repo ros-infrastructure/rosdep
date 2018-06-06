@@ -238,7 +238,7 @@ class AptInstaller(PackageManagerInstaller):
             base_cmd = ['apt-get', 'install', '-y', '-qq']
         elif quiet:
             base_cmd = ['apt-get', 'install', '-qq']
-        if not interactive:
+        elif not interactive:
             base_cmd = ['apt-get', 'install', '-y']
         else:
             base_cmd = ['apt-get', 'install']
