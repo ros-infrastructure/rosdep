@@ -234,13 +234,10 @@ class AptInstaller(PackageManagerInstaller):
         packages = self.get_packages_to_install(resolved, reinstall=reinstall)
         if not packages:
             return []
-        if not interactive and quiet:
-            base_cmd = ['apt-get', 'install', '-y', '-qq']
-        elif quiet:
-            base_cmd = ['apt-get', 'install', '-qq']
-        elif not interactive:
-            base_cmd = ['apt-get', 'install', '-y']
-        else:
-            base_cmd = ['apt-get', 'install']
+        base_cmd = ['apt-get', 'install']
+        if not interactive:
+            base_cmd.append('-y')
+        if quiet:
+            base_cmd.append('-qq')
 
         return [self._get_install_commands_for_package(base_cmd, p) for p in _iterate_packages(packages, reinstall)]
