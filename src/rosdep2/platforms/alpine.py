@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-# Copyright (c) 2018, rosdep authors
+# Copyright (c) 2018, Open Source Robotics Foundation, Inc.
+# Copyright (c) 2018, SEQSENSE, Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,7 +27,7 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-# Author Atsushi Watanabe <atsushi.w@ieee.org>
+# Author Atsushi Watanabe/atsushi.w@ieee.org
 
 import os
 
