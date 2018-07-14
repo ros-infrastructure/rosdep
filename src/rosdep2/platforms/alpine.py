@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# Copyright (c) 2018, Open Source Robotics Foundation, Inc.
 # Copyright (c) 2018, SEQSENSE, Inc.
 # All rights reserved.
 #
