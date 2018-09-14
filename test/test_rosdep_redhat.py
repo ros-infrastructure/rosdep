@@ -37,20 +37,20 @@ def get_test_dir():
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'redhat'))
 
 
-def test_rpm_expand():
-    from rosdep2.platforms.redhat import rpm_expand
+def test_rpm_expand_cmd():
+    from rosdep2.platforms.redhat import rpm_expand_cmd
 
     m = Mock()
     m.return_value = ''
 
     # Non-macro test, should return the string unmodified
-    val = rpm_expand('test-string', exec_fn=m)
+    val = rpm_expand_cmd('test-string', exec_fn=m)
     assert val == 'test-string', val
 
     # Macro test, should return expanded rpm tag
     with open(os.path.join(get_test_dir(), 'rpm-E-fedora'), 'r') as f:
         m.return_value = f.read()
-    val = rpm_expand('%fedora', exec_fn=m)
+    val = rpm_expand_cmd('%fedora', exec_fn=m)
     assert val == '27', val
 
 
