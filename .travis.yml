@@ -30,6 +30,6 @@ install:
 script:
   - python -m nose --with-coverage --cover-package=rosdep2 --with-xunit test
 after_script:
-  - codecov
+  - python -m codecov
 notifications:
   email: false
