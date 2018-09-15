@@ -35,14 +35,14 @@ class RosdepCLIDirective(Directive):
                 [py, '-c', "from rosdep2.main import rosdep_main;rosdep_main(['-h'])"]
             )
             return [
-                nodes.literal_block(text=re.sub(escaped_capitalized_usage, '', out))
+                nodes.literal_block(text=re.sub(escaped_capitalized_usage, '', out.decode()))
             ]
         if 'install' in self.arguments:
             out = subprocess.check_output(
                 [py, '-c', "from rosdep2.main import rosdep_main;rosdep_main(['install', '-h'])"]
             )
             return [
-                nodes.literal_block(text=re.sub(escaped_capitalized_usage, '', out))
+                nodes.literal_block(text=re.sub(escaped_capitalized_usage, '', out.decode()))
             ]
 
 
