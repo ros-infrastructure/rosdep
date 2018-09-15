@@ -23,12 +23,12 @@ matrix:
 install:
   - source .travis/install.sh
   - python --version
-  - pip install PyYAML argparse rospkg vcstools catkin_pkg python-dateutil rosdistro
-  - pip install -e .
-  - pip install nose coverage flake8 mock codecov
+  - python -m pip install PyYAML argparse rospkg vcstools catkin_pkg python-dateutil rosdistro
+  - python -m pip install -e .
+  - python -m pip install nose coverage flake8 mock codecov
 # command to run tests
 script:
-  - nosetests --with-coverage --cover-package=rosdep2 --with-xunit test
+  - python -m nose --with-coverage --cover-package=rosdep2 --with-xunit test
 after_script:
   - codecov
 notifications:
