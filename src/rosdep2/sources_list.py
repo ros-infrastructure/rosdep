@@ -557,7 +557,7 @@ def write_cache_file(source_cache_d, key_filenames, rosdep_data):
     key_hash = compute_filename_hash(key_filenames)
     filepath = os.path.join(source_cache_d, key_hash)
     try:
-        write_atomic(filepath + PICKLE_CACHE_EXT, pickle.dumps(rosdep_data, -1), True)
+        write_atomic(filepath + PICKLE_CACHE_EXT, pickle.dumps(rosdep_data, 2), True)
     except OSError as e:
         raise CachePermissionError('Failed to write cache file: ' + str(e))
     try:
