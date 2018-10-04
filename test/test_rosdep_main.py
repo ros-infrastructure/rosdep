@@ -124,7 +124,7 @@ class TestRosdepMain(unittest.TestCase):
                 assert False, 'system exit occurred: %s\n%s' % (b[0].getvalue(), b[1].getvalue())
 
             stdout, stderr = b
-            assert stdout.getvalue().strip() == 'All system dependencies have been satisified', stdout.getvalue()
+            assert stdout.getvalue().strip() == 'All system dependencies have been satisfied', stdout.getvalue()
             assert not stderr.getvalue(), stderr.getvalue()
         try:
             osd = rospkg.os_detect.OsDetect()
@@ -132,7 +132,7 @@ class TestRosdepMain(unittest.TestCase):
             with fakeout() as b:
                 rosdep_main(['check', 'python_dep', '--os', override] + cmd_extras)
                 stdout, stderr = b
-                assert stdout.getvalue().strip() == 'All system dependencies have been satisified'
+                assert stdout.getvalue().strip() == 'All system dependencies have been satisfied'
                 assert not stderr.getvalue(), stderr.getvalue()
         except SystemExit:
             assert False, 'system exit occurred'
@@ -142,7 +142,7 @@ class TestRosdepMain(unittest.TestCase):
             with fakeout() as b:
                 rosdep_main(['check', 'packageless'] + cmd_extras)
                 stdout, stderr = b
-                assert stdout.getvalue().strip() == 'All system dependencies have been satisified'
+                assert stdout.getvalue().strip() == 'All system dependencies have been satisfied'
                 assert not stderr.getvalue(), stderr.getvalue()
         except SystemExit:
             assert False, 'system exit occurred'

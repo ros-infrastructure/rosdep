@@ -46,7 +46,7 @@ install the system dependencies for.
 Common installation workflow::
 
     $ rosdep check ros_comm
-    All system dependencies have been satisified
+    All system dependencies have been satisfied
     $ rosdep install geometry
 
 If you're worried about ``rosdep install`` bringing in system
