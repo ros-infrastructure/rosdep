@@ -33,6 +33,7 @@ def test_flake8():
             'F841',  # ignore presence of unused variables
             'I',  # ignore import order related warnings
             'N802',  # ignore presence of upper case in function names
+            'W504',  # ignore line breaks after binary operator (new rule added in 2018)
         ],
         max_line_length=200,
         max_complexity=10,
