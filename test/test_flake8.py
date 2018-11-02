@@ -33,6 +33,7 @@ def test_flake8():
             'F841',  # ignore presence of unused variables
             'I',  # ignore import order related warnings
             'N802',  # ignore presence of upper case in function names
+            'W504',  # ignore line breaks after binary operator (new rule added in 2018)
         ],
         max_line_length=200,
         max_complexity=10,
@@ -53,7 +54,7 @@ def test_flake8():
         report._application.formatter.show_statistics(report._stats)
         print(
             'flake8 reported {report.total_errors} errors'
-            .format_map(locals()), file=sys.stderr)
+            .format(**locals()), file=sys.stderr)
 
     assert not report.total_errors, \
         'flake8 reported {report.total_errors} errors'.format(**locals())
