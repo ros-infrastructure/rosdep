@@ -87,16 +87,16 @@ def test_DnfInstaller():
 
         # no interactive option with YUM
         mock_method.return_value = ['a', 'b']
-        expected = [['sudo', '-H', 'dnf', '--assumeyes', '--quiet', 'install', 'a', 'b']]
+        expected = [['sudo', '-H', 'dnf', '--assumeyes', '--quiet', '--setopt=strict=0', 'install', 'a', 'b']]
         val = installer.get_install_command(['whatever'], interactive=False, quiet=True)
         assert val == expected, val + expected
-        expected = [['sudo', '-H', 'dnf', '--quiet', 'install', 'a', 'b']]
+        expected = [['sudo', '-H', 'dnf', '--quiet', '--setopt=strict=0', 'install', 'a', 'b']]
         val = installer.get_install_command(['whatever'], interactive=True, quiet=True)
         assert val == expected, val + expected
-        expected = [['sudo', '-H', 'dnf', '--assumeyes', 'install', 'a', 'b']]
+        expected = [['sudo', '-H', 'dnf', '--assumeyes', '--setopt=strict=0', 'install', 'a', 'b']]
         val = installer.get_install_command(['whatever'], interactive=False, quiet=False)
         assert val == expected, val + expected
-        expected = [['sudo', '-H', 'dnf', 'install', 'a', 'b']]
+        expected = [['sudo', '-H', 'dnf', '--setopt=strict=0', 'install', 'a', 'b']]
         val = installer.get_install_command(['whatever'], interactive=True, quiet=False)
         assert val == expected, val + expected
     try:
