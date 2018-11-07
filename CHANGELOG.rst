@@ -1,3 +1,31 @@
+0.13.0 (2018-11-06)
+-------------------
+- Improve error message when a package.xml is malformed
+  - https://github.com/ros-infrastructure/rosdep/pull/608
+- Enable rosdep db cache from python3 to be used from python2.
+  - https://github.com/ros-infrastructure/rosdep/pull/633
+  - Reported in https://github.com/ros-infrastructure/rosdep/issues/3791
+- Fix DNF installer behavior to match yum and apt.
+  - https://github.com/ros-infrastructure/rosdep/pull/638
+- Clean up executable permissions and #! lines.
+  - https://github.com/ros-infrastructure/rosdep/pull/630
+- Fix quiet mode for Debian installer.
+  - https://github.com/ros-infrastructure/rosdep/pull/612
+- Fix typos in documentation.
+  - https://github.com/ros-infrastructure/rosdep/pull/606
+  - https://github.com/ros-infrastructure/rosdep/pull/634
+- Improve documentation output on Fedora.
+  - https://github.com/ros-infrastructure/rosdep/pull/628
+- Update CI infrastructure.
+  - https://github.com/ros-infrastructure/rosdep/pull/602
+  - https://github.com/ros-infrastructure/rosdep/pull/609
+  - https://github.com/ros-infrastructure/rosdep/pull/629
+  - https://github.com/ros-infrastructure/rosdep/pull/636
+- Fix RPM comand tests.
+  - https://github.com/ros-infrastructure/rosdep/pull/627
+- Update package metadata.
+  - https://github.com/ros-infrastructure/rosdep/pull/605
+
 0.12.2 (2018-03-21)
 -------------------
 - Fix bug introduced in https://github.com/ros-infrastructure/rosdep/pull/521, reported in https://github.com/ros-infrastructure/rosdep/issues/589
