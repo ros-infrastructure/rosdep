@@ -138,6 +138,24 @@ def rpm_expand(package, exec_fn=None):
         return rpm_expand_cmd(package, exec_fn)
 
 
+def get_rpm_version_py():
+    from rpm import __version__ as rpm_version
+    return rpm_version
+
+
+def get_rpm_version_cmd():
+    output = subprocess.check_output(['rpm', '--version'])
+    version = output.splitlines()[0].split(b' ')[-1].decode()
+    return version
+
+
+def get_rpm_version():
+    try:
+        return get_rpm_version_py()
+    except ImportError:
+        return get_rpm_version_cmd()
+
+
 class DnfInstaller(PackageManagerInstaller):
     """
     This class provides the functions for installing using dnf
@@ -147,6 +165,15 @@ class DnfInstaller(PackageManagerInstaller):
 
     def __init__(self):
         super(DnfInstaller, self).__init__(rpm_detect)
+
+    def get_version_strings(self):
+        dnf_output = subprocess.check_output(['dnf', '--version'])
+        dnf_version = dnf_output.splitlines()[0].decode()
+        version_strings = [
+            'dnf {}'.format(dnf_version),
+            'rpm {}'.format(get_rpm_version()),
+        ]
+        return version_strings
 
     def get_install_command(self, resolved, interactive=True, reinstall=False, quiet=False):
         raw_packages = self.get_packages_to_install(resolved, reinstall=reinstall)
@@ -173,6 +200,15 @@ class YumInstaller(PackageManagerInstaller):
 
     def __init__(self):
         super(YumInstaller, self).__init__(rpm_detect)
+
+    def get_version_strings(self):
+        yum_output = subprocess.check_output(['yum', '--version'])
+        yum_version = yum_output.splitlines()[0].decode()
+        version_strings = [
+            'yum {}'.format(yum_version),
+            'rpm {}'.format(get_rpm_version()),
+        ]
+        return version_strings
 
     def get_install_command(self, resolved, interactive=True, reinstall=False, quiet=False):
         raw_packages = self.get_packages_to_install(resolved, reinstall=reinstall)
