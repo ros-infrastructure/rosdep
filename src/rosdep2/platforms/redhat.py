@@ -40,12 +40,16 @@ from ..shell_utils import read_stdout
 # dnf package manager key
 DNF_INSTALLER = 'dnf'
 
+# dnf module manager key
+DNF_MODULE_INSTALLER = 'dnf-module'
+
 # yum package manager key
 YUM_INSTALLER = 'yum'
 
 
 def register_installers(context):
     context.set_installer(DNF_INSTALLER, DnfInstaller())
+    context.set_installer(DNF_MODULE_INSTALLER, DnfModuleInstaller())
     context.set_installer(YUM_INSTALLER, YumInstaller())
 
 
@@ -56,6 +60,7 @@ def register_platforms(context):
 
 def register_fedora(context):
     context.add_os_installer_key(OS_FEDORA, PIP_INSTALLER)
+    context.add_os_installer_key(OS_FEDORA, DNF_MODULE_INSTALLER)
     context.add_os_installer_key(OS_FEDORA, DNF_INSTALLER)
     context.add_os_installer_key(OS_FEDORA, YUM_INSTALLER)
     context.add_os_installer_key(OS_FEDORA, SOURCE_INSTALLER)
@@ -138,6 +143,29 @@ def rpm_expand(package, exec_fn=None):
         return rpm_expand_cmd(package, exec_fn)
 
 
+def dnf_module_detect(modules, exec_fn=None):
+    ret_list = []
+
+    if exec_fn is None:
+        exec_fn = read_stdout
+
+    cmd = ['dnf', 'module', 'list', '--installed']
+    cmd.extend(modules)
+
+    std_out = exec_fn(cmd, True)[0]
+    out_lines = std_out.split('\n')
+    entries = [line.split(None, 2)[0:2] for line in out_lines]
+    installed_modules = {entry[0]: entry[1] for entry in entries if len(entry) >= 2}
+
+    for index, module in enumerate(modules):
+        search_parts = module.split(':', 1)
+        if search_parts[0] in installed_modules.keys():
+            if len(search_parts) == 1 or \
+                    installed_modules[search_parts[0]] == search_parts[1]:
+                ret_list.append(module)
+    return ret_list
+
+
 class DnfInstaller(PackageManagerInstaller):
     """
     This class provides the functions for installing using dnf
@@ -162,6 +190,31 @@ class DnfInstaller(PackageManagerInstaller):
             return [self.elevate_priv(['dnf', '--assumeyes', '--setopt=strict=0', 'install']) + packages]
         else:
             return [self.elevate_priv(['dnf', '--setopt=strict=0', 'install']) + packages]
+
+
+class DnfModuleInstaller(PackageManagerInstaller):
+    """
+    This class provides the functions for installing using dnf modules
+    it's methods partially implement the Rosdep OS api to complement
+    the roslib.OSDetect API.
+    """
+
+    def __init__(self):
+        super(DnfModuleInstaller, self).__init__(dnf_module_detect)
+
+    def get_install_command(self, resolved, interactive=True, reinstall=False, quiet=False):
+        modules = self.get_packages_to_install(resolved, reinstall=reinstall)
+
+        if not modules:
+            return []
+        elif not interactive and quiet:
+            return [self.elevate_priv(['dnf', 'module', '--assumeyes', '--quiet', '--setopt=strict=0', 'install']) + modules]
+        elif quiet:
+            return [self.elevate_priv(['dnf', 'module', '--quiet', '--setopt=strict=0', 'install']) + modules]
+        elif not interactive:
+            return [self.elevate_priv(['dnf', 'module', '--assumeyes', '--setopt=strict=0', 'install']) + modules]
+        else:
+            return [self.elevate_priv(['dnf', 'module', '--setopt=strict=0', 'install']) + modules]
 
 
 class YumInstaller(PackageManagerInstaller):
