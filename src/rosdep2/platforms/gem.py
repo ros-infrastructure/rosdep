@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # Copyright (c) 2009, Willow Garage, Inc.
 # Copyright (c) 2012, Intermodalics, BVBA.
 # All rights reserved.

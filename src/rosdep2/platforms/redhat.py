@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # Copyright (c) 2009, Willow Garage, Inc.
 # All rights reserved.
 #
@@ -156,13 +155,13 @@ class DnfInstaller(PackageManagerInstaller):
         if not packages:
             return []
         elif not interactive and quiet:
-            return [self.elevate_priv(['dnf', '--assumeyes', '--quiet', 'install']) + packages]
+            return [self.elevate_priv(['dnf', '--assumeyes', '--quiet', '--setopt=strict=0', 'install']) + packages]
         elif quiet:
-            return [self.elevate_priv(['dnf', '--quiet', 'install']) + packages]
+            return [self.elevate_priv(['dnf', '--quiet', '--setopt=strict=0', 'install']) + packages]
         elif not interactive:
-            return [self.elevate_priv(['dnf', '--assumeyes', 'install']) + packages]
+            return [self.elevate_priv(['dnf', '--assumeyes', '--setopt=strict=0', 'install']) + packages]
         else:
-            return [self.elevate_priv(['dnf', 'install']) + packages]
+            return [self.elevate_priv(['dnf', '--setopt=strict=0', 'install']) + packages]
 
 
 class YumInstaller(PackageManagerInstaller):

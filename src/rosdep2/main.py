@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # Copyright (c) 2009, Willow Garage, Inc.
 # All rights reserved.
 #
@@ -635,13 +634,13 @@ def command_check(lookup, packages, options):
 
     # pretty print the result
     if [v for k, v in uninstalled if v]:
-        print('System dependencies have not been satisified:')
+        print('System dependencies have not been satisfied:')
         for installer_key, resolved in uninstalled:
             if resolved:
                 for r in resolved:
                     print('%s\t%s' % (installer_key, r))
     else:
-        print('All system dependencies have been satisified')
+        print('All system dependencies have been satisfied')
     if errors:
         for package_name, ex in errors.items():
             if isinstance(ex, rospkg.ResourceNotFound):

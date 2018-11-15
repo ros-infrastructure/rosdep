@@ -484,3 +484,15 @@ def test_SourcesListLoader_create_default():
 
     #  - coverage, repeat loader, should noop
     loader.load_view(GITHUB_URL, rosdep_db)
+
+
+def test_unpickle_same_results():
+    try:
+        import cPickle as pickle
+    except ImportError:
+        import pickle
+    with open(os.path.join('test', 'fixtures', 'python2cache.pickle'), 'rb') as py2_cache:
+        py2_result = pickle.loads(py2_cache.read())
+    with open(os.path.join('test', 'fixtures', 'python3cache.pickle'), 'rb') as py3_cache:
+        py3_result = pickle.loads(py3_cache.read())
+    assert py2_result == py3_result
