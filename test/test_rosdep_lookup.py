@@ -304,6 +304,10 @@ def test_RosdepLookup_get_rosdeps():
     assert set(lookup.get_rosdeps('another_catkin_package')) == set(['catkin', 'simple_catkin_package'])  # implicit deps won't get included
     assert set(lookup.get_rosdeps('another_catkin_package', implicit=False)) == set(['catkin', 'simple_catkin_package'])
 
+    print(lookup.get_rosdeps('package_with_documentation'))
+    assert set(lookup.get_rosdeps('package_with_documentation')) == set(['catkin', 'simple_catkin_package'])  # implicit deps won't get included
+    assert set(lookup.get_rosdeps('package_with_documentation', implicit=False)) == set(['catkin', 'simple_catkin_package'])
+
     print(lookup.get_rosdeps('metapackage_with_deps'))
     assert set(lookup.get_rosdeps('metapackage_with_deps')) == set(['catkin', 'simple_catkin_package', 'another_catkin_package'])  # implicit deps won't get included
     assert set(lookup.get_rosdeps('metapackage_with_deps', implicit=False)) == set(['catkin', 'simple_catkin_package', 'another_catkin_package'])
