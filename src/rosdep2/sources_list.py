@@ -439,7 +439,8 @@ def _generate_key_from_urls(urls):
 
 
 def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
-                        success_handler=None, error_handler=None):
+                        success_handler=None, error_handler=None,
+                        include_eol_distros=False):
     """
     Re-downloaded data from remote sources and store in cache.  Also
     update the cache index based on current sources.
@@ -485,11 +486,16 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
     # In compliance with REP137 and REP143
     print('Query rosdistro index %s' % get_index_url())
     for dist_name in sorted(get_index().distributions.keys()):
+        distribution = get_index().distributions[dist_name]
+        if not include_eol_distros:
+            if distribution.get('distribution_status') == 'end-of-life':
+                print('Skip end-of-life distro "%s"' % dist_name)
+                continue
         print('Add distro "%s"' % dist_name)
         rds = RosDistroSource(dist_name)
         rosdep_data = get_gbprepo_as_rosdep_data(dist_name)
         # dist_files can either be a string (single filename) or a list (list of filenames)
-        dist_files = get_index().distributions[dist_name]['distribution']
+        dist_files = distribution['distribution']
         key = _generate_key_from_urls(dist_files)
         retval.append((rds, write_cache_file(sources_cache_dir, key, rosdep_data)))
         sources.append(rds)
