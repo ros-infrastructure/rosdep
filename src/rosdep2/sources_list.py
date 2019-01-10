@@ -440,7 +440,7 @@ def _generate_key_from_urls(urls):
 
 def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
                         success_handler=None, error_handler=None,
-                        include_eol_distros=False):
+                        skip_eol_distros=False):
     """
     Re-downloaded data from remote sources and store in cache.  Also
     update the cache index based on current sources.
@@ -453,7 +453,7 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
     :param error_handler: fn(DataSource, DownloadFailure) to call
         if a particular source fails.  This hook is mainly for
         printing errors to console.
-    :param include_eol_distros: additionally download sources for EOL distros
+    :param skip_eol_distros: skip downloading sources for EOL distros
 
     :returns: list of (`DataSource`, cache_file_path) pairs for cache
         files that were updated, ``[str]``
@@ -488,7 +488,7 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
     print('Query rosdistro index %s' % get_index_url())
     for dist_name in sorted(get_index().distributions.keys()):
         distribution = get_index().distributions[dist_name]
-        if not include_eol_distros:
+        if skip_eol_distros:
             if distribution.get('distribution_status') == 'end-of-life':
                 print('Skip end-of-life distro "%s"' % dist_name)
                 continue
