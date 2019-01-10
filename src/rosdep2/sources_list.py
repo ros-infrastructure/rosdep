@@ -453,6 +453,7 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
     :param error_handler: fn(DataSource, DownloadFailure) to call
         if a particular source fails.  This hook is mainly for
         printing errors to console.
+    :param include_eol_distros: additionally download sources for EOL distros
 
     :returns: list of (`DataSource`, cache_file_path) pairs for cache
         files that were updated, ``[str]``
