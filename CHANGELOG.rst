@@ -1,3 +1,8 @@
+0.14.0 (2018-11-06)
+-------------------
+- Skip EOL distros by default, add option to include them
+  - https://github.com/ros-infrastructure/rosdep/pull/647
+
 0.13.0 (2018-11-06)
 -------------------
 - Improve error message when a package.xml is malformed
