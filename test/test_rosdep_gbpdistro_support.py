@@ -53,7 +53,7 @@ def test_get_gbprepo_as_rosdep_data():
     from rosdep2.rosdistrohelper import get_index
     from rosdep2.gbpdistro_support import get_gbprepo_as_rosdep_data
     distro = sorted(
-        d for d, info in get_index().distributions.items()
+        name for name, info in get_index().distributions.items()
         if info['distribution_type'] == 'ros1')[0]
     data = get_gbprepo_as_rosdep_data(distro)
     for k in ['ros', 'catkin', 'genmsg']:
