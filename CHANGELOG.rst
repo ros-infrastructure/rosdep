@@ -1,4 +1,4 @@
-0.14.0 (2018-11-06)
+0.14.0 (2019-01-14)
 -------------------
 - Skip EOL distros by default, add option to include them
   - https://github.com/ros-infrastructure/rosdep/pull/647
