@@ -1,3 +1,18 @@
+0.15.0 (2019-01-24)
+-------------------
+- Use yaml.safe_load for untrusted yaml input.
+  - https://github.com/ros-infrastructure/rosdep/pull/651
+- Evaluate conditions before collecting dependencies.
+  - https://github.com/ros-infrastructure/rosdep/pull/655
+  - Fixes https://github.com/ros-infrastructure/rosdep/pull/653
+- Filter ROS 2 distros out of ROS 1 test results.
+  - https://github.com/ros-infrastructure/rosdep/pull/652
+
+0.14.0 (2019-01-14)
+-------------------
+- Skip EOL distros by default, add option to include them
+  - https://github.com/ros-infrastructure/rosdep/pull/647
+
 0.13.0 (2018-11-06)
 -------------------
 - Improve error message when a package.xml is malformed
