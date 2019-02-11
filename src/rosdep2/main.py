@@ -347,7 +347,7 @@ def _rosdep_main(args):
         installer_keys = get_default_installer()[1]
         version_strings = []
         for key in installer_keys:
-            if key is 'source':
+            if key == 'source':
                 # Explicitly skip the source installer.
                 continue
             installer = installers[key]
