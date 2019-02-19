@@ -33,7 +33,7 @@ except NameError:
     basestring = unicode = str
 
 # location of an example gbpdistro file for reference and testing
-FUERTE_GBPDISTRO_URL = 'https://raw.github.com/ros/rosdistro/' \
+FUERTE_GBPDISTRO_URL = 'https://raw.githubusercontent.com/ros/rosdistro/' \
     'master/releases/fuerte.yaml'
 
 # seconds to wait before aborting download of gbpdistro data
