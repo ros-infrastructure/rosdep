@@ -1,3 +1,12 @@
+0.15.1 (2019-02-19)
+-------------------
+- Change GitHub url's which no longer work.
+  - https://github.com/ros-infrastructure/rosdep/pull/663
+- Fixed a flake8 warning.
+  - https://github.com/ros-infrastructure/rosdep/pull/659
+- Reduced number of supported platforms, e.g. trusty and newer only now.
+  - https://github.com/ros-infrastructure/rosdep/pull/657
+
 0.15.0 (2019-01-24)
 -------------------
 - Use yaml.safe_load for untrusted yaml input.
