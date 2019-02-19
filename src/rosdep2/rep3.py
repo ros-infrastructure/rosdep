@@ -36,7 +36,7 @@ from .core import DownloadFailure
 from .rosdistrohelper import PreRep137Warning
 
 # location of targets file for processing gbpdistro files
-REP3_TARGETS_URL = 'https://raw.github.com/ros/rosdistro/master/releases/targets.yaml'
+REP3_TARGETS_URL = 'https://raw.githubusercontent.com/ros/rosdistro/master/releases/targets.yaml'
 
 # seconds to wait before aborting download of gbpdistro data
 DOWNLOAD_TIMEOUT = 15.0
