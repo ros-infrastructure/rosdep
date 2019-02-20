@@ -219,7 +219,7 @@ class InstallerContext(object):
         if not installer_key(self.os_detect) in self.os_installers[os_key]:
             raise KeyError('installer [%s] is not associated with OS [%s]. call add_os_installer_key() first' % (installer_key(self.os_detect), os_key))
         if self.verbose:
-            print('set default installer for OS [%s]' % (os_key,))
+            print('set default installer [%s] for OS [%s]' % (installer_key(self.os_detect), os_key,))
         self.default_os_installer[os_key] = installer_key
 
     def get_default_os_installer_key(self, os_key):
