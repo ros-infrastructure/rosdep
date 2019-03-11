@@ -93,7 +93,7 @@ class InstallerContext(object):
         self.os_override = os_name, os_version
 
     def get_os_version_type(self, os_name):
-        return self.os_version_type.get(os_name, OsDetect.get_version)
+        return self.os_version_type.get(os_name, self.os_detect.get_version)
 
     def set_os_version_type(self, os_name, version_type):
         if not hasattr(version_type, '__call__'):
