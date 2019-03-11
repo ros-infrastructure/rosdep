@@ -49,9 +49,11 @@ def register_installers(context):
 
 def register_platforms(context):
     register_debian(context)
-    register_linaro(context)
     register_ubuntu(context)
+
+    # Aliases
     register_elementary(context)
+    register_linaro(context)
 
 
 def register_debian(context):
