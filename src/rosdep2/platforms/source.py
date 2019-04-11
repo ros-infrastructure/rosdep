@@ -118,7 +118,7 @@ def load_rdmanifest(contents):
     :raises: :exc:`InvalidRdmanifest`
     """
     try:
-        return yaml.load(contents)
+        return yaml.safe_load(contents)
     except yaml.scanner.ScannerError as ex:
         raise InvalidRdmanifest('Failed to parse yaml in %s:  Error: %s' % (contents, ex))
 
