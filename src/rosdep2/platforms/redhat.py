@@ -68,6 +68,7 @@ def register_rhel(context):
     context.add_os_installer_key(OS_RHEL, YUM_INSTALLER)
     context.add_os_installer_key(OS_RHEL, SOURCE_INSTALLER)
     context.set_default_os_installer_key(OS_RHEL, lambda self: YUM_INSTALLER)
+    context.set_os_version_type(OS_RHEL, lambda self: self.get_version().split('.', 1)[0])
 
 
 def rpm_detect_py(packages):
