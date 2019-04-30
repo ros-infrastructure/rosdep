@@ -27,9 +27,11 @@
 
 # Author Tully Foote/tfoote@willowgarage.com
 
+from __future__ import print_function
 import subprocess
+import sys
 
-from rospkg.os_detect import OS_RHEL, OS_FEDORA
+from rospkg.os_detect import OS_CENTOS, OS_RHEL, OS_FEDORA
 
 from .pip import PIP_INSTALLER
 from .source import SOURCE_INSTALLER
@@ -53,6 +55,9 @@ def register_platforms(context):
     register_fedora(context)
     register_rhel(context)
 
+    # Aliases
+    register_centos(context)
+
 
 def register_fedora(context):
     context.add_os_installer_key(OS_FEDORA, PIP_INSTALLER)
@@ -68,6 +73,17 @@ def register_rhel(context):
     context.add_os_installer_key(OS_RHEL, YUM_INSTALLER)
     context.add_os_installer_key(OS_RHEL, SOURCE_INSTALLER)
     context.set_default_os_installer_key(OS_RHEL, lambda self: YUM_INSTALLER)
+    context.set_os_version_type(OS_RHEL, lambda self: self.get_version().split('.', 1)[0])
+
+
+def register_centos(context):
+    # CentOS is an alias for RHEL. If CentOS is detected and it's not set as
+    # an override force RHEL.
+    (os_name, os_version) = context.get_os_name_and_version()
+    if os_name == OS_CENTOS and not context.os_override:
+        print('rosdep detected OS: [%s] aliasing it to: [%s]' %
+              (OS_CENTOS, OS_RHEL), file=sys.stderr)
+        context.set_os_override(OS_RHEL, os_version.split('.', 1)[0])
 
 
 def rpm_detect_py(packages):
