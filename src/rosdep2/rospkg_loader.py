@@ -34,6 +34,8 @@ filesystem.
 
 from __future__ import print_function
 
+import os
+
 import catkin_pkg.package
 import rospkg
 
@@ -137,8 +139,9 @@ class RosPkgLoader(RosdepLoader):
 
         if resource_name in self.get_catkin_paths():
             pkg = catkin_pkg.package.parse_package(self.get_catkin_paths()[resource_name])
+            pkg.evaluate_conditions(os.environ)
             deps = pkg.build_depends + pkg.buildtool_depends + pkg.run_depends + pkg.test_depends + pkg.doc_depends
-            return [d.name for d in deps]
+            return [d.name for d in deps if d.evaluated_condition]
         elif resource_name in self.get_loadable_resources():
             return self._rospack.get_rosdeps(resource_name, implicit=implicit)
         elif resource_name in self._rosstack.list():

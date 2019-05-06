@@ -55,7 +55,7 @@ class RosdepLoader:
         :raises: :exc:`yaml.YAMLError`
         """
         try:
-            return yaml.load(yaml_contents)
+            return yaml.safe_load(yaml_contents)
         except yaml.YAMLError as e:
             raise InvalidData('Invalid YAML in [%s]: %s' % (origin, e), origin=origin)
 

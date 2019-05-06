@@ -203,7 +203,7 @@ def cache_data_source_loader(sources_cache_dir, verbose=False):
             if verbose:
                 print('loading cached data source:\n\t%s\n\t%s' % (uri, filepath), file=sys.stderr)
             with open(filepath) as f:
-                rosdep_data = yaml.load(f.read())
+                rosdep_data = yaml.safe_load(f.read())
         else:
             rosdep_data = {}
         return CachedDataSource(type_, uri, tags, rosdep_data, origin=filepath)
@@ -439,7 +439,8 @@ def _generate_key_from_urls(urls):
 
 
 def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
-                        success_handler=None, error_handler=None):
+                        success_handler=None, error_handler=None,
+                        skip_eol_distros=False):
     """
     Re-downloaded data from remote sources and store in cache.  Also
     update the cache index based on current sources.
@@ -452,6 +453,7 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
     :param error_handler: fn(DataSource, DownloadFailure) to call
         if a particular source fails.  This hook is mainly for
         printing errors to console.
+    :param skip_eol_distros: skip downloading sources for EOL distros
 
     :returns: list of (`DataSource`, cache_file_path) pairs for cache
         files that were updated, ``[str]``
@@ -485,11 +487,16 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
     # In compliance with REP137 and REP143
     print('Query rosdistro index %s' % get_index_url())
     for dist_name in sorted(get_index().distributions.keys()):
+        distribution = get_index().distributions[dist_name]
+        if skip_eol_distros:
+            if distribution.get('distribution_status') == 'end-of-life':
+                print('Skip end-of-life distro "%s"' % dist_name)
+                continue
         print('Add distro "%s"' % dist_name)
         rds = RosDistroSource(dist_name)
         rosdep_data = get_gbprepo_as_rosdep_data(dist_name)
         # dist_files can either be a string (single filename) or a list (list of filenames)
-        dist_files = get_index().distributions[dist_name]['distribution']
+        dist_files = distribution['distribution']
         key = _generate_key_from_urls(dist_files)
         retval.append((rds, write_cache_file(sources_cache_dir, key, rosdep_data)))
         sources.append(rds)

@@ -87,7 +87,7 @@ rosdep check <stacks-and-packages>...
   check if the dependencies of package(s) have been met.
 
 rosdep install <stacks-and-packages>...
-  generate a bash script and then execute it.
+  download and install the dependencies of a given package or packages.
 
 rosdep db
   generate the dependency database and print it to the console.
@@ -329,6 +329,11 @@ def _rosdep_main(args):
                       'whether sudo is used for a specific installer, '
                       "e.g. '--as-root pip:false' or '--as-root \"pip:no homebrew:yes\"'. "
                       'Can be specified multiple times.')
+    parser.add_option('--include-eol-distros', dest='include_eol_distros',
+                      default=False, action='store_true',
+                      help="Affects the 'update' verb. "
+                           'If specified end-of-life distros are being '
+                           'fetched too.')
 
     options, args = parser.parse_args(args)
     if options.print_version or options.print_all_versions:
@@ -342,7 +347,7 @@ def _rosdep_main(args):
         installer_keys = get_default_installer()[1]
         version_strings = []
         for key in installer_keys:
-            if key is 'source':
+            if key == 'source':
                 # Explicitly skip the source installer.
                 continue
             installer = installers[key]
@@ -592,7 +597,8 @@ def command_update(options):
             # nothing we wanna do under Windows
             pass
         update_sources_list(success_handler=update_success_handler,
-                            error_handler=update_error_handler)
+                            error_handler=update_error_handler,
+                            skip_eol_distros=not options.include_eol_distros)
         print('updated cache in %s' % (sources_cache_dir))
     except InvalidData as e:
         print('ERROR: invalid sources list file:\n\t%s' % (e), file=sys.stderr)
