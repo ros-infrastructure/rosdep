@@ -87,7 +87,7 @@ rosdep check <stacks-and-packages>...
   check if the dependencies of package(s) have been met.
 
 rosdep install <stacks-and-packages>...
-  generate a bash script and then execute it.
+  download and install the dependencies of a given package or packages.
 
 rosdep db
   generate the dependency database and print it to the console.
