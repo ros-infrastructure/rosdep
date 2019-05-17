@@ -1,3 +1,21 @@
+0.15.2 (2019-05-17)
+-------------------
+- Migrate to yaml.safe_load to avoid yaml.load vulnerabilities.
+  - https://github.com/ros-infrastructure/rosdep/pull/675
+- Improve text feeback and prompts
+  - https://github.com/ros-infrastructure/rosdep/pull/675
+  - https://github.com/ros-infrastructure/rosdep/pull/670
+  - https://github.com/ros-infrastructure/rosdep/pull/665
+- Add support for MX Linux
+  - https://github.com/ros-infrastructure/rosdep/pull/674
+- Add support for OpenEmbedded
+  - https://github.com/ros-infrastructure/rosdep/pull/673
+- Add support for Alpine
+  - https://github.com/ros-infrastructure/rosdep/pull/673
+- Add support for CentOS and improve RHEL
+  - https://github.com/ros-infrastructure/rosdep/pull/668
+  - https://github.com/ros-infrastructure/rosdep/pull/667
+
 0.15.1 (2019-02-19)
 -------------------
 - Change GitHub url's which no longer work.
