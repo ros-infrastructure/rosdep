@@ -59,7 +59,7 @@ def get_test_dir():
 def _subtest_rep112_rdmanifest(resolved):
     test_dir = get_test_dir()
     path = os.path.join(test_dir, 'rep112-example.rdmanifest')
-    manifest = yaml.load(open(path))
+    manifest = yaml.safe_load(open(path))
 
     assert resolved.manifest == manifest
     assert resolved.manifest_url == path
@@ -102,7 +102,7 @@ def test_SourceInstall():
 
     test_dir = get_test_dir()
     path = os.path.join(test_dir, 'rep112-example.rdmanifest')
-    manifest = yaml.load(open(path))
+    manifest = yaml.safe_load(open(path))
     resolved = SourceInstall.from_manifest(manifest, path)
     _subtest_rep112_rdmanifest(resolved)
 
@@ -272,7 +272,7 @@ def test_fetch_file():
 def test_download_rdmanifest():
     test_dir = get_test_dir()
     with open(os.path.join(test_dir, 'rep112-example.rdmanifest')) as f:
-        expected = yaml.load(f)
+        expected = yaml.safe_load(f)
 
     from rosdep2.platforms.source import download_rdmanifest, DownloadFailed
     url = 'file://%s' % os.path.join(test_dir, 'rep112-example.rdmanifest')
