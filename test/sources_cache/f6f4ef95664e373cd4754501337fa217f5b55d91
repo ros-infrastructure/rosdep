@@ -22,6 +22,9 @@ testpython:
   osx:
     homebrew:
       packages: []
+  windows:
+    pip:
+      packages: []
 python-empy: {ubuntu: python-empy}
 python-gtk2:
   arch: pygtk

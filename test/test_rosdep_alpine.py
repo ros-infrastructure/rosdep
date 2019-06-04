@@ -32,6 +32,7 @@ import traceback
 from mock import Mock, patch
 
 import rospkg.os_detect
+from rosdep2.shell_utils import sudo_command_prefix
 
 
 def get_test_dir():
@@ -72,15 +73,15 @@ def test_ApkInstaller():
 
         mock_method.return_value = ['a-dev', 'b-dev']
 
-        expected = [['sudo', '-H', 'apk', 'add', 'a-dev', 'b-dev']]
+        expected = [sudo_command_prefix().split() + ['apk', 'add', 'a-dev', 'b-dev']]
         val = installer.get_install_command(['notused'], interactive=False, quiet=False)
         assert val == expected, 'Result was: %s' % val
 
-        expected = [['sudo', '-H', 'apk', 'add', '--interactive', 'a-dev', 'b-dev']]
+        expected = [sudo_command_prefix().split() + ['apk', 'add', '--interactive', 'a-dev', 'b-dev']]
         val = installer.get_install_command(['notused'], interactive=True, quiet=False)
         assert val == expected, 'Result was: %s' % val
 
-        expected = [['sudo', '-H', 'apk', 'add', '--quiet', 'a-dev', 'b-dev']]
+        expected = [sudo_command_prefix().split() + ['apk', 'add', '--quiet', 'a-dev', 'b-dev']]
         val = installer.get_install_command(['notused'], interactive=False, quiet=True)
         assert val == expected, 'Result was: %s' % val
 

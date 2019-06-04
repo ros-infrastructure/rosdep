@@ -44,6 +44,7 @@ from mock import DEFAULT
 from rosdep2 import main
 from rosdep2.main import rosdep_main
 from rosdep2.main import setup_proxy_opener
+from rosdep2.shell_utils import sudo_command_prefix
 
 
 GITHUB_BASE_URL = 'https://github.com/ros/rosdistro/raw/master/rosdep/base.yaml'
@@ -193,10 +194,11 @@ class TestRosdepMain(unittest.TestCase):
                     '--from-paths', catkin_tree
                 ] + cmd_extras)
                 stdout, stderr = b
+                sudo_command = ('%s ' % sudo_command_prefix()).lstrip()
                 expected = [
                     '#[apt] Installation commands:',
-                    '  sudo -H apt-get install ros-fuerte-catkin',
-                    '  sudo -H apt-get install libboost1.40-all-dev'
+                    '  %sapt-get install ros-fuerte-catkin' % sudo_command,
+                    '  %sapt-get install libboost1.40-all-dev' % sudo_command
                 ]
                 lines = stdout.getvalue().splitlines()
                 assert set(lines) == set(expected), lines

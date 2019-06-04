@@ -30,6 +30,7 @@
 import os
 import traceback
 from mock import patch, Mock
+from rosdep2.shell_utils import sudo_command_prefix
 
 
 def get_test_dir():
@@ -87,16 +88,16 @@ def test_DnfInstaller():
 
         # no interactive option with YUM
         mock_method.return_value = ['a', 'b']
-        expected = [['sudo', '-H', 'dnf', '--assumeyes', '--quiet', '--setopt=strict=0', 'install', 'a', 'b']]
+        expected = [sudo_command_prefix().split() + ['dnf', '--assumeyes', '--quiet', '--setopt=strict=0', 'install', 'a', 'b']]
         val = installer.get_install_command(['whatever'], interactive=False, quiet=True)
         assert val == expected, val + expected
-        expected = [['sudo', '-H', 'dnf', '--quiet', '--setopt=strict=0', 'install', 'a', 'b']]
+        expected = [sudo_command_prefix().split() + ['dnf', '--quiet', '--setopt=strict=0', 'install', 'a', 'b']]
         val = installer.get_install_command(['whatever'], interactive=True, quiet=True)
         assert val == expected, val + expected
-        expected = [['sudo', '-H', 'dnf', '--assumeyes', '--setopt=strict=0', 'install', 'a', 'b']]
+        expected = [sudo_command_prefix().split() + ['dnf', '--assumeyes', '--setopt=strict=0', 'install', 'a', 'b']]
         val = installer.get_install_command(['whatever'], interactive=False, quiet=False)
         assert val == expected, val + expected
-        expected = [['sudo', '-H', 'dnf', '--setopt=strict=0', 'install', 'a', 'b']]
+        expected = [sudo_command_prefix().split() + ['dnf', '--setopt=strict=0', 'install', 'a', 'b']]
         val = installer.get_install_command(['whatever'], interactive=True, quiet=False)
         assert val == expected, val + expected
     try:
@@ -117,16 +118,16 @@ def test_YumInstaller():
 
         # no interactive option with YUM
         mock_method.return_value = ['a', 'b']
-        expected = [['sudo', '-H', 'yum', '--assumeyes', '--quiet', '--skip-broken', 'install', 'a', 'b']]
+        expected = [sudo_command_prefix().split() + ['yum', '--assumeyes', '--quiet', '--skip-broken', 'install', 'a', 'b']]
         val = installer.get_install_command(['whatever'], interactive=False, quiet=True)
         assert val == expected, val + expected
-        expected = [['sudo', '-H', 'yum', '--quiet', '--skip-broken', 'install', 'a', 'b']]
+        expected = [sudo_command_prefix().split() + ['yum', '--quiet', '--skip-broken', 'install', 'a', 'b']]
         val = installer.get_install_command(['whatever'], interactive=True, quiet=True)
         assert val == expected, val + expected
-        expected = [['sudo', '-H', 'yum', '--assumeyes', '--skip-broken', 'install', 'a', 'b']]
+        expected = [sudo_command_prefix().split() + ['yum', '--assumeyes', '--skip-broken', 'install', 'a', 'b']]
         val = installer.get_install_command(['whatever'], interactive=False, quiet=False)
         assert val == expected, val + expected
-        expected = [['sudo', '-H', 'yum', '--skip-broken', 'install', 'a', 'b']]
+        expected = [sudo_command_prefix().split() + ['yum', '--skip-broken', 'install', 'a', 'b']]
         val = installer.get_install_command(['whatever'], interactive=True, quiet=False)
         assert val == expected, val + expected
     try:

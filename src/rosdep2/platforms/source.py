@@ -302,6 +302,7 @@ def install_source(resolved):
             rd_debug('Extracting tarball')
             tarf = tarfile.open(filename)
             tarf.extractall(tempdir)
+            tarf.close()
         else:
             rd_debug('Bypassing tarball extraction as it is a dmg')
         rd_debug('Running installation script')

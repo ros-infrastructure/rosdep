@@ -36,6 +36,7 @@ import traceback
 from rospkg.os_detect import OsDetect
 
 from .core import rd_debug, RosdepInternalError, InstallFailed, print_bold, InvalidData
+from .shell_utils import sudo_command_prefix
 
 # kwc: InstallerContext is basically just a bunch of dictionaries with
 # defined lookup methods.  It really encompasses two facets of a
@@ -325,7 +326,7 @@ class PackageManagerInstaller(Installer):
         self.detect_fn = detect_fn
         self.supports_depends = supports_depends
         self.as_root = True
-        self.sudo_command = 'sudo -H' if os.geteuid() != 0 else ''
+        self.sudo_command = sudo_command_prefix()
 
     def elevate_priv(self, cmd):
         """

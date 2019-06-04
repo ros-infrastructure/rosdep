@@ -29,6 +29,9 @@
 
 import os
 import yaml
+from rosdep2.shell_utils import get_simple_script_exit_with
+from rosdep2.shell_utils import _get_file_uri
+
 
 rep122_install_command = """#!/bin/bash
 set -o errexit
@@ -137,9 +140,7 @@ def test_SourceInstall():
 def test_is_installed():
     from rosdep2.platforms.source import SourceInstaller, SourceInstall
     resolved = SourceInstall()
-    resolved.check_presence_command = """#!/bin/bash
-exit 0
-"""
+    resolved.check_presence_command = get_simple_script_exit_with(0)
     installer = SourceInstaller()
     assert installer.is_installed(resolved)
 
@@ -147,9 +148,7 @@ exit 0
 def test_source_detect():
     from rosdep2.platforms.source import source_detect, SourceInstall
     resolved = SourceInstall()
-    resolved.check_presence_command = """#!/bin/bash
-exit 0
-"""
+    resolved.check_presence_command = get_simple_script_exit_with(0)
     assert [] == source_detect([])
     assert [resolved] == source_detect([resolved])
 
@@ -174,18 +173,14 @@ def test_SourceInstaller_get_install_command():
 
     resolved = SourceInstall()
     resolved.manifest_url = 'http://fake/foo'
-    resolved.check_presence_command = """#!/bin/bash
-exit 1
-"""
+    resolved.check_presence_command = get_simple_script_exit_with(1)
     commands = installer.get_install_command([resolved])
     assert len(commands) == 1
     assert commands[0] == ['rosdep-source', 'install', 'http://fake/foo']
 
     resolved = SourceInstall()
     resolved.manifest_url = 'http://fake/foo'
-    resolved.check_presence_command = """#!/bin/bash
-exit 0
-"""
+    resolved.check_presence_command = get_simple_script_exit_with(0)
     commands = installer.get_install_command([resolved])
     assert not(commands)
 
@@ -194,7 +189,7 @@ def test_SourceInstaller_resolve():
     from rosdep2.platforms.source import SourceInstaller, InvalidData
     test_dir = get_test_dir()
 
-    url = 'file://%s' % os.path.join(test_dir, 'rep112-example.rdmanifest')
+    url = _get_file_uri(os.path.join(test_dir, 'rep112-example.rdmanifest'))
     md5sum_good = REP112_MD5SUM
     md5sum_bad = 'fake'
 
@@ -255,7 +250,7 @@ def test_fetch_file():
         expected = f.read()
 
     from rosdep2.platforms.source import fetch_file
-    url = 'file://%s' % os.path.join(test_dir, 'rep112-example.rdmanifest')
+    url = _get_file_uri(os.path.join(test_dir, 'rep112-example.rdmanifest'))
     contents, error = fetch_file(url, REP112_MD5SUM)
     assert not error
     assert contents == expected
@@ -275,7 +270,7 @@ def test_download_rdmanifest():
         expected = yaml.safe_load(f)
 
     from rosdep2.platforms.source import download_rdmanifest, DownloadFailed
-    url = 'file://%s' % os.path.join(test_dir, 'rep112-example.rdmanifest')
+    url = _get_file_uri(os.path.join(test_dir, 'rep112-example.rdmanifest'))
     contents, download_url = download_rdmanifest(url, REP112_MD5SUM)
     assert contents == expected
     assert download_url == url
@@ -311,8 +306,6 @@ def test_install_source():
     resolved = SourceInstall()
     resolved.tarball = 'https://github.com/ros-infrastructure/rosdep/raw/master/test/source/foo.tar.gz'
     resolved.tarball_md5sum = 'fd34dc39f8f192b97fcc191fe0a6befc'
-    resolved.install_command = """#!/bin/sh
-exit 0
-"""
+    resolved.install_command = get_simple_script_exit_with(0)
     resolved.exec_path = ''
     install_source(resolved)

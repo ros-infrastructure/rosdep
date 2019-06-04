@@ -30,6 +30,7 @@
 import os
 import traceback
 from mock import Mock, patch
+from rosdep2.shell_utils import sudo_command_prefix
 
 
 def get_test_dir():
@@ -92,12 +93,12 @@ def test_PipInstaller():
 
         # no interactive option with PIP
         mock_method.return_value = ['a', 'b']
-        expected = [['sudo', '-H', 'pip', 'install', '-U', 'a'],
-                    ['sudo', '-H', 'pip', 'install', '-U', 'b']]
+        expected = [sudo_command_prefix().split() + ['pip', 'install', '-U', 'a'],
+                    sudo_command_prefix().split() + ['pip', 'install', '-U', 'b']]
         val = installer.get_install_command(['whatever'], interactive=False)
         assert val == expected, val
-        expected = [['sudo', '-H', 'pip', 'install', '-U', 'a'],
-                    ['sudo', '-H', 'pip', 'install', '-U', 'b']]
+        expected = [sudo_command_prefix().split() + ['pip', 'install', '-U', 'a'],
+                    sudo_command_prefix().split() + ['pip', 'install', '-U', 'b']]
         val = installer.get_install_command(['whatever'], interactive=True)
         assert val == expected, val
     try:

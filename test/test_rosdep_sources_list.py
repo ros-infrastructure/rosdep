@@ -37,6 +37,8 @@ except ImportError:
 
 import rospkg.distro
 import rosdep2.sources_list
+from rosdep2.shell_utils import _samefile
+from rosdep2.shell_utils import _get_file_uri
 
 GITHUB_BASE_URL = 'https://raw.githubusercontent.com/ros/rosdistro/master/rosdep/base.yaml'
 
@@ -188,7 +190,7 @@ def test_write_cache_file():
 
     filepath = write_cache_file(tempdir, 'foo', {'data': 1}) + PICKLE_CACHE_EXT
     computed_path = os.path.join(tempdir, compute_filename_hash('foo')) + PICKLE_CACHE_EXT
-    assert os.path.samefile(filepath, computed_path)
+    assert _samefile(filepath, computed_path)
     with open(filepath, 'rb') as f:
         assert {'data': 1} == pickle.loads(f.read())
 
@@ -199,13 +201,9 @@ def test_update_sources_list():
         import cPickle as pickle
     except ImportError:
         import pickle
-    try:
-        from urllib.request import pathname2url
-    except ImportError:
-        from urllib import pathname2url
     sources_list_dir = get_test_dir()
     index_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'rosdistro', 'index.yaml'))
-    index_url = 'file://' + pathname2url(index_path)
+    index_url = _get_file_uri(index_path)
     os.environ['ROSDISTRO_INDEX_URL'] = index_url
     tempdir = tempfile.mkdtemp()
     # use a subdirectory of test dir to make sure rosdep creates the necessary substructure

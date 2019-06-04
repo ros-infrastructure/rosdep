@@ -25,15 +25,23 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import os
+
 
 def test_create_tempfile_from_string_and_execute():
     # not sure how to test this just yet, for now just a tripwire
     from rosdep2.shell_utils import create_tempfile_from_string_and_execute
 
-    assert create_tempfile_from_string_and_execute('#!/bin/sh\necho "hello"'), 'ls command failed'
+    if os.name == 'nt':
+        assert create_tempfile_from_string_and_execute('echo "hello"'), 'ls command failed'
+    else:
+        assert create_tempfile_from_string_and_execute('#!/bin/sh\necho "hello"'), 'ls command failed'
     assert not create_tempfile_from_string_and_execute('bad'), 'bad command did not fail'
 
 
 def test_read_stdout():
     from rosdep2.shell_utils import read_stdout
-    assert 'foo' in read_stdout(['echo', 'foo'])
+    if os.name == 'nt':
+        assert 'foo' in read_stdout(['cmd', '/c', 'echo', 'foo'])
+    else:
+        assert 'foo' in read_stdout(['echo', 'foo'])

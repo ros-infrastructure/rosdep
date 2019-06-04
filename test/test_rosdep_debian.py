@@ -30,6 +30,7 @@
 import os
 import traceback
 from mock import Mock, patch, call
+from rosdep2.shell_utils import sudo_command_prefix
 
 
 def get_test_dir():
@@ -123,13 +124,13 @@ def test_AptInstaller():
         assert [] == installer.get_install_command(['fake'])
 
         mock_get_packages_to_install.return_value = ['a', 'b']
-        expected = [['sudo', '-H', 'apt-get', 'install', '-y', 'a'],
-                    ['sudo', '-H', 'apt-get', 'install', '-y', 'b']]
+        expected = [sudo_command_prefix().split() + ['apt-get', 'install', '-y', 'a'],
+                    sudo_command_prefix().split() + ['apt-get', 'install', '-y', 'b']]
         val = installer.get_install_command(['whatever'], interactive=False)
         print('VAL', val)
         assert val == expected, val
-        expected = [['sudo', '-H', 'apt-get', 'install', 'a'],
-                    ['sudo', '-H', 'apt-get', 'install', 'b']]
+        expected = [sudo_command_prefix().split() + ['apt-get', 'install', 'a'],
+                    sudo_command_prefix().split() + ['apt-get', 'install', 'b']]
         val = installer.get_install_command(['whatever'], interactive=True)
         assert val == expected, val
     try:

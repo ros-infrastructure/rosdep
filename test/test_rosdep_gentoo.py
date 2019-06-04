@@ -30,6 +30,7 @@
 import os
 import traceback
 from mock import Mock, patch
+from rosdep2.shell_utils import sudo_command_prefix
 
 import rospkg.os_detect
 
@@ -183,13 +184,13 @@ def test_PortageInstaller():
 
         mock_method.return_value = ['a', 'b']
 
-        expected = [['sudo', '-H', 'emerge', 'a'],
-                    ['sudo', '-H', 'emerge', 'b']]
+        expected = [sudo_command_prefix().split() + ['emerge', 'a'],
+                    sudo_command_prefix().split() + ['emerge', 'b']]
         val = installer.get_install_command(['whatever'], interactive=False)
         assert val == expected, val
 
-        expected = [['sudo', '-H', 'emerge', '-a', 'a'],
-                    ['sudo', '-H', 'emerge', '-a', 'b']]
+        expected = [sudo_command_prefix().split() + ['emerge', '-a', 'a'],
+                    sudo_command_prefix().split() + ['emerge', '-a', 'b']]
         val = installer.get_install_command(['whatever'], interactive=True)
         assert val == expected, val
 
