@@ -61,7 +61,7 @@ from . import __version__
 from .core import RosdepInternalError, InstallFailed, UnsupportedOs, InvalidData, CachePermissionError, DownloadFailure
 from .installers import normalize_uninstalled_to_list
 from .installers import RosdepInstaller
-from .lookup import RosdepLookup, ResolutionError
+from .lookup import RosdepLookup, ResolutionError, prune_catkin_packages
 from .rospkg_loader import DEFAULT_VIEW_KEY
 from .sources_list import update_sources_list, get_sources_cache_dir,\
     download_default_sources_list, SourcesListLoader, CACHE_INDEX,\
@@ -292,10 +292,10 @@ def _rosdep_main(args):
                       action='store_false', help="Do not consider implicit/recursive dependencies.  Only valid with 'keys', 'check', and 'install' commands.")
     parser.add_option('--ignore-packages-from-source', '--ignore-src', '-i',
                       dest='ignore_src', default=False, action='store_true',
-                      help="Affects the 'check' and 'install' verbs. If "
-                           'specified then rosdep will not install keys '
-                           'that are found to be catkin packages anywhere in '
-                           'the ROS_PACKAGE_PATH or in any of the directories '
+                      help="Affects the 'check', 'install', and 'keys' verbs. "
+                           'If specified then rosdep will ignore keys that '
+                           'are found to be catkin packages anywhere in the '
+                           'ROS_PACKAGE_PATH or in any of the directories '
                            'given by the --from-paths option.')
     parser.add_option('--skip-keys',
                       dest='skip_keys', action='append', default=[],
@@ -462,7 +462,7 @@ def _package_args_handler(command, parser, options, args):
         raise rospkg.ResourceNotFound(not_found[0], rospack.get_ros_paths())
 
     # Handle the --ignore-src option
-    if command in ['install', 'check'] and options.ignore_src:
+    if command in ['install', 'check', 'keys'] and options.ignore_src:
         if options.verbose:
             print('Searching ROS_PACKAGE_PATH for '
                   'sources: ' + str(os.environ['ROS_PACKAGE_PATH'].split(':')))
@@ -617,16 +617,17 @@ def command_update(options):
 def command_keys(lookup, packages, options):
     lookup = _get_default_RosdepLookup(options)
     rosdep_keys = get_keys(lookup, packages, options.recursive)
+    prune_catkin_packages(rosdep_keys, options.verbose)
     _print_lookup_errors(lookup)
     print('\n'.join(rosdep_keys))
 
 
 def get_keys(lookup, packages, recursive):
-    rosdep_keys = []
+    rosdep_keys = set()  # using a set to ensure uniqueness
     for package_name in packages:
         deps = lookup.get_rosdeps(package_name, implicit=recursive)
-        rosdep_keys.extend(deps)
-    return set(rosdep_keys)
+        rosdep_keys.update(deps)
+    return list(rosdep_keys)
 
 
 def command_check(lookup, packages, options):
