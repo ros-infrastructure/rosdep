@@ -478,58 +478,74 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
 
     max_retries = abs(max_retries)
 
-    sources = parse_sources_list(sources_list_dir=sources_list_dir)
-    retval = []
-    for source in list(sources):
+    def err_handler(exception, retries_left, custom_handler=None, source=None):
+        if retries_left:
+            if debug:
+                print("Trying again. Retries left: {}".format(retries_left))
+        else:
+            if custom_handler is None:
+                raise exception
+            custom_handler(source, exception)
+
+    def retry(max_retries, functor, acceptable_exceptions=tuple(), error_handler=err_handler):
         for trial in range(1, max_retries + 1):
             try:
-                if source.type == TYPE_YAML:
-                    rosdep_data = download_rosdep_data(source.url)
-                elif source.type == TYPE_GBPDISTRO:  # DEPRECATED, do not use this file. See REP137
-                    if not source.tags[0] in ['electric', 'fuerte']:
-                        print('Ignore legacy gbpdistro "%s"' % source.tags[0])
-                        sources.remove(source)
-                        break # do not store this entry in the cache
-                    rosdep_data = download_gbpdistro_as_rosdep_data(source.url)
-                retval.append((source, write_cache_file(
-                    sources_cache_dir, source.url, rosdep_data)))
-                if success_handler is not None:
-                    success_handler(source)
-                break
-            except (DownloadFailure, IOError) as e:
-                if trial == max_retries:
-                    if error_handler is not None:
-                        error_handler(source, e)
-                elif debug:
-                    print("Try {} failed. Retrying...".format(trial))
+                return functor()
+            except acceptable_exceptions as e:
+                error_handler(exception=e, retries_left=max_retries - trial)
+
+    sources = parse_sources_list(sources_list_dir=sources_list_dir)
+    retval = []
+
+    def get_source(source):
+        if source.type == TYPE_YAML:
+            rosdep_data = download_rosdep_data(source.url)
+        elif source.type == TYPE_GBPDISTRO:  # DEPRECATED, do not use this file. See REP137
+            if not source.tags[0] in ['electric', 'fuerte']:
+                print('Ignore legacy gbpdistro "%s"' % source.tags[0])
+                return  # do not store this entry in the cache
+            rosdep_data = download_gbpdistro_as_rosdep_data(source.url)
+        retval.append((source, write_cache_file(
+            sources_cache_dir, source.url, rosdep_data)))
+        if success_handler is not None:
+            success_handler(source)
+        return
+
+    for source in list(sources):
+        retry(max_retries,
+              lambda: get_source(source),
+              (DownloadFailure, IOError),
+              lambda e, n: err_handler(e, n, custom_handler=error_handler,
+                                       source=source)
+              )
 
     # Additional sources for ros distros
     # In compliance with REP137 and REP143
     print('Query rosdistro index %s' % get_index_url())
-    for dist_name in sorted(get_index().distributions.keys()):
-        for trial in range(1, max_retries + 1):
-            try:
-                distribution = get_index().distributions[dist_name]
-                if skip_eol_distros:
-                    if distribution.get('distribution_status') == 'end-of-life':
-                        print('Skip end-of-life distro "%s"' % dist_name)
-                        break
-                print('Add distro "%s"' % dist_name)
-                rds = RosDistroSource(dist_name)
-                rosdep_data = get_gbprepo_as_rosdep_data(dist_name)
-                # dist_files can either be a string (single filename) or a list (list of filenames)
-                dist_files = distribution['distribution']
-                key = _generate_key_from_urls(dist_files)
-                retval.append((rds, write_cache_file(
-                    sources_cache_dir, key, rosdep_data)))
-                sources.append(rds)
-                break
-            except (DownloadFailure, IOError) as e:
-                if trial == max_retries:
-                    if error_handler is not None:
-                        error_handler(source, e)
-                elif debug:
-                    print("Try {} failed. Retrying...".format(trial))
+    dist_names = retry(max_retries,
+                       lambda: sorted(get_index().distributions.keys()),
+                       (DownloadFailure, IOError))
+
+    def get_additional_sources(dist_name):
+        distribution = get_index().distributions[dist_name]
+        if skip_eol_distros:
+            if distribution.get('distribution_status') == 'end-of-life':
+                print('Skip end-of-life distro "%s"' % dist_name)
+                return
+        rds = RosDistroSource(dist_name)
+        rosdep_data = get_gbprepo_as_rosdep_data(dist_name)
+        # dist_files can either be a string (single filename) or a list (list of filenames)
+        dist_files = distribution['distribution']
+        key = _generate_key_from_urls(dist_files)
+        retval.append((rds, write_cache_file(
+            sources_cache_dir, key, rosdep_data)))
+        sources.append(rds)
+
+    for dist_name in dist_names:
+        print('Add distro "%s"' % dist_name)
+        retry(max_retries,
+              lambda: get_additional_sources(dist_name),
+              (DownloadFailure, IOError))
 
     # Create a combined index of *all* the sources.  We do all the
     # sources regardless of failures because a cache from a previous
