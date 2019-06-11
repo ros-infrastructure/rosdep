@@ -144,10 +144,12 @@ class DataSource(object):
         """
         # validate inputs
         if type_ not in VALID_TYPES:
-            raise ValueError('type must be one of [%s]' % (','.join(VALID_TYPES)))
+            raise ValueError(
+                'type must be one of [%s]' % (','.join(VALID_TYPES)))
         parsed = urlparse.urlparse(url)
         if not parsed.scheme or (parsed.scheme != 'file' and not parsed.netloc) or parsed.path in ('', '/'):
-            raise ValueError('url must be a fully-specified URL with scheme, hostname, and path: %s' % (str(url)))
+            raise ValueError(
+                'url must be a fully-specified URL with scheme, hostname, and path: %s' % (str(url)))
         if not type(tags) == list:
             raise ValueError('tags must be a list: %s' % (str(tags)))
 
@@ -196,12 +198,14 @@ def cache_data_source_loader(sources_cache_dir, verbose=False):
         pickle_filepath = filepath + PICKLE_CACHE_EXT
         if os.path.exists(pickle_filepath):
             if verbose:
-                print('loading cached data source:\n\t%s\n\t%s' % (uri, pickle_filepath), file=sys.stderr)
+                print('loading cached data source:\n\t%s\n\t%s' %
+                      (uri, pickle_filepath), file=sys.stderr)
             with open(pickle_filepath, 'rb') as f:
                 rosdep_data = pickle.loads(f.read())
         elif os.path.exists(filepath):
             if verbose:
-                print('loading cached data source:\n\t%s\n\t%s' % (uri, filepath), file=sys.stderr)
+                print('loading cached data source:\n\t%s\n\t%s' %
+                      (uri, filepath), file=sys.stderr)
             with open(filepath) as f:
                 rosdep_data = yaml.safe_load(f.read())
         else:
@@ -309,7 +313,8 @@ def download_rosdep_data(url):
         f.close()
         data = yaml.safe_load(text)
         if type(data) != dict:
-            raise DownloadFailure('rosdep data from [%s] is not a YAML dictionary' % (url))
+            raise DownloadFailure(
+                'rosdep data from [%s] is not a YAML dictionary' % (url))
         return data
     except (URLError, httplib.HTTPException) as e:
         raise DownloadFailure(str(e) + ' (%s)' % url)
@@ -335,7 +340,8 @@ def download_default_sources_list(url=DEFAULT_SOURCES_LIST_URL):
     data = f.read().decode()
     f.close()
     if not data:
-        raise DownloadFailure('cannot download defaults file from %s : empty contents' % url)
+        raise DownloadFailure(
+            'cannot download defaults file from %s : empty contents' % url)
     # parse just for validation
     try:
         parse_sources_data(data)
@@ -401,7 +407,8 @@ def parse_sources_file(filepath):
         with open(filepath, 'r') as f:
             return parse_sources_data(f.read(), origin=filepath)
     except IOError as e:
-        raise InvalidData('I/O error reading sources file: %s' % (str(e)), origin=filepath)
+        raise InvalidData('I/O error reading sources file: %s' %
+                          (str(e)), origin=filepath)
 
 
 def parse_sources_list(sources_list_dir=None):
@@ -421,7 +428,8 @@ def parse_sources_list(sources_list_dir=None):
 
     filelist = []
     for sdir in sources_list_dirs:
-        filelist += sorted([os.path.join(sdir, f) for f in os.listdir(sdir) if f.endswith('.list')])
+        filelist += sorted([os.path.join(sdir, f)
+                            for f in os.listdir(sdir) if f.endswith('.list')])
     sources_list = []
     for f in filelist:
         sources_list.extend(parse_sources_file(f))
@@ -455,6 +463,9 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
         if a particular source fails.  This hook is mainly for
         printing errors to console.
     :param skip_eol_distros: skip downloading sources for EOL distros
+    :param max_retries: retry despite DownloadErrors, useful for bad
+        networks connections
+    :param debug: print additional data such as retries left
 
     :returns: list of (`DataSource`, cache_file_path) pairs for cache
         files that were updated, ``[str]``
@@ -550,7 +561,8 @@ def load_cached_sources_list(sources_cache_dir=None, verbose=False):
     cache_index = os.path.join(sources_cache_dir, 'index')
     if not os.path.exists(cache_index):
         if verbose:
-            print('no cache index present, not loading cached sources', file=sys.stderr)
+            print('no cache index present, not loading cached sources',
+                  file=sys.stderr)
         return []
     with open(cache_index, 'r') as f:
         cache_data = f.read()
@@ -583,7 +595,8 @@ def write_cache_file(source_cache_d, key_filenames, rosdep_data):
     key_hash = compute_filename_hash(key_filenames)
     filepath = os.path.join(source_cache_d, key_hash)
     try:
-        write_atomic(filepath + PICKLE_CACHE_EXT, pickle.dumps(rosdep_data, 2), True)
+        write_atomic(filepath + PICKLE_CACHE_EXT,
+                     pickle.dumps(rosdep_data, 2), True)
     except OSError as e:
         raise CachePermissionError('Failed to write cache file: ' + str(e))
     try:
@@ -595,7 +608,8 @@ def write_cache_file(source_cache_d, key_filenames, rosdep_data):
 
 def write_atomic(filepath, data, binary=False):
     # write data to new file
-    fd, filepath_tmp = tempfile.mkstemp(prefix=os.path.basename(filepath) + '.tmp.', dir=os.path.dirname(filepath))
+    fd, filepath_tmp = tempfile.mkstemp(prefix=os.path.basename(
+        filepath) + '.tmp.', dir=os.path.dirname(filepath))
 
     if (binary):
         fmode = 'wb'
@@ -654,14 +668,17 @@ class SourcesListLoader(RosdepLoader):
         if matcher is None:
             matcher = DataSourceMatcher.create_default(os_override=os_override)
         if verbose:
-            print('using matcher with tags [%s]' % (', '.join(matcher.tags)), file=sys.stderr)
+            print('using matcher with tags [%s]' % (
+                ', '.join(matcher.tags)), file=sys.stderr)
 
-        sources = load_cached_sources_list(sources_cache_dir=sources_cache_dir, verbose=verbose)
+        sources = load_cached_sources_list(
+            sources_cache_dir=sources_cache_dir, verbose=verbose)
         if verbose:
             print('loaded %s sources' % (len(sources)), file=sys.stderr)
         sources = [x for x in sources if matcher.matches(x)]
         if verbose:
-            print('%s sources match current tags' % (len(sources)), file=sys.stderr)
+            print('%s sources match current tags' %
+                  (len(sources)), file=sys.stderr)
         return SourcesListLoader(sources)
 
     def load_view(self, view_name, rosdep_db, verbose=False):
@@ -678,9 +695,11 @@ class SourcesListLoader(RosdepLoader):
             return
         source = self.get_source(view_name)
         if verbose:
-            print('loading view [%s] with sources.list loader' % (view_name), file=sys.stderr)
+            print('loading view [%s] with sources.list loader' %
+                  (view_name), file=sys.stderr)
         view_dependencies = self.get_view_dependencies(view_name)
-        rosdep_db.set_view_data(view_name, source.rosdep_data, view_dependencies, view_name)
+        rosdep_db.set_view_data(
+            view_name, source.rosdep_data, view_dependencies, view_name)
 
     def get_loadable_resources(self):
         return []
