@@ -334,6 +334,10 @@ def _rosdep_main(args):
                       help="Affects the 'update' verb. "
                            'If specified end-of-life distros are being '
                            'fetched too.')
+    parser.add_option('--max-retries', dest='max_retries',
+                      default=5, type=int,
+                      help="Affects the 'update' verb. "
+                           'Trt to connect multiple number of times before signalling a failure')
 
     options, args = parser.parse_args(args)
     if options.print_version or options.print_all_versions:
@@ -598,7 +602,8 @@ def command_update(options):
             pass
         update_sources_list(success_handler=update_success_handler,
                             error_handler=update_error_handler,
-                            skip_eol_distros=not options.include_eol_distros)
+                            skip_eol_distros=not options.include_eol_distros,
+                            max_retries=options.max_retries)
         print('updated cache in %s' % (sources_cache_dir))
     except InvalidData as e:
         print('ERROR: invalid sources list file:\n\t%s' % (e), file=sys.stderr)

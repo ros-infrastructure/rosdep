@@ -465,14 +465,12 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
     if sources_cache_dir is None:
         sources_cache_dir = get_sources_cache_dir()
 
+    max_retries = abs(max_retries)
+
     sources = parse_sources_list(sources_list_dir=sources_list_dir)
     retval = []
     for source in list(sources):
-        trial = 0
-        while trial < max_retries:
-            trial += 1
-            if debug:
-                print("Trial: {}".format(trial))
+        for trial in range(1, max_retries + 1):
             try:
                 if source.type == TYPE_YAML:
                     rosdep_data = download_rosdep_data(source.url)
@@ -480,7 +478,7 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
                     if not source.tags[0] in ['electric', 'fuerte']:
                         print('Ignore legacy gbpdistro "%s"' % source.tags[0])
                         sources.remove(source)
-                        continue  # do not store this entry in the cache
+                        break # do not store this entry in the cache
                     rosdep_data = download_gbpdistro_as_rosdep_data(source.url)
                 retval.append((source, write_cache_file(
                     sources_cache_dir, source.url, rosdep_data)))
@@ -491,16 +489,14 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
                 if trial == max_retries:
                     if error_handler is not None:
                         error_handler(source, e)
+                elif debug:
+                    print("Try {} failed. Retrying...".format(trial))
 
     # Additional sources for ros distros
     # In compliance with REP137 and REP143
     print('Query rosdistro index %s' % get_index_url())
     for dist_name in sorted(get_index().distributions.keys()):
-        trial = 0
-        while trial < max_retries:
-            trial += 1
-            if debug:
-                print("Trial: {}".format(trial))
+        for trial in range(1, max_retries + 1):
             try:
                 distribution = get_index().distributions[dist_name]
                 if skip_eol_distros:
@@ -521,6 +517,8 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
                 if trial == max_retries:
                     if error_handler is not None:
                         error_handler(source, e)
+                elif debug:
+                    print("Try {} failed. Retrying...".format(trial))
 
     # Create a combined index of *all* the sources.  We do all the
     # sources regardless of failures because a cache from a previous
