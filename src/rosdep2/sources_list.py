@@ -515,9 +515,9 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
         retry(max_retries,
               lambda: get_source(source),
               (DownloadFailure, IOError),
-              lambda e, n: err_handler(e, n, custom_handler=error_handler,
-                                       source=source)
-              )
+              lambda exception, retries_left: err_handler(exception, retries_left,
+                                                          custom_handler=error_handler,
+                                                          source=source))
 
     # Additional sources for ros distros
     # In compliance with REP137 and REP143
