@@ -256,6 +256,10 @@ class TestRosdepMain(unittest.TestCase):
                 rosdep_main(['keys', 'rospack_fake', '--os', 'ubuntu:lucid', '--verbose'] + cmd_extras)
                 stdout, stderr = b
                 assert stdout.getvalue().strip() == 'testtinyxml', stdout.getvalue()
+            with fakeout() as b:
+                rosdep_main(['keys', 'another_catkin_package'] + cmd_extras + ['-i'])
+                stdout, stderr = b
+                assert stdout.getvalue().strip() == 'catkin', stdout.getvalue()
         except SystemExit:
             assert False, 'system exit occurred'
         try:
