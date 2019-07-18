@@ -64,6 +64,7 @@ def create_default_installer_context(verbose=False):
     from .platforms import opensuse
     from .platforms import osx
     from .platforms import pip
+    from .platforms import npm
     from .platforms import gem
     from .platforms import redhat
     from .platforms import freebsd
@@ -71,7 +72,7 @@ def create_default_installer_context(verbose=False):
     from .platforms import source
 
     platform_mods = [alpine, arch, cygwin, debian, gentoo, openembedded, opensuse, osx, redhat, slackware, freebsd]
-    installer_mods = [source, pip, gem] + platform_mods
+    installer_mods = [source, pip, gem, npm] + platform_mods
 
     context = InstallerContext()
     context.set_verbose(verbose)
