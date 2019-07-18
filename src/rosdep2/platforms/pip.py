@@ -115,7 +115,10 @@ class PipInstaller(PackageManagerInstaller):
         packages = self.get_packages_to_install(resolved, reinstall=reinstall)
         if not packages:
             return []
-        cmd = ['pip', 'install', '-U']
+        if self.as_root:
+            cmd = ['pip', 'install', '-U']
+        else:
+            cmd = ['pip', 'install', '-U', '--user']
         if quiet:
             cmd.append('-q')
         if reinstall:
