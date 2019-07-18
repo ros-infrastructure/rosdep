@@ -670,7 +670,7 @@ def command_keys(lookup, packages, options):
     rosdep_keys = get_keys(lookup, packages, options.recursive)
     prune_catkin_packages(rosdep_keys, options.verbose)
     _print_lookup_errors(lookup)
-    print('\n'.join(rosdep_keys))
+    print('\n'.join([d.name for d in rosdep_keys]))
 
 
 def get_keys(lookup, packages, recursive):

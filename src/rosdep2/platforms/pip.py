@@ -34,7 +34,7 @@ import pkg_resources
 import subprocess
 import sys
 
-from ..core import InstallFailed
+from ..core import InstallFailed, InvalidData
 from ..installers import PackageManagerInstaller
 from ..shell_utils import read_stdout
 
@@ -127,6 +127,53 @@ class PipInstaller(PackageManagerInstaller):
 
     def __init__(self):
         super(PipInstaller, self).__init__(pip_detect, supports_depends=True)
+
+    def resolve(self, rosdep, rosdep_args):
+        """
+        See :meth:`Installer.resolve()`
+        """
+        packages = None
+        if type(rosdep_args) == dict:
+            packages = rosdep_args.get('packages', [])
+            if isinstance(packages, str):
+                packages = packages.split()
+        elif isinstance(rosdep_args, str):
+            packages = rosdep_args.split(' ')
+        elif type(rosdep_args) == list:
+            packages = rosdep_args
+        else:
+            raise InvalidData('Invalid rosdep args: %s' % (rosdep_args))
+
+        pip_specify_version = None
+        if rosdep.version_eq:
+            for i, package in list(enumerate(packages)):
+                packages[i] = package + '==' + rosdep.version_eq
+            pip_specify_version = True
+        if rosdep.version_gte:
+            for i, package in list(enumerate(packages)):
+                package = package + ',' if pip_specify_version else package
+                packages[i] = package + '>=' + rosdep.version_gte
+            pip_specify_version = True
+        if rosdep.version_lte:
+            for i, package in list(enumerate(packages)):
+                package = package + ',' if pip_specify_version else package
+                packages[i] = package + '<=' + rosdep.version_lte
+            pip_specify_version = True
+        if rosdep.version_gt:
+            for i, package in list(enumerate(packages)):
+                package = package + ',' if pip_specify_version else package
+                packages[i] = package + '>' + rosdep.version_gt
+            pip_specify_version = True
+        if rosdep.version_lt:
+            for i, package in list(enumerate(packages)):
+                package = package + ',' if pip_specify_version else package
+                packages[i] = package + '<' + rosdep.version_lt
+            pip_specify_version = True
+        if pip_specify_version:
+            for i, package in list(enumerate(packages)):
+                packages[i] = "'" + package + "'"
+
+        return packages
 
     def get_version_strings(self):
         pip_version = pkg_resources.get_distribution('pip').version

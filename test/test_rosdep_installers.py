@@ -294,6 +294,7 @@ def test_InstallerContext_os_installers():
 
 
 def test_Installer_tripwire():
+    from catkin_pkg.package import Dependency
     from rosdep2.installers import Installer
     try:
         Installer().is_installed('foo')
@@ -306,7 +307,7 @@ def test_Installer_tripwire():
     except NotImplementedError:
         pass
     try:
-        Installer().resolve({})
+        Installer().resolve(Dependency('null'), {})
         assert False
     except NotImplementedError:
         pass
@@ -341,26 +342,27 @@ def test_PackageManagerInstaller():
 
 
 def test_PackageManagerInstaller_resolve():
+    from catkin_pkg.package import Dependency
     from rosdep2 import InvalidData
     from rosdep2.installers import PackageManagerInstaller
 
     installer = PackageManagerInstaller(detect_fn_all)
-    assert ['baz'] == installer.resolve(dict(depends=['foo', 'bar'], packages=['baz']))
-    assert ['baz', 'bar'] == installer.resolve(dict(packages=['baz', 'bar']))
+    assert ['baz'] == installer.resolve(Dependency('baz'), dict(depends=['foo', 'bar'], packages=['baz']))
+    assert ['baz', 'bar'] == installer.resolve(Dependency('baz'), dict(packages=['baz', 'bar']))
 
     # test string logic
-    assert ['baz'] == installer.resolve(dict(depends=['foo', 'bar'], packages='baz'))
-    assert ['baz', 'bar'] == installer.resolve(dict(packages='baz bar'))
-    assert ['baz'] == installer.resolve('baz')
-    assert ['baz', 'bar'] == installer.resolve('baz bar')
+    assert ['baz'] == installer.resolve(Dependency('baz'), dict(depends=['foo', 'bar'], packages='baz'))
+    assert ['baz', 'bar'] == installer.resolve(Dependency('baz'), dict(packages='baz bar'))
+    assert ['baz'] == installer.resolve(Dependency('baz'), 'baz')
+    assert ['baz', 'bar'] == installer.resolve(Dependency('baz'), 'baz bar')
 
     # test list logic
-    assert ['baz'] == installer.resolve(['baz'])
-    assert ['baz', 'bar'] == installer.resolve(['baz', 'bar'])
+    assert ['baz'] == installer.resolve(Dependency('baz'), ['baz'])
+    assert ['baz', 'bar'] == installer.resolve(Dependency('baz'), ['baz', 'bar'])
 
     # test invalid data
     try:
-        installer.resolve(0)
+        installer.resolve(Dependency('baz'), 0)
         assert False, 'should have raised'
     except InvalidData:
         pass
