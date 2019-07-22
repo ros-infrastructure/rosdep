@@ -267,73 +267,73 @@ def _rosdep_main(args):
 
     parser = ArgumentParser(usage=_usage)
     parser.add_argument('--os', dest='os_override', default=None,
-                      metavar='OS_NAME:OS_VERSION', help='Override OS name and version (colon-separated), e.g. ubuntu:lucid')
+                        metavar='OS_NAME:OS_VERSION', help='Override OS name and version (colon-separated), e.g. ubuntu:lucid')
     parser.add_argument('-c', '--sources-cache-dir', dest='sources_cache_dir', default=default_sources_cache,
-                      metavar='SOURCES_CACHE_DIR', help='Override %s' % (default_sources_cache))
+                        metavar='SOURCES_CACHE_DIR', help='Override %s' % (default_sources_cache))
     parser.add_argument('--verbose', '-v', dest='verbose', default=False,
-                      action='store_true', help='verbose display')
+                        action='store_true', help='verbose display')
     parser.add_argument('--version', dest='print_version', default=False,
-                      action='store_true', help='print just the rosdep version, then exit')
+                        action='store_true', help='print just the rosdep version, then exit')
     parser.add_argument('--all-versions', dest='print_all_versions', default=False,
-                      action='store_true', help='print rosdep version and version of installers, then exit')
+                        action='store_true', help='print rosdep version and version of installers, then exit')
     parser.add_argument('--reinstall', dest='reinstall', default=False,
-                      action='store_true', help='(re)install all dependencies, even if already installed')
+                        action='store_true', help='(re)install all dependencies, even if already installed')
     parser.add_argument('--default-yes', '-y', dest='default_yes', default=False,
-                      action='store_true', help='Tell the package manager to default to y or fail when installing')
+                        action='store_true', help='Tell the package manager to default to y or fail when installing')
     parser.add_argument('--simulate', '-s', dest='simulate', default=False,
-                      action='store_true', help='Simulate install')
+                        action='store_true', help='Simulate install')
     parser.add_argument('-r', dest='robust', default=False,
-                      action='store_true', help='Continue installing despite errors.')
+                        action='store_true', help='Continue installing despite errors.')
     parser.add_argument('-q', dest='quiet', default=False,
-                      action='store_true', help='Quiet. Suppress output except for errors.')
+                        action='store_true', help='Quiet. Suppress output except for errors.')
     parser.add_argument('-a', '--all', dest='rosdep_all', default=False,
-                      action='store_true', help='select all packages')
+                        action='store_true', help='select all packages')
     parser.add_argument('-n', dest='recursive', default=True,
-                      action='store_false', help="Do not consider implicit/recursive dependencies.  Only valid with 'keys', 'check', and 'install' commands.")
+                        action='store_false', help="Do not consider implicit/recursive dependencies.  Only valid with 'keys', 'check', and 'install' commands.")
     parser.add_argument('--ignore-packages-from-source', '--ignore-src', '-i',
-                      dest='ignore_src', default=False, action='store_true',
-                      help="Affects the 'check', 'install', and 'keys' verbs. "
-                           'If specified then rosdep will ignore keys that '
-                           'are found to be catkin packages anywhere in the '
-                           'ROS_PACKAGE_PATH or in any of the directories '
-                           'given by the --from-paths option.')
+                        dest='ignore_src', default=False, action='store_true',
+                        help="Affects the 'check', 'install', and 'keys' verbs. "
+                        'If specified then rosdep will ignore keys that '
+                        'are found to be catkin packages anywhere in the '
+                        'ROS_PACKAGE_PATH or in any of the directories '
+                        'given by the --from-paths option.')
     parser.add_argument('--skip-keys',
-                      dest='skip_keys', action='append', default=[],
-                      help="Affects the 'check' and 'install' verbs. The "
-                           'specified rosdep keys will be ignored, i.e. not '
-                           'resolved and not installed. The option can be supplied multiple '
-                           'times. A space separated list of rosdep keys can also '
-                           'be passed as a string. A more permanent solution to '
-                           'locally ignore a rosdep key is creating a local rosdep rule '
-                           'with an empty list of packages (include it in '
-                           '/etc/ros/rosdep/sources.list.d/ before the defaults).')
+                        dest='skip_keys', action='append', default=[],
+                        help="Affects the 'check' and 'install' verbs. The "
+                        'specified rosdep keys will be ignored, i.e. not '
+                        'resolved and not installed. The option can be supplied multiple '
+                        'times. A space separated list of rosdep keys can also '
+                        'be passed as a string. A more permanent solution to '
+                        'locally ignore a rosdep key is creating a local rosdep rule '
+                        'with an empty list of packages (include it in '
+                        '/etc/ros/rosdep/sources.list.d/ before the defaults).')
     parser.add_argument('--filter-for-installers',
-                      action='append', default=[],
-                      help="Affects the 'db' verb. If supplied, the output of the 'db' "
-                           'command is filtered to only list packages whose installer '
-                           'is in the provided list. The option can be supplied '
-                           'multiple times. A space separated list of installers can also '
-                           'be passed as a string. Example: `--filter-for-installers "apt pip"`')
+                        action='append', default=[],
+                        help="Affects the 'db' verb. If supplied, the output of the 'db' "
+                        'command is filtered to only list packages whose installer '
+                        'is in the provided list. The option can be supplied '
+                        'multiple times. A space separated list of installers can also '
+                        'be passed as a string. Example: `--filter-for-installers "apt pip"`')
     parser.add_argument('--from-paths', dest='from_paths',
-                      default=False, action='store_true',
-                      help="Affects the 'check', 'keys', and 'install' verbs. "
-                           'If specified the arguments to those verbs will be '
-                           'considered paths to be searched, acting on all '
-                           'catkin packages found there in.')
+                        default=False, action='store_true',
+                        help="Affects the 'check', 'keys', and 'install' verbs. "
+                        'If specified the arguments to those verbs will be '
+                        'considered paths to be searched, acting on all '
+                        'catkin packages found there in.')
     parser.add_argument('--rosdistro', dest='ros_distro', default=None,
-                      help='Explicitly sets the ROS distro to use, overriding '
-                           'the normal method of detecting the ROS distro '
-                           'using the ROS_DISTRO environment variable.')
+                        help='Explicitly sets the ROS distro to use, overriding '
+                        'the normal method of detecting the ROS distro '
+                        'using the ROS_DISTRO environment variable.')
     parser.add_argument('--as-root', default=[], action='append',
-                      metavar='INSTALLER_KEY:<bool>', help='Override '
-                      'whether sudo is used for a specific installer, '
-                      "e.g. '--as-root pip:false' or '--as-root \"pip:no homebrew:yes\"'. "
-                      'Can be specified multiple times.')
+                        metavar='INSTALLER_KEY:<bool>', help='Override '
+                        'whether sudo is used for a specific installer, '
+                        "e.g. '--as-root pip:false' or '--as-root \"pip:no homebrew:yes\"'. "
+                        'Can be specified multiple times.')
     parser.add_argument('--include-eol-distros', dest='include_eol_distros',
-                      default=False, action='store_true',
-                      help="Affects the 'update' verb. "
-                           'If specified end-of-life distros are being '
-                           'fetched too.')
+                        default=False, action='store_true',
+                        help="Affects the 'update' verb. "
+                        'If specified end-of-life distros are being '
+                        'fetched too.')
 
     options, args = parser.parse_known_args(args)
     if options.print_version or options.print_all_versions:
