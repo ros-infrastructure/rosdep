@@ -55,6 +55,7 @@ import warnings
 from argparse import ArgumentParser
 
 import rospkg
+import yaml
 
 from . import create_default_installer_context, get_default_installer
 from . import __version__
@@ -334,8 +335,41 @@ def _rosdep_main(args):
                         help="Affects the 'update' verb. "
                         'If specified end-of-life distros are being '
                         'fetched too.')
+    parser.add_argument('--installer-options', default=None,
+                        metavar='{INSTALLER_KEY: {additional-flags: <string>, '
+                        'sudo: <bool>, command-options: <string>, help: <string>}',
+                        help='Add argument flags to set customized command options for a specific installer. '
+                        "e.g. '--installer-options \"{pip: {additional-flags: user, "
+                        "sudo: false, command-options: -v --user, "
+                        "help: Install to the user install directory, typically ~/.local}}\"")
 
+    # skip --help to show --installer-options in help command
+    options, _ = parser.parse_known_args([arg for arg in args if arg not in ['-h', '--help']])
+    # load rosdep/config.yaml
+    installer_options = {}
+    for etc_ros_dir in ['/etc/ros', rospkg.get_ros_home()]:
+        # we can't use get_etc_ros_dir() because environment config does not carry out over under sudo
+        rosdep_config = os.path.join(etc_ros_dir, 'rosdep', 'config.yaml')
+        if os.path.exists(rosdep_config):
+            if options.verbose:
+                print('loading rosdep config from %s\n' % (rosdep_config), file=sys.stderr)
+            with open(rosdep_config, 'r') as f:
+                loaded = yaml.safe_load(f.read())
+                if 'installer-options' in loaded:
+                    installer_options.update(loaded['installer-options'])
+    if options.installer_options:
+        # process --installer-options to add additional argument flags for a specific installer
+        installer_options.update(yaml.safe_load(options.installer_options.rstrip()))
+    for k, v in installer_options.items():
+        if 'additional-flags' not in v:
+            parser.error("'additional-flags' key is required for --installer-options\n"
+                         "Current argument is '--installer-options %s'" % installer_options)
+        else:
+            parser.add_argument('--' + v['additional-flags'], action='store_true', help=v['help'] if 'help' in v else None)
     options, args = parser.parse_known_args(args)
+    # finally set options.installer_options as a dict of settings
+    options.installer_options = installer_options
+
     if options.print_version or options.print_all_versions:
         # First print the rosdep version.
         print('{}'.format(__version__))
@@ -516,6 +550,7 @@ def configure_installer_context(installer_context, options):
 
     - Override the OS detector in *installer_context* if necessary.
     - Set *as_root* for installers if specified.
+    - Set *installer_options* for installers if specified and additional-flags are set.
 
     :raises: :exc:`UsageError` If user input options incorrectly
     """
@@ -527,6 +562,10 @@ def configure_installer_context(installer_context, options):
             installer_context.get_installer(k).as_root = v
         except KeyError:
             raise UsageError("Installer '%s' not defined." % k)
+    for k, v in options.installer_options.items():
+        # set install_options only when options holds v['additional-flags'] argument as True
+        if vars(options)[v['additional-flags']]:
+            installer_context.get_installer(k).installer_options = v
 
 
 def command_init(options):
