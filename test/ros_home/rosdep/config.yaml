@@ -1,0 +1,6 @@
+installer-options:
+  pip:
+    additional-flags: user
+    sudo: false
+    command-options: --user
+

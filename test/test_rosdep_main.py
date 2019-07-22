@@ -68,6 +68,12 @@ def get_cache_dir():
     return p
 
 
+def get_home_dir():
+    p = os.path.join(get_test_dir(), 'ros_home')
+    assert os.path.isdir(p)
+    return p
+
+
 @contextmanager
 def fakeout():
     realstdout = sys.stdout
@@ -291,3 +297,13 @@ class TestRosdepMain(unittest.TestCase):
             assert len(output) == 2
             assert test_package_dir in output[0]
             assert 'Package version ":{version}" does not follow version conventions' in output[1]
+
+    def test_installer_options(self):
+        import rospkg
+        rospkg.get_ros_home = get_home_dir
+        sources_cache = get_cache_dir()
+        cmd_extras = ['-c', sources_cache]
+        with fakeout() as b:
+            rosdep_main(['install', 'python_dep', '--user'] + cmd_extras)
+            stdout, stderr = b
+            assert 'All required rosdeps installed' in stdout.getvalue(), stdout.getvalue()

@@ -100,6 +100,29 @@ def test_PipInstaller():
                     ['sudo', '-H', 'pip', 'install', '-U', 'b']]
         val = installer.get_install_command(['whatever'], interactive=True)
         assert val == expected, val
+
+        # check as_root option with PIP
+        installer.as_root = False
+        expected = [['pip', 'install', '-U', 'a'],
+                    ['pip', 'install', '-U', 'b']]
+        val = installer.get_install_command(['whatever'], interactive=False)
+        assert val == expected, val
+        expected = [['pip', 'install', '-U', 'a'],
+                    ['pip', 'install', '-U', 'b']]
+        val = installer.get_install_command(['whatever'], interactive=True)
+        assert val == expected, val
+
+        # check as_root option with PIP
+        installer = PipInstaller()
+        installer.installer_options = {'sudo': False, 'command-options': '--user -v'}
+        expected = [['pip', 'install', '-U', '--user', '-v', 'a'],
+                    ['pip', 'install', '-U', '--user', '-v', 'b']]
+        val = installer.get_install_command(['whatever'], interactive=False)
+        assert val == expected, val
+        expected = [['pip', 'install', '-U', '--user', '-v', 'a'],
+                    ['pip', 'install', '-U', '--user', '-v', 'b']]
+        val = installer.get_install_command(['whatever'], interactive=True)
+        assert val == expected, val
     try:
         test()
     except AssertionError:

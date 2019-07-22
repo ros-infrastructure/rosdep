@@ -326,6 +326,7 @@ class PackageManagerInstaller(Installer):
         self.supports_depends = supports_depends
         self.as_root = True
         self.sudo_command = 'sudo -H' if os.geteuid() != 0 else ''
+        self.installer_options = {}
 
     def elevate_priv(self, cmd):
         """

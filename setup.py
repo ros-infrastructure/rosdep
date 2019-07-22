@@ -12,6 +12,7 @@ setup(
     test_suite='nose.collector',
     test_requires=['mock', 'nose >= 1.0'],
     scripts=['scripts/rosdep', 'scripts/rosdep-source'],
+    data_files=[('etc/ros/rosdep', ['config/config.yaml'])],
     author='Tully Foote, Ken Conley',
     author_email='tfoote@osrfoundation.org',
     url='http://wiki.ros.org/rosdep',
