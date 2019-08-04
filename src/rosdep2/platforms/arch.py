@@ -29,10 +29,11 @@
 
 import subprocess
 
+from rospkg.os_detect import OS_ARCH
+
 from ..installers import PackageManagerInstaller
 from .source import SOURCE_INSTALLER
 
-ARCH_OS_NAME = 'arch'
 PACMAN_INSTALLER = 'pacman'
 
 
@@ -41,9 +42,9 @@ def register_installers(context):
 
 
 def register_platforms(context):
-    context.add_os_installer_key(ARCH_OS_NAME, SOURCE_INSTALLER)
-    context.add_os_installer_key(ARCH_OS_NAME, PACMAN_INSTALLER)
-    context.set_default_os_installer_key(ARCH_OS_NAME, lambda self: PACMAN_INSTALLER)
+    context.add_os_installer_key(OS_ARCH, SOURCE_INSTALLER)
+    context.add_os_installer_key(OS_ARCH, PACMAN_INSTALLER)
+    context.set_default_os_installer_key(OS_ARCH, lambda self: PACMAN_INSTALLER)
 
 
 def pacman_detect_single(p):
