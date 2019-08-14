@@ -14,13 +14,7 @@
 
 import os
 
-from .resources import get_resource
 from .resources import get_resources
-from .search_paths import get_search_paths
-
-
-class PackageNotFoundError(KeyError):
-    pass
 
 
 def get_packages_with_prefixes():
@@ -31,39 +25,3 @@ def get_packages_with_prefixes():
     :rtype: dict
     """
     return get_resources('packages')
-
-
-def get_package_prefix(package_name):
-    """
-    Return the installation prefix directory of the given package.
-
-    For example, if you install the package 'foo' into
-    '/home/user/ros2_ws/install' and you called this function with 'foo' as the
-    argument, then it will return that directory.
-
-    :param str package_name: name of the package to locate
-    :returns: installation prefix of the package
-    :raises: :exc:`PackageNotFoundError` if the package is not found
-    """
-    try:
-        content, package_prefix = get_resource('packages', package_name)
-    except LookupError:
-        raise PackageNotFoundError(
-            "package '{}' not found, searching: {}".format(package_name, get_search_paths()))
-    return package_prefix
-
-
-def get_package_share_directory(package_name):
-    """
-    Return the share directory of the given package.
-
-    For example, if you install the package 'foo' into
-    '/home/user/ros2_ws/install' and you called this function with 'foo' as the
-    argument, then it will return '/home/user/ros2_ws/install/share/foo' as
-    the package's share directory.
-
-    :param str package_name: name of the package to locate
-    :returns: share directory of the package
-    :raises: :exc:`PackageNotFoundError` if the package is not found
-    """
-    return os.path.join(get_package_prefix(package_name), 'share', package_name)

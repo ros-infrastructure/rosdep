@@ -19,36 +19,6 @@ from .constants import RESOURCE_INDEX_SUBFOLDER
 from .search_paths import get_search_paths
 
 
-def get_resource(resource_type, resource_name):
-    """
-    Get the content of a specific resource and its prefix path.
-
-    :param resource_type: the type of the resource
-    :type resource_type: str
-    :param resource_names: the name of the resource
-    :type resource_name: str
-    :returns: a tuple of the content (bytes) of the resource and its prefix path
-    :raises: :exc:`EnvironmentError`
-    :raises: :exc:`OSError`
-    :raises: :exc:`LookupError`
-    """
-    assert resource_type, 'The resource type must not be empty'
-    assert resource_name, 'The resource name must not be empty'
-    for path in get_search_paths():
-        resource_path = os.path.join(path, RESOURCE_INDEX_SUBFOLDER, resource_type, resource_name)
-        if os.path.isfile(resource_path):
-            try:
-                with open(resource_path, 'r') as h:
-                    content = h.read()
-            except OSError as e:
-                raise OSError(
-                    "Could not open the resource '%s' of type '%s':\n%s"
-                    % (resource_name, resource_type, e))
-            return content, path
-    raise LookupError(
-        "Could not find the resource '%s' of type '%s'" % (resource_name, resource_type))
-
-
 def get_resources(resource_type):
     """
     Get the resource names of all resources of the specified type.
@@ -71,23 +41,3 @@ def get_resources(resource_type):
                 if resource not in resources:
                     resources[resource] = path
     return resources
-
-
-def has_resource(resource_type, resource_name):
-    """
-    Check if a specific resource exists.
-
-    :param resource_type: the type of the resource
-    :type resource_type: str
-    :param resource_names: the name of the resource
-    :type resource_name: str
-    :returns: The prefix path if the resource exists, False otherwise
-    :raises: :exc:`EnvironmentError`
-    """
-    assert resource_type, 'The resource type must not be empty'
-    assert resource_name, 'The resource name must not be empty'
-    for path in get_search_paths():
-        resource_path = os.path.join(path, RESOURCE_INDEX_SUBFOLDER, resource_type, resource_name)
-        if os.path.isfile(resource_path):
-            return path
-    return False

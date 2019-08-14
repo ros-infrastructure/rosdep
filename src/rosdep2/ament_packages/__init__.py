@@ -13,23 +13,13 @@
 # limitations under the License.
 
 from .constants import RESOURCE_INDEX_SUBFOLDER
-from .packages import get_package_prefix
-from .packages import get_package_share_directory
 from .packages import get_packages_with_prefixes
-from .packages import PackageNotFoundError
-from .resources import get_resource
 from .resources import get_resources
-from .resources import has_resource
 from .search_paths import get_search_paths
 
 __all__ = [
-    'get_package_prefix',
-    'get_package_share_directory',
     'get_packages_with_prefixes',
-    'get_resource',
     'get_resources',
     'get_search_paths',
-    'has_resource',
-    'PackageNotFoundError',
     'RESOURCE_INDEX_SUBFOLDER',
 ]
