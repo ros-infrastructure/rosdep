@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from .constants import AMENT_PREFIX_PATH_ENV_VAR
 from .constants import RESOURCE_INDEX_SUBFOLDER
 from .packages import get_packages_with_prefixes
 from .resources import get_resources
@@ -21,5 +22,6 @@ __all__ = [
     'get_packages_with_prefixes',
     'get_resources',
     'get_search_paths',
+    'AMENT_PREFIX_PATH_ENV_VAR',
     'RESOURCE_INDEX_SUBFOLDER',
 ]
