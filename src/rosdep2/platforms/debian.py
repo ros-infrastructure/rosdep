@@ -140,21 +140,36 @@ def _read_apt_cache_showpkg(packages, exec_fn=None):
 
         header = 'Package: %s' % p
         # proceed to Package header
-        while next(lines) != header:
-            pass
+        while True:
+            try:
+                if next(lines) == header:
+                    break
+            except StopIteration:
+                break
 
         # proceed to versions section
-        while next(lines) != 'Versions: ':
-            pass
+        while True:
+            try:
+                if next(lines) == 'Versions: ':
+                    break
+            except StopIteration:
+                break
 
         # virtual packages don't have versions
-        if next(lines) != '':
-            yield p, False, None
-            continue
+        try:
+            if next(lines) != '':
+                yield p, False, None
+                continue
+        except StopIteration:
+            break
 
         # proceed to reserve provides section
-        while next(lines) != 'Reverse Provides: ':
-            pass
+        while True:
+            try:
+                if next(lines) == 'Reverse Provides: ':
+                    break
+            except StopIteration:
+                break
 
         pr = [line.split(' ', 2)[0] for line in lines]
         if pr:
