@@ -297,8 +297,8 @@ def _rosdep_main(args):
                       dest='ignore_src', default=False, action='store_true',
                       help="Affects the 'check', 'install', and 'keys' verbs. "
                            'If specified then rosdep will ignore keys that '
-                           'are found to be catkin packages anywhere in the '
-                           'ROS_PACKAGE_PATH or in any of the directories '
+                           'are found to be catkin or ament packages anywhere in the '
+                           'ROS_PACKAGE_PATH, AMENT_PREFIX_PATH or in any of the directories '
                            'given by the --from-paths option.')
     parser.add_option('--skip-keys',
                       dest='skip_keys', action='append', default=[],
