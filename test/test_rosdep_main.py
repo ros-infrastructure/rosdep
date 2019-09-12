@@ -42,6 +42,7 @@ from mock import patch
 from mock import DEFAULT
 
 from rosdep2 import main
+from rosdep2.ament_packages import AMENT_PREFIX_PATH_ENV_VAR
 from rosdep2.main import rosdep_main
 from rosdep2.main import setup_proxy_opener
 
@@ -91,15 +92,19 @@ class TestRosdepMain(unittest.TestCase):
             del os.environ['ROSDEP_DEBUG']
         self.old_rr = rospkg.get_ros_root()
         self.old_rpp = rospkg.get_ros_package_path()
+        self.old_app = os.getenv(AMENT_PREFIX_PATH_ENV_VAR, None)
         if 'ROS_ROOT' in os.environ:
             del os.environ['ROS_ROOT']
         os.environ['ROS_PACKAGE_PATH'] = os.path.join(get_test_tree_dir())
+        os.environ[AMENT_PREFIX_PATH_ENV_VAR] = os.path.join(get_test_tree_dir(), 'ament')
 
     def tearDown(self):
         if self.old_rr is not None:
             os.environ['ROS_ROOT'] = self.old_rr
         if self.old_rpp is not None:
             os.environ['ROS_PACKAGE_PATH'] = self.old_rpp
+        if self.old_app is not None:
+            os.environ[AMENT_PREFIX_PATH_ENV_VAR] = self.old_app
 
     def test_bad_commands(self):
         sources_cache = get_cache_dir()

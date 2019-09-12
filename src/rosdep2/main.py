@@ -69,6 +69,9 @@ from .sources_list import update_sources_list, get_sources_cache_dir,\
     DEFAULT_SOURCES_LIST_URL
 from .rosdistrohelper import PreRep137Warning
 
+from .ament_packages import AMENT_PREFIX_PATH_ENV_VAR
+from .ament_packages import get_packages_with_prefixes
+
 from .catkin_packages import find_catkin_packages_in
 from .catkin_packages import set_workspace_packages
 from .catkin_packages import get_workspace_packages
@@ -294,8 +297,8 @@ def _rosdep_main(args):
                       dest='ignore_src', default=False, action='store_true',
                       help="Affects the 'check', 'install', and 'keys' verbs. "
                            'If specified then rosdep will ignore keys that '
-                           'are found to be catkin packages anywhere in the '
-                           'ROS_PACKAGE_PATH or in any of the directories '
+                           'are found to be catkin or ament packages anywhere in the '
+                           'ROS_PACKAGE_PATH, AMENT_PREFIX_PATH or in any of the directories '
                            'given by the --from-paths option.')
     parser.add_option('--skip-keys',
                       dest='skip_keys', action='append', default=[],
@@ -475,6 +478,19 @@ def _package_args_handler(command, parser, options, args):
             elif options.verbose:
                 print('Skipping non-existent path ' + path)
         set_workspace_packages(ws_pkgs)
+
+        # Lookup package names from ament index.
+        if AMENT_PREFIX_PATH_ENV_VAR in os.environ:
+            if options.verbose:
+                print(
+                    'Searching ' + AMENT_PREFIX_PATH_ENV_VAR + ' for '
+                    'sources: ' + str(os.environ[AMENT_PREFIX_PATH_ENV_VAR].split(':')))
+            ws_pkgs = get_workspace_packages()
+            pkgs = get_packages_with_prefixes().keys()
+            ws_pkgs.extend(pkgs)
+            # Make packages list unique
+            ws_pkgs = list(set(ws_pkgs))
+            set_workspace_packages(ws_pkgs)
 
     lookup = _get_default_RosdepLookup(options)
 
