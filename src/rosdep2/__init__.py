@@ -59,8 +59,9 @@ def create_default_installer_context(verbose=False):
     from .platforms import arch
     from .platforms import cygwin
     from .platforms import debian
-    from .platforms import openembedded
     from .platforms import gentoo
+    from .platforms import nix
+    from .platforms import openembedded
     from .platforms import opensuse
     from .platforms import osx
     from .platforms import pip
@@ -70,7 +71,7 @@ def create_default_installer_context(verbose=False):
     from .platforms import slackware
     from .platforms import source
 
-    platform_mods = [alpine, arch, cygwin, debian, gentoo, openembedded, opensuse, osx, redhat, slackware, freebsd]
+    platform_mods = [alpine, arch, cygwin, debian, gentoo, nix, openembedded, opensuse, osx, redhat, slackware, freebsd]
     installer_mods = [source, pip, gem] + platform_mods
 
     context = InstallerContext()
