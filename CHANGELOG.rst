@@ -1,3 +1,9 @@
+0.16.1 (2019-09-19)
+-------------------
+
+- Fix problem with release uploaded to PyPI.
+  - https://github.com/ros-infrastructure/rosdep/issues/705
+
 0.16.0 (2019-09-19)
 -------------------
 - Add support for Nix/NixOS.
