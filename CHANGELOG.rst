@@ -1,3 +1,18 @@
+0.16.0 (2019-09-19)
+-------------------
+- Add support for Nix/NixOS.
+  - https://github.com/ros-infrastructure/rosdep/pull/697
+- Update supported platforms.
+  - Dropped platforms older than Xenial.
+  - Added Ubuntu Cosmic, Disco, and Eoan.
+  - https://github.com/ros-infrastructure/rosdep/pull/700
+- Add sudo dependency in debian packages.
+  - https://github.com/ros-infrastructure/rosdep/pull/680
+- Improve support for AMENT_PREFIX_PATH used in ROS 2.
+  - https://github.com/ros-infrastructure/rosdep/pull/699
+- Add support for the --ignore-src argument for the keys verb.
+  - https://github.com/ros-infrastructure/rosdep/pull/686
+
 0.15.2 (2019-05-17)
 -------------------
 - Migrate to yaml.safe_load to avoid yaml.load vulnerabilities.
