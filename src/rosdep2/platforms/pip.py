@@ -57,8 +57,9 @@ def get_pip_command():
         try:
             import pip
         except ImportError:
-            return None
-        return [sys.executable, '-m', 'pip']
+            pass
+        else:
+            return [sys.executable, '-m', 'pip']
 
     # Finally, try python2 or python3 commands
     cmd = ['python' + os.environ['ROS_PYTHON_VERSION'], '-m', 'pip']
