@@ -29,8 +29,10 @@
 
 from __future__ import print_function
 
+import os
 import pkg_resources
 import subprocess
+import sys
 
 from ..core import InstallFailed
 from ..installers import PackageManagerInstaller
@@ -44,9 +46,30 @@ def register_installers(context):
     context.set_installer(PIP_INSTALLER, PipInstaller())
 
 
-def is_pip_installed():
+def get_pip_command():
+    # First try pip2 or pip3
+    cmd = ['pip' + os.environ['ROS_PYTHON_VERSION']]
+    if is_cmd_available(cmd):
+        return cmd
+
+    # Second, try using the same python executable since we know that exists
+    if os.environ['ROS_PYTHON_VERSION'] == sys.version[0]:
+        try:
+            import pip
+        except ImportError:
+            return None
+        return [sys.executable, '-m', 'pip']
+
+    # Finally, try python2 or python3 commands
+    cmd = ['python' + os.environ['ROS_PYTHON_VERSION'], '-m', 'pip']
+    if is_cmd_available(cmd):
+        return cmd
+    return None
+
+
+def is_cmd_available(cmd):
     try:
-        subprocess.Popen(['pip'], stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+        subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
         return True
     except OSError:
         return False
@@ -58,11 +81,15 @@ def pip_detect(pkgs, exec_fn=None):
 
     :param exec_fn: function to execute Popen and read stdout (for testing)
     """
+    pip_cmd = get_pip_command()
+    if not pip_cmd:
+        return []
+
     fallback_to_pip_show = False
     if exec_fn is None:
         exec_fn = read_stdout
         fallback_to_pip_show = True
-    pkg_list = exec_fn(['pip', 'freeze']).split('\n')
+    pkg_list = exec_fn(pip_cmd + ['freeze']).split('\n')
 
     ret_list = []
     for pkg in pkg_list:
@@ -79,7 +106,7 @@ def pip_detect(pkgs, exec_fn=None):
         for pkg in [p for p in pkgs if p not in ret_list]:
             # does not see retcode but stdout for old pip to check if installed
             proc = subprocess.Popen(
-                ['pip', 'show', pkg],
+                pip_cmd + ['show', pkg],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT
             )
@@ -110,12 +137,13 @@ class PipInstaller(PackageManagerInstaller):
         return version_strings
 
     def get_install_command(self, resolved, interactive=True, reinstall=False, quiet=False):
-        if not is_pip_installed():
+        pip_cmd = get_pip_command()
+        if not pip_cmd:
             raise InstallFailed((PIP_INSTALLER, 'pip is not installed'))
         packages = self.get_packages_to_install(resolved, reinstall=reinstall)
         if not packages:
             return []
-        cmd = ['pip', 'install', '-U']
+        cmd = pip_cmd + ['install', '-U']
         if quiet:
             cmd.append('-q')
         if reinstall:
