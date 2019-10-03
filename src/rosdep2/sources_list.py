@@ -46,6 +46,7 @@ except ImportError:
 from .cache_tools import compute_filename_hash, PICKLE_CACHE_EXT, write_atomic, write_cache_file
 from .core import InvalidData, DownloadFailure, CachePermissionError
 from .gbpdistro_support import get_gbprepo_as_rosdep_data, download_gbpdistro_as_rosdep_data
+from .meta import MetaDatabase
 
 try:
     import urlparse
@@ -483,6 +484,8 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
 
     # Additional sources for ros distros
     # In compliance with REP137 and REP143
+    python_versions = {}
+
     print('Query rosdistro index %s' % get_index_url())
     for dist_name in sorted(get_index().distributions.keys()):
         distribution = get_index().distributions[dist_name]
@@ -493,11 +496,17 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
         print('Add distro "%s"' % dist_name)
         rds = RosDistroSource(dist_name)
         rosdep_data = get_gbprepo_as_rosdep_data(dist_name)
+        # Store Python version from REP153
+        if distribution.get('python_version'):
+            python_versions[dist_name] = distribution.get('python_version')
         # dist_files can either be a string (single filename) or a list (list of filenames)
         dist_files = distribution['distribution']
         key = _generate_key_from_urls(dist_files)
         retval.append((rds, write_cache_file(sources_cache_dir, key, rosdep_data)))
         sources.append(rds)
+
+    # cache metadata that isn't a source list
+    MetaDatabase().set('ROS_PYTHON_VERSION', python_versions)
 
     # Create a combined index of *all* the sources.  We do all the
     # sources regardless of failures because a cache from a previous
