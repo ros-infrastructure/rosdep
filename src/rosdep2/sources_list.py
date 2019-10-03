@@ -31,9 +31,7 @@ from __future__ import print_function
 
 import os
 import sys
-import tempfile
 import yaml
-import hashlib
 try:
     from urllib.request import urlopen
     from urllib.error import URLError
@@ -45,6 +43,7 @@ try:
 except ImportError:
     import pickle
 
+from .cache_tools import compute_filename_hash, PICKLE_CACHE_EXT, write_atomic, write_cache_file
 from .core import InvalidData, DownloadFailure, CachePermissionError
 from .gbpdistro_support import get_gbprepo_as_rosdep_data, download_gbpdistro_as_rosdep_data
 
@@ -78,7 +77,6 @@ SOURCES_CACHE_DIR = 'sources.cache'
 CACHE_INDEX = 'index'
 
 # extension for binary cache
-PICKLE_CACHE_EXT = '.pickle'
 SOURCE_PATH_ENV = 'ROSDEP_SOURCE_PATH'
 
 
@@ -538,68 +536,6 @@ def load_cached_sources_list(sources_cache_dir=None, verbose=False):
     # the loader does all the work
     model = cache_data_source_loader(sources_cache_dir, verbose=verbose)
     return parse_sources_data(cache_data, origin=cache_index, model=model)
-
-
-def compute_filename_hash(key_filenames):
-    sha_hash = hashlib.sha1()
-    if isinstance(key_filenames, list):
-        for key in key_filenames:
-            sha_hash.update(key.encode())
-    else:
-        sha_hash.update(key_filenames.encode())
-    return sha_hash.hexdigest()
-
-
-def write_cache_file(source_cache_d, key_filenames, rosdep_data):
-    """
-    :param source_cache_d: directory to write cache file to
-    :param key_filenames: filename (or list of filenames) to be used in hashing
-    :param rosdep_data: dictionary of data to serialize as YAML
-    :returns: name of file where cache is stored
-    :raises: :exc:`OSError` if cannot write to cache file/directory
-    :raises: :exc:`IOError` if cannot write to cache file/directory
-    """
-    if not os.path.exists(source_cache_d):
-        os.makedirs(source_cache_d)
-    key_hash = compute_filename_hash(key_filenames)
-    filepath = os.path.join(source_cache_d, key_hash)
-    try:
-        write_atomic(filepath + PICKLE_CACHE_EXT, pickle.dumps(rosdep_data, 2), True)
-    except OSError as e:
-        raise CachePermissionError('Failed to write cache file: ' + str(e))
-    try:
-        os.unlink(filepath)
-    except OSError:
-        pass
-    return filepath
-
-
-def write_atomic(filepath, data, binary=False):
-    # write data to new file
-    fd, filepath_tmp = tempfile.mkstemp(prefix=os.path.basename(filepath) + '.tmp.', dir=os.path.dirname(filepath))
-
-    if (binary):
-        fmode = 'wb'
-    else:
-        fmode = 'w'
-
-    with os.fdopen(fd, fmode) as f:
-        f.write(data)
-        f.close()
-
-    try:
-        # switch file atomically (if supported)
-        os.rename(filepath_tmp, filepath)
-    except OSError:
-        # fall back to non-atomic operation
-        try:
-            os.unlink(filepath)
-        except OSError:
-            pass
-        try:
-            os.rename(filepath_tmp, filepath)
-        except OSError:
-            os.unlink(filepath_tmp)
 
 
 class SourcesListLoader(RosdepLoader):
