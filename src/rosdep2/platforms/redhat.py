@@ -73,7 +73,7 @@ def register_rhel(context):
     context.add_os_installer_key(OS_RHEL, DNF_INSTALLER)
     context.add_os_installer_key(OS_RHEL, YUM_INSTALLER)
     context.add_os_installer_key(OS_RHEL, SOURCE_INSTALLER)
-    context.set_default_os_installer_key(OS_RHEL, lambda self: DNF_INSTALLER if int(self.get_version().split('.', 1)[0]) >= 8 else YUM_INSTALLER)
+    context.set_default_os_installer_key(OS_RHEL, lambda self: DNF_INSTALLER if self.get_version().split('.', 1)[0].isdigit() and int(self.get_version().split('.', 1)[0]) >= 8 else YUM_INSTALLER)
     context.set_os_version_type(OS_RHEL, lambda self: self.get_version().split('.', 1)[0])
 
 
