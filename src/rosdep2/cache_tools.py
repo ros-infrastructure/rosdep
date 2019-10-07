@@ -29,12 +29,15 @@ import hashlib
 import os
 import tempfile
 
+from .core import CachePermissionError
+
 try:
     import cPickle as pickle
 except ImportError:
     import pickle
 
 PICKLE_CACHE_EXT = '.pickle'
+
 
 def compute_filename_hash(key_filenames):
     sha_hash = hashlib.sha1()

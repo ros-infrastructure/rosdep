@@ -32,6 +32,13 @@ try:
 except ImportError:
     import pickle
 
+try:
+    FileNotFoundError
+except NameError:
+    # Python 2 compatibility
+    # https://stackoverflow.com/questions/21367320/
+    FileNotFoundError = IOError
+
 import rospkg
 
 from ._version import __version__
@@ -53,6 +60,27 @@ def get_meta_cache_dir():
     return os.path.join(ros_home, 'rosdep', META_CACHE_DIR)
 
 
+class CacheWrapper(object):
+    """Make it possible to introspect cache in case some future bug needs to be worked around."""
+
+    def __init__(self, category, data):
+        # The version of rosdep that wrote the category
+        self.rosdep_version = __version__
+        # The un-hashed name of the category
+        self.category_name = category
+        # The stuff being stored
+        self.data = data
+
+    @property
+    def data(self):
+        # If cached data type is mutable, don't allow modifications to what's been loaded
+        return copy.deepcopy(self.__data)
+
+    @data.setter
+    def data(self, value):
+        self.__data = copy.deepcopy(value)
+
+
 class MetaDatabase:
     """
     Store and retrieve metadata from rosdep cache.
@@ -60,33 +88,16 @@ class MetaDatabase:
     This data is fetched during `rosdep update`, but is not a source for resolving rosdep keys.
     """
 
-    class CacheWrapper:
-        """Make it possible to introspect cache in case some future bug needs to be worked around."""
+    def __init__(self, cache_dir=None):
+        if cache_dir is None:
+            cache_dir = get_meta_cache_dir()
 
-        def __init__(self, category, data):
-            # The version of rosdep that wrote the category
-            self.rosdep_version = __version__
-            # The un-hashed name of the category
-            self.category_name = category
-            # The stuff being stored
-            self.data = data
-
-        @property
-        def data(self):
-            # If cached data type is mutable, don't allow modifications to what's been loaded
-            return copy.deepcopy(self.__data)
-
-        @data.setter
-        def data(self, value):
-            self.__data = copy.deepcopy(value)
-
-    def __init__(self):
-        self._cache_dir = get_meta_cache_dir()
+        self._cache_dir = cache_dir
         self._loaded = {}
 
     def set(self, category, metadata):
         """Add or overwrite metadata in the cache."""
-        wrapper = self.CacheWrapper(category, metadata)
+        wrapper = CacheWrapper(category, metadata)
         print(category, metadata)
         write_cache_file(self._cache_dir, category, wrapper)
         self._loaded[category] = wrapper
