@@ -383,6 +383,13 @@ def _rosdep_main(args):
     args = args[1:]
 
     if options.ros_distro:
+        if 'ROS_DISTRO' in os.environ and os.environ['ROS_DISTRO'] != options.ros_distro:
+            # user has a different workspace sourced, use --rosdistro
+            print('WARNING: given --rosdistro {} but ROS_DISTRO is "{}". Ignoring environment.'.format(
+                options.ros_distro, os.environ['ROS_DISTRO']))
+            # Use python version from --rosdistro
+            if 'ROS_PYTHON_VERSION' in os.environ:
+                del os.environ['ROS_PYTHON_VERSION']
         os.environ['ROS_DISTRO'] = options.ros_distro
 
     # Convert list of keys to dictionary
@@ -393,11 +400,11 @@ def _rosdep_main(args):
     elif command not in ['fix-permissions']:
         setup_proxy_opener()
 
-    if 'ROS_PYTHON_VERSION' not in os.environ and options.ros_distro:
+    if 'ROS_PYTHON_VERSION' not in os.environ and 'ROS_DISTRO' in os.environ:
         # Set python version to version used by ROS distro
         python_versions = MetaDatabase().get('ROS_PYTHON_VERSION')
-        if options.ros_distro in python_versions:
-            os.environ['ROS_PYTHON_VERSION'] = str(python_versions[options.ros_distro])
+        if os.environ['ROS_DISTRO'] in python_versions:
+            os.environ['ROS_PYTHON_VERSION'] = str(python_versions[os.environ['ROS_DISTRO']])
 
     if 'ROS_PYTHON_VERSION' not in os.environ:
         # Default to same python version used to invoke rosdep
