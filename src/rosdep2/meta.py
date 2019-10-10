@@ -98,7 +98,7 @@ class MetaDatabase:
     def set(self, category, metadata):
         """Add or overwrite metadata in the cache."""
         wrapper = CacheWrapper(category, metadata)
-        print(category, metadata)
+        # print(category, metadata)
         write_cache_file(self._cache_dir, category, wrapper)
         self._loaded[category] = wrapper
 
