@@ -62,6 +62,7 @@ from .core import RosdepInternalError, InstallFailed, UnsupportedOs, InvalidData
 from .installers import normalize_uninstalled_to_list
 from .installers import RosdepInstaller
 from .lookup import RosdepLookup, ResolutionError, prune_catkin_packages
+from .meta import MetaDatabase
 from .rospkg_loader import DEFAULT_VIEW_KEY
 from .sources_list import update_sources_list, get_sources_cache_dir,\
     download_default_sources_list, SourcesListLoader, CACHE_INDEX,\
@@ -382,6 +383,13 @@ def _rosdep_main(args):
     args = args[1:]
 
     if options.ros_distro:
+        if 'ROS_DISTRO' in os.environ and os.environ['ROS_DISTRO'] != options.ros_distro:
+            # user has a different workspace sourced, use --rosdistro
+            print('WARNING: given --rosdistro {} but ROS_DISTRO is "{}". Ignoring environment.'.format(
+                options.ros_distro, os.environ['ROS_DISTRO']))
+            # Use python version from --rosdistro
+            if 'ROS_PYTHON_VERSION' in os.environ:
+                del os.environ['ROS_PYTHON_VERSION']
         os.environ['ROS_DISTRO'] = options.ros_distro
 
     # Convert list of keys to dictionary
@@ -391,6 +399,18 @@ def _rosdep_main(args):
         check_for_sources_list_init(options.sources_cache_dir)
     elif command not in ['fix-permissions']:
         setup_proxy_opener()
+
+    if 'ROS_PYTHON_VERSION' not in os.environ and 'ROS_DISTRO' in os.environ:
+        # Set python version to version used by ROS distro
+        python_versions = MetaDatabase().get('ROS_PYTHON_VERSION')
+        if os.environ['ROS_DISTRO'] in python_versions:
+            os.environ['ROS_PYTHON_VERSION'] = str(python_versions[os.environ['ROS_DISTRO']])
+
+    if 'ROS_PYTHON_VERSION' not in os.environ:
+        # Default to same python version used to invoke rosdep
+        print('WARNING: ROS_PYTHON_VERSION is unset. Defaulting to {}'.format(sys.version[0]), file=sys.stderr)
+        os.environ['ROS_PYTHON_VERSION'] = sys.version[0]
+
     if command in _command_rosdep_args:
         return _rosdep_args_handler(command, parser, options, args)
     elif command in _command_no_args:
