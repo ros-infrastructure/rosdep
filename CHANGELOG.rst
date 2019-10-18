@@ -1,3 +1,10 @@
+0.16.2 (2019-10-18)
+-------------------
+- Bump rospkg dependency to guarantee all platforms are available..
+  - https://github.com/ros-infrastructure/rosdep/issues/717
+- Set ROS_PYTHON_VERSION if unset.
+  - https://github.com/ros-infrastructure/rosdep/issues/708
+
 0.16.1 (2019-09-19)
 -------------------
 
