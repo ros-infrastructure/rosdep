@@ -28,6 +28,7 @@
 # Author Ken Conley/kwc@willowgarage.com
 
 import os
+import sys
 import traceback
 from mock import Mock, patch
 
@@ -70,9 +71,9 @@ def test_PipInstaller():
     from rosdep2 import InstallFailed
     from rosdep2.platforms.pip import PipInstaller
 
-    @patch('rosdep2.platforms.pip.is_pip_installed')
+    @patch('rosdep2.platforms.pip.get_pip_command')
     def test_no_pip(mock_method):
-        mock_method.return_value = False
+        mock_method.return_value = None
         try:
             installer = PipInstaller()
             installer.get_install_command(['whatever'])
@@ -82,22 +83,22 @@ def test_PipInstaller():
 
     test_no_pip()
 
-    @patch('rosdep2.platforms.pip.is_pip_installed')
+    @patch('rosdep2.platforms.pip.get_pip_command')
     @patch.object(PipInstaller, 'get_packages_to_install')
-    def test(mock_method, mock_is_pip_installed):
-        mock_is_pip_installed.return_value = True
+    def test(mock_method, mock_get_pip_command):
+        mock_get_pip_command.return_value = ['mock-pip']
         installer = PipInstaller()
         mock_method.return_value = []
         assert [] == installer.get_install_command(['fake'])
 
         # no interactive option with PIP
         mock_method.return_value = ['a', 'b']
-        expected = [['sudo', '-H', 'pip', 'install', '-U', 'a'],
-                    ['sudo', '-H', 'pip', 'install', '-U', 'b']]
+        expected = [['sudo', '-H', 'mock-pip', 'install', '-U', 'a'],
+                    ['sudo', '-H', 'mock-pip', 'install', '-U', 'b']]
         val = installer.get_install_command(['whatever'], interactive=False)
         assert val == expected, val
-        expected = [['sudo', '-H', 'pip', 'install', '-U', 'a'],
-                    ['sudo', '-H', 'pip', 'install', '-U', 'b']]
+        expected = [['sudo', '-H', 'mock-pip', 'install', '-U', 'a'],
+                    ['sudo', '-H', 'mock-pip', 'install', '-U', 'b']]
         val = installer.get_install_command(['whatever'], interactive=True)
         assert val == expected, val
     try:
@@ -105,3 +106,41 @@ def test_PipInstaller():
     except AssertionError:
         traceback.print_exc()
         raise
+
+
+def test_get_pip_command():
+    from rosdep2.platforms.pip import get_pip_command
+
+    # pip2 or pip3
+    @patch('rosdep2.platforms.pip.is_cmd_available')
+    def test_pip2_or_pip3(mock_is_cmd_available):
+        mock_is_cmd_available.return_value = True
+
+        with patch.dict(os.environ, {'ROS_PYTHON_VERSION': '2'}):
+            assert ['pip2'] == get_pip_command()
+
+        with patch.dict(os.environ, {'ROS_PYTHON_VERSION': '3'}):
+            assert ['pip3'] == get_pip_command()
+
+    # sys.executable (assumes pip is installed)
+    @patch('rosdep2.platforms.pip.is_cmd_available')
+    def test_sys_executable(mock_is_cmd_available):
+        mock_is_cmd_available.return_value = False
+
+        with patch.dict(os.environ, {'ROS_PYTHON_VERSION': str(sys.version[0])}):
+            assert [sys.executable, '-m', 'pip'] == get_pip_command()
+
+    # python2 or python3
+    def fake_is_cmd_available(cmd):
+        if cmd[0] in ['pip2', 'pip3']:
+            return False
+        return True
+
+    @patch('rosdep2.platforms.pip.is_cmd_available', new=fake_is_cmd_available)
+    def test_python2_or_python3(mock_is_cmd_available):
+
+        with patch.dict(os.environ, {'ROS_PYTHON_VERSION': '2'}):
+            assert ['python2', '-m', 'pip'] == get_pip_command()
+
+        with patch.dict(os.environ, {'ROS_PYTHON_VERSION': '3'}):
+            assert ['python3', '-m', 'pip'] == get_pip_command()
