@@ -65,6 +65,14 @@ def test_metadatabase_get_none():
         assert db.get('fruit') is None
 
 
+def test_metadatabase_get_default():
+    with TemporaryDirectory() as tmpdir:
+        db = MetaDatabase(cache_dir=tmpdir)
+        assert db.get('fruit', default='foo') == 'foo'
+        db.set('fruit', 'tomato')
+        assert db.get('fruit', default='foo') != 'foo'
+
+
 def test_metadatabase_get_mutate_get():
     with TemporaryDirectory() as tmpdir:
         db = MetaDatabase(cache_dir=tmpdir)
