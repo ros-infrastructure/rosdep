@@ -108,7 +108,7 @@ def test_PipInstaller():
         raise
 
 
-def test_get_pip_ocmmand():
+def test_get_pip_command():
     from rosdep2.platforms.pip import get_pip_command
 
     # pip2 or pip3
