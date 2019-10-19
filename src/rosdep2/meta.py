@@ -102,13 +102,15 @@ class MetaDatabase:
         write_cache_file(self._cache_dir, category, wrapper)
         self._loaded[category] = wrapper
 
-    def get(self, category):
+    def get(self, category, default=None):
         """Return metadata in the cache, or None if there is no cache entry."""
         if category not in self._loaded:
             self._load_from_cache(category, self._cache_dir)
 
         if category in self._loaded:
             return self._loaded[category].data
+
+        return default
 
     def _load_from_cache(self, category, cache_dir):
         filename = compute_filename_hash(category) + PICKLE_CACHE_EXT

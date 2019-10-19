@@ -402,7 +402,7 @@ def _rosdep_main(args):
 
     if 'ROS_PYTHON_VERSION' not in os.environ and 'ROS_DISTRO' in os.environ:
         # Set python version to version used by ROS distro
-        python_versions = MetaDatabase().get('ROS_PYTHON_VERSION')
+        python_versions = MetaDatabase().get('ROS_PYTHON_VERSION', default=[])
         if os.environ['ROS_DISTRO'] in python_versions:
             os.environ['ROS_PYTHON_VERSION'] = str(python_versions[os.environ['ROS_DISTRO']])
 
