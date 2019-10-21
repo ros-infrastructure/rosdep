@@ -415,6 +415,8 @@ def _rosdep_main(args):
 
     if command not in ['init', 'update', 'fix-permissions']:
         check_for_sources_list_init(options.sources_cache_dir)
+        # _package_args_handler uses `ROS_DISTRO`, so must setup environment variable here
+        setup_environment_variables(options.ros_distro)
     elif command not in ['fix-permissions']:
         setup_proxy_opener()
 
@@ -658,7 +660,6 @@ def command_update(options):
 
 
 def command_keys(lookup, packages, options):
-    setup_environment_variables(options.ros_distro)
     lookup = _get_default_RosdepLookup(options)
     rosdep_keys = get_keys(lookup, packages, options.recursive)
     prune_catkin_packages(rosdep_keys, options.verbose)
@@ -675,7 +676,6 @@ def get_keys(lookup, packages, recursive):
 
 
 def command_check(lookup, packages, options):
-    setup_environment_variables(options.ros_distro)
     verbose = options.verbose
 
     installer_context = create_default_installer_context(verbose=verbose)
@@ -715,7 +715,6 @@ def error_to_human_readable(error):
 
 
 def command_install(lookup, packages, options):
-    setup_environment_variables(options.ros_distro)
     # map options
     install_options = dict(interactive=not options.default_yes, verbose=options.verbose,
                            reinstall=options.reinstall,
@@ -772,7 +771,6 @@ def command_install(lookup, packages, options):
 
 
 def command_db(options):
-    setup_environment_variables(options.ros_distro)
     # exact same setup logic as command_resolve, should possibly combine
     lookup = _get_default_RosdepLookup(options)
     installer_context = create_default_installer_context(verbose=options.verbose)
@@ -820,7 +818,6 @@ def _print_lookup_errors(lookup):
 
 
 def command_what_needs(args, options):
-    setup_environment_variables(options.ros_distro)
     lookup = _get_default_RosdepLookup(options)
     packages = []
     for rosdep_name in args:
@@ -831,7 +828,6 @@ def command_what_needs(args, options):
 
 
 def command_where_defined(args, options):
-    setup_environment_variables(options.ros_distro)
     lookup = _get_default_RosdepLookup(options)
     locations = []
     for rosdep_name in args:
@@ -848,7 +844,6 @@ def command_where_defined(args, options):
 
 
 def command_resolve(args, options):
-    setup_environment_variables(options.ros_distro)
     lookup = _get_default_RosdepLookup(options)
     installer_context = create_default_installer_context(verbose=options.verbose)
     configure_installer_context(installer_context, options)
