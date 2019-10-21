@@ -265,6 +265,34 @@ def setup_proxy_opener():
             install_opener(opener)
 
 
+def setup_environment_variables(ros_distro):
+    """
+    Set environment variables needed to find ROS packages and evaluate conditional dependencies.
+
+    :param rosdistro: The requested ROS distro passed on the CLI, or None
+    """
+    if ros_distro is not None:
+        if 'ROS_DISTRO' in os.environ and os.environ['ROS_DISTRO'] != ros_distro:
+            # user has a different workspace sourced, use --rosdistro
+            print('WARNING: given --rosdistro {} but ROS_DISTRO is "{}". Ignoring environment.'.format(
+                ros_distro, os.environ['ROS_DISTRO']))
+            # Use python version from --rosdistro
+            if 'ROS_PYTHON_VERSION' in os.environ:
+                del os.environ['ROS_PYTHON_VERSION']
+        os.environ['ROS_DISTRO'] = ros_distro
+
+    if 'ROS_PYTHON_VERSION' not in os.environ and 'ROS_DISTRO' in os.environ:
+        # Set python version to version used by ROS distro
+        python_versions = MetaDatabase().get('ROS_PYTHON_VERSION', default=[])
+        if os.environ['ROS_DISTRO'] in python_versions:
+            os.environ['ROS_PYTHON_VERSION'] = str(python_versions[os.environ['ROS_DISTRO']])
+
+    if 'ROS_PYTHON_VERSION' not in os.environ:
+        # Default to same python version used to invoke rosdep
+        print('WARNING: ROS_PYTHON_VERSION is unset. Defaulting to {}'.format(sys.version[0]), file=sys.stderr)
+        os.environ['ROS_PYTHON_VERSION'] = sys.version[0]
+
+
 def _rosdep_main(args):
     # sources cache dir is our local database.
     default_sources_cache = get_sources_cache_dir()
@@ -382,16 +410,6 @@ def _rosdep_main(args):
         parser.error('Unsupported command %s.' % command)
     args = args[1:]
 
-    if options.ros_distro:
-        if 'ROS_DISTRO' in os.environ and os.environ['ROS_DISTRO'] != options.ros_distro:
-            # user has a different workspace sourced, use --rosdistro
-            print('WARNING: given --rosdistro {} but ROS_DISTRO is "{}". Ignoring environment.'.format(
-                options.ros_distro, os.environ['ROS_DISTRO']))
-            # Use python version from --rosdistro
-            if 'ROS_PYTHON_VERSION' in os.environ:
-                del os.environ['ROS_PYTHON_VERSION']
-        os.environ['ROS_DISTRO'] = options.ros_distro
-
     # Convert list of keys to dictionary
     options.as_root = dict((k, str_to_bool(v)) for k, v in key_list_to_dict(options.as_root).items())
 
@@ -399,17 +417,6 @@ def _rosdep_main(args):
         check_for_sources_list_init(options.sources_cache_dir)
     elif command not in ['fix-permissions']:
         setup_proxy_opener()
-
-    if 'ROS_PYTHON_VERSION' not in os.environ and 'ROS_DISTRO' in os.environ:
-        # Set python version to version used by ROS distro
-        python_versions = MetaDatabase().get('ROS_PYTHON_VERSION', default=[])
-        if os.environ['ROS_DISTRO'] in python_versions:
-            os.environ['ROS_PYTHON_VERSION'] = str(python_versions[os.environ['ROS_DISTRO']])
-
-    if 'ROS_PYTHON_VERSION' not in os.environ:
-        # Default to same python version used to invoke rosdep
-        print('WARNING: ROS_PYTHON_VERSION is unset. Defaulting to {}'.format(sys.version[0]), file=sys.stderr)
-        os.environ['ROS_PYTHON_VERSION'] = sys.version[0]
 
     if command in _command_rosdep_args:
         return _rosdep_args_handler(command, parser, options, args)
@@ -651,6 +658,7 @@ def command_update(options):
 
 
 def command_keys(lookup, packages, options):
+    setup_environment_variables(options.ros_distro)
     lookup = _get_default_RosdepLookup(options)
     rosdep_keys = get_keys(lookup, packages, options.recursive)
     prune_catkin_packages(rosdep_keys, options.verbose)
@@ -667,6 +675,7 @@ def get_keys(lookup, packages, recursive):
 
 
 def command_check(lookup, packages, options):
+    setup_environment_variables(options.ros_distro)
     verbose = options.verbose
 
     installer_context = create_default_installer_context(verbose=verbose)
@@ -706,6 +715,7 @@ def error_to_human_readable(error):
 
 
 def command_install(lookup, packages, options):
+    setup_environment_variables(options.ros_distro)
     # map options
     install_options = dict(interactive=not options.default_yes, verbose=options.verbose,
                            reinstall=options.reinstall,
@@ -762,6 +772,7 @@ def command_install(lookup, packages, options):
 
 
 def command_db(options):
+    setup_environment_variables(options.ros_distro)
     # exact same setup logic as command_resolve, should possibly combine
     lookup = _get_default_RosdepLookup(options)
     installer_context = create_default_installer_context(verbose=options.verbose)
@@ -809,6 +820,7 @@ def _print_lookup_errors(lookup):
 
 
 def command_what_needs(args, options):
+    setup_environment_variables(options.ros_distro)
     lookup = _get_default_RosdepLookup(options)
     packages = []
     for rosdep_name in args:
@@ -819,6 +831,7 @@ def command_what_needs(args, options):
 
 
 def command_where_defined(args, options):
+    setup_environment_variables(options.ros_distro)
     lookup = _get_default_RosdepLookup(options)
     locations = []
     for rosdep_name in args:
@@ -835,6 +848,7 @@ def command_where_defined(args, options):
 
 
 def command_resolve(args, options):
+    setup_environment_variables(options.ros_distro)
     lookup = _get_default_RosdepLookup(options)
     installer_context = create_default_installer_context(verbose=options.verbose)
     configure_installer_context(installer_context, options)
