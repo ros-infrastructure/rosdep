@@ -415,7 +415,7 @@ def _rosdep_main(args):
 
     if command not in ['init', 'update', 'fix-permissions']:
         check_for_sources_list_init(options.sources_cache_dir)
-        # _package_args_handler uses `ROS_DISTRO`, so must setup environment variable here
+        # _package_args_handler uses `ROS_DISTRO`, so environment variables must be set before
         setup_environment_variables(options.ros_distro)
     elif command not in ['fix-permissions']:
         setup_proxy_opener()
