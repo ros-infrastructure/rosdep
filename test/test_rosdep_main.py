@@ -97,6 +97,9 @@ class TestRosdepMain(unittest.TestCase):
             del os.environ['ROS_ROOT']
         os.environ['ROS_PACKAGE_PATH'] = os.path.join(get_test_tree_dir())
         os.environ[AMENT_PREFIX_PATH_ENV_VAR] = os.path.join(get_test_tree_dir(), 'ament')
+        if 'ROS_PYTHON_VERSION' not in os.environ:
+            # avoid `test_check` failure due to warning on stderr
+            os.environ['ROS_PYTHON_VERSION'] = sys.version[0]
 
     def tearDown(self):
         if self.old_rr is not None:
