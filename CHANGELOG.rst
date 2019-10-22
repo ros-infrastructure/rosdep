@@ -1,3 +1,8 @@
+0.17.1 (2019-10-22)
+-------------------
+- Warn about ROS_PYTHON_VERSION only when it is needed
+  - https://github.com/ros-infrastructure/rosdep/issues/725
+
 0.17.0 (2019-10-18)
 -------------------
 - Fix TypeError on ROS Kinetic.
