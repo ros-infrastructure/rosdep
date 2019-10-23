@@ -144,6 +144,9 @@ class RosdepDefinition(object):
                                 return_key = installer_key
                                 break
 
+        # Check if the rule is null
+        if data is None:
+            raise ResolutionError(rosdep_key, self.data, os_name, os_version, '[%s] defined as "not available" for OS version [%s]' % (rosdep_key, os_version))
         if type(data) not in (dict, list, type('str')):
             raise InvalidData('rosdep OS definition for [%s:%s] must be a dictionary, string, or list: %s' % (self.rosdep_key, os_name, data), origin=self.origin)
 
