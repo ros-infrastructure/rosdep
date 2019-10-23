@@ -174,7 +174,7 @@ class ResolutionError(Exception):
 \trosdep key : %s
 \tOS name    : %s
 \tOS version : %s
-\tData: %s""" % (self.args[0], self.rosdep_key, self.os_name, self.os_version, pretty_data)
+\tData:\n%s""" % (self.args[0], self.rosdep_key, self.os_name, self.os_version, pretty_data)
 
 
 class RosdepView(object):
