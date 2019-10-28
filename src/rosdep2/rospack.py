@@ -50,13 +50,7 @@ def call_pkg_config(option, pkg_name):
 
 
 def init_rospack_interface():
-    class Options(object):
-
-        def __init__(self):
-            self.os_override = None
-            self.sources_cache_dir = get_sources_cache_dir()
-            self.verbose = False
-    lookup = _get_default_RosdepLookup(Options())
+    lookup = _get_default_RosdepLookup()
     return lookup.get_rosdep_view(DEFAULT_VIEW_KEY)
 
 

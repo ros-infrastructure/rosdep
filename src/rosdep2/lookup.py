@@ -325,7 +325,7 @@ class RosdepLookup(object):
     @staticmethod
     def create_from_rospkg(rospack=None, rosstack=None,
                            sources_loader=None,
-                           verbose=False):
+                           verbose=False, dependency_types=[]):
         """
         Create :class:`RosdepLookup` based on current ROS package
         environment.
@@ -336,6 +336,8 @@ class RosdepLookup(object):
           instance used to crawl ROS stacks.
         :param sources_loader: (optional) Override SourcesLoader used
             for managing sources.list data sources.
+        :param dependency_types: (optional) List of dependency types.
+            Allowed: "build", "buildtool", "run", "test"
         """
         # initialize the loader
         if rospack is None:
@@ -355,7 +357,7 @@ class RosdepLookup(object):
 
         # Create the rospkg loader on top of the underlay
         loader = RosPkgLoader(rospack=rospack, rosstack=rosstack,
-                              underlay_key=underlay_key)
+                              underlay_key=underlay_key, dependency_types=dependency_types)
 
         # create our actual instance
         lookup = RosdepLookup(rosdep_db, loader)
