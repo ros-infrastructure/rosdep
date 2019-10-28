@@ -123,11 +123,16 @@ rosdep fix-permissions
 """
 
 
-def _get_default_RosdepLookup(options):
+_global_options = None
+
+def _get_default_RosdepLookup(options=None):
     """
     Helper routine for converting command-line options into
     appropriate RosdepLookup instance.
     """
+    global _global_options
+    if options is None:
+        options = _global_options
     os_override = convert_os_override_option(options.os_override)
     sources_loader = SourcesListLoader.create_default(sources_cache_dir=options.sources_cache_dir,
                                                       os_override=os_override,
@@ -295,6 +300,7 @@ def setup_environment_variables(ros_distro):
 
 def _rosdep_main(args):
     # sources cache dir is our local database.
+    global _global_options
     default_sources_cache = get_sources_cache_dir()
 
     parser = OptionParser(usage=_usage, prog='rosdep')
@@ -372,9 +378,10 @@ def _rosdep_main(args):
                       type="choice", choices=("build", "buildtool", "build_export", "exec", "run", "test", "doc"),
                       default=[], action='append',
                       help='Dependency types to install, can be given multiple times. '
-                           'Chose from build, buildtool, build_export, exec, run, test, doc. Default: all except doc.')
+                           'Choose from build, buildtool, build_export, exec, run, test, doc. Default: all except doc.')
 
     options, args = parser.parse_args(args)
+    _global_options = options
     if options.print_version or options.print_all_versions:
         # First print the rosdep version.
         print('{}'.format(__version__))
