@@ -123,16 +123,21 @@ rosdep fix-permissions
 """
 
 
-def _get_default_RosdepLookup(options):
+_global_options = None
+
+def _get_default_RosdepLookup(options=None):
     """
     Helper routine for converting command-line options into
     appropriate RosdepLookup instance.
     """
+    global _global_options
+    if options is None:
+        options = _global_options
     os_override = convert_os_override_option(options.os_override)
     sources_loader = SourcesListLoader.create_default(sources_cache_dir=options.sources_cache_dir,
                                                       os_override=os_override,
                                                       verbose=options.verbose)
-    lookup = RosdepLookup.create_from_rospkg(sources_loader=sources_loader)
+    lookup = RosdepLookup.create_from_rospkg(sources_loader=sources_loader, dependency_types=options.dependency_types)
     lookup.verbose = options.verbose
     return lookup
 
@@ -295,6 +300,7 @@ def setup_environment_variables(ros_distro):
 
 def _rosdep_main(args):
     # sources cache dir is our local database.
+    global _global_options
     default_sources_cache = get_sources_cache_dir()
 
     parser = OptionParser(usage=_usage, prog='rosdep')
@@ -368,8 +374,14 @@ def _rosdep_main(args):
                       help="Affects the 'update' verb. "
                            'If specified end-of-life distros are being '
                            'fetched too.')
+    parser.add_option('-t', '--dependency-types', dest='dependency_types',
+                    type="choice", choices=("build", "buildtool", "run", "test"),
+                    default=[], action='append',
+                    help='Dependency types to install, can be given multiple times. '
+                        'Chose from build, buildtool, run, test. Default: all.')
 
     options, args = parser.parse_args(args)
+    _global_options = options
     if options.print_version or options.print_all_versions:
         # First print the rosdep version.
         print('{}'.format(__version__))

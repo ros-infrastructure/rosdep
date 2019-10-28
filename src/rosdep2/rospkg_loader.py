@@ -59,7 +59,7 @@ DEFAULT_VIEW_KEY = '*default*'
 
 class RosPkgLoader(RosdepLoader):
 
-    def __init__(self, rospack=None, rosstack=None, underlay_key=None):
+    def __init__(self, rospack=None, rosstack=None, underlay_key=None, dependency_types=[]):
         """
         :param underlay_key: If set, all views loaded by this loader
             will depend on this key.
@@ -77,6 +77,13 @@ class RosPkgLoader(RosdepLoader):
         # cache computed list of loadable resources
         self._loadable_resource_cache = None
         self._catkin_packages_cache = None
+
+        # Dependency types to include
+        check_dep = lambda type_ : type_ in dependency_types or not dependency_types
+        self.include_build_depends = check_dep('build')
+        self.include_buildtool_depends = check_dep('buildtool')
+        self.include_run_depends = check_dep('run')
+        self.include_test_depends = check_dep('test')
 
     def load_view(self, view_name, rosdep_db, verbose=False):
         """
@@ -140,7 +147,15 @@ class RosPkgLoader(RosdepLoader):
         if resource_name in self.get_catkin_paths():
             pkg = catkin_pkg.package.parse_package(self.get_catkin_paths()[resource_name])
             pkg.evaluate_conditions(os.environ)
-            deps = pkg.build_depends + pkg.buildtool_depends + pkg.run_depends + pkg.test_depends + pkg.buildtool_export_depends
+            deps = []
+            if self.include_build_depends:
+                deps += pkg.build_depends + pkg.buildtool_export_depends
+            if self.include_buildtool_depends:
+                deps += pkg.buildtool_depends
+            if self.include_run_depends:
+                deps += pkg.run_depends
+            if self.include_test_depends:
+                deps += pkg.test_depends
             return [d.name for d in deps if d.evaluated_condition]
         elif resource_name in self.get_loadable_resources():
             rosdeps = set(self._rospack.get_rosdeps(resource_name, implicit=False))
