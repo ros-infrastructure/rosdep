@@ -1,3 +1,22 @@
+0.17.1 (2019-10-22)
+-------------------
+- Warn about ROS_PYTHON_VERSION only when it is needed
+  - https://github.com/ros-infrastructure/rosdep/issues/725
+
+0.17.0 (2019-10-18)
+-------------------
+- Fix TypeError on ROS Kinetic.
+  - https://github.com/ros-infrastructure/rosdep/issues/721
+- Pip installer uses ROS_PYTHON_VERSION
+  - https://github.com/ros-infrastructure/rosdep/issues/709
+
+0.16.2 (2019-10-18)
+-------------------
+- Bump rospkg dependency to guarantee all platforms are available..
+  - https://github.com/ros-infrastructure/rosdep/issues/717
+- Set ROS_PYTHON_VERSION if unset.
+  - https://github.com/ros-infrastructure/rosdep/issues/708
+
 0.16.1 (2019-09-19)
 -------------------
 
