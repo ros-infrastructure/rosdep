@@ -29,7 +29,7 @@
 
 import os
 
-from rospkg.os_detect import OS_ALPINE, OsDetect
+from rospkg.os_detect import OS_ALPINE
 
 from .pip import PIP_INSTALLER
 from .source import SOURCE_INSTALLER
@@ -48,7 +48,7 @@ def register_platforms(context):
     context.add_os_installer_key(OS_ALPINE, PIP_INSTALLER)
     context.add_os_installer_key(OS_ALPINE, SOURCE_INSTALLER)
     context.set_default_os_installer_key(OS_ALPINE, lambda self: APK_INSTALLER)
-    context.set_os_version_type(OS_ALPINE, OsDetect.get_codename)
+    context.set_os_version_type(OS_ALPINE, lambda self: ".".join(self.get_version().split('.')[:2]))
 
 
 def apk_detect(pkgs, exec_fn=read_stdout):
