@@ -53,7 +53,7 @@ def register_platforms(context):
 def rpm_detect(packages):
     installed = []
     for p in packages:
-        if not subprocess.call(['rpm', '-q', p]):
+        if not subprocess.call(['rpm', '-q', '--whatprovides', p]):
             installed.append(p)
     return installed
 
