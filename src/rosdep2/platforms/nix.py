@@ -1,4 +1,4 @@
-# Copyright (c) 2009, Willow Garage, Inc.
+# Copyright (c) 2019, Ben Wolsieffer
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,53 +25,38 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-# Author Tully Foote/tfoote@willowgarage.com
-
+# Author Ben Wolsieffer/benwolsieffer@gmail.com
 import subprocess
 
-from rospkg.os_detect import OS_ARCH
+from rospkg.os_detect import OS_NIXOS
 
 from ..installers import PackageManagerInstaller
-from .source import SOURCE_INSTALLER
 
-PACMAN_INSTALLER = 'pacman'
+NIX_INSTALLER = 'nix'
 
 
 def register_installers(context):
-    context.set_installer(PACMAN_INSTALLER, PacmanInstaller())
+    context.set_installer(NIX_INSTALLER, NixInstaller())
 
 
 def register_platforms(context):
-    context.add_os_installer_key(OS_ARCH, SOURCE_INSTALLER)
-    context.add_os_installer_key(OS_ARCH, PACMAN_INSTALLER)
-    context.set_default_os_installer_key(OS_ARCH, lambda self: PACMAN_INSTALLER)
+    context.add_os_installer_key(OS_NIXOS, NIX_INSTALLER)
+    context.set_default_os_installer_key(OS_NIXOS, lambda self: NIX_INSTALLER)
 
 
-def pacman_detect_single(p):
-    return not subprocess.call(['pacman', '-T', p], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+def nix_detect(packages):
+    # Say that all packages are installed, because Nix handles installation
+    # automatically
+    return packages
 
 
-def pacman_detect(packages):
-    return [p for p in packages if pacman_detect_single(p)]
-
-
-class PacmanInstaller(PackageManagerInstaller):
+class NixInstaller(PackageManagerInstaller):
 
     def __init__(self):
-        super(PacmanInstaller, self).__init__(pacman_detect)
+        super(NixInstaller, self).__init__(nix_detect)
 
     def get_install_command(self, resolved, interactive=True, reinstall=False, quiet=False):
-        packages = self.get_packages_to_install(resolved, reinstall=reinstall)
-        if not packages:
-            return []
+        raise NotImplementedError('Nix does not support installing packages through ROS')
 
-        command = ['pacman', '-S']
-
-        if not interactive:
-            command.append('--noconfirm')
-        if not reinstall:
-            command.append('--needed')
-        if quiet:
-            command.append('-q')
-
-        return [self.elevate_priv(command + packages)]
+    def get_version_strings(self):
+        return subprocess.check_output(('nix', '--version'))

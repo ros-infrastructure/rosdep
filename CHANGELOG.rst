@@ -1,3 +1,43 @@
+0.17.1 (2019-10-22)
+-------------------
+- Warn about ROS_PYTHON_VERSION only when it is needed
+  - https://github.com/ros-infrastructure/rosdep/issues/725
+
+0.17.0 (2019-10-18)
+-------------------
+- Fix TypeError on ROS Kinetic.
+  - https://github.com/ros-infrastructure/rosdep/issues/721
+- Pip installer uses ROS_PYTHON_VERSION
+  - https://github.com/ros-infrastructure/rosdep/issues/709
+
+0.16.2 (2019-10-18)
+-------------------
+- Bump rospkg dependency to guarantee all platforms are available..
+  - https://github.com/ros-infrastructure/rosdep/issues/717
+- Set ROS_PYTHON_VERSION if unset.
+  - https://github.com/ros-infrastructure/rosdep/issues/708
+
+0.16.1 (2019-09-19)
+-------------------
+
+- Fix problem with release uploaded to PyPI.
+  - https://github.com/ros-infrastructure/rosdep/issues/705
+
+0.16.0 (2019-09-19)
+-------------------
+- Add support for Nix/NixOS.
+  - https://github.com/ros-infrastructure/rosdep/pull/697
+- Update supported platforms.
+  - Dropped platforms older than Xenial.
+  - Added Ubuntu Cosmic, Disco, and Eoan.
+  - https://github.com/ros-infrastructure/rosdep/pull/700
+- Add sudo dependency in debian packages.
+  - https://github.com/ros-infrastructure/rosdep/pull/680
+- Improve support for AMENT_PREFIX_PATH used in ROS 2.
+  - https://github.com/ros-infrastructure/rosdep/pull/699
+- Add support for the --ignore-src argument for the keys verb.
+  - https://github.com/ros-infrastructure/rosdep/pull/686
+
 0.15.2 (2019-05-17)
 -------------------
 - Migrate to yaml.safe_load to avoid yaml.load vulnerabilities.

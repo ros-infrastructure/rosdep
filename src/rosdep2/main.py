@@ -61,13 +61,17 @@ from . import __version__
 from .core import RosdepInternalError, InstallFailed, UnsupportedOs, InvalidData, CachePermissionError, DownloadFailure
 from .installers import normalize_uninstalled_to_list
 from .installers import RosdepInstaller
-from .lookup import RosdepLookup, ResolutionError
+from .lookup import RosdepLookup, ResolutionError, prune_catkin_packages
+from .meta import MetaDatabase
 from .rospkg_loader import DEFAULT_VIEW_KEY
 from .sources_list import update_sources_list, get_sources_cache_dir,\
     download_default_sources_list, SourcesListLoader, CACHE_INDEX,\
     get_sources_list_dir, get_default_sources_list_file,\
     DEFAULT_SOURCES_LIST_URL
 from .rosdistrohelper import PreRep137Warning
+
+from .ament_packages import AMENT_PREFIX_PATH_ENV_VAR
+from .ament_packages import get_packages_with_prefixes
 
 from .catkin_packages import find_catkin_packages_in
 from .catkin_packages import set_workspace_packages
@@ -264,6 +268,34 @@ def setup_proxy_opener():
             install_opener(opener)
 
 
+def setup_environment_variables(ros_distro):
+    """
+    Set environment variables needed to find ROS packages and evaluate conditional dependencies.
+
+    :param rosdistro: The requested ROS distro passed on the CLI, or None
+    """
+    if ros_distro is not None:
+        if 'ROS_DISTRO' in os.environ and os.environ['ROS_DISTRO'] != ros_distro:
+            # user has a different workspace sourced, use --rosdistro
+            print('WARNING: given --rosdistro {} but ROS_DISTRO is "{}". Ignoring environment.'.format(
+                ros_distro, os.environ['ROS_DISTRO']))
+            # Use python version from --rosdistro
+            if 'ROS_PYTHON_VERSION' in os.environ:
+                del os.environ['ROS_PYTHON_VERSION']
+        os.environ['ROS_DISTRO'] = ros_distro
+
+    if 'ROS_PYTHON_VERSION' not in os.environ and 'ROS_DISTRO' in os.environ:
+        # Set python version to version used by ROS distro
+        python_versions = MetaDatabase().get('ROS_PYTHON_VERSION', default=[])
+        if os.environ['ROS_DISTRO'] in python_versions:
+            os.environ['ROS_PYTHON_VERSION'] = str(python_versions[os.environ['ROS_DISTRO']])
+
+    if 'ROS_PYTHON_VERSION' not in os.environ:
+        # Default to same python version used to invoke rosdep
+        print('WARNING: ROS_PYTHON_VERSION is unset. Defaulting to {}'.format(sys.version[0]), file=sys.stderr)
+        os.environ['ROS_PYTHON_VERSION'] = sys.version[0]
+
+
 def _rosdep_main(args):
     # sources cache dir is our local database.
     default_sources_cache = get_sources_cache_dir()
@@ -295,10 +327,10 @@ def _rosdep_main(args):
                       action='store_false', help="Do not consider implicit/recursive dependencies.  Only valid with 'keys', 'check', and 'install' commands.")
     parser.add_option('--ignore-packages-from-source', '--ignore-src', '-i',
                       dest='ignore_src', default=False, action='store_true',
-                      help="Affects the 'check' and 'install' verbs. If "
-                           'specified then rosdep will not install keys '
-                           'that are found to be catkin packages anywhere in '
-                           'the ROS_PACKAGE_PATH or in any of the directories '
+                      help="Affects the 'check', 'install', and 'keys' verbs. "
+                           'If specified then rosdep will ignore keys that '
+                           'are found to be catkin or ament packages anywhere in the '
+                           'ROS_PACKAGE_PATH, AMENT_PREFIX_PATH or in any of the directories '
                            'given by the --from-paths option.')
     parser.add_option('--skip-keys',
                       dest='skip_keys', action='append', default=[],
@@ -381,16 +413,16 @@ def _rosdep_main(args):
         parser.error('Unsupported command %s.' % command)
     args = args[1:]
 
-    if options.ros_distro:
-        os.environ['ROS_DISTRO'] = options.ros_distro
-
     # Convert list of keys to dictionary
     options.as_root = dict((k, str_to_bool(v)) for k, v in key_list_to_dict(options.as_root).items())
 
     if command not in ['init', 'update', 'fix-permissions']:
         check_for_sources_list_init(options.sources_cache_dir)
+        # _package_args_handler uses `ROS_DISTRO`, so environment variables must be set before
+        setup_environment_variables(options.ros_distro)
     elif command not in ['fix-permissions']:
         setup_proxy_opener()
+
     if command in _command_rosdep_args:
         return _rosdep_args_handler(command, parser, options, args)
     elif command in _command_no_args:
@@ -465,7 +497,7 @@ def _package_args_handler(command, parser, options, args):
         raise rospkg.ResourceNotFound(not_found[0], rospack.get_ros_paths())
 
     # Handle the --ignore-src option
-    if command in ['install', 'check'] and options.ignore_src:
+    if command in ['install', 'check', 'keys'] and options.ignore_src:
         if options.verbose:
             print('Searching ROS_PACKAGE_PATH for '
                   'sources: ' + str(os.environ['ROS_PACKAGE_PATH'].split(os.pathsep)))
@@ -478,6 +510,19 @@ def _package_args_handler(command, parser, options, args):
             elif options.verbose:
                 print('Skipping non-existent path ' + path)
         set_workspace_packages(ws_pkgs)
+
+        # Lookup package names from ament index.
+        if AMENT_PREFIX_PATH_ENV_VAR in os.environ:
+            if options.verbose:
+                print(
+                    'Searching ' + AMENT_PREFIX_PATH_ENV_VAR + ' for '
+                    'sources: ' + str(os.environ[AMENT_PREFIX_PATH_ENV_VAR].split(':')))
+            ws_pkgs = get_workspace_packages()
+            pkgs = get_packages_with_prefixes().keys()
+            ws_pkgs.extend(pkgs)
+            # Make packages list unique
+            ws_pkgs = list(set(ws_pkgs))
+            set_workspace_packages(ws_pkgs)
 
     lookup = _get_default_RosdepLookup(options)
 
@@ -620,16 +665,17 @@ def command_update(options):
 def command_keys(lookup, packages, options):
     lookup = _get_default_RosdepLookup(options)
     rosdep_keys = get_keys(lookup, packages, options.recursive)
+    prune_catkin_packages(rosdep_keys, options.verbose)
     _print_lookup_errors(lookup)
     print('\n'.join(rosdep_keys))
 
 
 def get_keys(lookup, packages, recursive):
-    rosdep_keys = []
+    rosdep_keys = set()  # using a set to ensure uniqueness
     for package_name in packages:
         deps = lookup.get_rosdeps(package_name, implicit=recursive)
-        rosdep_keys.extend(deps)
-    return set(rosdep_keys)
+        rosdep_keys.update(deps)
+    return list(rosdep_keys)
 
 
 def command_check(lookup, packages, options):
