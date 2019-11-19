@@ -5,7 +5,8 @@ do_install()
     set -e
 
     if [[ $TRAVIS_OS_NAME == 'osx' && $PYTHON_INSTALLER == 'pyenv' ]]; then
-        HOMEBREW_NO_AUTO_UPDATE=1 brew install pyenv-virtualenv
+        brew update
+        brew install pyenv-virtualenv
         pyenv versions
         eval "$(pyenv init -)"
         pyenv install $TRAVIS_PYTHON_VERSION
