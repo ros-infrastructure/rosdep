@@ -1,1 +1,4 @@
-__version__ = '0.17.1'
+# same version as in:
+# - setup.py
+# - stdeb.cfg
+__version__ = '0.18.0'

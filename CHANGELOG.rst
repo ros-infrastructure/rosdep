@@ -1,7 +1,9 @@
-0.17.1 (2019-10-22)
+0.18.0 (2019-11-20)
 -------------------
-- Warn about ROS_PYTHON_VERSION only when it is needed
-  - https://github.com/ros-infrastructure/rosdep/issues/725
+- split -modules into separate Debian package
+  - https://github.com/ros-infrastructure/rosdep/pull/731
+- fix macOS CI
+  - https://github.com/ros-infrastructure/rosdep/pull/730
 
 0.17.0 (2019-10-18)
 -------------------
