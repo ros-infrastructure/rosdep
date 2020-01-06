@@ -439,7 +439,7 @@ def _generate_key_from_urls(urls):
 
 def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
                         success_handler=None, error_handler=None,
-                        skip_eol_distros=False):
+                        skip_eol_distros=False, ros_distro=None):
     """
     Re-downloaded data from remote sources and store in cache.  Also
     update the cache index based on current sources.
@@ -489,7 +489,11 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
     print('Query rosdistro index %s' % get_index_url())
     for dist_name in sorted(get_index().distributions.keys()):
         distribution = get_index().distributions[dist_name]
-        if skip_eol_distros:
+        if ros_distro is not None:
+            if dist_name != ros_distro:
+                print('Skip distro "%s" different from requested "%s"' % (dist_name, ros_distro))
+                continue
+        if skip_eol_distros and dist_name != ros_distro:
             if distribution.get('distribution_status') == 'end-of-life':
                 print('Skip end-of-life distro "%s"' % dist_name)
                 continue

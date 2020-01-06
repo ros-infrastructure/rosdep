@@ -643,7 +643,8 @@ def command_update(options):
             pass
         update_sources_list(success_handler=update_success_handler,
                             error_handler=update_error_handler,
-                            skip_eol_distros=not options.include_eol_distros)
+                            skip_eol_distros=not options.include_eol_distros,
+                            ros_distro=options.ros_distro)
         print('updated cache in %s' % (sources_cache_dir))
     except InvalidData as e:
         print('ERROR: invalid sources list file:\n\t%s' % (e), file=sys.stderr)
