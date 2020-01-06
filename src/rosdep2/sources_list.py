@@ -487,7 +487,14 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
     python_versions = {}
 
     print('Query rosdistro index %s' % get_index_url())
-    for dist_name in sorted(get_index().distributions.keys()):
+    distribution_name_list = sorted(get_index().distributions.keys())
+    if ros_distro not in distribution_name_list:
+        print(
+            'Requested distribution "%s" is not in the index.'
+            ' Ignoring ros_distro argument' % ros_distro)
+        ros_distro = None
+
+    for dist_name in distribution_name_list:
         distribution = get_index().distributions[dist_name]
         if ros_distro is not None:
             if dist_name != ros_distro:
