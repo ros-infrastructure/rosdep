@@ -487,23 +487,21 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
     python_versions = {}
 
     print('Query rosdistro index %s' % get_index_url())
-    distribution_name_list = sorted(get_index().distributions.keys())
-    if ros_distro not in distribution_name_list:
-        print(
-            'Requested distribution "%s" is not in the index.'
-            ' Ignoring ros_distro argument' % ros_distro)
-        ros_distro = None
+    distribution_names = get_index().distributions.keys()
+    if ros_distro is not None and ros_distro not in distribution_names:
+        raise ValueError(
+            'Requested distribution "%s" is not in the index.' % ros_distro)
 
-    for dist_name in distribution_name_list:
+    for dist_name in sorted(distribution_names):
         distribution = get_index().distributions[dist_name]
-        if ros_distro is not None:
-            if dist_name != ros_distro:
+        if dist_name != ros_distro:
+            if ros_distro is not None:
                 print('Skip distro "%s" different from requested "%s"' % (dist_name, ros_distro))
                 continue
-        if skip_eol_distros and dist_name != ros_distro:
-            if distribution.get('distribution_status') == 'end-of-life':
-                print('Skip end-of-life distro "%s"' % dist_name)
-                continue
+            if skip_eol_distros:
+                if distribution.get('distribution_status') == 'end-of-life':
+                    print('Skip end-of-life distro "%s"' % dist_name)
+                    continue
         print('Add distro "%s"' % dist_name)
         rds = RosDistroSource(dist_name)
         rosdep_data = get_gbprepo_as_rosdep_data(dist_name)

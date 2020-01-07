@@ -652,6 +652,9 @@ def command_update(options):
     except IOError as e:
         print('ERROR: error loading sources list:\n\t%s' % (e), file=sys.stderr)
         return 1
+    except ValueError as e:
+        print('ERROR: invalid argument value provided:\n\t%s' % (e), file=sys.stderr)
+        return 1
     if error_occured:
         print('ERROR: Not all sources were able to be updated.\n[[[')
         for e in error_occured:
