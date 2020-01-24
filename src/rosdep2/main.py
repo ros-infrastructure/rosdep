@@ -269,7 +269,7 @@ def setup_environment_variables(ros_distro):
     """
     Set environment variables needed to find ROS packages and evaluate conditional dependencies.
 
-    :param rosdistro: The requested ROS distro passed on the CLI, or None
+    :param ros_distro: The requested ROS distro passed on the CLI, or None
     """
     if ros_distro is not None:
         if 'ROS_DISTRO' in os.environ and os.environ['ROS_DISTRO'] != ros_distro:
@@ -355,7 +355,9 @@ def _rosdep_main(args):
     parser.add_option('--rosdistro', dest='ros_distro', default=None,
                       help='Explicitly sets the ROS distro to use, overriding '
                            'the normal method of detecting the ROS distro '
-                           'using the ROS_DISTRO environment variable.')
+                           'using the ROS_DISTRO environment variable. '
+                           "When used with the 'update' verb, "
+                           'only the specified distro will be updated.')
     parser.add_option('--as-root', default=[], action='append',
                       metavar='INSTALLER_KEY:<bool>', help='Override '
                       'whether sudo is used for a specific installer, '
