@@ -35,6 +35,6 @@ if 'SKIP_PYTHON_MODULES' in os.environ:
     kwargs['package_dir'] = {}
 if 'SKIP_PYTHON_SCRIPTS' in os.environ:
     kwargs['name'] += '_modules'
-    kwargs['scripts'] = {}
+    kwargs['entry_points'] = {}
 
 setup(**kwargs)
