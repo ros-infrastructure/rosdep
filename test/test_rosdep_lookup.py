@@ -58,14 +58,14 @@ def create_test_SourcesListLoader():
 def get_cache_raw():
     cache_rosdep_path = os.path.join(get_cache_dir(), '0a12d6e7b0d47be9b76e7726720e4cb79528cbaa')
     with open(cache_rosdep_path) as f:
-        cache_raw = yaml.load(f.read())
+        cache_raw = yaml.safe_load(f.read())
     return cache_raw
 
 
 def get_cache_raw_python():
     cache_rosdep_path = os.path.join(get_cache_dir(), 'f6f4ef95664e373cd4754501337fa217f5b55d91')
     with open(cache_rosdep_path) as f:
-        cache_raw = yaml.load(f.read())
+        cache_raw = yaml.safe_load(f.read())
     return cache_raw
 
 
@@ -125,7 +125,7 @@ def test_RosdepDefinition():
         pass
 
     #  - test w/valid data
-    d2 = yaml.load(FAKE_TINYXML_RULE)['testtinyxml']
+    d2 = yaml.safe_load(FAKE_TINYXML_RULE)['testtinyxml']
     definition = RosdepDefinition('d2', d2, 'file2.txt')
     #  - tripwire
     str(definition)
