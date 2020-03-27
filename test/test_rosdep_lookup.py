@@ -182,6 +182,26 @@ def test_RosdepDefinition():
     val = definition.get_rule_for_platform('ubuntu', 'trusty', ['apt', 'source', 'pip'], 'apt')
     assert val == ('apt', ['libtinyxml2-dev']), val
 
+    definition = RosdepDefinition('trusty_only_key', {'ubuntu': {'*': None, 'trusty': ['trusty_only_pkg']}, 'debian': None}, 'wildcard.txt')
+    try:
+        val = definition.get_rule_for_platform('ubuntu', 'lucid', ['apt', 'source', 'pip'], 'apt')
+        assert False, 'should have raised: %s' % (str(val))
+    except ResolutionError as e:
+        assert e.rosdep_key == 'trusty_only_key'
+        assert e.os_name == 'ubuntu'
+        assert e.os_version == '*'
+        # tripwire
+        str(e)
+    try:
+        val = definition.get_rule_for_platform('debian', 'stretch', ['apt', 'source', 'pip'], 'apt')
+        assert False, 'should have raised: %s' % (str(val))
+    except ResolutionError as e:
+        assert e.rosdep_key == 'trusty_only_key'
+        assert e.os_name == 'debian'
+        assert e.os_version == 'stretch'
+        # tripwire
+        str(e)
+
     # test reverse merging OS things (first is default)
     definition = RosdepDefinition('test', {'debian': 'libtest-dev'}, 'fake-1.txt')
     # rule should work as expected before reverse-merge
