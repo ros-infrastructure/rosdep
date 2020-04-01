@@ -31,6 +31,7 @@
 import os
 import traceback
 from mock import patch, Mock
+from rosdep2.shell_utils import sudo_command_prefix
 
 
 def get_test_dir():
@@ -62,10 +63,10 @@ def test_PkgInstaller():
 
         # no interactive option with YUM
         mock_method.return_value = ['a', 'b']
-        expected = [['sudo', '-H', '/usr/sbin/pkg', 'install', '-y', 'a', 'b']]
+        expected = [sudo_command_prefix().split() + ['/usr/sbin/pkg', 'install', '-y', 'a', 'b']]
         val = installer.get_install_command(['whatever'], interactive=False)
         assert val == expected, val
-        expected = [['sudo', '-H', '/usr/sbin/pkg', 'install', '-y', 'a', 'b']]
+        expected = [sudo_command_prefix().split() + ['/usr/sbin/pkg', 'install', '-y', 'a', 'b']]
         val = installer.get_install_command(['whatever'], interactive=True)
         assert val == expected, val
     try:

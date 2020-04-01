@@ -84,7 +84,8 @@ def create_tempfile_from_string_and_execute(string_script, path=None, exec_fn=No
 
     result = 1
     try:
-        fh = tempfile.NamedTemporaryFile('w', delete=False)
+        script_ext = '.bat' if os.name == 'nt' else ''
+        fh = tempfile.NamedTemporaryFile('w', suffix=script_ext, delete=False)
         fh.write(string_script)
         fh.close()
         rd_debug('Executing script below with cwd=%s\n{{{\n%s\n}}}\n' % (path, string_script))
@@ -102,3 +103,61 @@ def create_tempfile_from_string_and_execute(string_script, path=None, exec_fn=No
 
     rd_debug('Return code was: %s' % (result))
     return result == 0
+
+
+def sudo_command_prefix():
+    """
+    return the default sudo prefix if the platform supports.
+    """
+    return 'sudo -H' if hasattr(os, 'geteuid') and os.geteuid() != 0 else ''
+
+
+def get_simple_script_exit_with(exitcode):
+    """
+    return a simple script with an desired exit code based on platforms.
+    """
+    if os.name != 'nt':
+        return """#!/bin/bash
+exit %d
+""" % exitcode
+    else:
+        return 'exit %d' % exitcode
+
+
+def _pathname2url(pathname):
+    """
+    pathname2url shim helper for Python2\3
+    """
+    import urllib
+    if (hasattr(urllib, 'pathname2url')):
+        from urllib import pathname2url
+    else:
+        from urllib.request import pathname2url
+    return pathname2url(pathname)
+
+
+def _urljoin(base, url):
+    """
+    urljoin shim helper for Python2\3
+    """
+    import urllib
+    if (hasattr(urllib, 'parse')):
+        from urllib.parse import urljoin
+    else:
+        import urlparse
+        from urlparse import urljoin
+    return urljoin(base, url)
+
+
+def _get_file_uri(pathname):
+    """
+    return a normalized file: procotol uri by an absolute local file path
+    """
+    return _urljoin('file:', _pathname2url(pathname))
+
+
+def _samefile(file1, file2):
+    if (hasattr(os.path, 'samefile')):
+        return os.path.samefile(file1, file2)
+    else:
+        return os.path.normcase(os.path.normpath(file1)) == os.path.normcase(os.path.normpath(file2))

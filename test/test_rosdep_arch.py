@@ -30,6 +30,7 @@
 import os
 import traceback
 from mock import Mock, patch
+from rosdep2.shell_utils import sudo_command_prefix
 
 
 def get_test_dir():
@@ -48,10 +49,10 @@ def test_PacmanInstaller():
 
         # no interactive option implemented yet
         mock_method.return_value = ['a', 'b']
-        expected = [['sudo', '-H', 'pacman', '-S', '--noconfirm', '--needed', 'a', 'b']]
+        expected = [sudo_command_prefix().split() + ['pacman', '-S', '--noconfirm', '--needed', 'a', 'b']]
         val = installer.get_install_command(['whatever'], interactive=False)
         assert val == expected, val
-        expected = [['sudo', '-H', 'pacman', '-S', '--needed', 'a', 'b']]
+        expected = [sudo_command_prefix().split() + ['pacman', '-S', '--needed', 'a', 'b']]
         val = installer.get_install_command(['whatever'], interactive=True)
         assert val == expected, val
     try:

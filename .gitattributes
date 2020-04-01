@@ -1,0 +1,2 @@
+# Test artifacts should be checkout as is.
+/test/source/** binary

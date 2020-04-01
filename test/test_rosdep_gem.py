@@ -32,6 +32,7 @@
 import os
 import traceback
 from mock import Mock, patch
+from rosdep2.shell_utils import sudo_command_prefix
 
 
 def get_test_dir():
@@ -94,12 +95,12 @@ def test_GemInstaller():
 
         # no interactive option with GEM
         mock_method.return_value = ['a', 'b']
-        expected = [['sudo', '-H', 'gem', 'install', 'a'],
-                    ['sudo', '-H', 'gem', 'install', 'b']]
+        expected = [sudo_command_prefix().split() + ['gem', 'install', 'a'],
+                    sudo_command_prefix().split() + ['gem', 'install', 'b']]
         val = installer.get_install_command(['whatever'], interactive=False)
         assert val == expected, val
-        expected = [['sudo', '-H', 'gem', 'install', 'a'],
-                    ['sudo', '-H', 'gem', 'install', 'b']]
+        expected = [sudo_command_prefix().split() + ['gem', 'install', 'a'],
+                    sudo_command_prefix().split() + ['gem', 'install', 'b']]
         val = installer.get_install_command(['whatever'], interactive=True)
         assert val == expected, val
     try:

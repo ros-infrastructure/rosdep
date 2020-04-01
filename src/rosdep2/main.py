@@ -153,7 +153,10 @@ ERROR: Rosdep cannot find all required resources to answer your query
     except UsageError as e:
         print(_usage, file=sys.stderr)
         print('ERROR: %s' % (str(e)), file=sys.stderr)
-        sys.exit(os.EX_USAGE)
+        if hasattr(os, 'EX_USAGE'):
+            sys.exit(os.EX_USAGE)
+        else:
+            sys.exit()
     except RosdepInternalError as e:
         print("""
 ERROR: Rosdep experienced an internal error.
@@ -499,9 +502,9 @@ def _package_args_handler(command, parser, options, args):
     if command in ['install', 'check', 'keys'] and options.ignore_src:
         if options.verbose:
             print('Searching ROS_PACKAGE_PATH for '
-                  'sources: ' + str(os.environ['ROS_PACKAGE_PATH'].split(':')))
+                  'sources: ' + str(os.environ['ROS_PACKAGE_PATH'].split(os.pathsep)))
         ws_pkgs = get_workspace_packages()
-        for path in os.environ['ROS_PACKAGE_PATH'].split(':'):
+        for path in os.environ['ROS_PACKAGE_PATH'].split(os.pathsep):
             path = os.path.abspath(path.strip())
             if os.path.exists(path):
                 pkgs = find_catkin_packages_in(path, options.verbose)

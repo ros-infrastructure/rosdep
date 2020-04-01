@@ -36,6 +36,8 @@ except ImportError:
     from io import StringIO
 
 from rospkg import RosPack, RosStack
+from mock import patch
+from rosdep2.shell_utils import sudo_command_prefix
 
 
 def get_test_dir():
@@ -583,12 +585,24 @@ def fakeout():
     sys.stderr = realstderr
 
 
-def test_RosdepInstaller_install_resolved():
+@patch('rosdep2.platforms.debian.read_stdout')
+def test_RosdepInstaller_install_resolved(mock_read_stdout):
     from rosdep2 import create_default_installer_context
     from rosdep2.lookup import RosdepLookup
     from rosdep2.installers import RosdepInstaller
     from rosdep2.platforms.debian import APT_INSTALLER
 
+    def read_stdout(cmd, capture_stderr=False):
+        if cmd[0] == 'apt-cache' and cmd[1] == 'showpkg':
+            result = ''
+        elif cmd[0] == 'dpkg-query':
+            result = '\n'.join(["dpkg-query: no packages found matching %s" % f for f in cmd[3:]])
+
+        if capture_stderr:
+            return result, ''
+        return result
+
+    mock_read_stdout.side_effect = read_stdout
     rospack, rosstack = get_test_rospkgs()
 
     # create our test fixture.  use most of the default toolchain, but
@@ -616,5 +630,5 @@ def test_RosdepInstaller_install_resolved():
     stdout_lines = [x.strip() for x in stdout.getvalue().split('\n') if x.strip()]
     assert len(stdout_lines) == 3
     assert stdout_lines[0] == '#[apt] Installation commands:'
-    assert 'sudo -H apt-get install rosdep-fake1' in stdout_lines, 'stdout_lines: %s' % stdout_lines
-    assert 'sudo -H apt-get install rosdep-fake2' in stdout_lines, 'stdout_lines: %s' % stdout_lines
+    assert ('%s apt-get install rosdep-fake1' % sudo_command_prefix()).lstrip() in stdout_lines, 'stdout_lines: %s' % stdout_lines
+    assert ('%s apt-get install rosdep-fake2' % sudo_command_prefix()).lstrip() in stdout_lines, 'stdout_lines: %s' % stdout_lines
