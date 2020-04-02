@@ -1,8 +1,8 @@
 name: rosdep
 
 on:
-  push: [action-jack, master]
-  pull_request: [action-jack, master]
+- push: [action-jack, master]
+- pull_request: [action-jack, master]
 
 jobs:
     build:
