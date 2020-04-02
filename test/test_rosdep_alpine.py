@@ -65,27 +65,30 @@ def test_ApkInstaller():
     from rosdep2.platforms.alpine import ApkInstaller
 
     @patch.object(ApkInstaller, 'get_packages_to_install')
-    def test(mock_method):
+    def test(expected_prefix, mock_method):
         installer = ApkInstaller()
         mock_method.return_value = []
         assert [] == installer.get_install_command(['nonexistingfakepackage'])
 
         mock_method.return_value = ['a-dev', 'b-dev']
 
-        expected = [['sudo', '-H', 'apk', 'add', 'a-dev', 'b-dev']]
+        expected = [expected_prefix + ['apk', 'add', 'a-dev', 'b-dev']]
         val = installer.get_install_command(['notused'], interactive=False, quiet=False)
         assert val == expected, 'Result was: %s' % val
 
-        expected = [['sudo', '-H', 'apk', 'add', '--interactive', 'a-dev', 'b-dev']]
+        expected = [expected_prefix + ['apk', 'add', '--interactive', 'a-dev', 'b-dev']]
         val = installer.get_install_command(['notused'], interactive=True, quiet=False)
         assert val == expected, 'Result was: %s' % val
 
-        expected = [['sudo', '-H', 'apk', 'add', '--quiet', 'a-dev', 'b-dev']]
+        expected = [expected_prefix + ['apk', 'add', '--quiet', 'a-dev', 'b-dev']]
         val = installer.get_install_command(['notused'], interactive=False, quiet=True)
         assert val == expected, 'Result was: %s' % val
 
     try:
-        test()
+        with patch('rosdep2.installers.os.geteuid', return_value=1):
+            test(['sudo', '-H'])
+        with patch('rosdep2.installers.os.geteuid', return_value=0):
+            test([])
     except AssertionError:
         traceback.print_exc()
         raise

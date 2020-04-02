@@ -28,6 +28,7 @@
 from __future__ import print_function
 
 from contextlib import contextmanager
+from mock import patch
 import os
 import sys
 try:
@@ -583,7 +584,8 @@ def fakeout():
     sys.stderr = realstderr
 
 
-def test_RosdepInstaller_install_resolved():
+@patch('rosdep2.installers.os.geteuid', return_value=1)
+def test_RosdepInstaller_install_resolved(mock_geteuid):
     from rosdep2 import create_default_installer_context
     from rosdep2.lookup import RosdepLookup
     from rosdep2.installers import RosdepInstaller

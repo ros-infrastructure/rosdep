@@ -85,7 +85,7 @@ def test_PipInstaller():
 
     @patch('rosdep2.platforms.pip.get_pip_command')
     @patch.object(PipInstaller, 'get_packages_to_install')
-    def test(mock_method, mock_get_pip_command):
+    def test(expected_prefix, mock_method, mock_get_pip_command):
         mock_get_pip_command.return_value = ['mock-pip']
         installer = PipInstaller()
         mock_method.return_value = []
@@ -93,16 +93,19 @@ def test_PipInstaller():
 
         # no interactive option with PIP
         mock_method.return_value = ['a', 'b']
-        expected = [['sudo', '-H', 'mock-pip', 'install', '-U', 'a'],
-                    ['sudo', '-H', 'mock-pip', 'install', '-U', 'b']]
+        expected = [expected_prefix + ['mock-pip', 'install', '-U', 'a'],
+                    expected_prefix + ['mock-pip', 'install', '-U', 'b']]
         val = installer.get_install_command(['whatever'], interactive=False)
         assert val == expected, val
-        expected = [['sudo', '-H', 'mock-pip', 'install', '-U', 'a'],
-                    ['sudo', '-H', 'mock-pip', 'install', '-U', 'b']]
+        expected = [expected_prefix + ['mock-pip', 'install', '-U', 'a'],
+                    expected_prefix + ['mock-pip', 'install', '-U', 'b']]
         val = installer.get_install_command(['whatever'], interactive=True)
         assert val == expected, val
     try:
-        test()
+        with patch('rosdep2.installers.os.geteuid', return_value=1):
+            test(['sudo', '-H'])
+        with patch('rosdep2.installers.os.geteuid', return_value=0):
+            test([])
     except AssertionError:
         traceback.print_exc()
         raise

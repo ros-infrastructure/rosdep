@@ -41,21 +41,24 @@ def test_ZypperInstaller():
     from rosdep2.platforms.opensuse import ZypperInstaller
 
     @patch.object(ZypperInstaller, 'get_packages_to_install')
-    def test(mock_method):
+    def test(expected_prefix, mock_method):
         installer = ZypperInstaller()
         mock_method.return_value = []
         assert [] == installer.get_install_command(['fake'])
+        mock_method.return_value = ['a', 'b']
 
         # no interactive option with YUM
-        mock_method.return_value = ['a', 'b']
-        expected = [['sudo', '-H', 'zypper', 'install', '-yl', 'a', 'b']]
+        expected = [expected_prefix + ['zypper', 'install', '-yl', 'a', 'b']]
         val = installer.get_install_command(['whatever'], interactive=False)
         assert val == expected, val
-        expected = [['sudo', '-H', 'zypper', 'install', 'a', 'b']]
+        expected = [expected_prefix + ['zypper', 'install', 'a', 'b']]
         val = installer.get_install_command(['whatever'], interactive=True)
         assert val == expected, val
     try:
-        test()
+        with patch('rosdep2.installers.os.geteuid', return_value=1):
+            test(['sudo', '-H'])
+        with patch('rosdep2.installers.os.geteuid', return_value=0):
+            test([])
     except AssertionError:
         traceback.print_exc()
         raise
