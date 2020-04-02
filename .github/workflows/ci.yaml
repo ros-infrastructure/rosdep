@@ -1,0 +1,49 @@
+name: rosdep
+
+on:
+  push: [master]
+  pull_request: [master]
+
+jobs:
+    build:
+      strategy:
+        matrix:
+          os: [ubuntu-16.04, ubuntu-18.04, macos-latest, windows-latest]
+          python: [2.7, 3.4, 3.5, 3.6, 3.7, 3.8]
+          exclude:
+          - os: ubuntu-16.04
+            python: 3.6
+          - os: ubuntu-16.04
+            python: 3.7
+          - os: ubuntu-16.04
+            python: 3.8
+          - os: macos-latest
+            python: 3.4
+          - os: macos-latest
+            python: 3.5
+          - os: macos-latest
+            python: 3.6
+      name: rosdep tests
+      runs-on: ${{matrix.os}}
+
+      steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{matrix.python}}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{matrix.python}}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools
+          if [ "${{matrix.python}}" == "3.4"]; then python -m pip install PyYAML==5.2; fi
+          python -m pip install PyYAML argparse rospkg vcstools catkin_pkg python-dateutil rosdistro
+          python -m pip install -e .
+          python -m pip nose coverage flake8 mock codecov
+      - name: Run tests
+        run: |
+          python -m nose --with-coverage --cover-package=rosdep2 --with-xunit test
+      - name: Check coverage
+        run: |
+          python -m codecov
+
+
