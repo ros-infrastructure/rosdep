@@ -33,7 +33,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip setuptools
-          if [ "${{matrix.python}}" == "3.4"]; then python -m pip install PyYAML==5.2; fi
+          if [ '${{matrix.python}}' == "3.4"]; then python -m pip install PyYAML==5.2; fi
           python -m pip install PyYAML argparse rospkg vcstools catkin_pkg python-dateutil rosdistro
           python -m pip install -e .
           python -m pip nose coverage flake8 mock codecov
