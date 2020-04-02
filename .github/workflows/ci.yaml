@@ -1,4 +1,4 @@
-name: rosdep
+name: rosdep CI
 
 on: [push, pull_request]
 
