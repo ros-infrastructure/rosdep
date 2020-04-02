@@ -36,7 +36,7 @@ jobs:
           if [ '${{matrix.python}}' == "3.4"]; then python -m pip install PyYAML==5.2; fi
           python -m pip install PyYAML argparse rospkg vcstools catkin_pkg python-dateutil rosdistro
           python -m pip install -e .
-          python -m pip nose coverage flake8 mock codecov
+          python -m pip install nose coverage flake8 mock codecov
       - name: Run tests
         run: |
           python -m nose --with-coverage --cover-package=rosdep2 --with-xunit test
