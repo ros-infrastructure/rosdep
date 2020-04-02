@@ -149,7 +149,7 @@ class RosPkgLoader(RosdepLoader):
                 # Make sure they get a chance to evaluate conditions
                 for dep in self._rospack.get_depends(resource_name):
                     rosdeps = rosdeps.union(set(self.get_rosdeps(dep, implicit=True)))
-            return rosdeps
+            return list(rosdeps)
         elif resource_name in self._rosstack.list():
             # stacks currently do not have rosdeps of their own, implicit or otherwise
             return []
