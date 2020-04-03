@@ -39,7 +39,7 @@ from optparse import OptionParser
 from rosdep2 import InstallFailed
 from rosdep2.platforms import source
 
-NAME='rosdep-source'
+NAME = 'rosdep-source'
 
 
 def install_main():
@@ -49,16 +49,12 @@ def install_main():
         parser.error("please specify one and only one rdmanifest url")
     if args[0] != 'install':
         parser.error("currently only support the 'install' command")
-    rdmanifest_url= args[1]
+    rdmanifest_url = args[1]
     try:
         if os.path.isfile(rdmanifest_url):
             source.install_from_file(rdmanifest_url)
         else:
             source.install_from_url(rdmanifest_url)
     except InstallFailed as e:
-        print("ERROR: installation failed:\n%s"%e, file=sys.stderr)
+        print("ERROR: installation failed:\n%s" % e, file=sys.stderr)
         sys.exit(1)
-
-
-if __name__ == '__main__':
-    install_main()
