@@ -1,3 +1,35 @@
+0.19.0 (2020-04-03)
+-------------------
+- Only release for Python3 into focal
+  - https://github.com/ros-infrastructure/rosdep/pull/734
+- Added --rosdistro argument to rosdep-update to scope update to one rosdistro
+  - https://github.com/ros-infrastructure/rosdep/pull/738
+  - Fixes https://github.com/ros-infrastructure/rosdep/pull/723
+- Fix CI for Python 3.4 and run slower CI jobs first
+  - https://github.com/ros-infrastructure/rosdep/pull/739
+- Strip Alpine's patch version from OS codename
+  - https://github.com/ros-infrastructure/rosdep/pull/716
+  - Fixes https://github.com/ros-infrastructure/rosdep/issues/715
+- Raise a clear and specific error message for null entries
+  - https://github.com/ros-infrastructure/rosdep/pull/726
+- Use DNF as the default installer on RHEL 8 and newer
+  - https://github.com/ros-infrastructure/rosdep/pull/713
+- Updates to YUM and DNF handling
+  - https://github.com/ros-infrastructure/rosdep/pull/640
+- Fix tests so they don't assume euid != 0
+  - https://github.com/ros-infrastructure/rosdep/pull/703
+- Update openSUSE package query function and enable pip installer
+  - https://github.com/ros-infrastructure/rosdep/pull/729
+- Fix conditional dependencies when one package uses manifest.xml
+  - https://github.com/ros-infrastructure/rosdep/pull/737
+- Handle StopIteration when querying in debian platform
+  - https://github.com/ros-infrastructure/rosdep/pull/701
+- Use entry points rather than console scripts to enable usage on Windows
+  - https://github.com/ros-infrastructure/rosdep/pull/656
+- Depend on modules packages only to allow modules packages to be co-installable.
+  - https://github.com/ros-infrastructure/rosdep/pull/750
+
+
 0.18.0 (2019-11-20)
 -------------------
 - split -modules into separate Debian package
