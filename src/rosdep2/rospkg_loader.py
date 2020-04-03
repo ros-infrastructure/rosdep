@@ -143,7 +143,13 @@ class RosPkgLoader(RosdepLoader):
             deps = pkg.build_depends + pkg.buildtool_depends + pkg.run_depends + pkg.test_depends
             return [d.name for d in deps if d.evaluated_condition]
         elif resource_name in self.get_loadable_resources():
-            return self._rospack.get_rosdeps(resource_name, implicit=implicit)
+            rosdeps = set(self._rospack.get_rosdeps(resource_name, implicit=False))
+            if implicit:
+                # This resource is a manifest.xml, but it might depend on things with a package.xml
+                # Make sure they get a chance to evaluate conditions
+                for dep in self._rospack.get_depends(resource_name):
+                    rosdeps = rosdeps.union(set(self.get_rosdeps(dep, implicit=True)))
+            return list(rosdeps)
         elif resource_name in self._rosstack.list():
             # stacks currently do not have rosdeps of their own, implicit or otherwise
             return []
