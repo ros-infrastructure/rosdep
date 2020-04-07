@@ -140,7 +140,7 @@ class RosPkgLoader(RosdepLoader):
         if resource_name in self.get_catkin_paths():
             pkg = catkin_pkg.package.parse_package(self.get_catkin_paths()[resource_name])
             pkg.evaluate_conditions(os.environ)
-            deps = pkg.build_depends + pkg.buildtool_depends + pkg.run_depends + pkg.test_depends
+            deps = pkg.build_depends + pkg.buildtool_depends + pkg.run_depends + pkg.test_depends + pkg.buildtool_export_depends
             return [d.name for d in deps if d.evaluated_condition]
         elif resource_name in self.get_loadable_resources():
             rosdeps = set(self._rospack.get_rosdeps(resource_name, implicit=False))
