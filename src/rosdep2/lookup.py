@@ -34,6 +34,8 @@ import yaml
 
 from collections import defaultdict
 
+from catkin_pkg.package import Dependency
+
 from rospkg import RosPack, RosStack, ResourceNotFound
 
 from .core import RosdepInternalError, InvalidData, rd_debug
@@ -414,7 +416,7 @@ class RosdepLookup(object):
                             if depend_rosdep_key in depend_graph:
                                 continue
                             installer_key, resolution, more_dependencies = \
-                                self.resolve(depend_rosdep_key, resource_name, installer_context)
+                                self.resolve(Dependency(depend_rosdep_key), resource_name, installer_context)
                             dependencies.extend(more_dependencies)
                             depend_graph[depend_rosdep_key]['installer_key'] = installer_key
                             depend_graph[depend_rosdep_key]['install_keys'] = list(resolution)
