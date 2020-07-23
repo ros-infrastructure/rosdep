@@ -595,7 +595,7 @@ def command_init(options):
         path = get_default_sources_list_file()
         try:
             with open(path, 'r') as f:
-                if f.readlines() == data.splitlines():
+                if f.read().splitlines() == data.splitlines():
                     print('Default sources list file okay. Nothing to do.')
                     return 0
                 else:
