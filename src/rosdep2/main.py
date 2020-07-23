@@ -593,9 +593,17 @@ def command_init(options):
         if not os.path.exists(path):
             os.makedirs(path)
         path = get_default_sources_list_file()
-        if os.path.exists(path):
-            print('ERROR: default sources list file already exists:\n\t%s\nPlease delete if you wish to re-initialize' % (path))
-            return 1
+        try:
+            with open(path, 'r') as f:
+                if f.readlines() == data.splitlines():
+                    print('Default sources list file okay. Nothing to do.')
+                    return 0
+                else:
+                    print('ERROR: default sources list file already exists with different content:\n\t%s' % (path,))
+                    print('Please delete if you wish to re-initialize')
+                    return 1
+        except FileNotFoundError:
+            pass
         with open(path, 'w') as f:
             f.write(data)
         print('Wrote %s' % (path))
