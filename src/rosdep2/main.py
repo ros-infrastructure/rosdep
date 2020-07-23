@@ -52,6 +52,13 @@ except ImportError:
     from urllib2 import URLError
 import warnings
 
+try:
+    from builtins import FileNotFoundError
+except ImportError:
+    # Python 2 compatibility
+    # https://stackoverflow.com/questions/21367320/
+    FileNotFoundError = IOError
+
 from optparse import OptionParser
 
 import rospkg
