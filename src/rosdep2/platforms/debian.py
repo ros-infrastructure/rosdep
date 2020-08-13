@@ -31,8 +31,16 @@ from __future__ import print_function
 import subprocess
 import sys
 
-from rospkg.os_detect import OS_DEBIAN, OS_LINARO, OS_UBUNTU, OS_ELEMENTARY, OS_MX, OsDetect, read_os_release
-
+from rospkg.os_detect import (
+    OS_DEBIAN,
+    OS_LINARO,
+    OS_UBUNTU,
+    OS_ELEMENTARY,
+    OS_MX,
+    OS_POP,
+    OsDetect,
+    read_os_release
+)
 from .pip import PIP_INSTALLER
 from .gem import GEM_INSTALLER
 from .source import SOURCE_INSTALLER
@@ -55,6 +63,7 @@ def register_platforms(context):
     register_elementary(context)
     register_linaro(context)
     register_mx(context)
+    register_pop(context)
 
 
 def register_debian(context):
@@ -96,6 +105,16 @@ def register_mx(context):
         release_info = read_os_release()
         version = read_os_release()["VERSION"]
         context.set_os_override(OS_DEBIAN, version[version.find("(") + 1:version.find(")")])
+
+
+def register_pop(context):
+    # Pop! OS is an alias for Ubuntu. If Pop! is detected and it's
+    # not set as an override force ubuntu.
+    (os_name, os_version) = context.get_os_name_and_version()
+    if os_name == OS_POP and not context.os_override:
+        print('rosdep detected OS: [%s] aliasing it to: [%s]' %
+              (OS_POP, OS_UBUNTU), file=sys.stderr)
+        context.set_os_override(OS_UBUNTU, context.os_detect.get_codename())
 
 
 def register_ubuntu(context):

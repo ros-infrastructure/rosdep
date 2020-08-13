@@ -9,7 +9,7 @@ kwargs = {
     'version': '0.19.0',
     'packages': ['rosdep2', 'rosdep2.ament_packages', 'rosdep2.platforms'],
     'package_dir': {'': 'src'},
-    'install_requires': ['catkin_pkg >= 0.4.0', 'rospkg >= 1.1.10', 'rosdistro >= 0.7.5', 'PyYAML >= 3.1'],
+    'install_requires': ['catkin_pkg >= 0.4.0', 'rospkg >= 1.2.7', 'rosdistro >= 0.7.5', 'PyYAML >= 3.1'],
     'test_suite': 'nose.collector',
     'test_requires': ['mock', 'nose >= 1.0'],
     'author': 'Tully Foote, Ken Conley',
