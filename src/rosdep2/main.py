@@ -372,7 +372,7 @@ def _rosdep_main(args):
                       type="choice", choices=("build", "buildtool", "build_export", "exec", "run", "test", "doc"),
                       default=[], action='append',
                       help='Dependency types to install, can be given multiple times. '
-                           'Chose from build, buildtool, build_export, exec, run, test, doc. Default: all.')
+                           'Chose from build, buildtool, build_export, exec, run, test, doc. Default: all except doc.')
 
     options, args = parser.parse_args(args)
     if options.print_version or options.print_all_versions:
