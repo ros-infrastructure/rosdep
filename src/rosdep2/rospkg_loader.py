@@ -84,6 +84,7 @@ class RosPkgLoader(RosdepLoader):
 
         self.include_build_depends = check_dep('build')
         self.include_buildtool_depends = check_dep('buildtool')
+        self.include_build_export_depends = check_dep('build_export')
         self.include_run_depends = check_dep('run')
         self.include_test_depends = check_dep('test')
 
@@ -151,9 +152,11 @@ class RosPkgLoader(RosdepLoader):
             pkg.evaluate_conditions(os.environ)
             deps = []
             if self.include_build_depends:
-                deps += pkg.build_depends + pkg.buildtool_export_depends
+                deps += pkg.build_depends
             if self.include_buildtool_depends:
                 deps += pkg.buildtool_depends
+            if self.include_build_export_depends:
+                deps += pkg.build_export_depends
             if self.include_run_depends:
                 deps += pkg.run_depends
             if self.include_test_depends:

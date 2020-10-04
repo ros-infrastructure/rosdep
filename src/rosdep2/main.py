@@ -369,10 +369,10 @@ def _rosdep_main(args):
                            'If specified end-of-life distros are being '
                            'fetched too.')
     parser.add_option('-t', '--dependency-types', dest='dependency_types',
-                      type="choice", choices=("build", "buildtool", "run", "test"),
+                      type="choice", choices=("build", "buildtool", "build_export", "run", "test"),
                       default=[], action='append',
                       help='Dependency types to install, can be given multiple times. '
-                           'Chose from build, buildtool, run, test. Default: all.')
+                           'Chose from build, buildtool, build_export, run, test. Default: all.')
 
     options, args = parser.parse_args(args)
     if options.print_version or options.print_all_versions:

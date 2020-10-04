@@ -56,7 +56,7 @@ def init_rospack_interface():
             self.os_override = None
             self.sources_cache_dir = get_sources_cache_dir()
             self.verbose = False
-            self.dependency_types = ['build', 'buildtool', 'run', 'test']
+            self.dependency_types = ['build', 'buildtool', 'build_export', 'run', 'test']
     lookup = _get_default_RosdepLookup(Options())
     return lookup.get_rosdep_view(DEFAULT_VIEW_KEY)
 
