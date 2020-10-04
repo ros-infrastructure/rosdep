@@ -92,6 +92,7 @@ class RosPkgLoader(RosdepLoader):
         self.include_test_depends = check_dep('test')
         self.include_doc_depends = check_dep('doc')
 
+
     def load_view(self, view_name, rosdep_db, verbose=False):
         """
         Load view data into *rosdep_db*. If the view has already
