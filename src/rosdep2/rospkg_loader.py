@@ -79,7 +79,9 @@ class RosPkgLoader(RosdepLoader):
         self._catkin_packages_cache = None
 
         # Dependency types to include
-        check_dep = lambda type_ : type_ in dependency_types or not dependency_types
+        def check_dep(dep_type):
+            return dep_type in dependency_types or not dependency_types
+
         self.include_build_depends = check_dep('build')
         self.include_buildtool_depends = check_dep('buildtool')
         self.include_run_depends = check_dep('run')
