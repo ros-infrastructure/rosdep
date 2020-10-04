@@ -329,6 +329,47 @@ def test_RosdepLookup_get_rosdeps():
     assert set(lookup.get_rosdeps('metapackage_with_deps', implicit=False)) == set(['catkin', 'simple_catkin_package', 'another_catkin_package'])
 
 
+def test_RosdepLookup_dependency_types():
+    from rosdep2.loader import RosdepLoader
+    from rosdep2.lookup import RosdepLookup
+    rospack, rosstack = get_test_rospkgs()
+
+    sources_loader = create_test_SourcesListLoader()
+    default_lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack,
+                                                     sources_loader=sources_loader)
+    buildtool_lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack,
+                                                       sources_loader=sources_loader, dependency_types=['buildtool'])
+    build_lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack,
+                                                   sources_loader=sources_loader, dependency_types=['build'])
+    build_export_lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack,
+                                                          sources_loader=sources_loader, dependency_types=['build_export'])
+    run_lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack,
+                                                 sources_loader=sources_loader, dependency_types=['run'])
+    test_lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack,
+                                                  sources_loader=sources_loader, dependency_types=['test'])
+    doc_lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack,
+                                                 sources_loader=sources_loader, dependency_types=['doc'])
+    mix_lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack,
+                                                 sources_loader=sources_loader, dependency_types=['build', 'build_export'])
+
+    buildtool_deps = ['catkin']
+    build_deps = ['testboost', 'eigen']
+    build_export_deps = ['eigen', 'testtinyxml']
+    run_deps = ['eigen', 'testlibtool', 'testtinyxml']  # build_export + exec
+    test_deps = ['curl']
+    doc_deps = ['epydoc']
+    default_deps = buildtool_deps + build_deps + build_export_deps + run_deps + test_deps
+
+    assert set(buildtool_lookup.get_rosdeps('multi_dep_type_catkin_package')) == set(buildtool_deps)
+    assert set(build_lookup.get_rosdeps('multi_dep_type_catkin_package')) == set(build_deps)
+    assert set(build_export_lookup.get_rosdeps('multi_dep_type_catkin_package')) == set(build_export_deps)
+    assert set(test_lookup.get_rosdeps('multi_dep_type_catkin_package')) == set(test_deps)
+    assert set(run_lookup.get_rosdeps('multi_dep_type_catkin_package')) == set(run_deps)
+    assert set(mix_lookup.get_rosdeps('multi_dep_type_catkin_package')) == set(build_deps + build_export_deps)
+    assert set(default_lookup.get_rosdeps('multi_dep_type_catkin_package')) == set(default_deps)
+    assert set(doc_lookup.get_rosdeps('multi_dep_type_catkin_package')) == set()
+
+
 def test_RosdepLookup_get_resources_that_need():
     from rosdep2.lookup import RosdepLookup
     rospack, rosstack = get_test_rospkgs()
