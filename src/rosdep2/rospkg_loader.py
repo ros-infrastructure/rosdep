@@ -79,11 +79,19 @@ class RosPkgLoader(RosdepLoader):
         self._catkin_packages_cache = None
 
         # Dependency types to include
-        check_dep = lambda type_ : type_ in dependency_types or not dependency_types
+        def check_dep(dep_type):
+            if dependency_types:
+                return dep_type in dependency_types
+            else:
+                return dep_type in ['buildtool', 'build', 'build_export', 'exec', 'test']
+
         self.include_build_depends = check_dep('build')
         self.include_buildtool_depends = check_dep('buildtool')
-        self.include_run_depends = check_dep('run')
+        self.include_build_export_depends = check_dep('build_export') or check_dep('run')
+        self.include_exec_depends = check_dep('exec') or check_dep('run')
         self.include_test_depends = check_dep('test')
+        self.include_doc_depends = check_dep('doc')
+
 
     def load_view(self, view_name, rosdep_db, verbose=False):
         """
@@ -152,13 +160,23 @@ class RosPkgLoader(RosdepLoader):
                 deps += pkg.build_depends
             if self.include_buildtool_depends:
                 deps += pkg.buildtool_depends
-            if self.include_run_depends:
-                deps += pkg.run_depends
+            if self.include_build_export_depends:
+                deps += pkg.build_export_depends
+            if self.include_exec_depends:
+                deps += pkg.exec_depends
             if self.include_test_depends:
                 deps += pkg.test_depends
+            if self.include_doc_depends:
+                deps += pkg.doc_depends
             return [d.name for d in deps if d.evaluated_condition]
         elif resource_name in self.get_loadable_resources():
-            return self._rospack.get_rosdeps(resource_name, implicit=implicit)
+            rosdeps = set(self._rospack.get_rosdeps(resource_name, implicit=False))
+            if implicit:
+                # This resource is a manifest.xml, but it might depend on things with a package.xml
+                # Make sure they get a chance to evaluate conditions
+                for dep in self._rospack.get_depends(resource_name):
+                    rosdeps = rosdeps.union(set(self.get_rosdeps(dep, implicit=True)))
+            return list(rosdeps)
         elif resource_name in self._rosstack.list():
             # stacks currently do not have rosdeps of their own, implicit or otherwise
             return []

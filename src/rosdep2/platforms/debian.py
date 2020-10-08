@@ -31,8 +31,16 @@ from __future__ import print_function
 import subprocess
 import sys
 
-from rospkg.os_detect import OS_DEBIAN, OS_LINARO, OS_UBUNTU, OS_ELEMENTARY, OS_MX, OsDetect, read_os_release
-
+from rospkg.os_detect import (
+    OS_DEBIAN,
+    OS_LINARO,
+    OS_UBUNTU,
+    OS_ELEMENTARY,
+    OS_MX,
+    OS_POP,
+    OsDetect,
+    read_os_release
+)
 from .pip import PIP_INSTALLER
 from .gem import GEM_INSTALLER
 from .source import SOURCE_INSTALLER
@@ -55,6 +63,7 @@ def register_platforms(context):
     register_elementary(context)
     register_linaro(context)
     register_mx(context)
+    register_pop(context)
 
 
 def register_debian(context):
@@ -96,6 +105,16 @@ def register_mx(context):
         release_info = read_os_release()
         version = read_os_release()["VERSION"]
         context.set_os_override(OS_DEBIAN, version[version.find("(") + 1:version.find(")")])
+
+
+def register_pop(context):
+    # Pop! OS is an alias for Ubuntu. If Pop! is detected and it's
+    # not set as an override force ubuntu.
+    (os_name, os_version) = context.get_os_name_and_version()
+    if os_name == OS_POP and not context.os_override:
+        print('rosdep detected OS: [%s] aliasing it to: [%s]' %
+              (OS_POP, OS_UBUNTU), file=sys.stderr)
+        context.set_os_override(OS_UBUNTU, context.os_detect.get_codename())
 
 
 def register_ubuntu(context):
@@ -140,20 +159,32 @@ def _read_apt_cache_showpkg(packages, exec_fn=None):
 
         header = 'Package: %s' % p
         # proceed to Package header
-        while next(lines) != header:
+        try:
+            while next(lines) != header:
+                pass
+        except StopIteration:
             pass
 
         # proceed to versions section
-        while next(lines) != 'Versions: ':
+        try:
+            while next(lines) != 'Versions: ':
+                pass
+        except StopIteration:
             pass
 
         # virtual packages don't have versions
-        if next(lines) != '':
-            yield p, False, None
-            continue
+        try:
+            if next(lines) != '':
+                yield p, False, None
+                continue
+        except StopIteration:
+            break
 
         # proceed to reserve provides section
-        while next(lines) != 'Reverse Provides: ':
+        try:
+            while next(lines) != 'Reverse Provides: ':
+                pass
+        except StopIteration:
             pass
 
         pr = [line.split(' ', 2)[0] for line in lines]

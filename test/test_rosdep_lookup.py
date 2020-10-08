@@ -58,14 +58,14 @@ def create_test_SourcesListLoader():
 def get_cache_raw():
     cache_rosdep_path = os.path.join(get_cache_dir(), '0a12d6e7b0d47be9b76e7726720e4cb79528cbaa')
     with open(cache_rosdep_path) as f:
-        cache_raw = yaml.load(f.read())
+        cache_raw = yaml.safe_load(f.read())
     return cache_raw
 
 
 def get_cache_raw_python():
     cache_rosdep_path = os.path.join(get_cache_dir(), 'f6f4ef95664e373cd4754501337fa217f5b55d91')
     with open(cache_rosdep_path) as f:
-        cache_raw = yaml.load(f.read())
+        cache_raw = yaml.safe_load(f.read())
     return cache_raw
 
 
@@ -125,7 +125,7 @@ def test_RosdepDefinition():
         pass
 
     #  - test w/valid data
-    d2 = yaml.load(FAKE_TINYXML_RULE)['testtinyxml']
+    d2 = yaml.safe_load(FAKE_TINYXML_RULE)['testtinyxml']
     definition = RosdepDefinition('d2', d2, 'file2.txt')
     #  - tripwire
     str(definition)
@@ -181,6 +181,26 @@ def test_RosdepDefinition():
 
     val = definition.get_rule_for_platform('ubuntu', 'trusty', ['apt', 'source', 'pip'], 'apt')
     assert val == ('apt', ['libtinyxml2-dev']), val
+
+    definition = RosdepDefinition('trusty_only_key', {'ubuntu': {'*': None, 'trusty': ['trusty_only_pkg']}, 'debian': None}, 'wildcard.txt')
+    try:
+        val = definition.get_rule_for_platform('ubuntu', 'lucid', ['apt', 'source', 'pip'], 'apt')
+        assert False, 'should have raised: %s' % (str(val))
+    except ResolutionError as e:
+        assert e.rosdep_key == 'trusty_only_key'
+        assert e.os_name == 'ubuntu'
+        assert e.os_version == '*'
+        # tripwire
+        str(e)
+    try:
+        val = definition.get_rule_for_platform('debian', 'stretch', ['apt', 'source', 'pip'], 'apt')
+        assert False, 'should have raised: %s' % (str(val))
+    except ResolutionError as e:
+        assert e.rosdep_key == 'trusty_only_key'
+        assert e.os_name == 'debian'
+        assert e.os_version == 'stretch'
+        # tripwire
+        str(e)
 
     # test reverse merging OS things (first is default)
     definition = RosdepDefinition('test', {'debian': 'libtest-dev'}, 'fake-1.txt')
@@ -307,6 +327,51 @@ def test_RosdepLookup_get_rosdeps():
     print(lookup.get_rosdeps('metapackage_with_deps'))
     assert set(lookup.get_rosdeps('metapackage_with_deps')) == set(['catkin', 'simple_catkin_package', 'another_catkin_package'])  # implicit deps won't get included
     assert set(lookup.get_rosdeps('metapackage_with_deps', implicit=False)) == set(['catkin', 'simple_catkin_package', 'another_catkin_package'])
+
+
+def test_RosdepLookup_dependency_types():
+    from rosdep2.loader import RosdepLoader
+    from rosdep2.lookup import RosdepLookup
+    rospack, rosstack = get_test_rospkgs()
+
+    sources_loader = create_test_SourcesListLoader()
+    default_lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack,
+                                                     sources_loader=sources_loader)
+    buildtool_lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack,
+                                                       sources_loader=sources_loader, dependency_types=['buildtool'])
+    build_lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack,
+                                                   sources_loader=sources_loader, dependency_types=['build'])
+    build_export_lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack,
+                                                          sources_loader=sources_loader, dependency_types=['build_export'])
+    exec_lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack,
+                                                  sources_loader=sources_loader, dependency_types=['exec'])
+    run_lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack,
+                                                 sources_loader=sources_loader, dependency_types=['run'])
+    test_lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack,
+                                                  sources_loader=sources_loader, dependency_types=['test'])
+    doc_lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack,
+                                                 sources_loader=sources_loader, dependency_types=['doc'])
+    mix_lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack,
+                                                 sources_loader=sources_loader, dependency_types=['build', 'build_export'])
+
+    buildtool_deps = ['catkin']
+    build_deps = ['testboost', 'eigen']
+    build_export_deps = ['eigen', 'testtinyxml']
+    exec_deps = ['eigen', 'testlibtool']
+    run_deps = ['eigen', 'testlibtool', 'testtinyxml']  # build_export + exec
+    test_deps = ['curl']
+    doc_deps = ['epydoc']
+    default_deps = buildtool_deps + build_deps + build_export_deps + exec_deps + test_deps
+
+    assert set(buildtool_lookup.get_rosdeps('multi_dep_type_catkin_package')) == set(buildtool_deps)
+    assert set(build_lookup.get_rosdeps('multi_dep_type_catkin_package')) == set(build_deps)
+    assert set(build_export_lookup.get_rosdeps('multi_dep_type_catkin_package')) == set(build_export_deps)
+    assert set(exec_lookup.get_rosdeps('multi_dep_type_catkin_package')) == set(exec_deps)
+    assert set(run_lookup.get_rosdeps('multi_dep_type_catkin_package')) == set(run_deps)
+    assert set(test_lookup.get_rosdeps('multi_dep_type_catkin_package')) == set(test_deps)
+    assert set(mix_lookup.get_rosdeps('multi_dep_type_catkin_package')) == set(build_deps + build_export_deps)
+    assert set(default_lookup.get_rosdeps('multi_dep_type_catkin_package')) == set(default_deps)
+    assert set(doc_lookup.get_rosdeps('multi_dep_type_catkin_package')) == set(doc_deps)
 
 
 def test_RosdepLookup_get_resources_that_need():

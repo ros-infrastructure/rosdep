@@ -303,7 +303,7 @@ class HomebrewInstaller(PackageManagerInstaller):
 
             # make sure options is a list of list of strings
             try:
-                valid = all([isinstance(x, _basestring) for l in options for x in l])
+                valid = all([isinstance(x, _basestring) for option in options for x in option])
             except Exception as e:
                 raise InvalidData("Invalid list of options '%s', error: %s" % (options, e))
             else:

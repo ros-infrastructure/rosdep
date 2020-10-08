@@ -27,4 +27,4 @@ testsetup:
 	echo "running rosdep tests"
 
 test: testsetup
-	nosetests --with-coverage --cover-package=rosdep2 --with-xunit test
+	nosetests3 --with-coverage --cover-package=rosdep2 --with-xunit test

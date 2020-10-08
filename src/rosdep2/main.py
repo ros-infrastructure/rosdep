@@ -274,7 +274,7 @@ def setup_environment_variables(ros_distro):
     """
     Set environment variables needed to find ROS packages and evaluate conditional dependencies.
 
-    :param rosdistro: The requested ROS distro passed on the CLI, or None
+    :param ros_distro: The requested ROS distro passed on the CLI, or None
     """
     if ros_distro is not None:
         if 'ROS_DISTRO' in os.environ and os.environ['ROS_DISTRO'] != ros_distro:
@@ -361,7 +361,9 @@ def _rosdep_main(args):
     parser.add_option('--rosdistro', dest='ros_distro', default=None,
                       help='Explicitly sets the ROS distro to use, overriding '
                            'the normal method of detecting the ROS distro '
-                           'using the ROS_DISTRO environment variable.')
+                           'using the ROS_DISTRO environment variable. '
+                           "When used with the 'update' verb, "
+                           'only the specified distro will be updated.')
     parser.add_option('--as-root', default=[], action='append',
                       metavar='INSTALLER_KEY:<bool>', help='Override '
                       'whether sudo is used for a specific installer, '
@@ -373,10 +375,10 @@ def _rosdep_main(args):
                            'If specified end-of-life distros are being '
                            'fetched too.')
     parser.add_option('-t', '--dependency-types', dest='dependency_types',
-                    type="choice", choices=("build", "buildtool", "run", "test"),
-                    default=[], action='append',
-                    help='Dependency types to install, can be given multiple times. '
-                        'Chose from build, buildtool, run, test. Default: all.')
+                      type="choice", choices=("build", "buildtool", "build_export", "exec", "run", "test", "doc"),
+                      default=[], action='append',
+                      help='Dependency types to install, can be given multiple times. '
+                           'Chose from build, buildtool, build_export, exec, run, test, doc. Default: all except doc.')
 
     options, args = parser.parse_args(args)
     _global_options = options
@@ -655,13 +657,17 @@ def command_update(options):
             pass
         update_sources_list(success_handler=update_success_handler,
                             error_handler=update_error_handler,
-                            skip_eol_distros=not options.include_eol_distros)
+                            skip_eol_distros=not options.include_eol_distros,
+                            ros_distro=options.ros_distro)
         print('updated cache in %s' % (sources_cache_dir))
     except InvalidData as e:
         print('ERROR: invalid sources list file:\n\t%s' % (e), file=sys.stderr)
         return 1
     except IOError as e:
         print('ERROR: error loading sources list:\n\t%s' % (e), file=sys.stderr)
+        return 1
+    except ValueError as e:
+        print('ERROR: invalid argument value provided:\n\t%s' % (e), file=sys.stderr)
         return 1
     if error_occured:
         print('ERROR: Not all sources were able to be updated.\n[[[')

@@ -162,7 +162,8 @@ class TestRosdepMain(unittest.TestCase):
             pass
 
     @patch('rosdep2.platforms.debian.read_stdout')
-    def test_install(self, mock_read_stdout):
+    @patch('rosdep2.installers.os.geteuid', return_value=1)
+    def test_install(self, mock_geteuid, mock_read_stdout):
         sources_cache = get_cache_dir()
         cmd_extras = ['-c', sources_cache]
         catkin_tree = get_test_catkin_tree_dir()
@@ -268,6 +269,12 @@ class TestRosdepMain(unittest.TestCase):
                 rosdep_main(['keys', 'another_catkin_package'] + cmd_extras + ['-i'])
                 stdout, stderr = b
                 assert stdout.getvalue().strip() == 'catkin', stdout.getvalue()
+            with fakeout() as b:
+                rosdep_main(['keys', 'multi_dep_type_catkin_package', '-t', 'test', '-t', 'doc'] + cmd_extras)
+                stdout, stderr = b
+                output_keys = set(stdout.getvalue().split())
+                expected_keys = set(['curl', 'epydoc'])
+                assert output_keys == expected_keys, stdout.getvalue()
         except SystemExit:
             assert False, 'system exit occurred'
         try:
