@@ -1,3 +1,28 @@
+0.20.0 (2020-11-12)
+-------------------
+- Install packages in buildtool_export_depends.
+  - https://github.com/ros-infrastructure/rosdep/pull/753
+- Remove shebang from a non-executable file.
+  - https://github.com/ros-infrastructure/rosdep/pull/755
+- Add alias for Pop! OS
+  - https://github.com/ros-infrastructure/rosdep/pull/757
+- Use tool-specific user-agent to retrieve custom rules from websites.
+  - https://github.com/ros-infrastructure/rosdep/pull/775
+  - https://github.com/ros-infrastructure/rosdep/issues/774
+- Update catkin-sphinx link in documentation.
+  - https://github.com/ros-infrastructure/rosdep/pull/783
+- Add ZorinOS detection support.
+  - https://github.com/ros-infrastructure/rosdep/pull/712
+- Fix handling of installer version strings in Python 3.
+  - https://github.com/ros-infrastructure/rosdep/pull/776
+- Use GitHub Actions for CI.
+  - https://github.com/ros-infrastructure/rosdep/pull/751
+  - https://github.com/ros-infrastructure/rosdep/pull/785
+- Add npm installer support.
+  - https://github.com/ros-infrastructure/rosdep/pull/692
+- Set Python2-Depends-Name option to allow releasing from Ubuntu Focal.
+  - https://github.com/ros-infrastructure/rosdep/pull/766
+
 0.19.0 (2020-04-03)
 -------------------
 - Only release for Python3 into focal
