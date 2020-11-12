@@ -79,7 +79,7 @@ class GemInstaller(PackageManagerInstaller):
         super(GemInstaller, self).__init__(gem_detect, supports_depends=True)
 
     def get_version_strings(self):
-        gem_version = subprocess.check_output(['gem', '--version']).strip()
+        gem_version = subprocess.check_output(['gem', '--version']).strip().decode()
         return ['gem {}'.format(gem_version)]
 
     def get_install_command(self, resolved, interactive=True, reinstall=False, quiet=False):

@@ -70,7 +70,7 @@ class OpkgInstaller(PackageManagerInstaller):
 
     def get_version_strings(self):
         output = subprocess.check_output(['opkg', '--version'])
-        version = output.splitlines()[0].split(' ')[2]
+        version = output.splitlines()[0].split(b' ')[2].decode()
         return [('opkg {}').format(version)]
 
     def get_install_command(self, resolved, interactive=True, reinstall=False, quiet=False):

@@ -59,4 +59,4 @@ class NixInstaller(PackageManagerInstaller):
         raise NotImplementedError('Nix does not support installing packages through ROS')
 
     def get_version_strings(self):
-        return subprocess.check_output(('nix', '--version'))
+        return subprocess.check_output(('nix', '--version')).decode()

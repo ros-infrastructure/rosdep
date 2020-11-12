@@ -275,7 +275,7 @@ class AptInstaller(PackageManagerInstaller):
 
     def get_version_strings(self):
         output = subprocess.check_output(['apt-get', '--version'])
-        version = output.splitlines()[0].split(' ')[1]
+        version = output.splitlines()[0].split(b' ')[1].decode()
         return ['apt-get {}'.format(version)]
 
     def _get_install_commands_for_package(self, base_cmd, package_or_list):
