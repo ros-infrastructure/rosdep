@@ -31,7 +31,6 @@ from __future__ import print_function
 import subprocess
 import sys
 
-from rospkg.os_detect import OS_DEBIAN, OS_LINARO, OS_UBUNTU, OS_ELEMENTARY, OS_MX, OS_ZORIN, OsDetect, read_os_release
 from rospkg.os_detect import (
     OS_DEBIAN,
     OS_LINARO,
