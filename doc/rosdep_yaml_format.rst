@@ -87,7 +87,8 @@ OS name identifiers and supported package managers
 
  * ``fedora``: Fedora Project
 
-   * ``yum`` (default)
+   * ``dnf`` (default)
+   * ``yum``
    * ``source``
 
  * ``freebsd``: FreeBSD

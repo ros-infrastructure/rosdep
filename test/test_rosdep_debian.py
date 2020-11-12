@@ -116,24 +116,27 @@ def test_AptInstaller():
 
     @patch('rosdep2.platforms.debian.read_stdout')
     @patch.object(AptInstaller, 'get_packages_to_install')
-    def test(mock_get_packages_to_install, mock_read_stdout):
+    def test(expected_prefix, mock_get_packages_to_install, mock_read_stdout):
         installer = AptInstaller()
         mock_get_packages_to_install.return_value = []
         mock_read_stdout.return_value = ''
         assert [] == installer.get_install_command(['fake'])
 
         mock_get_packages_to_install.return_value = ['a', 'b']
-        expected = [['sudo', '-H', 'apt-get', 'install', '-y', 'a'],
-                    ['sudo', '-H', 'apt-get', 'install', '-y', 'b']]
+        expected = [expected_prefix + ['apt-get', 'install', '-y', 'a'],
+                    expected_prefix + ['apt-get', 'install', '-y', 'b']]
         val = installer.get_install_command(['whatever'], interactive=False)
         print('VAL', val)
         assert val == expected, val
-        expected = [['sudo', '-H', 'apt-get', 'install', 'a'],
-                    ['sudo', '-H', 'apt-get', 'install', 'b']]
+        expected = [expected_prefix + ['apt-get', 'install', 'a'],
+                    expected_prefix + ['apt-get', 'install', 'b']]
         val = installer.get_install_command(['whatever'], interactive=True)
         assert val == expected, val
     try:
-        test()
+        with patch('rosdep2.installers.os.geteuid', return_value=1):
+            test(['sudo', '-H'])
+        with patch('rosdep2.installers.os.geteuid', return_value=0):
+            test([])
     except AssertionError:
         traceback.print_exc()
         raise

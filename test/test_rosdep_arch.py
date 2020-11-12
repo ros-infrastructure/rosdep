@@ -41,21 +41,24 @@ def test_PacmanInstaller():
     from rosdep2.platforms.arch import PacmanInstaller
 
     @patch.object(PacmanInstaller, 'get_packages_to_install')
-    def test(mock_method):
+    def test(expected_prefix, mock_method):
         installer = PacmanInstaller()
         mock_method.return_value = []
         assert [] == installer.get_install_command(['fake'])
 
         # no interactive option implemented yet
         mock_method.return_value = ['a', 'b']
-        expected = [['sudo', '-H', 'pacman', '-S', '--noconfirm', '--needed', 'a', 'b']]
+        expected = [expected_prefix + ['pacman', '-S', '--noconfirm', '--needed', 'a', 'b']]
         val = installer.get_install_command(['whatever'], interactive=False)
         assert val == expected, val
-        expected = [['sudo', '-H', 'pacman', '-S', '--needed', 'a', 'b']]
+        expected = [expected_prefix + ['pacman', '-S', '--needed', 'a', 'b']]
         val = installer.get_install_command(['whatever'], interactive=True)
         assert val == expected, val
     try:
-        test()
+        with patch('rosdep2.installers.os.geteuid', return_value=1):
+            test(['sudo', '-H'])
+        with patch('rosdep2.installers.os.geteuid', return_value=0):
+            test([])
     except AssertionError:
         traceback.print_exc()
         raise

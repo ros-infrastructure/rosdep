@@ -55,21 +55,24 @@ def test_PkgInstaller():
     from rosdep2.platforms.freebsd import PkgInstaller
 
     @patch.object(PkgInstaller, 'get_packages_to_install')
-    def test(mock_method):
+    def test(expected_prefix, mock_method):
         installer = PkgInstaller()
         mock_method.return_value = []
         assert [] == installer.get_install_command(['fake'])
 
         # no interactive option with YUM
         mock_method.return_value = ['a', 'b']
-        expected = [['sudo', '-H', '/usr/sbin/pkg', 'install', '-y', 'a', 'b']]
+        expected = [expected_prefix + ['/usr/sbin/pkg', 'install', '-y', 'a', 'b']]
         val = installer.get_install_command(['whatever'], interactive=False)
         assert val == expected, val
-        expected = [['sudo', '-H', '/usr/sbin/pkg', 'install', '-y', 'a', 'b']]
+        expected = [expected_prefix + ['/usr/sbin/pkg', 'install', '-y', 'a', 'b']]
         val = installer.get_install_command(['whatever'], interactive=True)
         assert val == expected, val
     try:
-        test()
+        with patch('rosdep2.installers.os.geteuid', return_value=1):
+            test(['sudo', '-H'])
+        with patch('rosdep2.installers.os.geteuid', return_value=0):
+            test([])
     except AssertionError:
         traceback.print_exc()
         raise

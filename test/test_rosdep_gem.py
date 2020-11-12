@@ -86,7 +86,7 @@ def test_GemInstaller():
 
     @patch('rosdep2.platforms.gem.is_gem_installed')
     @patch.object(GemInstaller, 'get_packages_to_install')
-    def test(mock_method, mock_is_gem_installed):
+    def test(expected_prefix, mock_method, mock_is_gem_installed):
         mock_is_gem_installed.return_value = True
         installer = GemInstaller()
         mock_method.return_value = []
@@ -94,16 +94,19 @@ def test_GemInstaller():
 
         # no interactive option with GEM
         mock_method.return_value = ['a', 'b']
-        expected = [['sudo', '-H', 'gem', 'install', 'a'],
-                    ['sudo', '-H', 'gem', 'install', 'b']]
+        expected = [expected_prefix + ['gem', 'install', 'a'],
+                    expected_prefix + ['gem', 'install', 'b']]
         val = installer.get_install_command(['whatever'], interactive=False)
         assert val == expected, val
-        expected = [['sudo', '-H', 'gem', 'install', 'a'],
-                    ['sudo', '-H', 'gem', 'install', 'b']]
+        expected = [expected_prefix + ['gem', 'install', 'a'],
+                    expected_prefix + ['gem', 'install', 'b']]
         val = installer.get_install_command(['whatever'], interactive=True)
         assert val == expected, val
     try:
-        test()
+        with patch('rosdep2.installers.os.geteuid', return_value=1):
+            test(['sudo', '-H'])
+        with patch('rosdep2.installers.os.geteuid', return_value=0):
+            test([])
     except AssertionError:
         traceback.print_exc()
         raise

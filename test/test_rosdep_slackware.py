@@ -89,25 +89,28 @@ def test_SbotoolsInstaller():
     from rosdep2.platforms.slackware import SbotoolsInstaller
 
     @patch.object(SbotoolsInstaller, 'get_packages_to_install')
-    def test(mock_method):
+    def test(expected_prefix, mock_method):
         installer = SbotoolsInstaller()
         mock_method.return_value = []
         assert [] == installer.get_install_command(['fake'])
 
         mock_method.return_value = ['a', 'b']
 
-        expected = [['sudo', '-H', 'sboinstall', '-r', 'a'],
-                    ['sudo', '-H', 'sboinstall', '-r', 'b']]
+        expected = [expected_prefix + ['sboinstall', '-r', 'a'],
+                    expected_prefix + ['sboinstall', '-r', 'b']]
         val = installer.get_install_command(['whatever'], interactive=False)
         assert val == expected, val
 
-        expected = [['sudo', '-H', 'sboinstall', 'a'],
-                    ['sudo', '-H', 'sboinstall', 'b']]
+        expected = [expected_prefix + ['sboinstall', 'a'],
+                    expected_prefix + ['sboinstall', 'b']]
         val = installer.get_install_command(['whatever'], interactive=True)
         assert val == expected, val
 
     try:
-        test()
+        with patch('rosdep2.installers.os.geteuid', return_value=1):
+            test(['sudo', '-H'])
+        with patch('rosdep2.installers.os.geteuid', return_value=0):
+            test([])
     except AssertionError:
         traceback.print_exc()
         raise
@@ -159,25 +162,28 @@ def test_SlackpkgInstaller():
     from rosdep2.platforms.slackware import SlackpkgInstaller
 
     @patch.object(SlackpkgInstaller, 'get_packages_to_install')
-    def test(mock_method):
+    def test(expected_prefix, mock_method):
         installer = SlackpkgInstaller()
         mock_method.return_value = []
         assert [] == installer.get_install_command(['fake'])
 
         mock_method.return_value = ['a', 'b']
 
-        expected = [['sudo', '-H', 'slackpkg', 'install', 'a'],
-                    ['sudo', '-H', 'slackpkg', 'install', 'b']]
+        expected = [expected_prefix + ['slackpkg', 'install', 'a'],
+                    expected_prefix + ['slackpkg', 'install', 'b']]
         val = installer.get_install_command(['whatever'], interactive=False)
         assert val == expected, val
 
-        expected = [['sudo', '-H', 'slackpkg', 'install', 'a'],
-                    ['sudo', '-H', 'slackpkg', 'install', 'b']]
+        expected = [expected_prefix + ['slackpkg', 'install', 'a'],
+                    expected_prefix + ['slackpkg', 'install', 'b']]
         val = installer.get_install_command(['whatever'], interactive=True)
         assert val == expected, val
 
     try:
-        test()
+        with patch('rosdep2.installers.os.geteuid', return_value=1):
+            test(['sudo', '-H'])
+        with patch('rosdep2.installers.os.geteuid', return_value=0):
+            test([])
     except AssertionError:
         traceback.print_exc()
         raise

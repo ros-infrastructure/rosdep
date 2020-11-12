@@ -1,31 +1,38 @@
 language: python
 matrix:
   include:
-    - os: linux
-      python: 2.7
-    - os: linux
-      python: 3.4
-    - os: linux
-      python: 3.5
-    - os: linux
-      python: 3.6
-    - os: osx
-      language: generic
-      env: PYTHON_INSTALLER=brew
     - os: osx
       language: generic
       env: PYTHON_INSTALLER=pyenv TRAVIS_PYTHON_VERSION=2.7.14
     - os: osx
       language: generic
       env: PYTHON_INSTALLER=pyenv TRAVIS_PYTHON_VERSION=3.6.4
+    - os: osx
+      language: generic
+      env:
+        - PYTHON_INSTALLER=brew
+        - PIP_USER_FLAG="--user"
+    - os: linux
+      python: 2.7
+    - os: linux
+      python: 3.4   # When support for 3.4 is removed unpin the PyYAML version below.
+    - os: linux
+      python: 3.5
+    - os: linux
+      python: 3.6
+    - os: linux
+      python: 3.7
+    - os: linux
+      python: 3.8
 
 # command to install dependencies
 install:
   - source .travis/install.sh
   - python --version
-  - python -m pip install PyYAML argparse rospkg vcstools catkin_pkg python-dateutil rosdistro
-  - python -m pip install -e .
-  - python -m pip install nose coverage flake8 mock codecov
+  - if [ $TRAVIS_PYTHON_VERSION == "3.4" ]; then python -m pip install PyYAML==5.2; fi # Forcing PyYAML 5.2 while we retain Python 3.4 support PyYAML 5.3 and higher does not support Python 3.4
+  - python -m pip install $PIP_USER_FLAG PyYAML argparse rospkg vcstools catkin_pkg python-dateutil rosdistro
+  - python -m pip install $PIP_USER_FLAG -e .
+  - python -m pip install $PIP_USER_FLAG nose coverage flake8 mock codecov
 # command to run tests
 script:
   - python -m nose --with-coverage --cover-package=rosdep2 --with-xunit test

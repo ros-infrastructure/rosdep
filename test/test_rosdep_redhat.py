@@ -80,27 +80,30 @@ def test_DnfInstaller():
     from rosdep2.platforms.redhat import DnfInstaller
 
     @patch.object(DnfInstaller, 'get_packages_to_install')
-    def test(mock_method):
+    def test(expected_prefix, mock_method):
         installer = DnfInstaller()
         mock_method.return_value = []
         assert [] == installer.get_install_command(['fake'])
 
         # no interactive option with YUM
         mock_method.return_value = ['a', 'b']
-        expected = [['sudo', '-H', 'dnf', '--assumeyes', '--quiet', '--setopt=strict=0', 'install', 'a', 'b']]
+        expected = [expected_prefix + ['dnf', '--assumeyes', '--quiet', '--setopt=strict=0', 'install', 'a', 'b']]
         val = installer.get_install_command(['whatever'], interactive=False, quiet=True)
         assert val == expected, val + expected
-        expected = [['sudo', '-H', 'dnf', '--quiet', '--setopt=strict=0', 'install', 'a', 'b']]
+        expected = [expected_prefix + ['dnf', '--quiet', '--setopt=strict=0', 'install', 'a', 'b']]
         val = installer.get_install_command(['whatever'], interactive=True, quiet=True)
         assert val == expected, val + expected
-        expected = [['sudo', '-H', 'dnf', '--assumeyes', '--setopt=strict=0', 'install', 'a', 'b']]
+        expected = [expected_prefix + ['dnf', '--assumeyes', '--setopt=strict=0', 'install', 'a', 'b']]
         val = installer.get_install_command(['whatever'], interactive=False, quiet=False)
         assert val == expected, val + expected
-        expected = [['sudo', '-H', 'dnf', '--setopt=strict=0', 'install', 'a', 'b']]
+        expected = [expected_prefix + ['dnf', '--setopt=strict=0', 'install', 'a', 'b']]
         val = installer.get_install_command(['whatever'], interactive=True, quiet=False)
         assert val == expected, val + expected
     try:
-        test()
+        with patch('rosdep2.installers.os.geteuid', return_value=1):
+            test(['sudo', '-H'])
+        with patch('rosdep2.installers.os.geteuid', return_value=0):
+            test([])
     except AssertionError:
         traceback.print_exc()
         raise
@@ -110,27 +113,30 @@ def test_YumInstaller():
     from rosdep2.platforms.redhat import YumInstaller
 
     @patch.object(YumInstaller, 'get_packages_to_install')
-    def test(mock_method):
+    def test(expected_prefix, mock_method):
         installer = YumInstaller()
         mock_method.return_value = []
         assert [] == installer.get_install_command(['fake'])
 
         # no interactive option with YUM
         mock_method.return_value = ['a', 'b']
-        expected = [['sudo', '-H', 'yum', '--assumeyes', '--quiet', '--skip-broken', 'install', 'a', 'b']]
+        expected = [expected_prefix + ['yum', '--assumeyes', '--quiet', '--skip-broken', 'install', 'a', 'b']]
         val = installer.get_install_command(['whatever'], interactive=False, quiet=True)
         assert val == expected, val + expected
-        expected = [['sudo', '-H', 'yum', '--quiet', '--skip-broken', 'install', 'a', 'b']]
+        expected = [expected_prefix + ['yum', '--quiet', '--skip-broken', 'install', 'a', 'b']]
         val = installer.get_install_command(['whatever'], interactive=True, quiet=True)
         assert val == expected, val + expected
-        expected = [['sudo', '-H', 'yum', '--assumeyes', '--skip-broken', 'install', 'a', 'b']]
+        expected = [expected_prefix + ['yum', '--assumeyes', '--skip-broken', 'install', 'a', 'b']]
         val = installer.get_install_command(['whatever'], interactive=False, quiet=False)
         assert val == expected, val + expected
-        expected = [['sudo', '-H', 'yum', '--skip-broken', 'install', 'a', 'b']]
+        expected = [expected_prefix + ['yum', '--skip-broken', 'install', 'a', 'b']]
         val = installer.get_install_command(['whatever'], interactive=True, quiet=False)
         assert val == expected, val + expected
     try:
-        test()
+        with patch('rosdep2.installers.os.geteuid', return_value=1):
+            test(['sudo', '-H'])
+        with patch('rosdep2.installers.os.geteuid', return_value=0):
+            test([])
     except AssertionError:
         traceback.print_exc()
         raise

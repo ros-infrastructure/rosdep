@@ -162,7 +162,8 @@ class TestRosdepMain(unittest.TestCase):
             pass
 
     @patch('rosdep2.platforms.debian.read_stdout')
-    def test_install(self, mock_read_stdout):
+    @patch('rosdep2.installers.os.geteuid', return_value=1)
+    def test_install(self, mock_geteuid, mock_read_stdout):
         sources_cache = get_cache_dir()
         cmd_extras = ['-c', sources_cache]
         catkin_tree = get_test_catkin_tree_dir()

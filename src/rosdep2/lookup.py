@@ -144,6 +144,9 @@ class RosdepDefinition(object):
                                 return_key = installer_key
                                 break
 
+        # Check if the rule is null
+        if data is None:
+            raise ResolutionError(rosdep_key, self.data, os_name, os_version, '[%s] defined as "not available" for OS version [%s]' % (rosdep_key, os_version))
         if type(data) not in (dict, list, type('str')):
             raise InvalidData('rosdep OS definition for [%s:%s] must be a dictionary, string, or list: %s' % (self.rosdep_key, os_name, data), origin=self.origin)
 
@@ -171,7 +174,7 @@ class ResolutionError(Exception):
 \trosdep key : %s
 \tOS name    : %s
 \tOS version : %s
-\tData: %s""" % (self.args[0], self.rosdep_key, self.os_name, self.os_version, pretty_data)
+\tData:\n%s""" % (self.args[0], self.rosdep_key, self.os_name, self.os_version, pretty_data.replace('\n', '\n\t\t'))
 
 
 class RosdepView(object):
