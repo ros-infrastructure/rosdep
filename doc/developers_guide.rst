@@ -150,5 +150,4 @@ are stored in the ``doc`` subdirectory.
 In order to build the docs, you need the 'ros-theme', which should be stored
 in `~/sphinx/ros-theme`.  You can get a copy of ros-theme from:
 
-https://github.com/willowgarage/catkin-sphinx/tree/master/theme
-
+https://github.com/ros-infrastructure/catkin-sphinx/tree/master/src/catkin_sphinx/theme
