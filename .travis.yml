@@ -1,29 +1,8 @@
 language: python
 matrix:
   include:
-    - os: osx
-      language: generic
-      env: PYTHON_INSTALLER=pyenv TRAVIS_PYTHON_VERSION=2.7.14
-    - os: osx
-      language: generic
-      env: PYTHON_INSTALLER=pyenv TRAVIS_PYTHON_VERSION=3.6.4
-    - os: osx
-      language: generic
-      env:
-        - PYTHON_INSTALLER=brew
-        - PIP_USER_FLAG="--user"
-    - os: linux
-      python: 2.7
     - os: linux
       python: 3.4   # When support for 3.4 is removed unpin the PyYAML version below.
-    - os: linux
-      python: 3.5
-    - os: linux
-      python: 3.6
-    - os: linux
-      python: 3.7
-    - os: linux
-      python: 3.8
 
 # command to install dependencies
 install:
