@@ -418,9 +418,15 @@ class RosdepLookup(object):
                             depend_graph[depend_rosdep_key]['dependencies'] = list(more_dependencies)
 
                     except ResolutionError as e:
-                        errors[resource_name] = e
+                        if resource_name in errors:
+                            errors[resource_name].append(e)
+                        else:
+                            errors[resource_name] = [e]
             except ResourceNotFound as e:
-                errors[resource_name] = e
+                if resource_name in errors:
+                    errors[resource_name].append(e)
+                else:
+                    errors[resource_name] = [e]
 
         try:
             # TODO: I really don't like AssertionErrors here; this should be modeled as 'CyclicGraphError'
