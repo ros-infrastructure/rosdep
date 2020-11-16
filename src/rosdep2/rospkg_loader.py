@@ -159,7 +159,6 @@ class RosPkgLoader(RosdepLoader):
                 deps += pkg.build_depends
             if self.include_buildtool_depends:
                 deps += pkg.buildtool_depends
-<<<<<<< HEAD
             if self.include_build_export_depends:
                 deps += pkg.build_export_depends
             if self.include_exec_depends:
@@ -168,12 +167,6 @@ class RosPkgLoader(RosdepLoader):
                 deps += pkg.test_depends
             if self.include_doc_depends:
                 deps += pkg.doc_depends
-=======
-            if self.include_run_depends:
-                deps += pkg.run_depends
-            if self.include_test_depends:
-                deps += pkg.test_depends
->>>>>>> d674078... Selection of dependency types with cmd line option
             return [d.name for d in deps if d.evaluated_condition]
         elif resource_name in self.get_loadable_resources():
             rosdeps = set(self._rospack.get_rosdeps(resource_name, implicit=False))

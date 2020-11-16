@@ -50,7 +50,6 @@ def call_pkg_config(option, pkg_name):
 
 
 def init_rospack_interface():
-<<<<<<< HEAD
     class Options(object):
 
         def __init__(self):
@@ -59,9 +58,6 @@ def init_rospack_interface():
             self.verbose = False
             self.dependency_types = []
     lookup = _get_default_RosdepLookup(Options())
-=======
-    lookup = _get_default_RosdepLookup()
->>>>>>> d674078... Selection of dependency types with cmd line option
     return lookup.get_rosdep_view(DEFAULT_VIEW_KEY)
 
 
