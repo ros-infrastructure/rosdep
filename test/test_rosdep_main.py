@@ -205,7 +205,12 @@ class TestRosdepMain(unittest.TestCase):
                 expected = [
                     '#[apt] Installation commands:',
                     '  sudo -H apt-get install ros-fuerte-catkin',
-                    '  sudo -H apt-get install libboost1.40-all-dev'
+                    '  sudo -H apt-get install libboost1.40-all-dev',
+                    '  sudo -H apt-get install libeigen3-dev',
+                    '  sudo -H apt-get install libtinyxml-dev',
+                    '  sudo -H apt-get install libltdl-dev',
+                    '  sudo -H apt-get install libtool',
+                    '  sudo -H apt-get install libcurl4-openssl-dev',
                 ]
                 lines = stdout.getvalue().splitlines()
                 assert set(lines) == set(expected), lines
