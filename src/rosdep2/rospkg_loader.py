@@ -56,6 +56,9 @@ DEFAULT_VIEW_KEY = '*default*'
 # resources and SourcesListLoader would build a *single* view that was
 # no longer resource-dependent.
 
+def all_dep_types():
+    # NOTE: 'group' is excluded
+    return {x[:-len('_depends')] for x in catkin_pkg.package.Package.__slots__ if x.endswith('_depends')} - {'group'}
 
 class RosPkgLoader(RosdepLoader):
 
@@ -78,19 +81,8 @@ class RosPkgLoader(RosdepLoader):
         self._loadable_resource_cache = None
         self._catkin_packages_cache = None
 
-        # Dependency types to include
-        def check_dep(dep_type):
-            if dependency_types:
-                return dep_type in dependency_types
-            else:
-                return dep_type in ['buildtool', 'build', 'build_export', 'exec', 'test']
-
-        self.include_build_depends = check_dep('build')
-        self.include_buildtool_depends = check_dep('buildtool')
-        self.include_build_export_depends = check_dep('build_export') or check_dep('run')
-        self.include_exec_depends = check_dep('exec') or check_dep('run')
-        self.include_test_depends = check_dep('test')
-        self.include_doc_depends = check_dep('doc')
+        default_dep_types = all_dep_types() - {'doc'}
+        self.include_dep_types = all_dep_types().intersection(set(dependency_types)) if dependency_types else default_dep_types
 
     def load_view(self, view_name, rosdep_db, verbose=False):
         """
@@ -154,19 +146,7 @@ class RosPkgLoader(RosdepLoader):
         if resource_name in self.get_catkin_paths():
             pkg = catkin_pkg.package.parse_package(self.get_catkin_paths()[resource_name])
             pkg.evaluate_conditions(os.environ)
-            deps = []
-            if self.include_build_depends:
-                deps += pkg.build_depends
-            if self.include_buildtool_depends:
-                deps += pkg.buildtool_depends
-            if self.include_build_export_depends:
-                deps += pkg.build_export_depends
-            if self.include_exec_depends:
-                deps += pkg.exec_depends
-            if self.include_test_depends:
-                deps += pkg.test_depends
-            if self.include_doc_depends:
-                deps += pkg.doc_depends
+            deps = sum((getattr(pkg, '{}_depends'.format(d)) for d in self.include_dep_types), [])
             return [d.name for d in deps if d.evaluated_condition]
         elif resource_name in self.get_loadable_resources():
             rosdeps = set(self._rospack.get_rosdeps(resource_name, implicit=False))

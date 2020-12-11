@@ -179,3 +179,7 @@ def test_RosPkgLoader_get_loadable():
     keys = loader.get_loadable_views()
     for s in ['ros', 'empty', 'invalid', 'stack1']:
         assert s in keys
+
+def test_rospkg_loader_all_dep_types():
+    from rosdep2.rospkg_loader import all_dep_types
+    assert all_dep_types() == {'build', 'buildtool', 'build_export', 'buildtool_export', 'exec', 'test', 'doc'}, all_dep_types()
