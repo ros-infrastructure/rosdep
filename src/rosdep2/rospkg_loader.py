@@ -56,9 +56,11 @@ DEFAULT_VIEW_KEY = '*default*'
 # resources and SourcesListLoader would build a *single* view that was
 # no longer resource-dependent.
 
+
 def all_dep_types():
     # NOTE: 'group' is excluded
     return {x[:-len('_depends')] for x in catkin_pkg.package.Package.__slots__ if x.endswith('_depends')} - {'group'}
+
 
 class RosPkgLoader(RosdepLoader):
 
