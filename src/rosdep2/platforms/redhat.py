@@ -87,13 +87,13 @@ def register_rhel(context):
     context.set_os_version_type(OS_RHEL, lambda self: self.get_version().split('.', 1)[0])
 
 
-def register_rhel_clone(context, OS_RHEL_CLONE):
+def register_rhel_clone(context, os_rhel_clone_name):
     # Some distributions are rebuilds of RHEL and can be treated like RHEL
     # because they are versioned the same and contain the same packages.
     (os_name, os_version) = context.get_os_name_and_version()
-    if os_name == OS_RHEL_CLONE and not context.os_override:
+    if os_name == os_rhel_clone_name and not context.os_override:
         print('rosdep detected OS: [%s] aliasing it to: [%s]' %
-              (OS_RHEL_CLONE, OS_RHEL), file=sys.stderr)
+              (os_rhel_clone_name, OS_RHEL), file=sys.stderr)
         context.set_os_override(OS_RHEL, os_version.split('.', 1)[0])
 
 
