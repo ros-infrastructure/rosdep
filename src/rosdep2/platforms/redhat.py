@@ -31,7 +31,14 @@ from __future__ import print_function
 import subprocess
 import sys
 
-from rospkg.os_detect import OS_CENTOS, OS_RHEL, OS_FEDORA
+from rospkg.os_detect import (
+    OS_ALMALINUX,
+    OS_CENTOS,
+    OS_FEDORA,
+    OS_ORACLE,
+    OS_RHEL,
+    OS_ROCKY
+)
 
 from .pip import PIP_INSTALLER
 from .source import SOURCE_INSTALLER
@@ -56,7 +63,10 @@ def register_platforms(context):
     register_rhel(context)
 
     # Aliases
-    register_centos(context)
+    register_rhel_clone(context, OS_ALMALINUX)
+    register_rhel_clone(context, OS_CENTOS)
+    register_rhel_clone(context, OS_ORACLE)
+    register_rhel_clone(context, OS_ROCKY)
 
 
 def register_fedora(context):
@@ -77,13 +87,13 @@ def register_rhel(context):
     context.set_os_version_type(OS_RHEL, lambda self: self.get_version().split('.', 1)[0])
 
 
-def register_centos(context):
-    # CentOS is an alias for RHEL. If CentOS is detected and it's not set as
-    # an override force RHEL.
+def register_rhel_clone(context, OS_RHEL_CLONE):
+    # Some distributions are rebuilds of RHEL and can be treated like RHEL
+    # because they are versioned the same and contain the same packages.
     (os_name, os_version) = context.get_os_name_and_version()
-    if os_name == OS_CENTOS and not context.os_override:
+    if os_name == OS_RHEL_CLONE and not context.os_override:
         print('rosdep detected OS: [%s] aliasing it to: [%s]' %
-              (OS_CENTOS, OS_RHEL), file=sys.stderr)
+              (OS_RHEL_CLONE, OS_RHEL), file=sys.stderr)
         context.set_os_override(OS_RHEL, os_version.split('.', 1)[0])
 
 
