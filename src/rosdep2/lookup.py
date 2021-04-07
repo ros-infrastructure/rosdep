@@ -328,7 +328,7 @@ class RosdepLookup(object):
     @staticmethod
     def create_from_rospkg(rospack=None, rosstack=None,
                            sources_loader=None,
-                           verbose=False, dependency_types=[]):
+                           verbose=False, dependency_types=None):
         """
         Create :class:`RosdepLookup` based on current ROS package
         environment.
@@ -349,6 +349,8 @@ class RosdepLookup(object):
             rosstack = RosStack()
         if sources_loader is None:
             sources_loader = SourcesListLoader.create_default(verbose=verbose)
+        if dependency_types is None:
+            dependency_types = []
 
         rosdep_db = RosdepDatabase()
 
