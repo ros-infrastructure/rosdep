@@ -406,9 +406,10 @@ def _rosdep_main(args):
             print('No installers with versions available found.')
         sys.exit(0)
 
-    # flatten list of skipped keys and filter-for-installers
+    # flatten list of skipped keys, filter-for-installers, and dependency types
     options.skip_keys = [key for s in options.skip_keys for key in s.split(' ')]
     options.filter_for_installers = [inst for s in options.filter_for_installers for inst in s.split(' ')]
+    options.dependency_types = [dep for s in options.dependency_types for dep in s.split(' ')]
 
     if len(args) == 0:
         parser.error('Please enter a command')
