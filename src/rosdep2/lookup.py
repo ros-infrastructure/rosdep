@@ -340,7 +340,7 @@ class RosdepLookup(object):
         :param sources_loader: (optional) Override SourcesLoader used
             for managing sources.list data sources.
         :param dependency_types: (optional) List of dependency types.
-            Allowed: "build", "buildtool", "build_export", "run", "test", "exec", "doc"
+            Allowed: {'build', 'buildtool', 'build_export', 'buildtool_export', 'exec', 'test', 'doc'}
         """
         # initialize the loader
         if rospack is None:

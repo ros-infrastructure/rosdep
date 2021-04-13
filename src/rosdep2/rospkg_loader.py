@@ -58,8 +58,7 @@ DEFAULT_VIEW_KEY = '*default*'
 
 
 def all_dep_types():
-    # NOTE: 'group' is excluded
-    return {x[:-len('_depends')] for x in catkin_pkg.package.Package.__slots__ if x.endswith('_depends')} - {'group'}
+    return {'build', 'buildtool', 'build_export', 'buildtool_export', 'exec', 'test', 'doc'}
 
 
 class RosPkgLoader(RosdepLoader):
