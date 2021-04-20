@@ -306,7 +306,7 @@ class RosdepLookup(object):
         """
         return self.errors[:]
 
-    def get_rosdeps(self, resource_name, implicit=True):
+    def get_rosdeps(self, resource_name, implicit=True, include_test_deps=True):
         """
         Get rosdeps that *resource_name* (e.g. package) requires.
 
@@ -315,7 +315,7 @@ class RosdepLookup(object):
 
         :returns: list of rosdep names, ``[str]``
         """
-        return self.loader.get_rosdeps(resource_name, implicit=implicit)
+        return self.loader.get_rosdeps(resource_name, implicit=implicit, include_test_deps=include_test_deps)
 
     def get_resources_that_need(self, rosdep_name):
         """
@@ -371,7 +371,7 @@ class RosdepLookup(object):
 
         return lookup
 
-    def resolve_all(self, resources, installer_context, implicit=False):
+    def resolve_all(self, resources, installer_context, implicit=False, include_test_deps=True):
         """
         Resolve all the rosdep dependencies for *resources* using *installer_context*.
 
@@ -393,7 +393,7 @@ class RosdepLookup(object):
         # TODO: resolutions dictionary should be replaced with resolution model instead of mapping (undefined) keys.
         for resource_name in resources:
             try:
-                rosdep_keys = self.get_rosdeps(resource_name, implicit=implicit)
+                rosdep_keys = self.get_rosdeps(resource_name, implicit=implicit, include_test_deps=include_test_deps)
                 if self.verbose:
                     print('resolve_all: resource [%s] requires rosdep keys [%s]' % (resource_name, ', '.join(rosdep_keys)), file=sys.stderr)
                 rosdep_keys = prune_catkin_packages(rosdep_keys, self.verbose)

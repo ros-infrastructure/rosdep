@@ -368,6 +368,9 @@ def _rosdep_main(args):
                       help="Affects the 'update' verb. "
                            'If specified end-of-life distros are being '
                            'fetched too.')
+    parser.add_option('--no-test-deps', action='store_true',
+                      default=False,
+                      help="Ignore test dependencies.")
 
     options, args = parser.parse_args(args)
     if options.print_version or options.print_all_versions:
@@ -688,7 +691,8 @@ def command_check(lookup, packages, options):
     configure_installer_context(installer_context, options)
     installer = RosdepInstaller(installer_context, lookup)
 
-    uninstalled, errors = installer.get_uninstalled(packages, implicit=options.recursive, verbose=verbose)
+    uninstalled, errors = installer.get_uninstalled(packages, implicit=options.recursive, verbose=verbose,
+                                                    include_test_deps=not options.no_test_deps)
 
     # pretty print the result
     if [v for k, v in uninstalled if v]:
@@ -735,12 +739,12 @@ def command_install(lookup, packages, options):
         if options.verbose:
             print('reinstall is true, resolving all dependencies')
         try:
-            uninstalled, errors = lookup.resolve_all(packages, installer_context, implicit=options.recursive)
+            uninstalled, errors = lookup.resolve_all(packages, installer_context, implicit=options.recursive, include_test_deps=not options.no_test_deps)
         except InvalidData as e:
             print('ERROR: unable to process all dependencies:\n\t%s' % (e), file=sys.stderr)
             return 1
     else:
-        uninstalled, errors = installer.get_uninstalled(packages, implicit=options.recursive, verbose=options.verbose)
+        uninstalled, errors = installer.get_uninstalled(packages, implicit=options.recursive, verbose=options.verbose, include_test_deps=not options.no_test_deps)
 
     if options.verbose:
         uninstalled_dependencies = normalize_uninstalled_to_list(uninstalled)

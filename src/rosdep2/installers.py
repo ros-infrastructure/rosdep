@@ -421,7 +421,8 @@ class RosdepInstaller(object):
         self.installer_context = installer_context
         self.lookup = lookup
 
-    def get_uninstalled(self, resources, implicit=False, verbose=False):
+    def get_uninstalled(self, resources, implicit=False, verbose=False,
+                        include_test_deps=True):
         """
         Get list of system dependencies that have not been installed
         as well as a list of errors from performing the resolution.
@@ -442,7 +443,8 @@ class RosdepInstaller(object):
         # resolutions have been unique()d
         if verbose:
             print('resolving for resources [%s]' % (', '.join(resources)))
-        resolutions, errors = self.lookup.resolve_all(resources, installer_context, implicit=implicit)
+        resolutions, errors = self.lookup.resolve_all(resources, installer_context, implicit=implicit,
+                                                      include_test_deps=include_test_deps)
 
         # for each installer, figure out what is left to install
         uninstalled = []
