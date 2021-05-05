@@ -84,7 +84,8 @@ def create_tempfile_from_string_and_execute(string_script, path=None, exec_fn=No
 
     result = 1
     try:
-        fh = tempfile.NamedTemporaryFile('w', delete=False)
+        script_ext = '.bat' if os.name == 'nt' else ''
+        fh = tempfile.NamedTemporaryFile('w', suffix=script_ext, delete=False)
         fh.write(string_script)
         fh.close()
         rd_debug('Executing script below with cwd=%s\n{{{\n%s\n}}}\n' % (path, string_script))
