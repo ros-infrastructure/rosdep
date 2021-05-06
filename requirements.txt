@@ -1,0 +1,12 @@
+catkin-pkg==0.4.23
+certifi==2020.12.5
+distro==1.5.0
+docutils==0.17.1
+mock==4.0.3
+nose==1.3.7
+pyparsing==2.4.7
+python-dateutil==2.8.1
+PyYAML==5.4.1
+rosdistro==0.8.3
+rospkg==1.3.0
+six==1.16.0
