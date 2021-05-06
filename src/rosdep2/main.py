@@ -580,7 +580,7 @@ def command_init(options):
     try:
         data = download_default_sources_list()
     except URLError as e:
-        print('ERROR: cannot download default sources list from:\n%s\nWebsite may be down.' % (DEFAULT_SOURCES_LIST_URL))
+        print('ERROR: cannot download default sources list from:\n%s\nReason: %s' % (DEFAULT_SOURCES_LIST_URL, e.reason))
         return 4
     except DownloadFailure as e:
         print('ERROR: cannot download default sources list from:\n%s\nWebsite may be down.' % (DEFAULT_SOURCES_LIST_URL))
