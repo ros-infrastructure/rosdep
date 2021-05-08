@@ -96,6 +96,11 @@ class RoboStackInstaller(PackageManagerInstaller):
             return []
 
         base_cmd = [get_conda_mamba_cmd(), 'install']
+
+        channels = ['robostack', 'conda-forge']
+        for channel in channels:
+            base_cmd += ['-c', channel]
+
         if not interactive:
             base_cmd.append('-y')
         if quiet:
