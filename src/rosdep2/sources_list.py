@@ -329,6 +329,7 @@ def download_rosdep_data(url):
     except yaml.YAMLError as e:
         raise DownloadFailure(str(e))
 
+
 def download_default_sources_list(url=DEFAULT_SOURCES_LIST_URL):
     """
     Download (and validate) contents of default sources list.
