@@ -498,9 +498,8 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
         try:
             get_source(source)
         except (DownloadFailure, URLError) as e:
-            error_handler(source, e)
-        except IOError as e:
-            error_handler("IO: " + source, e)
+            if error_handler:
+                error_handler(source, e)
 
     # Additional sources for ros distros
     # In compliance with REP137 and REP143
