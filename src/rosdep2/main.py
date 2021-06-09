@@ -392,6 +392,9 @@ def _rosdep_main(args):
             except NotImplementedError:
                 version_strings.append('{} unknown'.format(key))
                 continue
+            except FileNotFoundError:
+                version_strings.append('{} not installed'.format(key))
+                continue
         if version_strings:
             print()
             print('Versions of installers:')
