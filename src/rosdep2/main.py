@@ -33,6 +33,7 @@ Command-line interface to rosdep library
 
 from __future__ import print_function
 
+import errno
 import os
 import sys
 import traceback
@@ -392,7 +393,9 @@ def _rosdep_main(args):
             except NotImplementedError:
                 version_strings.append('{} unknown'.format(key))
                 continue
-            except FileNotFoundError:
+            except EnvironmentError as e:
+                if e.errno != errno.ENOENT:
+                    raise
                 version_strings.append('{} not installed'.format(key))
                 continue
         if version_strings:
