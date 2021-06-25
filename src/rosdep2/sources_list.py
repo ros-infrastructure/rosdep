@@ -563,7 +563,7 @@ def load_cached_sources_list(sources_cache_dir=None, verbose=False):
             cache_data = f.read()
     except IOError as e:
         if e.strerror == 'Permission denied':
-            raise CachePermissionError('Failed to write cache file: ' + str(e)) from e
+            raise CachePermissionError('Failed to write cache file: ' + str(e))
         else:
             raise
     # the loader does all the work
