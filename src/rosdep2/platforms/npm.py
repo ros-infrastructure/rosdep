@@ -83,7 +83,7 @@ class NpmInstaller(PackageManagerInstaller):
         return ret_list
 
     def get_version_strings(self):
-        npm_version = subprocess.check_output(['npm', '--version']).strip()
+        npm_version = subprocess.check_output(['npm', '--version']).strip().decode()
         return ['npm {}'.format(npm_version)]
 
     def get_install_command(self, resolved, interactive=True, reinstall=False, quiet=False):
