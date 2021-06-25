@@ -63,7 +63,7 @@ from .installers import normalize_uninstalled_to_list
 from .installers import RosdepInstaller
 from .lookup import RosdepLookup, ResolutionError, prune_catkin_packages
 from .meta import MetaDatabase
-from .rospkg_loader import DEFAULT_VIEW_KEY, all_dep_types
+from .rospkg_loader import DEFAULT_VIEW_KEY
 from .sources_list import update_sources_list, get_sources_cache_dir,\
     download_default_sources_list, SourcesListLoader, CACHE_INDEX,\
     get_sources_list_dir, get_default_sources_list_file,\
@@ -76,6 +76,7 @@ from .ament_packages import get_packages_with_prefixes
 from .catkin_packages import find_catkin_packages_in
 from .catkin_packages import set_workspace_packages
 from .catkin_packages import get_workspace_packages
+from .catkin_packages import VALID_DEPENDENCY_TYPES
 from catkin_pkg.package import InvalidPackage
 
 
@@ -369,10 +370,10 @@ def _rosdep_main(args):
                            'If specified end-of-life distros are being '
                            'fetched too.')
     parser.add_option('-t', '--dependency-types', dest='dependency_types',
-                      type="choice", choices=list(all_dep_types()),
+                      type="choice", choices=list(VALID_DEPENDENCY_TYPES),
                       default=[], action='append',
                       help='Dependency types to install, can be given multiple times. '
-                           'Choose from {}. Default: all except doc.'.format(all_dep_types()))
+                           'Choose from {}. Default: all except doc.'.format(VALID_DEPENDENCY_TYPES))
 
     options, args = parser.parse_args(args)
     if options.print_version or options.print_all_versions:

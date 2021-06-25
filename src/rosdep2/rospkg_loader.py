@@ -39,6 +39,7 @@ import os
 import catkin_pkg.package
 import rospkg
 
+from .catkin_packages import VALID_DEPENDENCY_TYPES
 from .loader import RosdepLoader
 
 # Default view key is the view that packages that are not in stacks
@@ -55,10 +56,6 @@ DEFAULT_VIEW_KEY = '*default*'
 # SourcesListLoader.  RosPkgLoader would provide identification of
 # resources and SourcesListLoader would build a *single* view that was
 # no longer resource-dependent.
-
-
-def all_dep_types():
-    return {'build', 'buildtool', 'build_export', 'buildtool_export', 'exec', 'test', 'doc'}
 
 
 class RosPkgLoader(RosdepLoader):
@@ -82,8 +79,8 @@ class RosPkgLoader(RosdepLoader):
         self._loadable_resource_cache = None
         self._catkin_packages_cache = None
 
-        default_dep_types = all_dep_types() - {'doc'}
-        self.include_dep_types = all_dep_types().intersection(set(dependency_types)) if dependency_types else default_dep_types
+        default_dep_types = VALID_DEPENDENCY_TYPES - {'doc'}
+        self.include_dep_types = VALID_DEPENDENCY_TYPES.intersection(set(dependency_types)) if dependency_types else default_dep_types
 
     def load_view(self, view_name, rosdep_db, verbose=False):
         """
