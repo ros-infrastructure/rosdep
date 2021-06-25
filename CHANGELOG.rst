@@ -1,3 +1,10 @@
+0.20.1 (2021-04-16)
+-------------------
+- Fix a typo in the ament_packages README
+  - https://github.com/ros-infrastructure/rosdep/pull/796
+- Add support for a few RHEL clones
+  - https://github.com/ros-infrastructure/rosdep/pull/802
+
 0.20.0 (2020-11-12)
 -------------------
 - Install packages in buildtool_export_depends.
