@@ -205,7 +205,12 @@ class TestRosdepMain(unittest.TestCase):
                 expected = [
                     '#[apt] Installation commands:',
                     '  sudo -H apt-get install ros-fuerte-catkin',
-                    '  sudo -H apt-get install libboost1.40-all-dev'
+                    '  sudo -H apt-get install libboost1.40-all-dev',
+                    '  sudo -H apt-get install libeigen3-dev',
+                    '  sudo -H apt-get install libtinyxml-dev',
+                    '  sudo -H apt-get install libltdl-dev',
+                    '  sudo -H apt-get install libtool',
+                    '  sudo -H apt-get install libcurl4-openssl-dev',
                 ]
                 lines = stdout.getvalue().splitlines()
                 assert set(lines) == set(expected), lines
@@ -269,6 +274,12 @@ class TestRosdepMain(unittest.TestCase):
                 rosdep_main(['keys', 'another_catkin_package'] + cmd_extras + ['-i'])
                 stdout, stderr = b
                 assert stdout.getvalue().strip() == 'catkin', stdout.getvalue()
+            with fakeout() as b:
+                rosdep_main(['keys', 'multi_dep_type_catkin_package', '-t', 'test', '-t', 'doc'] + cmd_extras)
+                stdout, stderr = b
+                output_keys = set(stdout.getvalue().split())
+                expected_keys = set(['curl', 'epydoc'])
+                assert output_keys == expected_keys, stdout.getvalue()
         except SystemExit:
             assert False, 'system exit occurred'
         try:
