@@ -33,6 +33,7 @@ Command-line interface to rosdep library
 
 from __future__ import print_function
 
+import errno
 import os
 import sys
 import traceback
@@ -76,6 +77,7 @@ from .ament_packages import get_packages_with_prefixes
 from .catkin_packages import find_catkin_packages_in
 from .catkin_packages import set_workspace_packages
 from .catkin_packages import get_workspace_packages
+from .catkin_packages import VALID_DEPENDENCY_TYPES
 from catkin_pkg.package import InvalidPackage
 
 
@@ -132,7 +134,7 @@ def _get_default_RosdepLookup(options):
     sources_loader = SourcesListLoader.create_default(sources_cache_dir=options.sources_cache_dir,
                                                       os_override=os_override,
                                                       verbose=options.verbose)
-    lookup = RosdepLookup.create_from_rospkg(sources_loader=sources_loader)
+    lookup = RosdepLookup.create_from_rospkg(sources_loader=sources_loader, dependency_types=options.dependency_types)
     lookup.verbose = options.verbose
     return lookup
 
@@ -368,6 +370,11 @@ def _rosdep_main(args):
                       help="Affects the 'update' verb. "
                            'If specified end-of-life distros are being '
                            'fetched too.')
+    parser.add_option('-t', '--dependency-types', dest='dependency_types',
+                      type="choice", choices=list(VALID_DEPENDENCY_TYPES),
+                      default=[], action='append',
+                      help='Dependency types to install, can be given multiple times. '
+                           'Choose from {}. Default: all except doc.'.format(VALID_DEPENDENCY_TYPES))
 
     options, args = parser.parse_args(args)
     if options.print_version or options.print_all_versions:
@@ -392,6 +399,11 @@ def _rosdep_main(args):
             except NotImplementedError:
                 version_strings.append('{} unknown'.format(key))
                 continue
+            except EnvironmentError as e:
+                if e.errno != errno.ENOENT:
+                    raise
+                version_strings.append('{} not installed'.format(key))
+                continue
         if version_strings:
             print()
             print('Versions of installers:')
@@ -401,9 +413,10 @@ def _rosdep_main(args):
             print('No installers with versions available found.')
         sys.exit(0)
 
-    # flatten list of skipped keys and filter-for-installers
+    # flatten list of skipped keys, filter-for-installers, and dependency types
     options.skip_keys = [key for s in options.skip_keys for key in s.split(' ')]
     options.filter_for_installers = [inst for s in options.filter_for_installers for inst in s.split(' ')]
+    options.dependency_types = [dep for s in options.dependency_types for dep in s.split(' ')]
 
     if len(args) == 0:
         parser.error('Please enter a command')

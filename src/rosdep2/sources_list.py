@@ -558,8 +558,14 @@ def load_cached_sources_list(sources_cache_dir=None, verbose=False):
         if verbose:
             print('no cache index present, not loading cached sources', file=sys.stderr)
         return []
-    with open(cache_index, 'r') as f:
-        cache_data = f.read()
+    try:
+        with open(cache_index, 'r') as f:
+            cache_data = f.read()
+    except IOError as e:
+        if e.strerror == 'Permission denied':
+            raise CachePermissionError('Failed to write cache file: ' + str(e))
+        else:
+            raise
     # the loader does all the work
     model = cache_data_source_loader(sources_cache_dir, verbose=verbose)
     return parse_sources_data(cache_data, origin=cache_index, model=model)
