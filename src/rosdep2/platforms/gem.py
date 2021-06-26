@@ -58,6 +58,9 @@ def gem_detect(pkgs, exec_fn=None):
 
     :param exec_fn: function to execute Popen and read stdout (for testing)
     """
+    if not is_gem_installed():
+        return []
+
     if exec_fn is None:
         exec_fn = read_stdout
     pkg_list = exec_fn(['gem', 'list']).split('\n')
