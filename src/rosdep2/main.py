@@ -156,7 +156,7 @@ ERROR: Rosdep cannot find all required resources to answer your query
         if hasattr(os, 'EX_USAGE'):
             sys.exit(os.EX_USAGE)
         else:
-            sys.exit()
+            sys.exit(64)  # EX_USAGE is not available on Windows; EX_USAGE is 64 on Unix
     except RosdepInternalError as e:
         print("""
 ERROR: Rosdep experienced an internal error.
