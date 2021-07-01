@@ -70,8 +70,9 @@ def get_pip_command():
 
 def is_cmd_available(cmd):
     try:
-        subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
-        return True
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        _ = proc.communicate()
+        return 0 == proc.returncode
     except OSError:
         return False
 
