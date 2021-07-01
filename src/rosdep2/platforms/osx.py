@@ -184,7 +184,7 @@ def brew_detect(resolved, exec_fn=None):
     """
     if exec_fn is None:
         exec_fn = read_stdout
-    std_out = exec_fn(['brew', 'list'])
+    std_out = exec_fn(['brew', 'list', '--formula'])
     installed_formulae = std_out.split()
 
     def is_installed(r):

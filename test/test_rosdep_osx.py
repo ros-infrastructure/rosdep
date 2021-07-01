@@ -91,8 +91,8 @@ def test_brew_detect():
     val = brew_detect(make_resolutions(['tinyxml']), exec_fn=m)
     assert val == [], val
     # make sure our test harness is based on the same implementation
-    m.assert_called_with(['brew', 'list'])
-    assert m.call_args_list == [call(['brew', 'list'])], m.call_args_list
+    m.assert_called_with(['brew', 'list', '--formula'])
+    assert m.call_args_list == [call(['brew', 'list', '--formula'])], m.call_args_list
 
     m = Mock()
     m.side_effect = brew_command
