@@ -7,6 +7,9 @@ try:
     import urlparse
 except ImportError:
     import urllib.parse as urlparse  # py3k
+import ssl
+import certifi
+
 import os
 
 from rospkg.os_detect import OS_DEBIAN
@@ -201,7 +204,8 @@ def download_gbpdistro_as_rosdep_data(gbpdistro_url, targets_url=None):
     # will output a warning
     targets_data = download_targets_data(targets_url=targets_url)
     try:
-        f = urlopen(gbpdistro_url, timeout=DOWNLOAD_TIMEOUT)
+        f = urlopen(gbpdistro_url, timeout=DOWNLOAD_TIMEOUT,
+                    context=ssl.create_default_context(cafile=certifi.where()))
         text = f.read()
         f.close()
         gbpdistro_data = yaml.safe_load(text)

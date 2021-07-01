@@ -29,6 +29,11 @@ try:
     from urllib.request import urlopen
 except ImportError:
     from urllib2 import urlopen
+
+# to fix errors with SSL certificate verification
+import ssl
+import certifi
+
 import yaml
 import warnings
 
@@ -59,7 +64,8 @@ def download_targets_data(targets_url=None):
     if targets_url is None:
         targets_url = REP3_TARGETS_URL
     try:
-        f = urlopen(targets_url, timeout=DOWNLOAD_TIMEOUT)
+        f = urlopen(targets_url, timeout=DOWNLOAD_TIMEOUT,
+                    context=ssl.create_default_context(cafile=certifi.where()))
         text = f.read()
         f.close()
         targets_data = yaml.safe_load(text)

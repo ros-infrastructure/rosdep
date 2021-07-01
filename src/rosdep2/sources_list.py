@@ -45,6 +45,10 @@ try:
 except ImportError:
     import pickle
 
+# to fix errors with SSL certificate verification
+import ssl
+import certifi
+
 from .cache_tools import compute_filename_hash, PICKLE_CACHE_EXT, write_atomic, write_cache_file
 from .core import InvalidData, DownloadFailure, CachePermissionError
 from .gbpdistro_support import get_gbprepo_as_rosdep_data, download_gbpdistro_as_rosdep_data
@@ -312,7 +316,8 @@ def download_rosdep_data(url):
             url_request = request.Request(url, headers={'User-Agent': 'rosdep/{version}'.format(version=__version__)})
         else:
             url_request = url
-        f = urlopen(url_request, timeout=DOWNLOAD_TIMEOUT)
+        f = urlopen(url_request, timeout=DOWNLOAD_TIMEOUT,
+                    context=ssl.create_default_context(cafile=certifi.where()))
         text = f.read()
         f.close()
         data = yaml.safe_load(text)
@@ -337,7 +342,8 @@ def download_default_sources_list(url=DEFAULT_SOURCES_LIST_URL):
         retrieved (e.g. 404, server down).
     """
     try:
-        f = urlopen(url, timeout=DOWNLOAD_TIMEOUT)
+        f = urlopen(url, timeout=DOWNLOAD_TIMEOUT,
+                    context=ssl.create_default_context(cafile=certifi.where()))
     except (URLError, httplib.HTTPException) as e:
         raise URLError(str(e) + ' (%s)' % url)
     data = f.read().decode()
@@ -474,21 +480,25 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
 
     sources = parse_sources_list(sources_list_dir=sources_list_dir)
     retval = []
+
+    def get_source(source):
+        if source.type == TYPE_YAML:
+            rosdep_data = download_rosdep_data(source.url)
+        elif source.type == TYPE_GBPDISTRO:  # DEPRECATED, do not use this file. See REP137
+            if not source.tags[0] in ['electric', 'fuerte']:
+                print('Ignore legacy gbpdistro "%s"' % source.tags[0])
+                sources.remove(source)
+                return  # do not store this entry in the cache
+            rosdep_data = download_gbpdistro_as_rosdep_data(source.url)
+        retval.append((source, write_cache_file(sources_cache_dir, source.url, rosdep_data)))
+        if success_handler is not None:
+            success_handler(source)
+
     for source in list(sources):
         try:
-            if source.type == TYPE_YAML:
-                rosdep_data = download_rosdep_data(source.url)
-            elif source.type == TYPE_GBPDISTRO:  # DEPRECATED, do not use this file. See REP137
-                if not source.tags[0] in ['electric', 'fuerte']:
-                    print('Ignore legacy gbpdistro "%s"' % source.tags[0])
-                    sources.remove(source)
-                    continue  # do not store this entry in the cache
-                rosdep_data = download_gbpdistro_as_rosdep_data(source.url)
-            retval.append((source, write_cache_file(sources_cache_dir, source.url, rosdep_data)))
-            if success_handler is not None:
-                success_handler(source)
-        except DownloadFailure as e:
-            if error_handler is not None:
+            get_source(source)
+        except (DownloadFailure, URLError) as e:
+            if error_handler:
                 error_handler(source, e)
 
     # Additional sources for ros distros
@@ -501,17 +511,16 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
         raise ValueError(
             'Requested distribution "%s" is not in the index.' % ros_distro)
 
-    for dist_name in sorted(distribution_names):
+    def get_additional_sources(dist_name):
         distribution = get_index().distributions[dist_name]
         if dist_name != ros_distro:
             if ros_distro is not None:
                 print('Skip distro "%s" different from requested "%s"' % (dist_name, ros_distro))
-                continue
+                return
             if skip_eol_distros:
                 if distribution.get('distribution_status') == 'end-of-life':
                     print('Skip end-of-life distro "%s"' % dist_name)
-                    continue
-        print('Add distro "%s"' % dist_name)
+                    return
         rds = RosDistroSource(dist_name)
         rosdep_data = get_gbprepo_as_rosdep_data(dist_name)
         # Store Python version from REP153
@@ -522,6 +531,10 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
         key = _generate_key_from_urls(dist_files)
         retval.append((rds, write_cache_file(sources_cache_dir, key, rosdep_data)))
         sources.append(rds)
+
+    for dist_name in sorted(distribution_names):
+        print('Add distro "%s"' % dist_name)
+        get_additional_sources(dist_name)
 
     # cache metadata that isn't a source list
     MetaDatabase().set('ROS_PYTHON_VERSION', python_versions)
