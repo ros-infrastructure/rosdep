@@ -29,11 +29,11 @@
 import subprocess
 import json
 
-from rospkg.os_detect import OS_ROBOSTACK
+from rospkg.os_detect import OS_CONDA
 
 from ..installers import PackageManagerInstaller
 
-ROBOSTACK_INSTALLER = 'robostack'
+CONDA_INSTALLER = 'conda'
 
 
 def get_conda_mamba_cmd():
@@ -48,12 +48,12 @@ def get_conda_mamba_cmd():
 
 
 def register_installers(context):
-    context.set_installer(ROBOSTACK_INSTALLER, RoboStackInstaller())
+    context.set_installer(CONDA_INSTALLER, CondaInstaller())
 
 
 def register_platforms(context):
-    context.add_os_installer_key(OS_ROBOSTACK, ROBOSTACK_INSTALLER)
-    context.set_default_os_installer_key(OS_ROBOSTACK, lambda self: ROBOSTACK_INSTALLER)
+    context.add_os_installer_key(OS_CONDA, CONDA_INSTALLER)
+    context.set_default_os_installer_key(OS_CONDA, lambda self: CONDA_INSTALLER)
 
 
 def conda_detect(packages):
@@ -84,9 +84,9 @@ def conda_detect(packages):
     return ret_list
 
 
-class RoboStackInstaller(PackageManagerInstaller):
+class CondaInstaller(PackageManagerInstaller):
     def __init__(self):
-        super(RoboStackInstaller, self).__init__(conda_detect)
+        super(CondaInstaller, self).__init__(conda_detect)
 
     def get_install_command(self, resolved, interactive=True, reinstall=False, quiet=False):
         packages = self.get_packages_to_install(resolved, reinstall=reinstall)
