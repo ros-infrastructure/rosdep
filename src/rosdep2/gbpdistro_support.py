@@ -18,7 +18,7 @@ from .core import InvalidData, DownloadFailure
 from .platforms.debian import APT_INSTALLER
 from .platforms.osx import BREW_INSTALLER
 from .platforms.redhat import YUM_INSTALLER
-from .rosdistrohelper import get_targets, get_release_file, PreRep137Warning
+from .rosdistrohelper import get_index, get_targets, get_release_file, PreRep137Warning
 
 from .rep3 import download_targets_data  # deprecated, will output warning
 
@@ -149,7 +149,10 @@ def get_gbprepo_as_rosdep_data(gbpdistro):
     distro_file = get_release_file(gbpdistro)
     ctx = create_default_installer_context()
     release_name = gbpdistro
-
+    distribution_info = get_index().distributions[release_name]
+    upstream_rosdep_data = None
+    if 'upstream_distribution' in distribution_info:
+        upstream_rosdep_data = get_gbprepo_as_rosdep_data(distribution_info['upstream_distribution'])
     rosdep_data = {}
     default_installers = {}
     gbp_repos = distro_file.repositories
@@ -180,6 +183,9 @@ def get_gbprepo_as_rosdep_data(gbpdistro):
                     }
 
             rosdep_data[pkg]['_is_ros'] = True
+    if upstream_rosdep_data:
+        upstream_rosdep_data.update(rosdep_data)
+        rosdep_data = upstream_rosdep_data
     return rosdep_data
 
 
