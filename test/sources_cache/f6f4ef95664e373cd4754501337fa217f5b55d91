@@ -11,14 +11,14 @@ paramiko:
 testpython:
   arch: python
   cygwin: python
-  debian: python-dev
-  fedora: python-devel
+  debian: python3-dev
+  fedora: python3-devel
   freebsd: python
   gentoo: python
   opensuse: python-devel
-  rhel: python-devel
+  rhel: python3-devel
   slackware: python
-  ubuntu: python-dev
+  ubuntu: python3-dev
   osx:
     homebrew:
       packages: []
