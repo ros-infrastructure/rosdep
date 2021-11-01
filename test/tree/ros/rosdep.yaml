@@ -6,12 +6,12 @@ testtinyxml:
       uri: 'http://kforge.ros.org/rosrelease/viewvc/sourcedeps/tinyxml/tinyxml-2.6.2-1.rdmanifest'
       md5sum: 13760e61e08c9004493c302a16966c42
 testpython:
-  ubuntu: python-dev
-  debian: python-dev
+  ubuntu: python3-dev
+  debian: python3-dev
   arch: python
   opensuse: python-devel
-  fedora: python-devel
-  rhel: python-devel
+  fedora: python3-devel
+  rhel: python3-devel
   macports: python26 python_select
   gentoo: python
   cygwin: python

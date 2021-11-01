@@ -172,8 +172,8 @@ class TestRosdepMain(unittest.TestCase):
             if cmd[0] == 'apt-cache' and cmd[1] == 'showpkg':
                 result = ''
             elif cmd[0] == 'dpkg-query':
-                if cmd[-1] == 'python-dev':
-                    result = '\'python-dev install ok installed\n\''
+                if cmd[-1] == 'python3-dev':
+                    result = '\'python3-dev install ok installed\n\''
                 else:
                     result = '\n'.join(["dpkg-query: no packages found matching %s" % f for f in cmd[3:]])
 
