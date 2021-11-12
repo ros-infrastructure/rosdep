@@ -33,14 +33,6 @@ import os
 import sys
 import yaml
 try:
-    from urllib.request import urlopen
-    from urllib.error import URLError
-    import urllib.request as request
-except ImportError:
-    from urllib2 import urlopen
-    from urllib2 import URLError
-    import urllib2 as request
-try:
     import cPickle as pickle
 except ImportError:
     import pickle
@@ -49,7 +41,7 @@ from .cache_tools import compute_filename_hash, PICKLE_CACHE_EXT, write_atomic, 
 from .core import InvalidData, DownloadFailure, CachePermissionError
 from .gbpdistro_support import get_gbprepo_as_rosdep_data, download_gbpdistro_as_rosdep_data
 from .meta import MetaDatabase
-from ._version import __version__
+from .url_utils import urlopen_gzip, URLError
 
 try:
     import urlparse
@@ -306,13 +298,7 @@ def download_rosdep_data(url):
         retrieved (e.g. 404, bad YAML format, server down).
     """
     try:
-        # http/https URLs need custom requests to specify the user-agent, since some repositories reject
-        # requests from the default user-agent.
-        if url.startswith("http://") or url.startswith("https://"):
-            url_request = request.Request(url, headers={'User-Agent': 'rosdep/{version}'.format(version=__version__)})
-        else:
-            url_request = url
-        f = urlopen(url_request, timeout=DOWNLOAD_TIMEOUT)
+        f = urlopen_gzip(url, timeout=DOWNLOAD_TIMEOUT)
         text = f.read()
         f.close()
         data = yaml.safe_load(text)
@@ -337,7 +323,7 @@ def download_default_sources_list(url=DEFAULT_SOURCES_LIST_URL):
         retrieved (e.g. 404, server down).
     """
     try:
-        f = urlopen(url, timeout=DOWNLOAD_TIMEOUT)
+        f = urlopen_gzip(url, timeout=DOWNLOAD_TIMEOUT)
     except (URLError, httplib.HTTPException) as e:
         raise URLError(str(e) + ' (%s)' % url)
     data = f.read().decode()
