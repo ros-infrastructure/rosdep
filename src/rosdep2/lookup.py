@@ -103,7 +103,11 @@ class RosdepDefinition(object):
         if type(data) != dict:
             raise InvalidData('rosdep value for [%s] must be a dictionary' % (self.rosdep_key), origin=self.origin)
         if os_name not in data:
-            raise ResolutionError(rosdep_key, data, os_name, os_version, 'No definition of [%s] for OS [%s]' % (rosdep_key, os_name))
+            if '*' not in data:
+                raise ResolutionError(rosdep_key, data, os_name, os_version, 'No definition of [%s] for OS [%s]' % (rosdep_key, os_name))
+            elif type(data['*']) != dict:
+                raise InvalidData('rosdep value under OS wildcard for [%s] must specify a package manager' % (rosdep_key))
+            os_name = '*'
         data = data[os_name]
         return_key = default_installer_key
 

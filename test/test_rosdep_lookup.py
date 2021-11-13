@@ -202,6 +202,41 @@ def test_RosdepDefinition():
         # tripwire
         str(e)
 
+    definition = RosdepDefinition('invalid_os_wildcard', {'*': ['pytest']}, 'os_wildcard.txt')
+    try:
+        val = definition.get_rule_for_platform('debian', 'sid', ['apt', 'source', 'pip'], 'apt')
+        assert False, 'should have raised: %s' % (str(val))
+    except InvalidData:
+        pass
+
+    definition = RosdepDefinition('non_debian_key', {'debian': None, '*': {'pip': ['pytest']}}, 'os_wildcard.txt')
+    try:
+        val = definition.get_rule_for_platform('debian', 'sid', ['apt', 'source', 'pip'], 'apt')
+        assert False, 'should have raised: %s' % (str(val))
+    except ResolutionError as e:
+        assert e.rosdep_key == 'non_debian_key'
+        assert e.os_name == 'debian'
+        assert e.os_version == 'sid'
+        # tripwire
+        str(e)
+
+    # package manager not supported
+    try:
+        val = definition.get_rule_for_platform('ubuntu', 'precise', ['apt', 'source'], 'apt')
+        assert False, 'should have raised: %s' % (str(val))
+    except ResolutionError as e:
+        assert e.rosdep_key == 'non_debian_key'
+        assert e.os_name == '*'
+        assert e.os_version == 'precise'
+        # tripwire
+        str(e)
+
+    val = definition.get_rule_for_platform('ubuntu', 'precise', ['apt', 'source', 'pip'], 'apt')
+    assert val == ('pip', ['pytest']), val
+
+    val = definition.get_rule_for_platform('fedora', '35', ['dnf', 'source', 'pip'], 'dnf')
+    assert val == ('pip', ['pytest']), val
+
     # test reverse merging OS things (first is default)
     definition = RosdepDefinition('test', {'debian': 'libtest-dev'}, 'fake-1.txt')
     # rule should work as expected before reverse-merge
