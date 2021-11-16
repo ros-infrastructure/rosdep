@@ -189,7 +189,7 @@ def test_RosdepDefinition():
     except ResolutionError as e:
         assert e.rosdep_key == 'trusty_only_key'
         assert e.os_name == 'ubuntu'
-        assert e.os_version == '*'
+        assert e.os_version == 'lucid'
         # tripwire
         str(e)
     try:
@@ -226,7 +226,7 @@ def test_RosdepDefinition():
         assert False, 'should have raised: %s' % (str(val))
     except ResolutionError as e:
         assert e.rosdep_key == 'non_debian_key'
-        assert e.os_name == '*'
+        assert e.os_name == 'ubuntu'
         assert e.os_version == 'precise'
         # tripwire
         str(e)
