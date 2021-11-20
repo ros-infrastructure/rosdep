@@ -66,9 +66,9 @@ from .lookup import RosdepLookup, ResolutionError, prune_catkin_packages
 from .meta import MetaDatabase
 from .rospkg_loader import DEFAULT_VIEW_KEY
 from .sources_list import update_sources_list, get_sources_cache_dir,\
-    download_default_sources_list, SourcesListLoader, CACHE_INDEX,\
-    get_sources_list_dir, get_default_sources_list_file,\
-    DEFAULT_SOURCES_LIST_URL
+    download_default_sources_list,download_mirror_sources_list, SourcesListLoader, CACHE_INDEX,\
+    get_sources_list_dir, get_default_sources_list_file, get_mirror_sources_list_file,\
+    DEFAULT_SOURCES_LIST_URL, MIRROR_SOURCES_LIST_URL
 from .rosdistrohelper import PreRep137Warning
 
 from .ament_packages import AMENT_PREFIX_PATH_ENV_VAR
@@ -625,8 +625,95 @@ def command_init(options):
     finally:
         os.umask(old_umask)
 
+def command_init_mirror(options):
+    try:
+        data = download_mirror_sources_list()
+    except URLError as e:
+        print('ERROR: cannot download mirror sources list from:\n%s\nWebsite may be down.' % (MIRROR_SOURCES_LIST_URL))
+        return 4
+    except DownloadFailure as e:
+        print('ERROR: cannot download mirror sources list from:\n%s\nWebsite may be down.' % (MIRROR_SOURCES_LIST_URL))
+        print(e)
+        return 4
+    # reuse path variable for error message
+    path = get_sources_list_dir()
+    old_umask = os.umask(0o022)
+    try:
+        if not os.path.exists(path):
+            os.makedirs(path)
+        path = get_mirror_sources_list_file()
+        if os.path.exists(path):
+            print('ERROR: mirror sources list file already exists:\n\t%s\nPlease delete if you wish to re-initialize' % (path))
+            return 1
+        with open(path, 'w') as f:
+            f.write(data)
+        print('Wrote %s' % (path))
+        print('Recommended: please run\n\n\trosdep update\n')
+    except IOError as e:
+        print('ERROR: cannot create %s:\n\t%s' % (path, e), file=sys.stderr)
+        return 2
+    except OSError as e:
+        print("ERROR: cannot create %s:\n\t%s\nPerhaps you need to run 'sudo rosdep init' instead" % (path, e), file=sys.stderr)
+        return 3
+    finally:
+        os.umask(old_umask)
+
 
 def command_update(options):
+    error_occured = []
+
+    def update_success_handler(data_source):
+        print('Hit %s' % (data_source.url))
+
+    def update_error_handler(data_source, exc):
+        error_string = 'ERROR: unable to process source [%s]:\n\t%s' % (data_source.url, exc)
+        print(error_string, file=sys.stderr)
+        error_occured.append(error_string)
+    sources_list_dir = get_sources_list_dir()
+
+    # disable deprecation warnings when using the command-line tool
+    warnings.filterwarnings('ignore', category=PreRep137Warning)
+
+    if not os.path.exists(sources_list_dir):
+        print('ERROR: no sources directory exists on the system meaning rosdep has not yet been initialized.\n\nPlease initialize your rosdep with\n\n\tsudo rosdep init\n')
+        return 1
+
+    filelist = [f for f in os.listdir(sources_list_dir) if f.endswith('.list')]
+    if not filelist:
+        print('ERROR: no data sources in %s\n\nPlease initialize your rosdep with\n\n\tsudo rosdep init\n' % sources_list_dir, file=sys.stderr)
+        return 1
+    try:
+        print('reading in sources list data from %s' % (sources_list_dir))
+        sources_cache_dir = get_sources_cache_dir()
+        try:
+            if os.geteuid() == 0:
+                print("Warning: running 'rosdep update' as root is not recommended.", file=sys.stderr)
+                print("  You should run 'sudo rosdep fix-permissions' and invoke 'rosdep update' again without sudo.", file=sys.stderr)
+        except AttributeError:
+            # nothing we wanna do under Windows
+            pass
+        update_sources_list(success_handler=update_success_handler,
+                            error_handler=update_error_handler,
+                            skip_eol_distros=not options.include_eol_distros,
+                            ros_distro=options.ros_distro)
+        print('updated cache in %s' % (sources_cache_dir))
+    except InvalidData as e:
+        print('ERROR: invalid sources list file:\n\t%s' % (e), file=sys.stderr)
+        return 1
+    except IOError as e:
+        print('ERROR: error loading sources list:\n\t%s' % (e), file=sys.stderr)
+        return 1
+    except ValueError as e:
+        print('ERROR: invalid argument value provided:\n\t%s' % (e), file=sys.stderr)
+        return 1
+    if error_occured:
+        print('ERROR: Not all sources were able to be updated.\n[[[')
+        for e in error_occured:
+            print(e)
+        print(']]]')
+        return 1
+
+def command_update_mirror(options):
     error_occured = []
 
     def update_success_handler(data_source):
@@ -954,7 +1041,9 @@ command_handlers = {
     'where-defined': command_where_defined,
     'resolve': command_resolve,
     'init': command_init,
+    'init-mirror': command_init_mirror,
     'update': command_update,
+    'update-mirror':command_update_mirror,
     'fix-permissions': command_fix_permissions,
 
     # backwards compat
