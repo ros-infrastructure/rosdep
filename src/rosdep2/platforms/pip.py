@@ -86,7 +86,12 @@ def pip_detect(pkgs, exec_fn=None):
     pip_cmd = get_pip_command()
     if not pip_cmd:
         return []
-
+    
+    pkg_names = {}
+    for pkg in pkgs:
+      short_name = pkg.split('#egg=')[1] if '#egg=' in pkg else pkg
+      pkg_names[short_name] = pkg
+        
     fallback_to_pip_show = False
     if exec_fn is None:
         exec_fn = read_stdout
@@ -96,8 +101,8 @@ def pip_detect(pkgs, exec_fn=None):
     ret_list = []
     for pkg in pkg_list:
         pkg_row = pkg.split('==')
-        if pkg_row[0] in pkgs:
-            ret_list.append(pkg_row[0])
+        if pkg_row[0] in pkg_names:
+            ret_list.append(pkg_names[pkg_row[0]])
 
     # Try to detect with the return code of `pip show`.
     # This can show the existance of things like `argparse` which
@@ -105,7 +110,7 @@ def pip_detect(pkgs, exec_fn=None):
     # See:
     #   https://github.com/pypa/pip/issues/1570#issuecomment-71111030
     if fallback_to_pip_show:
-        for pkg in [p for p in pkgs if p not in ret_list]:
+        for pkg in [p for p in pkg_names if p not in ret_list]:
             # does not see retcode but stdout for old pip to check if installed
             proc = subprocess.Popen(
                 pip_cmd + ['show', pkg],
@@ -116,7 +121,7 @@ def pip_detect(pkgs, exec_fn=None):
             output = output.strip()
             if proc.returncode == 0 and output:
                 # `pip show` detected it, add it to the list.
-                ret_list.append(pkg)
+                ret_list.append(pkg_names[pkg])
 
     return ret_list
 
