@@ -99,11 +99,17 @@ class RosdepDefinition(object):
         """
         rosdep_key = self.rosdep_key
         data = self.data
+        queried_os = os_name
+        queried_ver = os_version
 
         if type(data) != dict:
             raise InvalidData('rosdep value for [%s] must be a dictionary' % (self.rosdep_key), origin=self.origin)
         if os_name not in data:
-            raise ResolutionError(rosdep_key, data, os_name, os_version, 'No definition of [%s] for OS [%s]' % (rosdep_key, os_name))
+            if '*' not in data:
+                raise ResolutionError(rosdep_key, data, queried_os, queried_ver, 'No definition of [%s] for OS [%s]' % (rosdep_key, os_name))
+            elif type(data['*']) != dict:
+                raise InvalidData('rosdep value under OS wildcard for [%s] must specify a package manager' % (rosdep_key))
+            os_name = '*'
         data = data[os_name]
         return_key = default_installer_key
 
@@ -129,10 +135,10 @@ class RosdepDefinition(object):
                     # dictionary value.
                     # if the os_version is not defined and there is no wildcard
                     if os_version not in data and '*' not in data:
-                        raise ResolutionError(rosdep_key, self.data, os_name, os_version, 'No definition of [%s] for OS version [%s]' % (rosdep_key, os_version))
+                        raise ResolutionError(rosdep_key, self.data, queried_os, queried_ver, 'No definition of [%s] for OS version [%s]' % (rosdep_key, os_version))
                     # if the os_version has the value None
                     if os_version in data and data[os_version] is None:
-                        raise ResolutionError(rosdep_key, self.data, os_name, os_version, '[%s] defined as "not available" for OS version [%s]' % (rosdep_key, os_version))
+                        raise ResolutionError(rosdep_key, self.data, queried_os, queried_ver, '[%s] defined as "not available" for OS version [%s]' % (rosdep_key, os_version))
                     # if os version is not defined (and there is a wildcard) fallback to the wildcard
                     if os_version not in data:
                         os_version = '*'
@@ -146,7 +152,7 @@ class RosdepDefinition(object):
 
         # Check if the rule is null
         if data is None:
-            raise ResolutionError(rosdep_key, self.data, os_name, os_version, '[%s] defined as "not available" for OS version [%s]' % (rosdep_key, os_version))
+            raise ResolutionError(rosdep_key, self.data, queried_os, queried_ver, '[%s] defined as "not available" for OS version [%s]' % (rosdep_key, os_version))
         if type(data) not in (dict, list, type('str')):
             raise InvalidData('rosdep OS definition for [%s:%s] must be a dictionary, string, or list: %s' % (self.rosdep_key, os_name, data), origin=self.origin)
 
