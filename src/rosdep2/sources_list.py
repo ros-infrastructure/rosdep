@@ -448,7 +448,8 @@ def _generate_key_from_urls(urls):
 
 def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
                         success_handler=None, error_handler=None,
-                        skip_eol_distros=False, ros_distro=None):
+                        skip_eol_distros=False, ros_distro=None,
+                        quiet=False):
     """
     Re-downloaded data from remote sources and store in cache.  Also
     update the cache index based on current sources.
@@ -480,7 +481,8 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
                 rosdep_data = download_rosdep_data(source.url)
             elif source.type == TYPE_GBPDISTRO:  # DEPRECATED, do not use this file. See REP137
                 if not source.tags[0] in ['electric', 'fuerte']:
-                    print('Ignore legacy gbpdistro "%s"' % source.tags[0])
+                    if not quiet:
+                        print('Ignore legacy gbpdistro "%s"' % source.tags[0])
                     sources.remove(source)
                     continue  # do not store this entry in the cache
                 rosdep_data = download_gbpdistro_as_rosdep_data(source.url)
@@ -495,7 +497,8 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
     # In compliance with REP137 and REP143
     python_versions = {}
 
-    print('Query rosdistro index %s' % get_index_url())
+    if not quiet:
+        print('Query rosdistro index %s' % get_index_url())
     distribution_names = get_index().distributions.keys()
     if ros_distro is not None and ros_distro not in distribution_names:
         raise ValueError(
@@ -505,13 +508,16 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
         distribution = get_index().distributions[dist_name]
         if dist_name != ros_distro:
             if ros_distro is not None:
-                print('Skip distro "%s" different from requested "%s"' % (dist_name, ros_distro))
+                if not quiet:
+                    print('Skip distro "%s" different from requested "%s"' % (dist_name, ros_distro))
                 continue
             if skip_eol_distros:
                 if distribution.get('distribution_status') == 'end-of-life':
-                    print('Skip end-of-life distro "%s"' % dist_name)
+                    if not quiet:
+                        print('Skip end-of-life distro "%s"' % dist_name)
                     continue
-        print('Add distro "%s"' % dist_name)
+        if not quiet:
+            print('Add distro "%s"' % dist_name)
         rds = RosDistroSource(dist_name)
         rosdep_data = get_gbprepo_as_rosdep_data(dist_name)
         # Store Python version from REP153

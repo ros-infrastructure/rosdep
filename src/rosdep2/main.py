@@ -630,7 +630,8 @@ def command_update(options):
     error_occured = []
 
     def update_success_handler(data_source):
-        print('Hit %s' % (data_source.url))
+        if not options.quiet:
+            print('Hit %s' % (data_source.url))
 
     def update_error_handler(data_source, exc):
         error_string = 'ERROR: unable to process source [%s]:\n\t%s' % (data_source.url, exc)
@@ -650,7 +651,8 @@ def command_update(options):
         print('ERROR: no data sources in %s\n\nPlease initialize your rosdep with\n\n\tsudo rosdep init\n' % sources_list_dir, file=sys.stderr)
         return 1
     try:
-        print('reading in sources list data from %s' % (sources_list_dir))
+        if not options.quiet:
+            print('reading in sources list data from %s' % (sources_list_dir))
         sources_cache_dir = get_sources_cache_dir()
         try:
             if os.geteuid() == 0:
@@ -662,8 +664,10 @@ def command_update(options):
         update_sources_list(success_handler=update_success_handler,
                             error_handler=update_error_handler,
                             skip_eol_distros=not options.include_eol_distros,
-                            ros_distro=options.ros_distro)
-        print('updated cache in %s' % (sources_cache_dir))
+                            ros_distro=options.ros_distro,
+                            quiet=options.quiet)
+        if not options.quiet:
+            print('updated cache in %s' % (sources_cache_dir))
     except InvalidData as e:
         print('ERROR: invalid sources list file:\n\t%s' % (e), file=sys.stderr)
         return 1
