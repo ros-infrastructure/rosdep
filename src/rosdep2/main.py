@@ -178,14 +178,14 @@ ERROR: %s
 """ % (e.args[0], e), file=sys.stderr)
         sys.exit(1)
     except CachePermissionError as e:
-        print(str(e))
-        print("Try running 'sudo rosdep fix-permissions'")
+        print(str(e), file=sys.stderr)
+        print("Try running 'sudo rosdep fix-permissions'", file=sys.stderr)
         sys.exit(1)
     except UnsupportedOs as e:
         print('Unsupported OS: %s\nSupported OSes are [%s]' % (e.args[0], ', '.join(e.args[1])), file=sys.stderr)
         sys.exit(1)
     except InvalidPackage as e:
-        print(str(e))
+        print(str(e), file=sys.stderr)
         sys.exit(1)
     except Exception as e:
         print("""
@@ -280,7 +280,7 @@ def setup_environment_variables(ros_distro):
         if 'ROS_DISTRO' in os.environ and os.environ['ROS_DISTRO'] != ros_distro:
             # user has a different workspace sourced, use --rosdistro
             print('WARNING: given --rosdistro {} but ROS_DISTRO is "{}". Ignoring environment.'.format(
-                ros_distro, os.environ['ROS_DISTRO']))
+                ros_distro, os.environ['ROS_DISTRO']), file=sys.stderr)
             # Use python version from --rosdistro
             if 'ROS_PYTHON_VERSION' in os.environ:
                 del os.environ['ROS_PYTHON_VERSION']
@@ -487,7 +487,7 @@ def _package_args_handler(command, parser, options, args):
             if options.verbose:
                 print("Using argument '{0}' as a path to search.".format(path))
             if not os.path.exists(path):
-                print("given path '{0}' does not exist".format(path))
+                print("given path '{0}' does not exist".format(path), file=sys.stderr)
                 return 1
             path = os.path.abspath(path)
             if 'ROS_PACKAGE_PATH' not in os.environ:
@@ -596,11 +596,11 @@ def command_init(options):
     try:
         data = download_default_sources_list()
     except URLError as e:
-        print('ERROR: cannot download default sources list from:\n%s\nWebsite may be down.' % (DEFAULT_SOURCES_LIST_URL))
+        print('ERROR: cannot download default sources list from:\n%s\nWebsite may be down.' % (DEFAULT_SOURCES_LIST_URL), file=sys.stderr)
         return 4
     except DownloadFailure as e:
-        print('ERROR: cannot download default sources list from:\n%s\nWebsite may be down.' % (DEFAULT_SOURCES_LIST_URL))
-        print(e)
+        print('ERROR: cannot download default sources list from:\n%s\nWebsite may be down.' % (DEFAULT_SOURCES_LIST_URL), file=sys.stderr)
+        print(e, file=sys.stderr)
         return 4
     # reuse path variable for error message
     path = get_sources_list_dir()
@@ -610,7 +610,7 @@ def command_init(options):
             os.makedirs(path)
         path = get_default_sources_list_file()
         if os.path.exists(path):
-            print('ERROR: default sources list file already exists:\n\t%s\nPlease delete if you wish to re-initialize' % (path))
+            print('ERROR: default sources list file already exists:\n\t%s\nPlease delete if you wish to re-initialize' % (path), file=sys.stderr)
             return 1
         with open(path, 'w') as f:
             f.write(data)
@@ -642,7 +642,7 @@ def command_update(options):
     warnings.filterwarnings('ignore', category=PreRep137Warning)
 
     if not os.path.exists(sources_list_dir):
-        print('ERROR: no sources directory exists on the system meaning rosdep has not yet been initialized.\n\nPlease initialize your rosdep with\n\n\tsudo rosdep init\n')
+        print('ERROR: no sources directory exists on the system meaning rosdep has not yet been initialized.\n\nPlease initialize your rosdep with\n\n\tsudo rosdep init\n', file=sys.stderr)
         return 1
 
     filelist = [f for f in os.listdir(sources_list_dir) if f.endswith('.list')]
@@ -674,10 +674,10 @@ def command_update(options):
         print('ERROR: invalid argument value provided:\n\t%s' % (e), file=sys.stderr)
         return 1
     if error_occured:
-        print('ERROR: Not all sources were able to be updated.\n[[[')
+        print('ERROR: Not all sources were able to be updated.\n[[[', file=sys.stderr)
         for e in error_occured:
-            print(e)
-        print(']]]')
+            print(e, file=sys.stderr)
+        print(']]]', file=sys.stderr)
         return 1
 
 
@@ -776,7 +776,7 @@ def command_install(lookup, packages, options):
         for rosdep_key, error in errors.items():
             print('%s: %s' % (rosdep_key, error_to_human_readable(error)), file=sys.stderr)
         if options.robust:
-            print('Continuing to install resolvable dependencies...')
+            print('Continuing to install resolvable dependencies...', file=sys.stderr)
         else:
             return 1
     try:
@@ -934,13 +934,13 @@ def command_fix_permissions(options):
     except Exception:
         import traceback
         traceback.print_exc()
-        print('Failed to walk directory. Try with sudo?')
+        print('Failed to walk directory. Try with sudo?', file=sys.stderr)
     else:
         if failed:
-            print('Failed to change ownership for:')
+            print('Failed to change ownership for:', file=sys.stderr)
             for p, e in failed:
-                print('{0} --> {1}'.format(p, e))
-            print('Try with sudo?')
+                print('{0} --> {1}'.format(p, e), file=sys.stderr)
+            print('Try with sudo?', file=sys.stderr)
         else:
             print('Done.')
 
