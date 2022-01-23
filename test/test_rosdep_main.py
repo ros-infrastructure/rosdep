@@ -38,8 +38,10 @@ import rospkg.os_detect
 
 import unittest
 
-from mock import patch
-from mock import DEFAULT
+try:
+    from unittest.mock import DEFAULT, patch
+except ImportError:
+    from mock import DEFAULT, patch
 
 from rosdep2 import main
 from rosdep2.ament_packages import AMENT_PREFIX_PATH_ENV_VAR

@@ -28,7 +28,10 @@
 from __future__ import print_function
 
 from contextlib import contextmanager
-from mock import patch
+try:
+    from unittest.mock import Mock, patch
+except ImportError:
+    from mock import Mock, patch
 import os
 import sys
 try:
@@ -117,7 +120,6 @@ def test_InstallerContext_os_version_and_name():
     context.set_os_override(*val)
     assert val == context.get_os_name_and_version()
 
-    from mock import Mock
     os_detect_mock = Mock(spec=OsDetect)
     os_detect_mock.get_name.return_value = 'fakeos'
     os_detect_mock.get_version.return_value = 'fakeos-version'
@@ -559,7 +561,6 @@ def test_RosdepInstaller_get_uninstalled_unconfigured():
         assert 'apt' in str(e)
 
     # annoying mock to test generally impossible error condition
-    from mock import Mock
     lookup = Mock(spec=RosdepLookup)
     lookup.resolve_all.return_value = ([('bad-key', ['stuff'])], [])
 
