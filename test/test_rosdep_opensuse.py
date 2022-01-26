@@ -29,7 +29,10 @@
 
 import os
 import traceback
-from mock import patch
+try:
+    from unittest.mock import patch
+except ImportError:
+    from mock import patch
 
 
 def get_test_dir():
