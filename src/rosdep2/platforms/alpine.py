@@ -87,7 +87,7 @@ def apk_detect(pkgs, exec_fn=read_stdout):
         elif line == '':
             reading = False
         elif reading:
-            replaced_packages.append(line)
+            replaced_packages.append(line.strip())
 
     return origin_packages + replaced_packages
 
