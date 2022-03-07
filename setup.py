@@ -14,6 +14,7 @@ kwargs = {
     'test_requires': ['mock', 'nose >= 1.0'],
     'author': 'Tully Foote, Ken Conley',
     'author_email': 'tfoote@osrfoundation.org',
+    'maintainer': 'ROS Infrastructure Team',
     'url': 'http://wiki.ros.org/rosdep',
     'keywords': ['ROS'],
     'entry_points': {
