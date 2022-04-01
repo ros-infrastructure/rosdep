@@ -30,9 +30,9 @@
 import os
 import traceback
 try:
-    from unittest.mock import Mock, patch
+    from unittest.mock import Mock, call, patch
 except ImportError:
-    from mock import Mock, patch
+    from mock import Mock, call, patch
 
 import rospkg.os_detect
 
@@ -55,13 +55,42 @@ def test_apk_detect():
     expected = []
     val = apk_detect(['a'], exec_fn=m)
     assert val == expected, 'Result was: %s' % val
-    m.assert_called_with(['apk', 'info', '--installed', 'a'])
+    m.assert_has_calls([
+        call(['apk', 'info', '--installed', 'a']),
+        call(['apk', 'info', '--installed', '--replaces', 'a']),
+    ])
 
-    m = Mock(return_value='\n'.join(['a', 'b']))
+    m = Mock(side_effect=[
+        '\n'.join(['a', 'b']),
+        '',
+    ])
     expected = ['a', 'b']
     val = apk_detect(['a', 'b'], exec_fn=m)
     assert val == expected, 'Result was: %s' % val
-    m.assert_called_with(['apk', 'info', '--installed', 'a', 'b'])
+    m.assert_has_calls([
+        call(['apk', 'info', '--installed', 'a', 'b']),
+        call(['apk', 'info', '--installed', '--replaces', 'a', 'b']),
+    ])
+
+    # Packages installed by alias names should be resolved.
+    m = Mock(side_effect=[
+        '\n'.join(['origin-pkg1', 'origin-pkg2']),
+        '\n'.join([
+            'origin-pkg1=0.0.0-r0 replaces:',
+            'alias-pkg1',
+            '',
+            'origin-pkg2=1.1.1-r1 replaces:',
+            'alias-pkg2',
+            '',
+        ]),
+    ])
+    expected = ['origin-pkg1', 'origin-pkg2', 'alias-pkg1', 'alias-pkg2']
+    val = apk_detect(['alias-pkg1', 'alias-pkg2'], exec_fn=m)
+    assert val == expected, 'Result was: %s' % val
+    m.assert_has_calls([
+        call(['apk', 'info', '--installed', 'alias-pkg1', 'alias-pkg2']),
+        call(['apk', 'info', '--installed', '--replaces', 'alias-pkg1', 'alias-pkg2']),
+    ])
 
 
 def test_ApkInstaller():
