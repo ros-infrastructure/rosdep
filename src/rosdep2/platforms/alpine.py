@@ -61,11 +61,35 @@ def apk_detect(pkgs, exec_fn=read_stdout):
     if not pkgs:
         return []
 
-    cmd = ['apk', 'info', '--installed']
-    cmd.extend(pkgs)
-    std_out = exec_fn(cmd)
+    # Get installed package names:
+    cmd_installed = ['apk', 'info', '--installed']
+    cmd_installed.extend(pkgs)
+    origin_packages = exec_fn(cmd_installed).splitlines()
 
-    return std_out.splitlines()
+    # Resolve alias names of replaced packages.
+    cmd_replaces = ['apk', 'info', '--installed', '--replaces']
+    cmd_replaces.extend(pkgs)
+    # This command will respond like:
+    #
+    #    $ apk info --installed --replaces boost-atomic boost-filesystem
+    #    boost1.76-atomic-1.76.0-r0 replaces:
+    #    boost-atomic
+    #
+    #    boost1.76-filesystem-1.76.0-r0 replaces:
+    #    boost-filesystem
+    #
+    #    $
+    replaced_packages = []
+    reading = False
+    for line in exec_fn(cmd_replaces).splitlines():
+        if line.endswith(' replaces:'):
+            reading = True
+        elif line == '':
+            reading = False
+        elif reading:
+            replaced_packages.append(line.strip())
+
+    return origin_packages + replaced_packages
 
 
 class ApkInstaller(PackageManagerInstaller):

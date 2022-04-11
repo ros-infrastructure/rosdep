@@ -682,7 +682,8 @@ def command_update(options):
 
 
 def command_keys(lookup, packages, options):
-    lookup = _get_default_RosdepLookup(options)
+    if not lookup:
+        lookup = _get_default_RosdepLookup(options)
     rosdep_keys = get_keys(lookup, packages, options.recursive)
     prune_catkin_packages(rosdep_keys, options.verbose)
     _print_lookup_errors(lookup)
@@ -792,9 +793,10 @@ def command_install(lookup, packages, options):
         return 1
 
 
-def command_db(options):
+def command_db(options, lookup=None):
     # exact same setup logic as command_resolve, should possibly combine
-    lookup = _get_default_RosdepLookup(options)
+    if not lookup:
+        lookup = _get_default_RosdepLookup(options)
     installer_context = create_default_installer_context(verbose=options.verbose)
     configure_installer_context(installer_context, options)
     os_name, os_version = installer_context.get_os_name_and_version()
@@ -839,8 +841,9 @@ def _print_lookup_errors(lookup):
             print('WARNING: %s' % (str(error)), file=sys.stderr)
 
 
-def command_what_needs(args, options):
-    lookup = _get_default_RosdepLookup(options)
+def command_what_needs(args, options, lookup=None):
+    if not lookup:
+        lookup = _get_default_RosdepLookup(options)
     packages = []
     for rosdep_name in args:
         packages.extend(lookup.get_resources_that_need(rosdep_name))
@@ -849,8 +852,9 @@ def command_what_needs(args, options):
     print('\n'.join(set(packages)))
 
 
-def command_where_defined(args, options):
-    lookup = _get_default_RosdepLookup(options)
+def command_where_defined(args, options, lookup=None):
+    if not lookup:
+        lookup = _get_default_RosdepLookup(options)
     locations = []
     for rosdep_name in args:
         locations.extend(lookup.get_views_that_define(rosdep_name))
@@ -865,8 +869,9 @@ def command_where_defined(args, options):
         return 1
 
 
-def command_resolve(args, options):
-    lookup = _get_default_RosdepLookup(options)
+def command_resolve(args, options, lookup=None):
+    if not lookup:
+        lookup = _get_default_RosdepLookup(options)
     installer_context = create_default_installer_context(verbose=options.verbose)
     configure_installer_context(installer_context, options)
 
