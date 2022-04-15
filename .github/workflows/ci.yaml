@@ -31,10 +31,10 @@ jobs:
           python -m pip install --upgrade pip setuptools
           python -m pip install PyYAML argparse rospkg vcstools catkin_pkg python-dateutil rosdistro
           python -m pip install -e .
-          python -m pip install nose coverage flake8 mock codecov
+          python -m pip install pytest pytest-cov flake8 mock codecov
       - name: Run tests
         run: |
-          python -m nose --with-coverage --cover-package=rosdep2 --with-xunit test
+          python -m pytest test --cov
       - name: Check coverage
         run: |
           python -m codecov
