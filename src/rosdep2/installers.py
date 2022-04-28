@@ -600,9 +600,9 @@ class RosdepInstaller(object):
                     raise InstallFailed(failures=failures)
 
         # test installation of each
-        for r in resolved:
-            if not installer.is_installed(r):
-                failures.append((installer_key, 'Failed to detect successful installation of [%s]' % (r)))
+        # for r in resolved:
+        #     if not installer.is_installed(r):
+        #         failures.append((installer_key, 'Failed to detect successful installation of [%s]' % (r)))
         # finalize result
         if failures:
             raise InstallFailed(failures=failures)
