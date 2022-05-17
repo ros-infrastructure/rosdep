@@ -38,6 +38,7 @@ from rospkg.os_detect import (
     OS_ELEMENTARY,
     OS_MX,
     OS_POP,
+    OS_RASPBIAN,
     OS_ZORIN,
     OsDetect,
     read_os_release
@@ -66,6 +67,7 @@ def register_platforms(context):
     register_linaro(context)
     register_mx(context)
     register_pop(context)
+    register_raspbian(context)
     register_zorin(context)
 
 
@@ -119,6 +121,16 @@ def register_pop(context):
         print('rosdep detected OS: [%s] aliasing it to: [%s]' %
               (OS_POP, OS_UBUNTU), file=sys.stderr)
         context.set_os_override(OS_UBUNTU, context.os_detect.get_codename())
+
+
+def register_raspbian(context):
+    # Raspbian is an alias for Debian. If Raspbian is detected and it's
+    # not set as an override force Debian.
+    (os_name, os_version) = context.get_os_name_and_version()
+    if os_name == OS_RASPBIAN and not context.os_override:
+        print('rosdep detected OS: [%s] aliasing it to: [%s]' %
+              (OS_RASPBIAN, OS_DEBIAN), file=sys.stderr)
+        context.set_os_override(OS_DEBIAN, context.os_detect.get_codename())
 
 
 def register_zorin(context):
