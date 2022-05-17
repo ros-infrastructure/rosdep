@@ -27,9 +27,11 @@
 
 # Author Tully Foote/tfoote@willowgarage.com
 
+from __future__ import print_function
 import subprocess
+import sys
 
-from rospkg.os_detect import OS_ARCH
+from rospkg.os_detect import OS_ARCH, OS_MANJARO
 
 from ..installers import PackageManagerInstaller
 from .source import SOURCE_INSTALLER
@@ -47,6 +49,17 @@ def register_platforms(context):
     context.add_os_installer_key(OS_ARCH, PACMAN_INSTALLER)
     context.add_os_installer_key(OS_ARCH, PIP_INSTALLER)
     context.set_default_os_installer_key(OS_ARCH, lambda self: PACMAN_INSTALLER)
+
+    register_manjaro(context)
+
+
+def register_manjaro(context):
+    # Manjaro uses the same packages as Arch Linux. Override to Arch if detected
+    (os_name, os_version) = context.get_os_name_and_version()
+    if os_name == OS_MANJARO and not context.os_override:
+        print('rosdep detected OS: [%s] aliasing it to: [%s]' %
+              (OS_MANJARO, OS_ARCH), file=sys.stderr)
+        context.set_os_override(OS_ARCH, context.os_detect.get_codename())
 
 
 def pacman_detect_single(p):
