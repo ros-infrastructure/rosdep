@@ -34,6 +34,8 @@ import yaml
 
 from collections import defaultdict
 
+from catkin_pkg.package import Dependency
+
 from rospkg import RosPack, RosStack, ResourceNotFound
 
 from .core import RosdepInternalError, InvalidData, rd_debug
@@ -235,10 +237,11 @@ class RosdepView(object):
                 db[dep_name].reverse_merge(dep_data, update_entry.origin, verbose=verbose)
 
 
-def prune_catkin_packages(rosdep_keys, verbose=False):
+def prune_catkin_packages(rosdeps, verbose=False):
     workspace_pkgs = catkin_packages.get_workspace_packages()
     if not workspace_pkgs:
-        return rosdep_keys
+        return rosdeps
+    rosdep_keys = [d.name for d in rosdeps]
     for i, rosdep_key in reversed(list(enumerate(rosdep_keys))):
         if rosdep_key in workspace_pkgs:
             # If workspace packages listed (--catkin-workspace)
@@ -248,13 +251,14 @@ def prune_catkin_packages(rosdep_keys, verbose=False):
                 print("rosdep key '{0}'".format(rosdep_key) +
                       ' is in the catkin workspace, skipping.',
                       file=sys.stderr)
-            del rosdep_keys[i]
-    return rosdep_keys
+            del rosdeps[i]
+    return rosdeps
 
 
-def prune_skipped_packages(rosdep_keys, skipped_keys, verbose=False):
+def prune_skipped_packages(rosdeps, skipped_keys, verbose=False):
     if not skipped_keys:
-        return rosdep_keys
+        return rosdeps
+    rosdep_keys = [d.name for d in rosdeps]
     for i, rosdep_key in reversed(list(enumerate(rosdep_keys))):
         if rosdep_key in skipped_keys:
             # If the key is in the list of keys to explicitly skip, skip it
@@ -262,8 +266,8 @@ def prune_skipped_packages(rosdep_keys, skipped_keys, verbose=False):
                 print("rosdep key '{0}'".format(rosdep_key) +
                       ' was listed in the skipped packages, skipping.',
                       file=sys.stderr)
-            del rosdep_keys[i]
-    return rosdep_keys
+            del rosdeps[i]
+    return rosdeps
 
 
 class RosdepLookup(object):
@@ -329,7 +333,7 @@ class RosdepLookup(object):
 
         :returns: list of package names that require rosdep, ``[str]``
         """
-        return [k for k in self.loader.get_loadable_resources() if rosdep_name in self.get_rosdeps(k, implicit=False)]
+        return [k for k in self.loader.get_loadable_resources() if rosdep_name in [d.name for d in self.get_rosdeps(k, implicit=False)]]
 
     @staticmethod
     def create_from_rospkg(rospack=None, rosstack=None,
@@ -403,15 +407,16 @@ class RosdepLookup(object):
         # TODO: resolutions dictionary should be replaced with resolution model instead of mapping (undefined) keys.
         for resource_name in resources:
             try:
-                rosdep_keys = self.get_rosdeps(resource_name, implicit=implicit)
+                rosdeps = self.get_rosdeps(resource_name, implicit=implicit)
                 if self.verbose:
-                    print('resolve_all: resource [%s] requires rosdep keys [%s]' % (resource_name, ', '.join(rosdep_keys)), file=sys.stderr)
-                rosdep_keys = prune_catkin_packages(rosdep_keys, self.verbose)
-                rosdep_keys = prune_skipped_packages(rosdep_keys, self.skipped_keys, self.verbose)
-                for rosdep_key in rosdep_keys:
+                    print('resolve_all: resource [%s] requires rosdep keys [%s]' % (resource_name, ', '.join([d.name for d in rosdeps])), file=sys.stderr)
+                rosdeps = prune_catkin_packages(rosdeps, self.verbose)
+                rosdeps = prune_skipped_packages(rosdeps, self.skipped_keys, self.verbose)
+                for rosdep in rosdeps:
                     try:
                         installer_key, resolution, dependencies = \
-                            self.resolve(rosdep_key, resource_name, installer_context)
+                            self.resolve(rosdep, resource_name, installer_context)
+                        rosdep_key = rosdep.name
                         depend_graph[rosdep_key]['installer_key'] = installer_key
                         depend_graph[rosdep_key]['install_keys'] = list(resolution)
                         depend_graph[rosdep_key]['dependencies'] = list(dependencies)
@@ -421,7 +426,7 @@ class RosdepLookup(object):
                             if depend_rosdep_key in depend_graph:
                                 continue
                             installer_key, resolution, more_dependencies = \
-                                self.resolve(depend_rosdep_key, resource_name, installer_context)
+                                self.resolve(Dependency(depend_rosdep_key), resource_name, installer_context)
                             dependencies.extend(more_dependencies)
                             depend_graph[depend_rosdep_key]['installer_key'] = installer_key
                             depend_graph[depend_rosdep_key]['install_keys'] = list(resolution)
@@ -443,13 +448,13 @@ class RosdepLookup(object):
 
         return resolutions_flat, errors
 
-    def resolve(self, rosdep_key, resource_name, installer_context):
+    def resolve(self, rosdep, resource_name, installer_context):
         """
         Resolve a :class:`RosdepDefinition` for a particular
         os/version spec.
 
         :param resource_name: resource (e.g. ROS package) to resolve key within
-        :param rosdep_key: rosdep key to resolve
+        :param rosdeps: rosdep key (catkin_pkg.package.Dependency object) to resolve
         :param os_name: OS name to use for resolution
         :param os_version: OS name to use for resolution
 
@@ -463,6 +468,7 @@ class RosdepLookup(object):
         :raises: :exc:`ResolutionError` If *rosdep_key* cannot be resolved for *resource_name* in *installer_context*
         :raises: :exc:`rospkg.ResourceNotFound` if *resource_name* cannot be located
         """
+        rosdep_key = rosdep.name
         os_name, os_version = installer_context.get_os_name_and_version()
 
         view = self.get_rosdep_view_for_resource(resource_name)
@@ -502,7 +508,7 @@ class RosdepLookup(object):
             installer = installer_context.get_installer(installer_key)
         except KeyError:
             raise ResolutionError(rosdep_key, definition.data, os_name, os_version, 'Unsupported installer [%s]' % (installer_key))
-        resolution = installer.resolve(rosdep_args_dict)
+        resolution = installer.resolve(rosdep, rosdep_args_dict)
         dependencies = installer.get_depends(rosdep_args_dict)
 
         # cache value

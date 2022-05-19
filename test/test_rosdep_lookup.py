@@ -343,25 +343,26 @@ def test_RosdepLookup_get_rosdeps():
         pass
 
     print(lookup.get_rosdeps('stack1_p1'))
-    assert set(lookup.get_rosdeps('stack1_p1')) == set(['stack1_dep1', 'stack1_p1_dep1', 'stack1_p1_dep2'])
-    assert set(lookup.get_rosdeps('stack1_p1', implicit=False)) == set(['stack1_dep1', 'stack1_p1_dep1', 'stack1_p1_dep2'])
+    assert set([d.name for d in lookup.get_rosdeps('stack1_p1')]) == set(['stack1_dep1', 'stack1_p1_dep1', 'stack1_p1_dep2'])
+    assert set([d.name for d in lookup.get_rosdeps('stack1_p1', implicit=False)]) == set(['stack1_dep1', 'stack1_p1_dep1', 'stack1_p1_dep2'])
 
     print(lookup.get_rosdeps('stack1_p2'))
-    assert set(lookup.get_rosdeps('stack1_p2', implicit=False)) == set(['stack1_dep1', 'stack1_dep2', 'stack1_p2_dep1']), set(lookup.get_rosdeps('stack1_p2'))
-    assert set(lookup.get_rosdeps('stack1_p2', implicit=True)) == set(['stack1_dep1', 'stack1_dep2', 'stack1_p1_dep1', 'stack1_p1_dep2', 'stack1_p2_dep1']), set(lookup.get_rosdeps('stack1_p2'))
+    assert set([d.name for d in lookup.get_rosdeps('stack1_p2', implicit=False)]) == set(['stack1_dep1', 'stack1_dep2', 'stack1_p2_dep1']), set(lookup.get_rosdeps('stack1_p2'))
+    assert set([d.name for d in lookup.get_rosdeps('stack1_p2', implicit=True)]) == \
+        set(['stack1_dep1', 'stack1_dep2', 'stack1_p1_dep1', 'stack1_p1_dep2', 'stack1_p2_dep1']), set([d.name for d in lookup.get_rosdeps('stack1_p2')])
 
     # catkin
     print(lookup.get_rosdeps('simple_catkin_package'))
-    assert set(lookup.get_rosdeps('simple_catkin_package')) == set(['catkin', 'testboost'])
-    assert set(lookup.get_rosdeps('simple_catkin_package', implicit=False)) == set(['catkin', 'testboost'])
+    assert set([d.name for d in lookup.get_rosdeps('simple_catkin_package')]) == set(['catkin', 'testboost'])
+    assert set([d.name for d in lookup.get_rosdeps('simple_catkin_package', implicit=False)]) == set(['catkin', 'testboost'])
 
     print(lookup.get_rosdeps('another_catkin_package'))
-    assert set(lookup.get_rosdeps('another_catkin_package')) == set(['catkin', 'simple_catkin_package'])  # implicit deps won't get included
-    assert set(lookup.get_rosdeps('another_catkin_package', implicit=False)) == set(['catkin', 'simple_catkin_package'])
+    assert set([d.name for d in lookup.get_rosdeps('another_catkin_package')]) == set(['catkin', 'simple_catkin_package'])  # implicit deps won't get included
+    assert set([d.name for d in lookup.get_rosdeps('another_catkin_package', implicit=False)]) == set(['catkin', 'simple_catkin_package'])
 
     print(lookup.get_rosdeps('metapackage_with_deps'))
-    assert set(lookup.get_rosdeps('metapackage_with_deps')) == set(['catkin', 'simple_catkin_package', 'another_catkin_package'])  # implicit deps won't get included
-    assert set(lookup.get_rosdeps('metapackage_with_deps', implicit=False)) == set(['catkin', 'simple_catkin_package', 'another_catkin_package'])
+    assert set([d.name for d in lookup.get_rosdeps('metapackage_with_deps')]) == set(['catkin', 'simple_catkin_package', 'another_catkin_package'])  # implicit deps won't get included
+    assert set([d.name for d in lookup.get_rosdeps('metapackage_with_deps', implicit=False)]) == set(['catkin', 'simple_catkin_package', 'another_catkin_package'])
 
 
 def test_RosdepLookup_dependency_types():
@@ -395,14 +396,14 @@ def test_RosdepLookup_dependency_types():
     doc_deps = ['epydoc']
     default_deps = buildtool_deps + build_deps + build_export_deps + exec_deps + test_deps
 
-    assert set(buildtool_lookup.get_rosdeps('multi_dep_type_catkin_package')) == set(buildtool_deps)
-    assert set(build_lookup.get_rosdeps('multi_dep_type_catkin_package')) == set(build_deps)
-    assert set(build_export_lookup.get_rosdeps('multi_dep_type_catkin_package')) == set(build_export_deps)
-    assert set(exec_lookup.get_rosdeps('multi_dep_type_catkin_package')) == set(exec_deps)
-    assert set(test_lookup.get_rosdeps('multi_dep_type_catkin_package')) == set(test_deps)
-    assert set(mix_lookup.get_rosdeps('multi_dep_type_catkin_package')) == set(build_deps + build_export_deps)
-    assert set(default_lookup.get_rosdeps('multi_dep_type_catkin_package')) == set(default_deps)
-    assert set(doc_lookup.get_rosdeps('multi_dep_type_catkin_package')) == set(doc_deps)
+    assert set([d.name for d in buildtool_lookup.get_rosdeps('multi_dep_type_catkin_package')]) == set(buildtool_deps)
+    assert set([d.name for d in build_lookup.get_rosdeps('multi_dep_type_catkin_package')]) == set(build_deps)
+    assert set([d.name for d in build_export_lookup.get_rosdeps('multi_dep_type_catkin_package')]) == set(build_export_deps)
+    assert set([d.name for d in exec_lookup.get_rosdeps('multi_dep_type_catkin_package')]) == set(exec_deps)
+    assert set([d.name for d in test_lookup.get_rosdeps('multi_dep_type_catkin_package')]) == set(test_deps)
+    assert set([d.name for d in mix_lookup.get_rosdeps('multi_dep_type_catkin_package')]) == set(build_deps + build_export_deps)
+    assert set([d.name for d in default_lookup.get_rosdeps('multi_dep_type_catkin_package')]) == set(default_deps)
+    assert set([d.name for d in doc_lookup.get_rosdeps('multi_dep_type_catkin_package')]) == set(doc_deps)
 
 
 def test_RosdepLookup_get_resources_that_need():
@@ -559,6 +560,7 @@ def test_RosdepLookup_resolve_all_errors():
 
 
 def test_RosdepLookup_resolve_errors():
+    from catkin_pkg.package import Dependency
     from rosdep2.installers import InstallerContext
     from rosdep2.lookup import RosdepLookup, ResolutionError
     rospack, rosstack = get_test_rospkgs()
@@ -571,19 +573,20 @@ def test_RosdepLookup_resolve_errors():
     installer_context.set_os_override('ubuntu', 'lucid')
 
     try:
-        lookup.resolve('testtinyxml', 'rospack_fake', installer_context)
+        lookup.resolve(Dependency('testtinyxml'), 'rospack_fake', installer_context)
         assert False, 'should have raised'
     except ResolutionError as e:
         assert 'Unsupported OS' in str(e), str(e)
 
     try:
-        lookup.resolve('fakedep', 'rospack_fake', installer_context)
+        lookup.resolve(Dependency('fakedep'), 'rospack_fake', installer_context)
         assert False, 'should have raised'
     except ResolutionError as e:
         assert 'Cannot locate rosdep definition' in str(e), str(e)
 
 
 def test_RosdepLookup_resolve():
+    from catkin_pkg.package import Dependency
     from rosdep2 import create_default_installer_context
     from rosdep2.lookup import RosdepLookup
     rospack, rosstack = get_test_rospkgs()
@@ -596,17 +599,17 @@ def test_RosdepLookup_resolve():
 
     # repeat for caching
     for count in range(0, 2):
-        installer_key, resolution, dependencies = lookup.resolve('testtinyxml', 'rospack_fake', installer_context)
+        installer_key, resolution, dependencies = lookup.resolve(Dependency('testtinyxml'), 'rospack_fake', installer_context)
         assert 'apt' == installer_key
         assert ['libtinyxml-dev'] == resolution
         assert [] == dependencies
 
-        installer_key, resolution, dependencies = lookup.resolve('testboost', 'roscpp_fake', installer_context)
+        installer_key, resolution, dependencies = lookup.resolve(Dependency('testboost'), 'roscpp_fake', installer_context)
         assert 'apt' == installer_key
         assert ['libboost1.40-all-dev'] == resolution
         assert [] == dependencies
 
-        installer_key, resolution, dependencies = lookup.resolve('testlibtool', 'roscpp_fake', installer_context)
+        installer_key, resolution, dependencies = lookup.resolve(Dependency('testlibtool'), 'roscpp_fake', installer_context)
         assert 'apt' == installer_key
         assert set(['libtool', 'libltdl-dev']) == set(resolution)
         assert [] == dependencies
