@@ -30,6 +30,7 @@
 from __future__ import print_function
 import subprocess
 import sys
+from rosdep2 import InvalidData
 
 from rospkg.os_detect import (
     OS_DEBIAN,
@@ -40,7 +41,7 @@ from rospkg.os_detect import (
     OS_POP,
     OS_ZORIN,
     OsDetect,
-    read_os_release
+    read_os_release,
 )
 from .pip import PIP_INSTALLER
 from .gem import GEM_INSTALLER
@@ -50,7 +51,7 @@ from ..installers import PackageManagerInstaller
 from ..shell_utils import read_stdout
 
 # apt package manager key
-APT_INSTALLER = 'apt'
+APT_INSTALLER = "apt"
 
 
 def register_installers(context):
@@ -84,8 +85,10 @@ def register_linaro(context):
     # an override force ubuntu.
     (os_name, os_version) = context.get_os_name_and_version()
     if os_name == OS_LINARO and not context.os_override:
-        print('rosdep detected OS: [%s] aliasing it to: [%s]' %
-              (OS_LINARO, OS_UBUNTU), file=sys.stderr)
+        print(
+            "rosdep detected OS: [%s] aliasing it to: [%s]" % (OS_LINARO, OS_UBUNTU),
+            file=sys.stderr,
+        )
         context.set_os_override(OS_UBUNTU, context.os_detect.get_codename())
 
 
@@ -94,8 +97,11 @@ def register_elementary(context):
     # not set as an override force ubuntu.
     (os_name, os_version) = context.get_os_name_and_version()
     if os_name == OS_ELEMENTARY and not context.os_override:
-        print('rosdep detected OS: [%s] aliasing it to: [%s]' %
-              (OS_ELEMENTARY, OS_UBUNTU), file=sys.stderr)
+        print(
+            "rosdep detected OS: [%s] aliasing it to: [%s]"
+            % (OS_ELEMENTARY, OS_UBUNTU),
+            file=sys.stderr,
+        )
         context.set_os_override(OS_UBUNTU, context.os_detect.get_codename())
 
 
@@ -104,11 +110,15 @@ def register_mx(context):
     # not set as an override, force Debian.
     (os_name, os_version) = context.get_os_name_and_version()
     if os_name == OS_MX and not context.os_override:
-        print('rosdep detected OS: [%s] aliasing it to: [%s]' %
-              (OS_MX, OS_DEBIAN), file=sys.stderr)
+        print(
+            "rosdep detected OS: [%s] aliasing it to: [%s]" % (OS_MX, OS_DEBIAN),
+            file=sys.stderr,
+        )
         release_info = read_os_release()
         version = read_os_release()["VERSION"]
-        context.set_os_override(OS_DEBIAN, version[version.find("(") + 1:version.find(")")])
+        context.set_os_override(
+            OS_DEBIAN, version[version.find("(") + 1 : version.find(")")]
+        )
 
 
 def register_pop(context):
@@ -116,8 +126,10 @@ def register_pop(context):
     # not set as an override force ubuntu.
     (os_name, os_version) = context.get_os_name_and_version()
     if os_name == OS_POP and not context.os_override:
-        print('rosdep detected OS: [%s] aliasing it to: [%s]' %
-              (OS_POP, OS_UBUNTU), file=sys.stderr)
+        print(
+            "rosdep detected OS: [%s] aliasing it to: [%s]" % (OS_POP, OS_UBUNTU),
+            file=sys.stderr,
+        )
         context.set_os_override(OS_UBUNTU, context.os_detect.get_codename())
 
 
@@ -126,8 +138,10 @@ def register_zorin(context):
     # not set as an override force ubuntu.
     (os_name, os_version) = context.get_os_name_and_version()
     if os_name == OS_ZORIN and not context.os_override:
-        print('rosdep detected OS: [%s] aliasing it to: [%s]' %
-              (OS_ZORIN, OS_UBUNTU), file=sys.stderr)
+        print(
+            "rosdep detected OS: [%s] aliasing it to: [%s]" % (OS_ZORIN, OS_UBUNTU),
+            file=sys.stderr,
+        )
         context.set_os_override(OS_UBUNTU, context.os_detect.get_codename())
 
 
@@ -149,7 +163,7 @@ def _read_apt_cache_showpkg(packages, exec_fn=None):
     second, boolean, parameter.
     """
 
-    cmd = ['apt-cache', 'showpkg'] + packages
+    cmd = ["apt-cache", "showpkg"] + packages
     if exec_fn is None:
         exec_fn = read_stdout
 
@@ -160,7 +174,7 @@ def _read_apt_cache_showpkg(packages, exec_fn=None):
     for p in packages:
         last_start = starts[-1] if len(starts) > 0 else 0
         try:
-            starts.append(std_out.index('Package: %s' % p, last_start))
+            starts.append(std_out.index("Package: %s" % p, last_start))
         except ValueError:
             notfound.add(p)
     starts.append(None)
@@ -170,9 +184,9 @@ def _read_apt_cache_showpkg(packages, exec_fn=None):
             yield p, False, None
             continue
         start = starts.pop(0)
-        lines = iter(std_out[start:starts[0]])
+        lines = iter(std_out[start : starts[0]])
 
-        header = 'Package: %s' % p
+        header = "Package: %s" % p
         # proceed to Package header
         try:
             while next(lines) != header:
@@ -182,14 +196,14 @@ def _read_apt_cache_showpkg(packages, exec_fn=None):
 
         # proceed to versions section
         try:
-            while next(lines) != 'Versions: ':
+            while next(lines) != "Versions: ":
                 pass
         except StopIteration:
             pass
 
         # virtual packages don't have versions
         try:
-            if next(lines) != '':
+            if next(lines) != "":
                 yield p, False, None
                 continue
         except StopIteration:
@@ -197,12 +211,12 @@ def _read_apt_cache_showpkg(packages, exec_fn=None):
 
         # proceed to reserve provides section
         try:
-            while next(lines) != 'Reverse Provides: ':
+            while next(lines) != "Reverse Provides: ":
                 pass
         except StopIteration:
             pass
 
-        pr = [line.split(' ', 2)[0] for line in lines]
+        pr = [line.split(" ", 2)[0] for line in lines]
         if pr:
             yield p, True, pr
         else:
@@ -224,27 +238,29 @@ def dpkg_detect(pkgs, exec_fn=None):
     # This is a map `package name -> package name optionally with version`.
     version_lock_map = {}
     for p in pkgs:
-        if '=' in p:
-            version_lock_map[p.split('=')[0]] = p
+        if "=" in p:
+            version_lock_map[p.split("=")[0]] = p
         else:
             version_lock_map[p] = p
-    cmd = ['dpkg-query', '-W', '-f=\'${Package} ${Status}\n\'']
+    cmd = ["dpkg-query", "-W", "-f='${Package} ${Status}\n'"]
     cmd.extend(version_lock_map.keys())
 
     if exec_fn is None:
         exec_fn = read_stdout
     std_out, std_err = exec_fn(cmd, True)
-    std_out = std_out.replace('\'', '')
-    pkg_list = std_out.split('\n')
+    std_out = std_out.replace("'", "")
+    pkg_list = std_out.split("\n")
     for pkg in pkg_list:
         pkg_row = pkg.split()
-        if len(pkg_row) == 4 and (pkg_row[3] == 'installed'):
+        if len(pkg_row) == 4 and (pkg_row[3] == "installed"):
             ret_list.append(pkg_row[0])
     installed_packages = [version_lock_map[r] for r in ret_list]
 
     # now for the remaining packages check, whether they are installed as
     # virtual packages
-    remaining = _read_apt_cache_showpkg(list(p for p in pkgs if p not in installed_packages))
+    remaining = _read_apt_cache_showpkg(
+        list(p for p in pkgs if p not in installed_packages)
+    )
     virtual = [n for (n, v, pr) in remaining if v and len(dpkg_detect(pr)) > 0]
 
     return installed_packages + virtual
@@ -276,10 +292,48 @@ class AptInstaller(PackageManagerInstaller):
     def __init__(self):
         super(AptInstaller, self).__init__(dpkg_detect)
 
+    def resolve(self, rosdep, rosdep_args):
+        """
+        See :meth:`Installer.resolve()`
+        """
+        packages = None
+        if type(rosdep_args) == dict:
+            packages = rosdep_args.get("packages", [])
+            if isinstance(packages, str):
+                packages = packages.split()
+        elif isinstance(rosdep_args, str):
+            packages = rosdep_args.split(" ")
+        elif type(rosdep_args) == list:
+            packages = rosdep_args
+        else:
+            raise InvalidData("Invalid rosdep args: %s" % (rosdep_args))
+
+        if rosdep.version_eq:
+            for i, package in list(enumerate(packages)):
+                packages[i] = package + "=" + rosdep.version_eq
+        if rosdep.version_gte:
+            raise InvalidData(
+                "version_gte not supported for debian package: %s" % (rosdep)
+            )
+        if rosdep.version_lte:
+            raise InvalidData(
+                "version_lte not supported for debian package: %s" % (rosdep)
+            )
+        if rosdep.version_gt:
+            raise InvalidData(
+                "version_gt not supported for debian package: %s" % (rosdep)
+            )
+        if rosdep.version_lt:
+            raise InvalidData(
+                "version_lt not supported for debian package: %s" % (rosdep)
+            )
+
+        return packages
+
     def get_version_strings(self):
-        output = subprocess.check_output(['apt-get', '--version'])
-        version = output.splitlines()[0].split(b' ')[1].decode()
-        return ['apt-get {}'.format(version)]
+        output = subprocess.check_output(["apt-get", "--version"])
+        version = output.splitlines()[0].split(b" ")[1].decode()
+        return ["apt-get {}".format(version)]
 
     def _get_install_commands_for_package(self, base_cmd, package_or_list):
         def pkg_command(p):
@@ -290,14 +344,20 @@ class AptInstaller(PackageManagerInstaller):
         else:
             return pkg_command(package_or_list)
 
-    def get_install_command(self, resolved, interactive=True, reinstall=False, quiet=False):
+    def get_install_command(
+        self, resolved, interactive=True, reinstall=False, quiet=False
+    ):
         packages = self.get_packages_to_install(resolved, reinstall=reinstall)
+        print(packages)
         if not packages:
             return []
-        base_cmd = ['apt-get', 'install']
+        base_cmd = ["apt-get", "install"]
         if not interactive:
-            base_cmd.append('-y')
+            base_cmd.append("-y")
         if quiet:
-            base_cmd.append('-qq')
+            base_cmd.append("-qq")
 
-        return [self._get_install_commands_for_package(base_cmd, p) for p in _iterate_packages(packages, reinstall)]
+        return [
+            self._get_install_commands_for_package(base_cmd, p)
+            for p in _iterate_packages(packages, reinstall)
+        ]
