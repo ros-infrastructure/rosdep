@@ -361,7 +361,7 @@ class PackageManagerInstaller(Installer):
         s = set()
         for resolved in resolved_rules:
             s.update(resolved)
-        return sorted(list(s))
+        return sorted(s)
 
     def get_packages_to_install(self, resolved, reinstall=False):
         """

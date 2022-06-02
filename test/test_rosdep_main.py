@@ -309,7 +309,7 @@ class TestRosdepMain(unittest.TestCase):
                 rosdep_main(['install', '--from-path', test_package_dir])
                 exit_mock.assert_called_with(1)
             stdout, stderr = b
-            output = stdout.getvalue().splitlines()
-            assert len(output) == 2
-            assert test_package_dir in output[0]
-            assert 'Package version ":{version}" does not follow version conventions' in output[1]
+            output = stderr.getvalue().splitlines()
+            assert len(output) >= 2
+            assert test_package_dir in output[-2]
+            assert 'Package version ":{version}" does not follow version conventions' in output[-1]

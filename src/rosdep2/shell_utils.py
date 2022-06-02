@@ -96,7 +96,7 @@ def create_tempfile_from_string_and_execute(string_script, path=None, exec_fn=No
             else:
                 result = exec_fn(fh.name, cwd=path)
         except OSError as ex:
-            print('Execution failed with OSError: %s' % (ex))
+            print('Execution failed with OSError: %s' % (ex), file=sys.stderr)
     finally:
         if os.path.exists(fh.name):
             os.remove(fh.name)

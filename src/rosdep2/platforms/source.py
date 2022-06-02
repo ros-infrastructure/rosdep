@@ -31,13 +31,9 @@ from __future__ import print_function
 
 import os
 try:
-    from urllib.request import urlopen
     from urllib.request import urlretrieve
-    from urllib.error import URLError
 except ImportError:
-    from urllib2 import urlopen
     from urllib import urlretrieve
-    from urllib2 import URLError
 import hashlib
 
 import yaml
@@ -45,6 +41,7 @@ import yaml
 from ..core import rd_debug, InvalidData
 from ..installers import PackageManagerInstaller, InstallFailed
 from ..shell_utils import create_tempfile_from_string_and_execute
+from ..url_utils import urlopen_gzip, URLError
 
 SOURCE_INSTALLER = 'source'
 
@@ -75,7 +72,7 @@ def _sub_fetch_file(url, md5sum=None):
     """
     contents = ''
     try:
-        fh = urlopen(url)
+        fh = urlopen_gzip(url)
         contents = fh.read()
         if md5sum is not None:
             filehash = hashlib.md5(contents).hexdigest()
