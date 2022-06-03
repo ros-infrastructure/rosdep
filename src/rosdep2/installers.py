@@ -519,6 +519,11 @@ class RosdepInstaller(object):
             squashed_uninstalled[-1][1].extend(resolved)
 
         failures = []
+
+        INSTALLER_PRIORITY = ['apt', 'nix', 'source', 'npm', 'pip']
+        # ensure pip is at the end of the list for our temporary way of compiling pip packages
+        squashed_uninstalled.sort(key=lambda i: INSTALLER_PRIORITY.index(i[0]))
+
         for installer_key, resolved in squashed_uninstalled:
             try:
                 self.install_resolved(installer_key, resolved, simulate=simulate,

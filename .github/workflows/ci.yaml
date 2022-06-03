@@ -2,7 +2,7 @@ name: rosdep-ci
 
 on:
   push:
-    branches: [master]
+    branches: [greenroom]
   pull_request:
     branches: ['*']
 
@@ -11,12 +11,7 @@ jobs:
       strategy:
         matrix:
           os: [ubuntu-latest, macos-latest]
-          python: [3.7, 3.8, 3.9]
-          include:
-          - os: ubuntu-18.04
-            python: 2.7
-          - os: ubuntu-18.04
-            python: 3.6
+          python: [3.8, 3.9]
       name: rosdep tests
       runs-on: ${{matrix.os}}
 
