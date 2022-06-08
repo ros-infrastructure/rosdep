@@ -56,12 +56,12 @@ def is_brew_installed_tripwire():
 
 def make_resolutions(package_list):
     from rosdep2.platforms.osx import HomebrewResolution
-    return list(map(lambda pkg: HomebrewResolution(pkg, [], []), package_list))
+    return [HomebrewResolution(pkg, [], []) for pkg in package_list]
 
 
 def make_resolutions_options(package_list):
     from rosdep2.platforms.osx import HomebrewResolution
-    return list(map(lambda pkg: HomebrewResolution(pkg[0], pkg[1], pkg[2]), package_list))
+    return [HomebrewResolution(pkg[0], pkg[1], pkg[2]) for pkg in package_list]
 
 
 def brew_command(command):
