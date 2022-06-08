@@ -25,15 +25,12 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-try:
-    from urllib.request import urlopen
-except ImportError:
-    from urllib2 import urlopen
 import yaml
 import warnings
 
 from .core import DownloadFailure
 from .rosdistrohelper import PreRep137Warning
+from .url_utils import urlopen_gzip
 
 # location of targets file for processing gbpdistro files
 REP3_TARGETS_URL = 'https://raw.githubusercontent.com/ros/rosdistro/master/releases/targets.yaml'
@@ -59,7 +56,7 @@ def download_targets_data(targets_url=None):
     if targets_url is None:
         targets_url = REP3_TARGETS_URL
     try:
-        f = urlopen(targets_url, timeout=DOWNLOAD_TIMEOUT)
+        f = urlopen_gzip(targets_url, timeout=DOWNLOAD_TIMEOUT)
         text = f.read()
         f.close()
         targets_data = yaml.safe_load(text)

@@ -33,14 +33,6 @@ import os
 import sys
 import yaml
 try:
-    from urllib.request import urlopen
-    from urllib.error import URLError
-    import urllib.request as request
-except ImportError:
-    from urllib2 import urlopen
-    from urllib2 import URLError
-    import urllib2 as request
-try:
     import cPickle as pickle
 except ImportError:
     import pickle
@@ -49,7 +41,7 @@ from .cache_tools import compute_filename_hash, PICKLE_CACHE_EXT, write_atomic, 
 from .core import InvalidData, DownloadFailure, CachePermissionError
 from .gbpdistro_support import get_gbprepo_as_rosdep_data, download_gbpdistro_as_rosdep_data
 from .meta import MetaDatabase
-from ._version import __version__
+from .url_utils import urlopen_gzip, URLError
 
 try:
     import urlparse
@@ -306,13 +298,7 @@ def download_rosdep_data(url):
         retrieved (e.g. 404, bad YAML format, server down).
     """
     try:
-        # http/https URLs need custom requests to specify the user-agent, since some repositories reject
-        # requests from the default user-agent.
-        if url.startswith("http://") or url.startswith("https://"):
-            url_request = request.Request(url, headers={'User-Agent': 'rosdep/{version}'.format(version=__version__)})
-        else:
-            url_request = url
-        f = urlopen(url_request, timeout=DOWNLOAD_TIMEOUT)
+        f = urlopen_gzip(url, timeout=DOWNLOAD_TIMEOUT)
         text = f.read()
         f.close()
         data = yaml.safe_load(text)
@@ -337,7 +323,7 @@ def download_default_sources_list(url=DEFAULT_SOURCES_LIST_URL):
         retrieved (e.g. 404, server down).
     """
     try:
-        f = urlopen(url, timeout=DOWNLOAD_TIMEOUT)
+        f = urlopen_gzip(url, timeout=DOWNLOAD_TIMEOUT)
     except (URLError, httplib.HTTPException) as e:
         raise URLError(str(e) + ' (%s)' % url)
     data = f.read().decode()
@@ -448,7 +434,8 @@ def _generate_key_from_urls(urls):
 
 def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
                         success_handler=None, error_handler=None,
-                        skip_eol_distros=False, ros_distro=None):
+                        skip_eol_distros=False, ros_distro=None,
+                        quiet=False):
     """
     Re-downloaded data from remote sources and store in cache.  Also
     update the cache index based on current sources.
@@ -480,7 +467,8 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
                 rosdep_data = download_rosdep_data(source.url)
             elif source.type == TYPE_GBPDISTRO:  # DEPRECATED, do not use this file. See REP137
                 if not source.tags[0] in ['electric', 'fuerte']:
-                    print('Ignore legacy gbpdistro "%s"' % source.tags[0])
+                    if not quiet:
+                        print('Ignore legacy gbpdistro "%s"' % source.tags[0])
                     sources.remove(source)
                     continue  # do not store this entry in the cache
                 rosdep_data = download_gbpdistro_as_rosdep_data(source.url)
@@ -495,7 +483,8 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
     # In compliance with REP137 and REP143
     python_versions = {}
 
-    print('Query rosdistro index %s' % get_index_url())
+    if not quiet:
+        print('Query rosdistro index %s' % get_index_url())
     distribution_names = get_index().distributions.keys()
     if ros_distro is not None and ros_distro not in distribution_names:
         raise ValueError(
@@ -505,13 +494,16 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
         distribution = get_index().distributions[dist_name]
         if dist_name != ros_distro:
             if ros_distro is not None:
-                print('Skip distro "%s" different from requested "%s"' % (dist_name, ros_distro))
+                if not quiet:
+                    print('Skip distro "%s" different from requested "%s"' % (dist_name, ros_distro))
                 continue
             if skip_eol_distros:
                 if distribution.get('distribution_status') == 'end-of-life':
-                    print('Skip end-of-life distro "%s"' % dist_name)
+                    if not quiet:
+                        print('Skip end-of-life distro "%s"' % dist_name)
                     continue
-        print('Add distro "%s"' % dist_name)
+        if not quiet:
+            print('Add distro "%s"' % dist_name)
         rds = RosDistroSource(dist_name)
         rosdep_data = get_gbprepo_as_rosdep_data(dist_name)
         # Store Python version from REP153

@@ -121,11 +121,11 @@ Setup
 
 ::
 
-    pip install nose
+    pip install pytest
     pip install mock
 
 
-rosdep2 uses `Python nose <http://readthedocs.org/docs/nose/en/latest/>`_
+rosdep2 uses `pytest <http://docs.pytest.org>`_
 for testing, which is a fairly simple and straightfoward test
 framework.  You just have to write a function start with the name
 ``test`` and use normal ``assert`` statements for your tests.
@@ -138,7 +138,7 @@ You can run the tests, including coverage, as follows:
 ::
 
     cd rosdep2/test
-    nosetests
+    pytest
 
 
 Documentation
