@@ -128,8 +128,8 @@ class RosPkgLoader(RosdepLoader):
     def get_catkin_paths(self):
         if not self._catkin_packages_cache:
             def find_catkin_paths(src):
-                return map(lambda x: (x, src.get_path(x)),
-                           filter(lambda x: src.get_manifest(x).is_catkin, src.list()))
+                return [(x, src.get_path(x)) for x in
+                        filter(lambda x: src.get_manifest(x).is_catkin, src.list())]
             self._catkin_packages_cache = dict(find_catkin_paths(self._rospack))
             self._catkin_packages_cache.update(find_catkin_paths(self._rosstack))
         return self._catkin_packages_cache
