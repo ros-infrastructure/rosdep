@@ -15,6 +15,12 @@ kwargs = {
     'author': 'Tully Foote, Ken Conley',
     'author_email': 'tfoote@osrfoundation.org',
     'maintainer': 'ROS Infrastructure Team',
+    'project_urls': {
+        'Source code':
+        'https://github.com/ros-infrastructure/rosdep',
+        'Issue tracker':
+        'https://github.com/ros-infrastructure/rosdep/issues',
+    },
     'url': 'http://wiki.ros.org/rosdep',
     'keywords': ['ROS'],
     'entry_points': {
