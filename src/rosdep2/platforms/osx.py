@@ -281,7 +281,7 @@ class HomebrewInstaller(PackageManagerInstaller):
         except OSError:
             return ['Homebrew not-found']
 
-    def resolve(self, rosdep, rosdep_args):
+    def resolve(self, rosdep_args, rosdep=None):
         """
         See :meth:`Installer.resolve()`
         """
@@ -318,7 +318,7 @@ class HomebrewInstaller(PackageManagerInstaller):
 
             return options
 
-        packages = super(HomebrewInstaller, self).resolve(rosdep, rosdep_args)
+        packages = super(HomebrewInstaller, self).resolve(rosdep_args)
         resolution = []
         if packages:
             options = []

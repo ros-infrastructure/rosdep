@@ -278,9 +278,8 @@ class Installer(object):
         """
         return []  # Default return empty list
 
-    def resolve(self, rosdep, rosdep_args_dict):
+    def resolve(self, rosdep_args_dict, rosdep=None):
         """
-        :param rosdep: rosdep key (catkin_pkg.package.Dependency object) to resolve
         :param rosdep_args_dict: argument dictionary to the rosdep rule for this package manager
         :returns: [resolutions].  resolved objects should be printable to a user, but are otherwise opaque.
         """
@@ -337,7 +336,7 @@ class PackageManagerInstaller(Installer):
         """
         return (self.sudo_command.split() if self.as_root else []) + cmd
 
-    def resolve(self, rosdep, rosdep_args):
+    def resolve(self, rosdep_args, rosdep=None):
         """
         See :meth:`Installer.resolve()`
         """

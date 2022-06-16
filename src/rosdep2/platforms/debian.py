@@ -51,6 +51,8 @@ from .source import SOURCE_INSTALLER
 from ..installers import PackageManagerInstaller
 from ..shell_utils import read_stdout
 
+from catkin_pkg.package import Dependency
+
 # apt package manager key
 APT_INSTALLER = "apt"
 
@@ -302,7 +304,7 @@ class AptInstaller(PackageManagerInstaller):
     def __init__(self):
         super(AptInstaller, self).__init__(dpkg_detect)
 
-    def resolve(self, rosdep, rosdep_args):
+    def resolve(self, rosdep_args, rosdep=None):
         """
         See :meth:`Installer.resolve()`
         """
@@ -311,6 +313,7 @@ class AptInstaller(PackageManagerInstaller):
             packages = rosdep_args.get("packages", [])
             if isinstance(packages, str):
                 packages = packages.split()
+
         elif isinstance(rosdep_args, str):
             packages = rosdep_args.split(" ")
         elif type(rosdep_args) == list:
@@ -318,25 +321,26 @@ class AptInstaller(PackageManagerInstaller):
         else:
             raise InvalidData("Invalid rosdep args: %s" % (rosdep_args))
 
-        if rosdep.version_eq:
-            for i, package in list(enumerate(packages)):
-                packages[i] = package + "=" + rosdep.version_eq
-        if rosdep.version_gte:
-            raise InvalidData(
-                "version_gte not supported for debian package: %s" % (rosdep)
-            )
-        if rosdep.version_lte:
-            raise InvalidData(
-                "version_lte not supported for debian package: %s" % (rosdep)
-            )
-        if rosdep.version_gt:
-            raise InvalidData(
-                "version_gt not supported for debian package: %s" % (rosdep)
-            )
-        if rosdep.version_lt:
-            raise InvalidData(
-                "version_lt not supported for debian package: %s" % (rosdep)
-            )
+        if rosdep and type(rosdep) == Dependency:
+            if rosdep.version_eq:
+                for i, package in list(enumerate(packages)):
+                    packages[i] = package + "=" + rosdep.version_eq
+            if rosdep.version_gte:
+                raise InvalidData(
+                    "version_gte not supported for debian package: %s" % (rosdep)
+                )
+            if rosdep.version_lte:
+                raise InvalidData(
+                    "version_lte not supported for debian package: %s" % (rosdep)
+                )
+            if rosdep.version_gt:
+                raise InvalidData(
+                    "version_gt not supported for debian package: %s" % (rosdep)
+                )
+            if rosdep.version_lt:
+                raise InvalidData(
+                    "version_lt not supported for debian package: %s" % (rosdep)
+                )
 
         return packages
 
@@ -358,7 +362,6 @@ class AptInstaller(PackageManagerInstaller):
         self, resolved, interactive=True, reinstall=False, quiet=False
     ):
         packages = self.get_packages_to_install(resolved, reinstall=reinstall)
-        print(packages)
         if not packages:
             return []
         base_cmd = ["apt-get", "install"]

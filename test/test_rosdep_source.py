@@ -201,16 +201,16 @@ def test_SourceInstaller_resolve():
 
     installer = SourceInstaller()
     try:
-        installer.resolve(Dependency('null'), {})
+        installer.resolve({})
         assert False, 'should have raised'
     except InvalidData:
         pass
     try:
-        installer.resolve(Dependency('null'), dict(uri=url, md5sum=md5sum_bad))
+        installer.resolve(dict(uri=url, md5sum=md5sum_bad))
         assert False, 'should have raised'
     except InvalidData:
         pass
-    resolved = installer.resolve(Dependency('null'), dict(uri=url, md5sum=md5sum_good))
+    resolved = installer.resolve(dict(uri=url, md5sum=md5sum_good))
 
     assert type(resolved) == list
     assert len(resolved) == 1
@@ -223,7 +223,7 @@ def test_SourceInstaller_resolve():
     assert resolved.check_presence_command == rep122_check_presence_command
 
     # test again to activate caching
-    resolved = installer.resolve(Dependency('null'), dict(uri=url, md5sum=md5sum_good))
+    resolved = installer.resolve(dict(uri=url, md5sum=md5sum_good))
     assert type(resolved) == list, 'Cache should also return a list'
     assert len(resolved) == 1
     resolved = resolved[0]
