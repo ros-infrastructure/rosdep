@@ -343,26 +343,26 @@ def test_RosdepLookup_get_rosdeps():
         pass
 
     print(lookup.get_rosdeps('stack1_p1'))
-    assert set([d.name for d in lookup.get_rosdeps('stack1_p1')]) == set(['stack1_dep1', 'stack1_p1_dep1', 'stack1_p1_dep2'])
-    assert set([d.name for d in lookup.get_rosdeps('stack1_p1', implicit=False)]) == set(['stack1_dep1', 'stack1_p1_dep1', 'stack1_p1_dep2'])
+    assert set({d.name for d in lookup.get_rosdeps('stack1_p1')}) == set(['stack1_dep1', 'stack1_p1_dep1', 'stack1_p1_dep2'])
+    assert set({d.name for d in lookup.get_rosdeps('stack1_p1', implicit=False)}) == set(['stack1_dep1', 'stack1_p1_dep1', 'stack1_p1_dep2'])
 
     print(lookup.get_rosdeps('stack1_p2'))
-    assert set([d.name for d in lookup.get_rosdeps('stack1_p2', implicit=False)]) == set(['stack1_dep1', 'stack1_dep2', 'stack1_p2_dep1']), set(lookup.get_rosdeps('stack1_p2'))
-    assert set([d.name for d in lookup.get_rosdeps('stack1_p2', implicit=True)]) == \
-        set(['stack1_dep1', 'stack1_dep2', 'stack1_p1_dep1', 'stack1_p1_dep2', 'stack1_p2_dep1']), set([d.name for d in lookup.get_rosdeps('stack1_p2')])
+    assert set({d.name for d in lookup.get_rosdeps('stack1_p2', implicit=False)}) == set(['stack1_dep1', 'stack1_dep2', 'stack1_p2_dep1']), set(lookup.get_rosdeps('stack1_p2'))
+    assert set({d.name for d in lookup.get_rosdeps('stack1_p2', implicit=True)}) == \
+        set({'stack1_dep1', 'stack1_dep2', 'stack1_p1_dep1', 'stack1_p1_dep2', 'stack1_p2_dep1'}), set({d.name for d in lookup.get_rosdeps('stack1_p2')})
 
     # catkin
     print(lookup.get_rosdeps('simple_catkin_package'))
-    assert set([d.name for d in lookup.get_rosdeps('simple_catkin_package')]) == set(['catkin', 'testboost'])
-    assert set([d.name for d in lookup.get_rosdeps('simple_catkin_package', implicit=False)]) == set(['catkin', 'testboost'])
+    assert set({d.name for d in lookup.get_rosdeps('simple_catkin_package')}) == set(['catkin', 'testboost'])
+    assert set({d.name for d in lookup.get_rosdeps('simple_catkin_package', implicit=False)}) == set(['catkin', 'testboost'])
 
     print(lookup.get_rosdeps('another_catkin_package'))
-    assert set([d.name for d in lookup.get_rosdeps('another_catkin_package')]) == set(['catkin', 'simple_catkin_package'])  # implicit deps won't get included
-    assert set([d.name for d in lookup.get_rosdeps('another_catkin_package', implicit=False)]) == set(['catkin', 'simple_catkin_package'])
+    assert set({d.name for d in lookup.get_rosdeps('another_catkin_package')}) == set(['catkin', 'simple_catkin_package'])  # implicit deps won't get included
+    assert set({d.name for d in lookup.get_rosdeps('another_catkin_package', implicit=False)}) == set(['catkin', 'simple_catkin_package'])
 
     print(lookup.get_rosdeps('metapackage_with_deps'))
-    assert set([d.name for d in lookup.get_rosdeps('metapackage_with_deps')]) == set(['catkin', 'simple_catkin_package', 'another_catkin_package'])  # implicit deps won't get included
-    assert set([d.name for d in lookup.get_rosdeps('metapackage_with_deps', implicit=False)]) == set(['catkin', 'simple_catkin_package', 'another_catkin_package'])
+    assert set({d.name for d in lookup.get_rosdeps('metapackage_with_deps')}) == set(['catkin', 'simple_catkin_package', 'another_catkin_package'])  # implicit deps won't get included
+    assert set({d.name for d in lookup.get_rosdeps('metapackage_with_deps', implicit=False)}) == set(['catkin', 'simple_catkin_package', 'another_catkin_package'])
 
 
 def test_RosdepLookup_dependency_types():
