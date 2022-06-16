@@ -34,6 +34,8 @@ import traceback
 
 from rospkg.os_detect import OS_OSX, OsDetect
 
+from catkin_pkg.package import Dependency
+
 from ..core import InstallFailed, RosdepInternalError, InvalidData
 from .pip import PIP_INSTALLER
 from .source import SOURCE_INSTALLER
@@ -281,7 +283,7 @@ class HomebrewInstaller(PackageManagerInstaller):
         except OSError:
             return ['Homebrew not-found']
 
-    def resolve(self, rosdep, rosdep_args):
+    def resolve(self, rosdep_args, rosdep=Dependency('null')):
         """
         See :meth:`Installer.resolve()`
         """
@@ -318,7 +320,7 @@ class HomebrewInstaller(PackageManagerInstaller):
 
             return options
 
-        packages = super(HomebrewInstaller, self).resolve(rosdep, rosdep_args)
+        packages = super(HomebrewInstaller, self).resolve(rosdep_args, rosdep)
         resolution = []
         if packages:
             options = []

@@ -34,6 +34,8 @@ import pkg_resources
 import subprocess
 import sys
 
+from catkin_pkg.package import Dependency
+
 from ..core import InstallFailed, InvalidData
 from ..installers import PackageManagerInstaller
 from ..shell_utils import read_stdout
@@ -133,7 +135,7 @@ class PipInstaller(PackageManagerInstaller):
     def __init__(self):
         super(PipInstaller, self).__init__(pip_detect, supports_depends=True)
 
-    def resolve(self, rosdep, rosdep_args):
+    def resolve(self, rosdep_args, rosdep=Dependency('null')):
         """
         See :meth:`Installer.resolve()`
         """

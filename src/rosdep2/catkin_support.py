@@ -90,7 +90,7 @@ def resolve_for_os(rosdep_key, view, installer, os_name, os_version):
     default_os_installer = ctx.get_default_os_installer_key(os_name)
     inst_key, rule = d.get_rule_for_platform(os_name, os_version, os_installers, default_os_installer)
     assert inst_key in os_installers
-    return installer.resolve({}, rule)
+    return installer.resolve(rule)
 
 
 def update_rosdep():

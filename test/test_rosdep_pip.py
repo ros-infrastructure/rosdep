@@ -76,37 +76,37 @@ def test_PackageManagerInstaller_resolve():
     from catkin_pkg.package import Dependency
 
     installer = PipInstaller()
-    assert ['baz'] == installer.resolve(Dependency('baz'), dict(depends=['foo', 'bar'], packages=['baz']))
-    assert ['baz', 'bar'] == installer.resolve(Dependency('baz'), dict(packages=['baz', 'bar']))
+    assert ['baz'] == installer.resolve(dict(depends=['foo', 'bar'], packages=['baz']), Dependency('baz'))
+    assert ['baz', 'bar'] == installer.resolve(dict(packages=['baz', 'bar']), Dependency('baz'))
 
     # test string logic
-    assert ['baz'] == installer.resolve(Dependency('baz'), dict(depends=['foo', 'bar'], packages='baz'))
-    assert ['baz', 'bar'] == installer.resolve(Dependency('baz'), dict(packages='baz bar'))
-    assert ['baz'] == installer.resolve(Dependency('baz'), 'baz')
-    assert ['baz', 'bar'] == installer.resolve(Dependency('baz'), 'baz bar')
+    assert ['baz'] == installer.resolve(dict(depends=['foo', 'bar'], packages='baz'), Dependency('baz'))
+    assert ['baz', 'bar'] == installer.resolve(dict(packages='baz bar'), Dependency('baz'))
+    assert ['baz'] == installer.resolve('baz', Dependency('baz'))
+    assert ['baz', 'bar'] == installer.resolve('baz bar', Dependency('baz'))
 
     # test list logic
-    assert ['baz'] == installer.resolve(Dependency('baz'), ['baz'])
-    assert ['baz', 'bar'] == installer.resolve(Dependency('baz'), ['baz', 'bar'])
+    assert ['baz'] == installer.resolve(['baz'], Dependency('baz'))
+    assert ['baz', 'bar'] == installer.resolve(['baz', 'bar'], Dependency('baz'))
 
     # version_eq
-    assert ['baz==1.0'] == installer.resolve(Dependency('baz', version_eq='1.0'), dict(depends=['foo', 'bar'], packages=['baz']))
-    assert ['baz==1.0', 'bar==1.0'] == installer.resolve(Dependency('baz', version_eq='1.0'), dict(packages=['baz', 'bar']))
+    assert ['baz==1.0'] == installer.resolve(dict(depends=['foo', 'bar'], packages=['baz']), Dependency('baz', version_eq='1.0'))
+    assert ['baz==1.0', 'bar==1.0'] == installer.resolve(dict(packages=['baz', 'bar']), Dependency('baz', version_eq='1.0'))
     # version_gte
-    assert ['baz>=1.0'] == installer.resolve(Dependency('baz', version_gte='1.0'), dict(depends=['foo', 'bar'], packages=['baz']))
-    assert ['baz>=1.0', 'bar>=1.0'] == installer.resolve(Dependency('baz', version_gte='1.0'), dict(packages=['baz', 'bar']))
+    assert ['baz>=1.0'] == installer.resolve(dict(depends=['foo', 'bar'], packages=['baz']), Dependency('baz', version_gte='1.0'))
+    assert ['baz>=1.0', 'bar>=1.0'] == installer.resolve(dict(packages=['baz', 'bar']), Dependency('baz', version_gte='1.0'))
     # version_lte
-    assert ['baz<=1.0'] == installer.resolve(Dependency('baz', version_lte='1.0'), dict(depends=['foo', 'bar'], packages=['baz']))
-    assert ['baz<=1.0', 'bar<=1.0'] == installer.resolve(Dependency('baz', version_lte='1.0'), dict(packages=['baz', 'bar']))
+    assert ['baz<=1.0'] == installer.resolve(dict(depends=['foo', 'bar'], packages=['baz']), Dependency('baz', version_lte='1.0'))
+    assert ['baz<=1.0', 'bar<=1.0'] == installer.resolve(dict(packages=['baz', 'bar']), Dependency('baz', version_lte='1.0'))
     # version_gt
-    assert ['baz>1.0'] == installer.resolve(Dependency('baz', version_gt='1.0'), dict(depends=['foo', 'bar'], packages=['baz']))
-    assert ['baz>1.0', 'bar>1.0'] == installer.resolve(Dependency('baz', version_gt='1.0'), dict(packages=['baz', 'bar']))
+    assert ['baz>1.0'] == installer.resolve(dict(depends=['foo', 'bar'], packages=['baz']), Dependency('baz', version_gt='1.0'))
+    assert ['baz>1.0', 'bar>1.0'] == installer.resolve(dict(packages=['baz', 'bar']), Dependency('baz', version_gt='1.0'))
     # version_lt
-    assert ['baz<1.0'] == installer.resolve(Dependency('baz', version_lt='1.0'), dict(depends=['foo', 'bar'], packages=['baz']))
-    assert ['baz<1.0', 'bar<1.0'] == installer.resolve(Dependency('baz', version_lt='1.0'), dict(packages=['baz', 'bar']))
+    assert ['baz<1.0'] == installer.resolve(dict(depends=['foo', 'bar'], packages=['baz']), Dependency('baz', version_lt='1.0'))
+    assert ['baz<1.0', 'bar<1.0'] == installer.resolve(dict(packages=['baz', 'bar']), Dependency('baz', version_lt='1.0'))
     # test invalid data
     try:
-        installer.resolve({}, 0)
+        installer.resolve(0, {})
         assert False, 'should have raised'
     except InvalidData:
         pass

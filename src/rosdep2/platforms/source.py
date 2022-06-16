@@ -38,6 +38,8 @@ import hashlib
 
 import yaml
 
+from catkin_pkg.package import Dependency
+
 from ..core import rd_debug, InvalidData
 from ..installers import PackageManagerInstaller, InstallFailed
 from ..shell_utils import create_tempfile_from_string_and_execute
@@ -198,7 +200,7 @@ class SourceInstaller(PackageManagerInstaller):
         super(SourceInstaller, self).__init__(source_detect, supports_depends=True)
         self._rdmanifest_cache = {}
 
-    def resolve(self, rosdep, rosdep_args):
+    def resolve(self, rosdep_args, rosdep=Dependency('null')):
         """
         :raises: :exc:`InvalidData` If format invalid or unable
           to retrieve rdmanifests.
@@ -243,7 +245,7 @@ class SourceInstaller(PackageManagerInstaller):
 
     def get_depends(self, rosdep_args):
         deps = rosdep_args.get('depends', [])
-        for r in self.resolve({}, rosdep_args):
+        for r in self.resolve(rosdep_args):
             deps.extend(r.dependencies)
         return deps
 

@@ -34,6 +34,7 @@ import subprocess
 import traceback
 
 from rospkg.os_detect import OsDetect
+from catkin_pkg.package import Dependency
 
 from .core import rd_debug, RosdepInternalError, InstallFailed, print_bold, InvalidData
 
@@ -278,10 +279,10 @@ class Installer(object):
         """
         return []  # Default return empty list
 
-    def resolve(self, rosdep, rosdep_args_dict):
+    def resolve(self, rosdep_args_dict, rosdep=Dependency('null')):
         """
-        :param rosdep: rosdep key (catkin_pkg.package.Dependency object) to resolve
         :param rosdep_args_dict: argument dictionary to the rosdep rule for this package manager
+        :param rosdep: rosdep key (catkin_pkg.package.Dependency object) to resolve
         :returns: [resolutions].  resolved objects should be printable to a user, but are otherwise opaque.
         """
         raise NotImplementedError('Base class resolve', rosdep_args_dict)
@@ -337,7 +338,7 @@ class PackageManagerInstaller(Installer):
         """
         return (self.sudo_command.split() if self.as_root else []) + cmd
 
-    def resolve(self, rosdep, rosdep_args):
+    def resolve(self, rosdep_args, rosdep=Dependency('null')):
         """
         See :meth:`Installer.resolve()`
         """

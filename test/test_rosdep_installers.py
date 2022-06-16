@@ -309,7 +309,7 @@ def test_Installer_tripwire():
     except NotImplementedError:
         pass
     try:
-        Installer().resolve(Dependency('null'), {})
+        Installer().resolve({})
         assert False
     except NotImplementedError:
         pass
@@ -349,22 +349,22 @@ def test_PackageManagerInstaller_resolve():
     from rosdep2.installers import PackageManagerInstaller
 
     installer = PackageManagerInstaller(detect_fn_all)
-    assert ['baz'] == installer.resolve(Dependency('baz'), dict(depends=['foo', 'bar'], packages=['baz']))
-    assert ['baz', 'bar'] == installer.resolve(Dependency('baz'), dict(packages=['baz', 'bar']))
+    assert ['baz'] == installer.resolve(dict(depends=['foo', 'bar'], packages=['baz']), Dependency('baz'))
+    assert ['baz', 'bar'] == installer.resolve(dict(packages=['baz', 'bar']), Dependency('baz'))
 
     # test string logic
-    assert ['baz'] == installer.resolve(Dependency('baz'), dict(depends=['foo', 'bar'], packages='baz'))
-    assert ['baz', 'bar'] == installer.resolve(Dependency('baz'), dict(packages='baz bar'))
-    assert ['baz'] == installer.resolve(Dependency('baz'), 'baz')
-    assert ['baz', 'bar'] == installer.resolve(Dependency('baz'), 'baz bar')
+    assert ['baz'] == installer.resolve(dict(depends=['foo', 'bar'], packages='baz'), Dependency('baz'))
+    assert ['baz', 'bar'] == installer.resolve(dict(packages='baz bar'), Dependency('baz'))
+    assert ['baz'] == installer.resolve('baz', Dependency('baz'))
+    assert ['baz', 'bar'] == installer.resolve('baz bar', Dependency('baz'))
 
     # test list logic
-    assert ['baz'] == installer.resolve(Dependency('baz'), ['baz'])
-    assert ['baz', 'bar'] == installer.resolve(Dependency('baz'), ['baz', 'bar'])
+    assert ['baz'] == installer.resolve(['baz'], Dependency('baz'))
+    assert ['baz', 'bar'] == installer.resolve(['baz', 'bar'], Dependency('baz'))
 
     # test invalid data
     try:
-        installer.resolve(Dependency('baz'), 0)
+        installer.resolve(0, Dependency('baz'))
         assert False, 'should have raised'
     except InvalidData:
         pass

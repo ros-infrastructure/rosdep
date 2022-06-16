@@ -508,7 +508,7 @@ class RosdepLookup(object):
             installer = installer_context.get_installer(installer_key)
         except KeyError:
             raise ResolutionError(rosdep_key, definition.data, os_name, os_version, 'Unsupported installer [%s]' % (installer_key))
-        resolution = installer.resolve(rosdep, rosdep_args_dict)
+        resolution = installer.resolve(rosdep_args_dict, rosdep)
         dependencies = installer.get_depends(rosdep_args_dict)
 
         # cache value
