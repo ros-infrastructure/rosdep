@@ -27,6 +27,7 @@
 
 # Author Paul Mathieu/paul@osrfoundation.org
 
+import os
 import rosdistro
 
 # monkey patch the old url loader
@@ -43,6 +44,9 @@ class _RDCache:
     index_url = None
     index = None
     release_files = {}
+    overlay_index_url = None
+    overlay_index = None
+    overlay_dist_files = {}
 
 
 class ReleaseFile(object):
@@ -56,11 +60,23 @@ class ReleaseFile(object):
         self.platforms = dist_file.release_platforms
 
 
+def get_overlay_index_url():
+    # environment variable has precedence over configuration files
+    if 'ROSDISTRO_OVERLAY_INDEX_URL' in os.environ:
+        return os.environ['ROSDISTRO_OVERLAY_INDEX_URL']
+
+    return None
+
+
 def _check_cache():
     if _RDCache.index_url != rosdistro.get_index_url():
         _RDCache.index_url = rosdistro.get_index_url()
         _RDCache.index = None
         _RDCache.release_files = {}
+
+        _RDCache.overlay_index_url = get_overlay_index_url()
+        _RDCache.overlay_index = None
+        _RDCache.overlay_dist_files = {}
 
 
 def get_index_url():
@@ -72,6 +88,8 @@ def get_index():
     _check_cache()
     if _RDCache.index is None:
         _RDCache.index = rosdistro.get_index(_RDCache.index_url)
+    if _RDCache.overlay_index is None and _RDCache.overlay_index_url is not None:
+        _RDCache.overlay_index = rosdistro.get_index(_RDCache.overlay_index_url)
     return _RDCache.index
 
 
@@ -79,6 +97,15 @@ def get_release_file(distro):
     _check_cache()
     if distro not in _RDCache.release_files:
         dist_file = rosdistro.get_distribution_file(get_index(), distro)
+
+        # gr mod: on the fly merge of overlay distribution file
+        if _RDCache.overlay_index is not None:
+            if distro in _RDCache.overlay_index.distributions:
+                if distro not in _RDCache.overlay_dist_files:
+                    _RDCache.overlay_dist_files[distro] = rosdistro.get_distribution_file(_RDCache.overlay_index, distro)
+
+                dist_file.merge(_RDCache.overlay_dist_files[distro])
+
         _RDCache.release_files[distro] = ReleaseFile(dist_file)
     return _RDCache.release_files[distro]
 
