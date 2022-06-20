@@ -27,10 +27,14 @@
 
 from gzip import GzipFile
 from io import BytesIO
+import base64
+import os
+
 try:
     from urllib.request import urlopen
     from urllib.error import URLError
     import urllib.request as request
+    from urllib.parse import urlparse
 except ImportError:
     from urllib2 import urlopen
     from urllib2 import URLError
@@ -42,11 +46,22 @@ from ._version import __version__
 def urlopen_gzip(url, **kwargs):
     # http/https URLs need custom requests to specify the user-agent, since some repositories reject
     # requests from the default user-agent.
-    if url.startswith("http://") or url.startswith("https://"):
+
+    uri = urlparse(url)
+
+    if uri.scheme in ["http", "https"]:
         url_request = request.Request(url, headers={
             'Accept-Encoding': 'gzip',
             'User-Agent': 'rosdep/{version}'.format(version=__version__),
         })
+
+        # not sure if this is the best way. alternatively we could explicitly request
+        # authentication by changing the scheme to https+github
+        if uri.hostname == 'raw.githubusercontent.com' and 'GHCR_PAT' in os.environ:
+            auth = base64.b64encode(f"{os.environ['GHCR_PAT']}:".encode('ascii')).decode('ascii')
+            # force it into a header because urllib is old and doesn't make this easy
+            url_request.headers['Authorization'] = f'Basic {auth}'
+
         response = urlopen(url_request, **kwargs)
         if response.info().get('Content-Encoding') == 'gzip':
             buffer = BytesIO(response.read())
