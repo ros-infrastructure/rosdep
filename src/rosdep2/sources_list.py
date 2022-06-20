@@ -57,7 +57,7 @@ import rospkg
 import rospkg.distro
 
 from .loader import RosdepLoader
-from .rosdistrohelper import get_index, get_index_url
+from .rosdistrohelper import get_index, get_index_url, get_overlay_index_url
 
 # default file to download with 'init' command in order to bootstrap
 # rosdep
@@ -485,6 +485,9 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
 
     if not quiet:
         print('Query rosdistro index %s' % get_index_url())
+        overlay_url = get_overlay_index_url()
+        if overlay_url:
+            print('Query rosdistro overlay index %s' % overlay_url)
     distribution_names = get_index().distributions.keys()
     if ros_distro is not None and ros_distro not in distribution_names:
         raise ValueError(
