@@ -29,6 +29,11 @@
 
 import rosdistro
 
+# monkey patch the old url loader
+from .url_utils import urlopen_gzip
+import rosdistro.loader
+rosdistro.loader.urlopen = urlopen_gzip
+
 
 class PreRep137Warning(UserWarning):
     pass
