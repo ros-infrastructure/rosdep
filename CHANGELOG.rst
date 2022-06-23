@@ -1,3 +1,15 @@
+0.21.0 (2021-06-25)
+-------------------
+- Add command line option to select which dependency types to install.
+  - https://github.com/ros-infrastructure/rosdep/pull/789
+  - https://github.com/ros-infrastructure/rosdep/pull/727
+- Fix output formatting for npm installer when running ``rosdep --all-versions``.
+  - https://github.com/ros-infrastructure/rosdep/pull/814
+- Fix exception running ``rosdep --all-versions`` when some installers are missing.
+  - https://github.com/ros-infrastructure/rosdep/pull/815
+- Display advice for fixing permissions when rosdep cache is not readable.
+  - https://github.com/ros-infrastructure/rosdep/pull/787
+
 0.20.1 (2021-04-16)
 -------------------
 - Fix a typo in the ament_packages README

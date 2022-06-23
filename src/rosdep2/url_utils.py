@@ -1,4 +1,4 @@
-# Copyright (c) 2011, Willow Garage, Inc.
+# Copyright (c) 2021, Open Source Robotics Foundation, Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,40 +25,32 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-# Author Ken Conley/kwc@willowgarage.com
-
-import os
-import traceback
+from gzip import GzipFile
+from io import BytesIO
 try:
-    from unittest.mock import patch
+    from urllib.request import urlopen
+    from urllib.error import URLError
+    import urllib.request as request
 except ImportError:
-    from mock import patch
+    from urllib2 import urlopen
+    from urllib2 import URLError
+    import urllib2 as request
+
+from ._version import __version__
 
 
-def get_test_dir():
-    # not used yet
-    return os.path.abspath(os.path.join(os.path.dirname(__file__), 'cygwin'))
+def urlopen_gzip(url, **kwargs):
+    # http/https URLs need custom requests to specify the user-agent, since some repositories reject
+    # requests from the default user-agent.
+    if url.startswith("http://") or url.startswith("https://"):
+        url_request = request.Request(url, headers={
+            'Accept-Encoding': 'gzip',
+            'User-Agent': 'rosdep/{version}'.format(version=__version__),
+        })
+        response = urlopen(url_request, **kwargs)
+        if response.info().get('Content-Encoding') == 'gzip':
+            buffer = BytesIO(response.read())
+            return GzipFile(fileobj=buffer, mode='rb')
+        return response
 
-
-def test_AptCygInstaller():
-    from rosdep2.platforms.cygwin import AptCygInstaller
-
-    @patch.object(AptCygInstaller, 'get_packages_to_install')
-    def test(mock_method):
-        installer = AptCygInstaller()
-        mock_method.return_value = []
-        assert [] == installer.get_install_command(['fake'])
-
-        # no interactive option implemented yet
-        mock_method.return_value = ['a', 'b']
-        expected = [['apt-cyg', '-m', 'ftp://sourceware.org/pub/cygwinports', 'install', 'a', 'b']]
-        val = installer.get_install_command(['whatever'], interactive=False)
-        assert val == expected, val
-        expected = [['apt-cyg', '-m', 'ftp://sourceware.org/pub/cygwinports', 'install', 'a', 'b']]
-        val = installer.get_install_command(['whatever'], interactive=True)
-        assert val == expected, val
-    try:
-        test()
-    except AssertionError:
-        traceback.print_exc()
-        raise
+    return urlopen(url, **kwargs)

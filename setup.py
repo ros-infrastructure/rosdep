@@ -6,14 +6,20 @@ kwargs = {
     # same version as in:
     # - src/rosdep2/__init__.py
     # - stdeb.cfg
-    'version': '0.20.1',
+    'version': '0.21.0',
     'packages': ['rosdep2', 'rosdep2.ament_packages', 'rosdep2.platforms'],
     'package_dir': {'': 'src'},
-    'install_requires': ['catkin_pkg >= 0.4.0', 'rospkg >= 1.3.0', 'rosdistro >= 0.7.5', 'PyYAML >= 3.1', 'setuptools'],
-    'test_suite': 'nose.collector',
-    'test_requires': ['mock', 'nose >= 1.0'],
+    'install_requires': ['catkin_pkg >= 0.4.0', 'rospkg >= 1.4.0', 'rosdistro >= 0.7.5', 'PyYAML >= 3.1', 'setuptools'],
+    'test_requires': ['mock', 'pytest'],
     'author': 'Tully Foote, Ken Conley',
     'author_email': 'tfoote@osrfoundation.org',
+    'maintainer': 'ROS Infrastructure Team',
+    'project_urls': {
+        'Source code':
+        'https://github.com/ros-infrastructure/rosdep',
+        'Issue tracker':
+        'https://github.com/ros-infrastructure/rosdep/issues',
+    },
     'url': 'http://wiki.ros.org/rosdep',
     'keywords': ['ROS'],
     'entry_points': {

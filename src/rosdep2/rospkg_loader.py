@@ -39,6 +39,7 @@ import os
 import catkin_pkg.package
 import rospkg
 
+from .catkin_packages import VALID_DEPENDENCY_TYPES
 from .loader import RosdepLoader
 
 # Default view key is the view that packages that are not in stacks
@@ -59,7 +60,7 @@ DEFAULT_VIEW_KEY = '*default*'
 
 class RosPkgLoader(RosdepLoader):
 
-    def __init__(self, rospack=None, rosstack=None, underlay_key=None):
+    def __init__(self, rospack=None, rosstack=None, underlay_key=None, dependency_types=[]):
         """
         :param underlay_key: If set, all views loaded by this loader
             will depend on this key.
@@ -77,6 +78,9 @@ class RosPkgLoader(RosdepLoader):
         # cache computed list of loadable resources
         self._loadable_resource_cache = None
         self._catkin_packages_cache = None
+
+        default_dep_types = VALID_DEPENDENCY_TYPES - {'doc'}
+        self.include_dep_types = VALID_DEPENDENCY_TYPES.intersection(set(dependency_types)) if dependency_types else default_dep_types
 
     def load_view(self, view_name, rosdep_db, verbose=False):
         """
@@ -124,8 +128,8 @@ class RosPkgLoader(RosdepLoader):
     def get_catkin_paths(self):
         if not self._catkin_packages_cache:
             def find_catkin_paths(src):
-                return map(lambda x: (x, src.get_path(x)),
-                           filter(lambda x: src.get_manifest(x).is_catkin, src.list()))
+                return [(x, src.get_path(x)) for x in
+                        filter(lambda x: src.get_manifest(x).is_catkin, src.list())]
             self._catkin_packages_cache = dict(find_catkin_paths(self._rospack))
             self._catkin_packages_cache.update(find_catkin_paths(self._rosstack))
         return self._catkin_packages_cache
@@ -140,7 +144,7 @@ class RosPkgLoader(RosdepLoader):
         if resource_name in self.get_catkin_paths():
             pkg = catkin_pkg.package.parse_package(self.get_catkin_paths()[resource_name])
             pkg.evaluate_conditions(os.environ)
-            deps = pkg.build_depends + pkg.buildtool_depends + pkg.run_depends + pkg.test_depends + pkg.buildtool_export_depends
+            deps = sum((getattr(pkg, '{}_depends'.format(d)) for d in self.include_dep_types), [])
             return [d.name for d in deps if d.evaluated_condition]
         elif resource_name in self.get_loadable_resources():
             rosdeps = set(self._rospack.get_rosdeps(resource_name, implicit=False))

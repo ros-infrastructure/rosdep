@@ -325,7 +325,7 @@ class PackageManagerInstaller(Installer):
         self.detect_fn = detect_fn
         self.supports_depends = supports_depends
         self.as_root = True
-        self.sudo_command = 'sudo -H' if os.geteuid() != 0 else ''
+        self.sudo_command = 'sudo -H' if hasattr(os, 'geteuid') and os.geteuid() != 0 else ''
 
     def elevate_priv(self, cmd):
         """
@@ -360,7 +360,7 @@ class PackageManagerInstaller(Installer):
         s = set()
         for resolved in resolved_rules:
             s.update(resolved)
-        return sorted(list(s))
+        return sorted(s)
 
     def get_packages_to_install(self, resolved, reinstall=False):
         """

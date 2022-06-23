@@ -1,4 +1,4 @@
-# Copyright (c) 2011, Willow Garage, Inc.
+# Copyright (c) 2022, Open Source Robotics Foundation, Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,40 +25,8 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-# Author Ken Conley/kwc@willowgarage.com
-
-import os
-import traceback
-try:
-    from unittest.mock import patch
-except ImportError:
-    from mock import patch
+from rosdep2.main import rosdep_main
 
 
-def get_test_dir():
-    # not used yet
-    return os.path.abspath(os.path.join(os.path.dirname(__file__), 'cygwin'))
-
-
-def test_AptCygInstaller():
-    from rosdep2.platforms.cygwin import AptCygInstaller
-
-    @patch.object(AptCygInstaller, 'get_packages_to_install')
-    def test(mock_method):
-        installer = AptCygInstaller()
-        mock_method.return_value = []
-        assert [] == installer.get_install_command(['fake'])
-
-        # no interactive option implemented yet
-        mock_method.return_value = ['a', 'b']
-        expected = [['apt-cyg', '-m', 'ftp://sourceware.org/pub/cygwinports', 'install', 'a', 'b']]
-        val = installer.get_install_command(['whatever'], interactive=False)
-        assert val == expected, val
-        expected = [['apt-cyg', '-m', 'ftp://sourceware.org/pub/cygwinports', 'install', 'a', 'b']]
-        val = installer.get_install_command(['whatever'], interactive=True)
-        assert val == expected, val
-    try:
-        test()
-    except AssertionError:
-        traceback.print_exc()
-        raise
+if __name__ == '__main__':
+    rosdep_main()

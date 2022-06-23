@@ -13,6 +13,8 @@ except ImportError:
 _catkin_workspace_packages = []
 _catkin_packages_cache = {}
 
+VALID_DEPENDENCY_TYPES = {'build', 'buildtool', 'build_export', 'buildtool_export', 'exec', 'test', 'doc'}
+
 
 def find_catkin_packages_in(path, verbose=False):
     """

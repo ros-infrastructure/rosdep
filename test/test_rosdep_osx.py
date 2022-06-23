@@ -32,9 +32,10 @@
 import os
 import traceback
 
-from mock import call
-from mock import Mock
-from mock import patch
+try:
+    from unittest.mock import call, Mock, patch
+except ImportError:
+    from mock import call, Mock, patch
 
 
 def get_test_dir():
@@ -55,12 +56,12 @@ def is_brew_installed_tripwire():
 
 def make_resolutions(package_list):
     from rosdep2.platforms.osx import HomebrewResolution
-    return list(map(lambda pkg: HomebrewResolution(pkg, [], []), package_list))
+    return [HomebrewResolution(pkg, [], []) for pkg in package_list]
 
 
 def make_resolutions_options(package_list):
     from rosdep2.platforms.osx import HomebrewResolution
-    return list(map(lambda pkg: HomebrewResolution(pkg[0], pkg[1], pkg[2]), package_list))
+    return [HomebrewResolution(pkg[0], pkg[1], pkg[2]) for pkg in package_list]
 
 
 def brew_command(command):
@@ -91,8 +92,8 @@ def test_brew_detect():
     val = brew_detect(make_resolutions(['tinyxml']), exec_fn=m)
     assert val == [], val
     # make sure our test harness is based on the same implementation
-    m.assert_called_with(['brew', 'list'])
-    assert m.call_args_list == [call(['brew', 'list'])], m.call_args_list
+    m.assert_called_with(['brew', 'list', '--formula'])
+    assert m.call_args_list == [call(['brew', 'list', '--formula'])], m.call_args_list
 
     m = Mock()
     m.side_effect = brew_command
