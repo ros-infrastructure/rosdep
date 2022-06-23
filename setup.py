@@ -10,7 +10,14 @@ kwargs = {
     'packages': ['rosdep2', 'rosdep2.ament_packages', 'rosdep2.platforms'],
     'package_dir': {'': 'src'},
     'install_requires': ['catkin_pkg >= 0.4.0', 'rospkg >= 1.4.0', 'rosdistro >= 0.7.5', 'PyYAML >= 3.1'],
-    'test_requires': ['mock', 'pytest'],
+    'extras_require': {
+        'test': [
+            'flake8',
+            'flake8-comprehensions',
+            "mock; python_version < '3.3'",
+            'pytest',
+        ],
+    },
     'author': 'Tully Foote, Ken Conley',
     'author_email': 'tfoote@osrfoundation.org',
     'maintainer': 'ROS Infrastructure Team',
