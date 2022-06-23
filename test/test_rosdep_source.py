@@ -28,6 +28,7 @@
 # Author Ken Conley/kwc@willowgarage.com
 
 import os
+import pytest
 import yaml
 
 rep122_install_command = """#!/bin/bash
@@ -300,12 +301,14 @@ def test_download_rdmanifest():
         pass
 
 
+@pytest.mark.online
 def test_install_from_file():
     from rosdep2.platforms.source import install_from_file
     f = os.path.join(get_test_dir(), 'noop-not-installed.rdmanifest')
     install_from_file(f)
 
 
+@pytest.mark.online
 def test_install_source():
     from rosdep2.platforms.source import install_source, SourceInstall
     resolved = SourceInstall()

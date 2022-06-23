@@ -35,6 +35,7 @@ except ImportError:
     from urllib2 import urlopen
     from urllib2 import URLError
 
+import pytest
 import rospkg.distro
 import rosdep2.sources_list
 
@@ -53,6 +54,7 @@ def test_get_sources_cache_dir():
     assert rosdep2.sources_list.get_sources_cache_dir()
 
 
+@pytest.mark.online
 def test_url_constants():
     from rosdep2.sources_list import DEFAULT_SOURCES_LIST_URL
     for url_name, url in [('DEFAULT_SOURCES_LIST_URL', DEFAULT_SOURCES_LIST_URL)]:
@@ -64,6 +66,7 @@ def test_url_constants():
             assert False, 'URL [%s][%s] failed to download' % (url_name, url)
 
 
+@pytest.mark.online
 def test_download_default_sources_list():
     from rosdep2.sources_list import download_default_sources_list
     data = download_default_sources_list()
@@ -193,6 +196,7 @@ def test_write_cache_file():
         assert {'data': 1} == pickle.loads(f.read())
 
 
+@pytest.mark.online
 def test_update_sources_list():
     from rosdep2.sources_list import update_sources_list, InvalidData, compute_filename_hash, PICKLE_CACHE_EXT
     try:
@@ -245,6 +249,7 @@ def test_update_sources_list():
     assert expected == index, '\n[%s]\nvs\n[%s]' % (expected, index)
 
 
+@pytest.mark.online
 def test_load_cached_sources_list():
     from rosdep2.sources_list import load_cached_sources_list, update_sources_list
     tempdir = tempfile.mkdtemp()
@@ -296,6 +301,7 @@ def test_DataSourceMatcher():
     assert not matcher.matches(data_source)
 
 
+@pytest.mark.online
 def test_download_rosdep_data():
     from rosdep2.sources_list import download_rosdep_data
     from rosdep2 import DownloadFailure
@@ -411,6 +417,7 @@ def test_DataSourceMatcher_create_default():
     assert not matcher.matches(data_source)
 
 
+@pytest.mark.online
 def test_SourcesListLoader_create_default():
     from rosdep2.sources_list import update_sources_list, SourcesListLoader, DataSourceMatcher
     # create temp dir for holding sources cache

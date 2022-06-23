@@ -31,11 +31,14 @@ try:
 except ImportError:
     from urllib2 import urlopen
 
+import pytest
+
 
 def get_test_dir():
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'sources.list.d'))
 
 
+@pytest.mark.online
 def test_url_constants():
     from rosdep2.rep3 import REP3_TARGETS_URL
     for url_name, url in [('REP3_TARGETS_URL', REP3_TARGETS_URL),
@@ -48,6 +51,7 @@ def test_url_constants():
             assert False, 'URL [%s][%s] failed to download' % (url_name, url)
 
 
+@pytest.mark.online
 def test_download_targets_data():
     from rosdep2.rep3 import download_targets_data, REP3_TARGETS_URL
     from rosdep2 import DownloadFailure
