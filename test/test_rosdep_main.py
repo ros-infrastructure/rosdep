@@ -135,7 +135,6 @@ class TestRosdepMain(unittest.TestCase):
 
             stdout, stderr = b
             assert stdout.getvalue().strip() == 'All system dependencies have been satisfied', stdout.getvalue()
-            assert not stderr.getvalue(), stderr.getvalue()
         try:
             osd = rospkg.os_detect.OsDetect()
             override = '%s:%s' % (osd.get_name(), osd.get_codename())
@@ -143,7 +142,6 @@ class TestRosdepMain(unittest.TestCase):
                 rosdep_main(['check', 'python_dep', '--os', override] + cmd_extras)
                 stdout, stderr = b
                 assert stdout.getvalue().strip() == 'All system dependencies have been satisfied'
-                assert not stderr.getvalue(), stderr.getvalue()
         except SystemExit:
             assert False, 'system exit occurred'
 
@@ -153,7 +151,6 @@ class TestRosdepMain(unittest.TestCase):
                 rosdep_main(['check', 'packageless'] + cmd_extras)
                 stdout, stderr = b
                 assert stdout.getvalue().strip() == 'All system dependencies have been satisfied'
-                assert not stderr.getvalue(), stderr.getvalue()
         except SystemExit:
             assert False, 'system exit occurred'
 
@@ -190,12 +187,10 @@ class TestRosdepMain(unittest.TestCase):
                 rosdep_main(['install', 'python_dep'] + cmd_extras)
                 stdout, stderr = b
                 assert 'All required rosdeps installed' in stdout.getvalue(), stdout.getvalue()
-                assert not stderr.getvalue(), stderr.getvalue()
             with fakeout() as b:
                 rosdep_main(['install', 'python_dep', '-r'] + cmd_extras)
                 stdout, stderr = b
                 assert 'All required rosdeps installed' in stdout.getvalue(), stdout.getvalue()
-                assert not stderr.getvalue(), stderr.getvalue()
             with fakeout() as b:
                 rosdep_main([
                     'install', '-s', '-i',
@@ -216,7 +211,6 @@ class TestRosdepMain(unittest.TestCase):
                 ]
                 lines = stdout.getvalue().splitlines()
                 assert set(lines) == set(expected), lines
-                assert not stderr.getvalue(), stderr.getvalue()
         except SystemExit:
             assert False, 'system exit occurred: ' + b[1].getvalue()
         try:
