@@ -1,3 +1,68 @@
+0.22.0 (2022-06-24)
+-------------------
+- Fixes for Windows
+  - https://github.com/ros-infrastructure/rosdep/pull/811
+- List only formula in brew_detect for brew 3.0
+  - https://github.com/ros-infrastructure/rosdep/pull/792
+- Correctly detect when pip is not available
+  - https://github.com/ros-infrastructure/rosdep/pull/822
+- Correctly detect when gem is not available
+  - https://github.com/ros-infrastructure/rosdep/pull/823
+- Update target package for tests
+  - https://github.com/ros-infrastructure/rosdep/pull/835
+- Drop support for EOL Ubuntu distros and add Focal
+  - https://github.com/ros-infrastructure/rosdep/pull/829
+- Remove references to Travis CI
+  - https://github.com/ros-infrastructure/rosdep/pull/836
+- Add support for wildcard OS name
+  - https://github.com/ros-infrastructure/rosdep/pull/838
+- Refactor CI platforms
+  - https://github.com/ros-infrastructure/rosdep/pull/843
+- Update release distributions
+  - https://github.com/ros-infrastructure/rosdep/pull/842
+- Use unittest.mock where possible
+  - https://github.com/ros-infrastructure/rosdep/pull/850
+- Support RosdepLookup overrides for several commands
+  - https://github.com/ros-infrastructure/rosdep/pull/847
+- Detect Alpine package name with alias
+  - https://github.com/ros-infrastructure/rosdep/pull/848
+- Run tests with pytest instead of nose
+  - https://github.com/ros-infrastructure/rosdep/pull/863
+- Alias Raspbian to Debian
+  - https://github.com/ros-infrastructure/rosdep/pull/867
+- Support PEP 338 invocation of rosdep2 module
+  - https://github.com/ros-infrastructure/rosdep/pull/862
+- Improve consistency of stderr usage
+  - https://github.com/ros-infrastructure/rosdep/pull/846
+- Make -q (quiet) work for update verb
+  - https://github.com/ros-infrastructure/rosdep/pull/844
+- Pass with flake8_comprehensions
+  - https://github.com/ros-infrastructure/rosdep/pull/861
+- Add pip installer to arch linux platform
+  - https://github.com/ros-infrastructure/rosdep/pull/865
+- Compress HTTP with GZip where available
+  - https://github.com/ros-infrastructure/rosdep/pull/837
+- If Manjaro is detected override to Arch Linux
+  - https://github.com/ros-infrastructure/rosdep/pull/866
+- Clean up some C417 flake8 violations
+  - https://github.com/ros-infrastructure/rosdep/pull/876
+- List 'ROS Infrastructure Team' as the package maintainer
+  - https://github.com/ros-infrastructure/rosdep/pull/859
+- Require setuptools, src/rosdep2/platforms/pip.py imports pkg_resources
+  - https://github.com/ros-infrastructure/rosdep/pull/809
+- Bump minimum Python 3 version in stdeb to 3.6
+  - https://github.com/ros-infrastructure/rosdep/pull/879
+- Update developer documentation to reflect mock dependency
+  - https://github.com/ros-infrastructure/rosdep/pull/880
+- Run tests against Python 3.10
+  - https://github.com/ros-infrastructure/rosdep/pull/883
+- Ignore rosdep's own deprecations when running rosdep tests
+  - https://github.com/ros-infrastructure/rosdep/pull/882
+- Declare test dependencies in [test] extra
+  - https://github.com/ros-infrastructure/rosdep/pull/881
+- Mark linter tests and tests which require network
+  - https://github.com/ros-infrastructure/rosdep/pull/884
+
 0.21.0 (2021-06-25)
 -------------------
 - Add command line option to select which dependency types to install.
