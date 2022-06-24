@@ -1,3 +1,10 @@
+0.22.1 (2022-06-24)
+-------------------
+- Drop ROS Python package dependencies in debs
+  - https://github.com/ros-infrastructure/rosdep/pull/887
+- Drop some over-agressive asserts from test_rosdep_main
+  - https://github.com/ros-infrastructure/rosdep/pull/888
+
 0.22.0 (2022-06-24)
 -------------------
 - Fix support for rosdep on Windows.
