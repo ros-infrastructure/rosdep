@@ -4,14 +4,13 @@ on:
   push:
     branches: [greenroom]
   pull_request:
-    branches: ['*']
 
 jobs:
     build:
       strategy:
         matrix:
           os: [ubuntu-latest, macos-latest]
-          python: [3.8, 3.9]
+          python: [3.8, 3.9, 3.10]
       name: rosdep tests
       runs-on: ${{matrix.os}}
 
