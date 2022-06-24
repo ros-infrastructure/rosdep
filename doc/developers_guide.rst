@@ -131,7 +131,7 @@ framework.  You just have to write a function start with the name
 ``test`` and use normal ``assert`` statements for your tests.
 
 rosdep2 also uses `mock <http://www.voidspace.org.uk/python/mock/>`_ to
-create mocks for testing.
+create mocks for testing on Python versions prior to 3.3.
 
 You can run the tests, including coverage, as follows:
 
