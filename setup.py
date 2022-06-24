@@ -9,7 +9,7 @@ kwargs = {
     'version': '0.22.0',
     'packages': ['rosdep2', 'rosdep2.ament_packages', 'rosdep2.platforms'],
     'package_dir': {'': 'src'},
-    'install_requires': ['catkin_pkg >= 0.4.0', 'rospkg >= 1.4.0', 'rosdistro >= 0.7.5', 'PyYAML >= 3.1', 'setuptools'],
+    'install_requires': ['PyYAML >= 3.1', 'setuptools'],
     'extras_require': {
         'test': [
             'flake8',
@@ -46,8 +46,10 @@ kwargs = {
 if 'SKIP_PYTHON_MODULES' in os.environ:
     kwargs['packages'] = []
     kwargs['package_dir'] = {}
-if 'SKIP_PYTHON_SCRIPTS' in os.environ:
+elif 'SKIP_PYTHON_SCRIPTS' in os.environ:
     kwargs['name'] += '_modules'
     kwargs['entry_points'] = {}
+else:
+    kwargs['install_requires'] += ['catkin_pkg >= 0.4.0', 'rospkg >= 1.4.0', 'rosdistro >= 0.7.5']
 
 setup(**kwargs)
