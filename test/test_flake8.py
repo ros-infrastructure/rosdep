@@ -18,8 +18,11 @@ import os
 import sys
 
 from flake8.api.legacy import get_style_guide
+import pytest
 
 
+@pytest.mark.flake8
+@pytest.mark.linter
 def test_flake8():
     style_guide = get_style_guide(
         exclude=['conf.py'],

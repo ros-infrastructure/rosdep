@@ -31,12 +31,15 @@ try:
 except ImportError:
     from urllib2 import urlopen
 
+import pytest
+
 
 def get_test_dir():
     return os.path.abspath(os.path.join(os.path.dirname(__file__),
                                         'sources.list.d'))
 
 
+@pytest.mark.online
 def test_url_constants():
     from rosdep2.gbpdistro_support import FUERTE_GBPDISTRO_URL
     for url_name, url in [
@@ -49,6 +52,7 @@ def test_url_constants():
             assert False, 'URL [%s][%s] failed to download' % (url_name, url)
 
 
+@pytest.mark.online
 def test_get_gbprepo_as_rosdep_data():
     from rosdep2.rosdistrohelper import get_index
     from rosdep2.gbpdistro_support import get_gbprepo_as_rosdep_data
@@ -67,6 +71,7 @@ def test_get_gbprepo_as_rosdep_data():
         pass
 
 
+@pytest.mark.online
 def test_download_gbpdistro_as_rosdep_data():
     from rosdep2.gbpdistro_support import download_gbpdistro_as_rosdep_data
     from rosdep2.gbpdistro_support import FUERTE_GBPDISTRO_URL
