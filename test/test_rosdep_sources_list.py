@@ -325,6 +325,14 @@ def test_download_rosdep_data():
             assert False, 'should have raised'
         except DownloadFailure as e:
             pass
+    # try with an authorized resource
+    try:
+        data = download_rosdep_data('https://username:password@badhost.willowgarage.com/rosdep.yaml')
+        assert False, 'should have raised'
+    except DownloadFailure as e:
+        pass
+    # Should also have a successful authorized resource test
+    # Is there such a service available publicly?
 
 
 BADHOSTNAME_URL = 'https://badhostname.willowgarage.com/rosdep.yaml'
