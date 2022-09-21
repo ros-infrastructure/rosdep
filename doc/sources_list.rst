@@ -59,6 +59,21 @@ source first.  The general format is::
     URL should point to the HTTP location of a rosdep YAML file. URL
     must contain an scheme (e.g. ``http://``), hostname, and path.
 
+    HTTPS locations are also supported with authentication. To add a remote server with
+    authentication to rosdep, you can specify the username and the password following
+    the ``https://username:password@url`` pattern that is also used by apt.
+
+    Since the passwords are stored in plain text and are readable by all users, you can
+    also use your operating system's keyring to protect the password. To do that, you
+    must specify the url by replacing your password with the literal ``KEYRING``
+    like so ``https://username:KEYRING@url``. Then you must manually
+    add your password on your keyring for your username on ``rosdep``.
+    You can do in python with::
+
+        import keyring
+        keyring.set_password("rosdep", "username", "password")
+
+
 ``tags``
 
     Tags are optional.  Currently, the OS name (e.g. ``ubuntu``), OS

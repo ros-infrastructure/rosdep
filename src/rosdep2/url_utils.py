@@ -25,18 +25,19 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import print_function
+
 import base64
+import sys
 from gzip import GzipFile
 from io import BytesIO
 try:
     from urllib.request import urlopen
     from urllib.error import URLError
-    from urllib.parse import splituser
     from urllib.parse import urlparse
     from urllib.parse import urlunparse
     import urllib.request as request
 except ImportError:
-    from urllib2 import splituser
     from urllib2 import urlopen
     from urllib2 import URLError
     import urllib2 as request
@@ -58,7 +59,21 @@ def urlopen_gzip(url, **kwargs):
             'User-Agent': 'rosdep/{version}'.format(version=__version__),
         })
         if auth:
-            url_request.add_header('Authorization', b'Basic ' + base64.b64encode(auth.encode())[:-1])
+            if auth.endswith(":KEYRING"):
+                try:
+                    import keyring
+                    username = auth.split(":")[0]
+                    password = keyring.get_password("rosdep", username)
+                    auth = "{}:{}".format(username, password)
+                except ImportError:
+                    print('Cannot import keyring, rosdep will not function properly with passwords stored in keyring',
+                          file=sys.stderr)
+            if sys.version_info[0] >= 3:
+                base64string = base64.b64encode(auth.encode()).decode()
+            else:
+                base64string = base64.b64encode(auth)
+            auth_header = "Basic " + base64string
+            url_request.add_header('Authorization', auth_header)
         response = urlopen(url_request, **kwargs)
         if response.info().get('Content-Encoding') == 'gzip':
             buffer = BytesIO(response.read())
@@ -66,3 +81,12 @@ def urlopen_gzip(url, **kwargs):
         return response
 
     return urlopen(url, **kwargs)
+
+
+# copy of urllib.parse._splituser from Python 3.8
+# This is required because no fully featured alternative has been provided since splituser was deprecated
+# Reference: https://github.com/pypa/setuptools/pull/1670
+def splituser(host):
+    """splituser('user[:passwd]@host[:port]') --> 'user[:passwd]', 'host[:port]'."""
+    user, delim, host = host.rpartition('@')
+    return (user if delim else None), host
