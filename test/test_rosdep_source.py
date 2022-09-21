@@ -188,7 +188,7 @@ exit 1
 exit 0
 """
     commands = installer.get_install_command([resolved])
-    assert not(commands)
+    assert not commands
 
 
 def test_SourceInstaller_resolve():
