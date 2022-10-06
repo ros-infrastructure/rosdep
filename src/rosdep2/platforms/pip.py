@@ -34,6 +34,8 @@ import pkg_resources
 import subprocess
 import sys
 
+from packaging.requirements import Requirement
+from packaging.version import Version
 from ..core import InstallFailed
 from ..installers import PackageManagerInstaller
 from ..shell_utils import read_stdout
@@ -79,7 +81,8 @@ def is_cmd_available(cmd):
 
 def pip_detect(pkgs, exec_fn=None):
     """
-    Given a list of package, return the list of installed packages.
+    Given a list of package specifications, return the list of installed
+    packages which meet the specifications.
 
     :param exec_fn: function to execute Popen and read stdout (for testing)
     """
@@ -94,10 +97,20 @@ def pip_detect(pkgs, exec_fn=None):
     pkg_list = exec_fn(pip_cmd + ['freeze']).split('\n')
 
     ret_list = []
+    version_list = []
+    req_list = []
+
     for pkg in pkg_list:
         pkg_row = pkg.split('==')
-        if pkg_row[0] in pkgs:
-            ret_list.append(pkg_row[0])
+        version_list.append((pkg_row[0], Version(pkg_row[1])))
+
+    for pkg in pkgs:
+        req_list.append(Requirement(pkg))
+
+    for req in req_list:
+        for pkg in [ver for ver in version_list if ver[0] == req.name]:
+            if pkg[1] in req.specifier:
+                ret_list.append(req.name)
 
     # Try to detect with the return code of `pip show`.
     # This can show the existance of things like `argparse` which
@@ -105,18 +118,25 @@ def pip_detect(pkgs, exec_fn=None):
     # See:
     #   https://github.com/pypa/pip/issues/1570#issuecomment-71111030
     if fallback_to_pip_show:
-        for pkg in [p for p in pkgs if p not in ret_list]:
+        for req in [r for r in req_list if r.name not in ret_list]:
             # does not see retcode but stdout for old pip to check if installed
             proc = subprocess.Popen(
-                pip_cmd + ['show', pkg],
+                pip_cmd + ['show', req.name],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT
             )
             output, _ = proc.communicate()
             output = output.strip()
             if proc.returncode == 0 and output:
-                # `pip show` detected it, add it to the list.
-                ret_list.append(pkg)
+                # `pip show` detected it, check the version.
+                show_split = output.split('\n')
+
+                for line in [l for l in show_split if l.startswith('Version:')]:
+                    version = Version(line.strip().split()[1])
+
+                    if version in req.specifier:
+                        # version matches, add it to the list
+                        ret_list.append(req.name)
 
     return ret_list
 
