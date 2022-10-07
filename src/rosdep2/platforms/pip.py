@@ -102,6 +102,10 @@ def pip_detect(pkgs, exec_fn=None):
 
     for pkg in pkg_list:
         pkg_row = pkg.split('==')
+        
+        # Account for some unusual instances of === instead of ==
+        pkg_row[1] = pkg_row[1].strip('=')
+
         version_list.append((pkg_row[0], Version(pkg_row[1])))
 
     for pkg in pkgs:
