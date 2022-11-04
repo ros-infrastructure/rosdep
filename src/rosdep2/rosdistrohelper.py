@@ -29,6 +29,7 @@
 
 import os
 import rosdistro
+from pathlib import Path
 
 # monkey patch the old url loader
 from .url_utils import urlopen_gzip
@@ -60,11 +61,20 @@ class ReleaseFile(object):
         self.platforms = dist_file.release_platforms
 
 
+ROSDEP_ETC = Path("/etc/ros/rosdep")
+OVERLAYS_LIST = "overlays.list"
+OVERLAYS_LIST_PATH = ROSDEP_ETC / OVERLAYS_LIST
+
+
 def get_overlay_index_url():
     # environment variable has precedence over configuration files
     if 'ROSDISTRO_OVERLAY_INDEX_URL' in os.environ:
         return os.environ['ROSDISTRO_OVERLAY_INDEX_URL']
 
+    if OVERLAYS_LIST_PATH.exists():
+        # only read one overlay for the moment
+        overlays = OVERLAYS_LIST_PATH.read_text().split("\n")
+        return overlays[0]
     return None
 
 
