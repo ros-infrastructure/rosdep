@@ -344,6 +344,20 @@ def _rosdep_main(args):
                            'locally ignore a rosdep key is creating a local rosdep rule '
                            'with an empty list of packages (include it in '
                            '/etc/ros/rosdep/sources.list.d/ before the defaults).')
+    parser.add_option('--packages-select',
+                      dest='packages_select', action='append', default=[],
+                      help="List of detected catkin or ament packages subset."
+                           'If specified then rosdep will use only keys that '
+                           'are declared in the packages select list. A space '
+                           'separated list of installers can also be passed as a '
+                           'string. Example: `--packages-select "pkg1 pkg2"`')
+    parser.add_option('--packages-skip',
+                      dest='packages_skip', action='append', default=[],
+                      help="List of detected catkin or ament packages to skip."
+                           'If specified, then rosdep will ignore keys that '
+                           'are declared in the packages skip list. A space '
+                           'separated list of installers can also be passed as a '
+                           'string. Example: `--packages-skip "pkg1 pkg2"`')
     parser.add_option('--filter-for-installers',
                       action='append', default=[],
                       help="Affects the 'db' verb. If supplied, the output of the 'db' "
@@ -420,6 +434,8 @@ def _rosdep_main(args):
     options.skip_keys = [key for s in options.skip_keys for key in s.split(' ')]
     options.filter_for_installers = [inst for s in options.filter_for_installers for inst in s.split(' ')]
     options.dependency_types = [dep for s in options.dependency_types for dep in s.split(' ')]
+    options.packages_select = [pkg for s in options.packages_select for pkg in s.split(' ')]
+    options.packages_skip = [pkg for s in options.packages_skip for pkg in s.split(' ')]
 
     if len(args) == 0:
         parser.error('Please enter a command')
@@ -552,7 +568,15 @@ def _package_args_handler(command, parser, options, args):
         print('No packages in arguments, aborting')
         return
 
-    return command_handlers[command](lookup, packages, options)
+    filtered_detected_packages = []
+    for package in packages:
+        if options.packages_select and package not in options.packages_select:
+            continue
+        if options.packages_skip and package in options.packages_skip:
+            continue
+        filtered_detected_packages.append(package)
+
+    return command_handlers[command](lookup, filtered_detected_packages, options)
 
 
 def convert_os_override_option(options_os_override):
