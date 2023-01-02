@@ -37,7 +37,7 @@ try:
 except ImportError:
     import pickle
 
-from .cache_tools import compute_filename_hash, PICKLE_CACHE_EXT, write_atomic, write_cache_file
+from .cache_tools import compute_filename_hash, PICKLE_CACHE_EXT, write_atomic, write_cache_file, CACHE_PATH_ENV
 from .core import InvalidData, DownloadFailure, CachePermissionError
 from .gbpdistro_support import get_gbprepo_as_rosdep_data, download_gbpdistro_as_rosdep_data
 from .meta import MetaDatabase
@@ -109,6 +109,8 @@ def get_default_sources_list_file():
 
 
 def get_sources_cache_dir():
+    if CACHE_PATH_ENV in os.environ and os.environ[CACHE_PATH_ENV]:
+        return os.path.join(os.environ[CACHE_PATH_ENV], SOURCES_CACHE_DIR)
     ros_home = rospkg.get_ros_home()
     return os.path.join(ros_home, 'rosdep', SOURCES_CACHE_DIR)
 
@@ -435,7 +437,8 @@ def _generate_key_from_urls(urls):
 def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
                         success_handler=None, error_handler=None,
                         skip_eol_distros=False, ros_distro=None,
-                        quiet=False):
+                        quiet=False,
+                        meta_cache_dir=None):
     """
     Re-downloaded data from remote sources and store in cache.  Also
     update the cache index based on current sources.
@@ -449,6 +452,7 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
         if a particular source fails.  This hook is mainly for
         printing errors to console.
     :param skip_eol_distros: skip downloading sources for EOL distros
+    :param meta_cache_dir: override meta cache directory
 
     :returns: list of (`DataSource`, cache_file_path) pairs for cache
         files that were updated, ``[str]``
@@ -516,7 +520,7 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
         sources.append(rds)
 
     # cache metadata that isn't a source list
-    MetaDatabase().set('ROS_PYTHON_VERSION', python_versions)
+    MetaDatabase(meta_cache_dir).set('ROS_PYTHON_VERSION', python_versions)
 
     # Create a combined index of *all* the sources.  We do all the
     # sources regardless of failures because a cache from a previous

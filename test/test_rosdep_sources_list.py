@@ -214,13 +214,15 @@ def test_update_sources_list():
     tempdir = tempfile.mkdtemp()
     # use a subdirectory of test dir to make sure rosdep creates the necessary substructure
     tempdir = os.path.join(tempdir, 'newdir')
+    metadir = os.path.join(tempdir, 'meta')
 
     errors = []
 
     def error_handler(loc, e):
         errors.append((loc, e))
     retval = update_sources_list(sources_list_dir=sources_list_dir,
-                                 sources_cache_dir=tempdir, error_handler=error_handler)
+                                 sources_cache_dir=tempdir, error_handler=error_handler,
+                                 meta_cache_dir=metadir)
     assert retval
     assert len(retval) == 2, retval
     # one of our sources is intentionally bad, this should be a softfail
@@ -253,6 +255,7 @@ def test_update_sources_list():
 def test_load_cached_sources_list():
     from rosdep2.sources_list import load_cached_sources_list, update_sources_list
     tempdir = tempfile.mkdtemp()
+    metadir = tempfile.mkdtemp()
 
     # test behavior on empty cache
     assert [] == load_cached_sources_list(sources_cache_dir=tempdir)
@@ -260,7 +263,8 @@ def test_load_cached_sources_list():
     # pull in cache data
     sources_list_dir = get_test_dir()
     retval = update_sources_list(sources_list_dir=sources_list_dir,
-                                 sources_cache_dir=tempdir, error_handler=None)
+                                 sources_cache_dir=tempdir, error_handler=None,
+                                 meta_cache_dir=metadir)
     assert retval
 
     # now test with cached data
@@ -422,11 +426,13 @@ def test_SourcesListLoader_create_default():
     from rosdep2.sources_list import update_sources_list, SourcesListLoader, DataSourceMatcher
     # create temp dir for holding sources cache
     tempdir = tempfile.mkdtemp()
+    metadir = tempfile.mkdtemp()
 
     # pull in cache data
     sources_list_dir = get_test_dir()
     retval = update_sources_list(sources_list_dir=sources_list_dir,
-                                 sources_cache_dir=tempdir, error_handler=None)
+                                 sources_cache_dir=tempdir, error_handler=None,
+                                 meta_cache_dir=metadir)
     assert retval
 
     # now test with cached data

@@ -37,6 +37,7 @@ except ImportError:
     import pickle
 
 PICKLE_CACHE_EXT = '.pickle'
+CACHE_PATH_ENV = 'ROSDEP_CACHE_PATH'
 
 
 def compute_filename_hash(key_filenames):

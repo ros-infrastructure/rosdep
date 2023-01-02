@@ -45,6 +45,7 @@ from ._version import __version__
 from .cache_tools import compute_filename_hash
 from .cache_tools import write_cache_file
 from .cache_tools import PICKLE_CACHE_EXT
+from .cache_tools import CACHE_PATH_ENV
 
 """
 Rosdep needs to store data that isn't used to resolve rosdep keys, but needs to be cached during
@@ -56,6 +57,8 @@ META_CACHE_DIR = 'meta.cache'
 
 def get_meta_cache_dir():
     """Return storage location for cached meta data."""
+    if CACHE_PATH_ENV in os.environ and os.environ[CACHE_PATH_ENV]:
+        return os.path.join(os.environ[CACHE_PATH_ENV], META_CACHE_DIR)
     ros_home = rospkg.get_ros_home()
     return os.path.join(ros_home, 'rosdep', META_CACHE_DIR)
 

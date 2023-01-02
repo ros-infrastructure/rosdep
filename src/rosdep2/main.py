@@ -63,7 +63,7 @@ from .core import RosdepInternalError, InstallFailed, UnsupportedOs, InvalidData
 from .installers import normalize_uninstalled_to_list
 from .installers import RosdepInstaller
 from .lookup import RosdepLookup, ResolutionError, prune_catkin_packages
-from .meta import MetaDatabase
+from .meta import MetaDatabase, get_meta_cache_dir
 from .rospkg_loader import DEFAULT_VIEW_KEY
 from .sources_list import update_sources_list, get_sources_cache_dir,\
     download_default_sources_list, SourcesListLoader, CACHE_INDEX,\
@@ -270,11 +270,12 @@ def setup_proxy_opener():
             install_opener(opener)
 
 
-def setup_environment_variables(ros_distro):
+def setup_environment_variables(ros_distro, meta_cache_dir=None):
     """
     Set environment variables needed to find ROS packages and evaluate conditional dependencies.
 
     :param ros_distro: The requested ROS distro passed on the CLI, or None
+    :param meta_cache_dir: Path to the cache directory of meta information
     """
     if ros_distro is not None:
         if 'ROS_DISTRO' in os.environ and os.environ['ROS_DISTRO'] != ros_distro:
@@ -288,7 +289,7 @@ def setup_environment_variables(ros_distro):
 
     if 'ROS_PYTHON_VERSION' not in os.environ and 'ROS_DISTRO' in os.environ:
         # Set python version to version used by ROS distro
-        python_versions = MetaDatabase().get('ROS_PYTHON_VERSION', default=[])
+        python_versions = MetaDatabase(meta_cache_dir).get('ROS_PYTHON_VERSION', default=[])
         if os.environ['ROS_DISTRO'] in python_versions:
             os.environ['ROS_PYTHON_VERSION'] = str(python_versions[os.environ['ROS_DISTRO']])
 
@@ -301,12 +302,15 @@ def setup_environment_variables(ros_distro):
 def _rosdep_main(args):
     # sources cache dir is our local database.
     default_sources_cache = get_sources_cache_dir()
+    default_meta_cache = get_meta_cache_dir()
 
     parser = OptionParser(usage=_usage, prog='rosdep')
     parser.add_option('--os', dest='os_override', default=None,
                       metavar='OS_NAME:OS_VERSION', help='Override OS name and version (colon-separated), e.g. ubuntu:lucid')
     parser.add_option('-c', '--sources-cache-dir', dest='sources_cache_dir', default=default_sources_cache,
                       metavar='SOURCES_CACHE_DIR', help='Override %s' % (default_sources_cache))
+    parser.add_option('-m', '--meta-cache-dir', dest='meta_cache_dir', default=default_meta_cache,
+                      metavar='META_CACHE_DIR', help='Override %s' % (default_meta_cache))
     parser.add_option('--verbose', '-v', dest='verbose', default=False,
                       action='store_true', help='verbose display')
     parser.add_option('--version', dest='print_version', default=False,
@@ -434,7 +438,7 @@ def _rosdep_main(args):
     if command not in ['init', 'update', 'fix-permissions']:
         check_for_sources_list_init(options.sources_cache_dir)
         # _package_args_handler uses `ROS_DISTRO`, so environment variables must be set before
-        setup_environment_variables(options.ros_distro)
+        setup_environment_variables(options.ros_distro, options.meta_cache_dir)
     elif command not in ['fix-permissions']:
         setup_proxy_opener()
 
@@ -666,7 +670,8 @@ def command_update(options):
                             error_handler=update_error_handler,
                             skip_eol_distros=not options.include_eol_distros,
                             ros_distro=options.ros_distro,
-                            quiet=options.quiet)
+                            quiet=options.quiet,
+                            meta_cache_dir=options.meta_cache_dir)
         if not options.quiet:
             print('updated cache in %s' % (sources_cache_dir))
     except InvalidData as e:
