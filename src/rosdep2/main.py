@@ -653,7 +653,7 @@ def command_update(options):
     try:
         if not options.quiet:
             print('reading in sources list data from %s' % (sources_list_dir))
-        sources_cache_dir = get_sources_cache_dir()
+        sources_cache_dir = options.sources_cache_dir if options.sources_cache_dir else get_sources_cache_dir()
         try:
             if os.geteuid() == 0:
                 print("Warning: running 'rosdep update' as root is not recommended.", file=sys.stderr)
@@ -661,7 +661,8 @@ def command_update(options):
         except AttributeError:
             # nothing we wanna do under Windows
             pass
-        update_sources_list(success_handler=update_success_handler,
+        update_sources_list(sources_cache_dir=sources_cache_dir,
+                            success_handler=update_success_handler,
                             error_handler=update_error_handler,
                             skip_eol_distros=not options.include_eol_distros,
                             ros_distro=options.ros_distro,
