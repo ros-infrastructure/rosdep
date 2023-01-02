@@ -47,6 +47,7 @@ from rosdep2 import main
 from rosdep2.ament_packages import AMENT_PREFIX_PATH_ENV_VAR
 from rosdep2.main import rosdep_main
 from rosdep2.main import setup_proxy_opener
+from rosdep2.cache_tools import CACHE_PATH_ENV
 
 
 GITHUB_BASE_URL = 'https://github.com/ros/rosdistro/raw/master/rosdep/base.yaml'
@@ -66,7 +67,7 @@ def get_test_catkin_tree_dir():
 
 
 def get_cache_dir():
-    p = os.path.join(get_test_dir(), 'sources_cache')
+    p = get_test_dir()
     assert os.path.isdir(p)
     return p
 
@@ -95,6 +96,7 @@ class TestRosdepMain(unittest.TestCase):
         self.old_rr = rospkg.get_ros_root()
         self.old_rpp = rospkg.get_ros_package_path()
         self.old_app = os.getenv(AMENT_PREFIX_PATH_ENV_VAR, None)
+        self.old_cpe = os.getenv(CACHE_PATH_ENV, None)
         if 'ROS_ROOT' in os.environ:
             del os.environ['ROS_ROOT']
         os.environ['ROS_PACKAGE_PATH'] = os.path.join(get_test_tree_dir())
@@ -102,6 +104,7 @@ class TestRosdepMain(unittest.TestCase):
         if 'ROS_PYTHON_VERSION' not in os.environ:
             # avoid `test_check` failure due to warning on stderr
             os.environ['ROS_PYTHON_VERSION'] = sys.version[0]
+        os.environ[CACHE_PATH_ENV] = get_cache_dir()
 
     def tearDown(self):
         if self.old_rr is not None:
@@ -110,10 +113,13 @@ class TestRosdepMain(unittest.TestCase):
             os.environ['ROS_PACKAGE_PATH'] = self.old_rpp
         if self.old_app is not None:
             os.environ[AMENT_PREFIX_PATH_ENV_VAR] = self.old_app
+        if self.old_cpe is None:
+            del os.environ[CACHE_PATH_ENV]
+        else:
+            os.environ[CACHE_PATH_ENV] = self.old_cpe
 
     def test_bad_commands(self):
-        sources_cache = get_cache_dir()
-        cmd_extras = ['-c', sources_cache]
+        cmd_extras = []
         for commands in [[], ['fake', 'something'], ['check'], ['install', '-a', 'rospack_fake'],
                          ['check', 'rospack_fake', '--os', 'ubuntulucid'],
                          ]:
@@ -124,8 +130,7 @@ class TestRosdepMain(unittest.TestCase):
                 pass
 
     def test_check(self):
-        sources_cache = get_cache_dir()
-        cmd_extras = ['-c', sources_cache]
+        cmd_extras = []
 
         with fakeout() as b:
             try:
@@ -163,8 +168,7 @@ class TestRosdepMain(unittest.TestCase):
     @patch('rosdep2.platforms.debian.read_stdout')
     @patch('rosdep2.installers.os.geteuid', return_value=1)
     def test_install(self, mock_geteuid, mock_read_stdout):
-        sources_cache = get_cache_dir()
-        cmd_extras = ['-c', sources_cache]
+        cmd_extras = []
         catkin_tree = get_test_catkin_tree_dir()
 
         def read_stdout(cmd, capture_stderr=False):
@@ -221,12 +225,11 @@ class TestRosdepMain(unittest.TestCase):
 
     def test_where_defined(self):
         try:
-            sources_cache = get_cache_dir()
             expected = GITHUB_PYTHON_URL
             for command in (['where_defined', 'testpython'], ['where_defined', 'testpython']):
                 with fakeout() as b:
                     # set os to ubuntu so this test works on different platforms
-                    rosdep_main(command + ['-c', sources_cache, '--os=ubuntu:lucid'])
+                    rosdep_main(command + ['--os=ubuntu:lucid'])
                     stdout, stderr = b
                     output = stdout.getvalue().strip()
                     assert output == expected, output
@@ -235,8 +238,7 @@ class TestRosdepMain(unittest.TestCase):
 
     def test_what_needs(self):
         try:
-            sources_cache = get_cache_dir()
-            cmd_extras = ['-c', sources_cache]
+            cmd_extras = []
             expected = ['python_dep']
             with fakeout() as b:
                 rosdep_main(['what-needs', 'testpython'] + cmd_extras)
@@ -253,8 +255,7 @@ class TestRosdepMain(unittest.TestCase):
             assert False, 'system exit occurred'
 
     def test_keys(self):
-        sources_cache = get_cache_dir()
-        cmd_extras = ['-c', sources_cache]
+        cmd_extras = []
 
         try:
             with fakeout() as b:

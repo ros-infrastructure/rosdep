@@ -45,7 +45,7 @@ def get_test_tree_dir():
 
 
 def get_cache_dir():
-    p = os.path.join(get_test_dir(), 'sources_cache')
+    p = os.path.join(get_test_dir(), 'sources.cache')
     assert os.path.isdir(p)
     return p
 

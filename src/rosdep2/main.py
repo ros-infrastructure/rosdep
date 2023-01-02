@@ -53,7 +53,7 @@ except ImportError:
     from urllib2 import URLError
 import warnings
 
-from optparse import OptionParser
+from optparse import OptionParser, SUPPRESS_HELP
 
 import rospkg
 
@@ -63,7 +63,7 @@ from .core import RosdepInternalError, InstallFailed, UnsupportedOs, InvalidData
 from .installers import normalize_uninstalled_to_list
 from .installers import RosdepInstaller
 from .lookup import RosdepLookup, ResolutionError, prune_catkin_packages
-from .meta import MetaDatabase, get_meta_cache_dir
+from .meta import MetaDatabase
 from .rospkg_loader import DEFAULT_VIEW_KEY
 from .sources_list import update_sources_list, get_sources_cache_dir,\
     download_default_sources_list, SourcesListLoader, CACHE_INDEX,\
@@ -122,6 +122,16 @@ rosdep fix-permissions
   Recursively change the permissions of the user's ros home directory.
   May require sudo.  Can be useful to fix permissions after calling
   "rosdep update" with sudo accidentally.
+
+Environment variables:
+
+ROSDEP_SOURCE_PATH
+  Overrides path to the sources list directory (by default /etc/ros/rosdep/sources.list.d).
+  Applies to init and update commands.
+
+ROSDEP_CACHE_PATH
+  Overrides path to the cache directory (by default $HOME/.ros/rosdep).
+  Applies to all commands except init.
 """
 
 
@@ -301,16 +311,13 @@ def setup_environment_variables(ros_distro, meta_cache_dir=None):
 
 def _rosdep_main(args):
     # sources cache dir is our local database.
-    default_sources_cache = get_sources_cache_dir()
-    default_meta_cache = get_meta_cache_dir()
-
     parser = OptionParser(usage=_usage, prog='rosdep')
     parser.add_option('--os', dest='os_override', default=None,
                       metavar='OS_NAME:OS_VERSION', help='Override OS name and version (colon-separated), e.g. ubuntu:lucid')
-    parser.add_option('-c', '--sources-cache-dir', dest='sources_cache_dir', default=default_sources_cache,
-                      metavar='SOURCES_CACHE_DIR', help='Override %s' % (default_sources_cache))
-    parser.add_option('-m', '--meta-cache-dir', dest='meta_cache_dir', default=default_meta_cache,
-                      metavar='META_CACHE_DIR', help='Override %s' % (default_meta_cache))
+    parser.add_option('-c', '--sources-cache-dir', dest='sources_cache_dir', default=None,
+                      metavar='SOURCES_CACHE_DIR', help=SUPPRESS_HELP)  # deprecated
+    parser.add_option('-m', '--meta-cache-dir', dest='meta_cache_dir', default=None,
+                      metavar='META_CACHE_DIR', help=SUPPRESS_HELP)  # deprecated
     parser.add_option('--verbose', '-v', dest='verbose', default=False,
                       action='store_true', help='verbose display')
     parser.add_option('--version', dest='print_version', default=False,
@@ -657,7 +664,6 @@ def command_update(options):
     try:
         if not options.quiet:
             print('reading in sources list data from %s' % (sources_list_dir))
-        sources_cache_dir = options.sources_cache_dir if options.sources_cache_dir else get_sources_cache_dir()
         try:
             if os.geteuid() == 0:
                 print("Warning: running 'rosdep update' as root is not recommended.", file=sys.stderr)
@@ -665,7 +671,7 @@ def command_update(options):
         except AttributeError:
             # nothing we wanna do under Windows
             pass
-        update_sources_list(sources_cache_dir=sources_cache_dir,
+        update_sources_list(sources_cache_dir=options.sources_cache_dir,
                             success_handler=update_success_handler,
                             error_handler=update_error_handler,
                             skip_eol_distros=not options.include_eol_distros,
@@ -673,6 +679,7 @@ def command_update(options):
                             quiet=options.quiet,
                             meta_cache_dir=options.meta_cache_dir)
         if not options.quiet:
+            sources_cache_dir = options.sources_cache_dir if options.sources_cache_dir else get_sources_cache_dir()
             print('updated cache in %s' % (sources_cache_dir))
     except InvalidData as e:
         print('ERROR: invalid sources list file:\n\t%s' % (e), file=sys.stderr)
