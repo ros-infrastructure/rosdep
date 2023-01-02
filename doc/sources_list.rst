@@ -30,6 +30,26 @@ Sources list file format
 ``/etc/ros/rosdep/sources.list.d``.  ``sudo rosdep init`` will create
 a default configuration for you.
 
+You can override the location by setting environment variable
+``ROSDEP_SOURCE_PATH``. The custom path has to exist prior to calling
+``rosdep init``, otherwise the default one will be used.
+
+Please note that when using ``sudo``, environment
+variables from the user are not passed to the command. To specify the variable
+for initializing the database, call::
+
+    sudo mkdir -p /usr/rosdep.sources
+    sudo env ROSDEP_SOURCE_PATH=/usr/rosdep.sources rosdep init
+
+If you point ``ROSDEP_SOURCE_PATH`` to a user-writable directory, you can avoid
+obtaining root privileges, so you can just call::
+
+    mkdir -p $HOME/my_rosdep_sources
+    ROSDEP_SOURCE_PATH=$HOME/my_rosdep_sources rosdep init
+
+Be aware that ``~`` is not expanded in ``ROSDEP_SOURCE_PATH``, so you should
+specify an absolute path.
+
 rosdep processes the files in this directory, sorted by filename in
 ascending order.  Precedence is assigned to the files in the order
 they are processed, with the first file having the highest
