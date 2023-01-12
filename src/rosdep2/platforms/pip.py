@@ -35,7 +35,7 @@ import subprocess
 import sys
 
 from packaging.requirements import Requirement
-from packaging.version import Version
+from packaging.version import InvalidVersion, parse
 from ..core import InstallFailed
 from ..installers import PackageManagerInstaller
 from ..shell_utils import read_stdout
@@ -79,6 +79,20 @@ def is_cmd_available(cmd):
         return False
 
 
+def parse_version(version_str):
+    """
+    Given a textual representation of a Python package version, return its parsed representation.
+
+    :param version_str: The textual representation of the version.
+    :return: The parsed representation of None if the version cannot be parsed.
+    :rtype: packaging.version.Version or packaging.version.LegacyVersion or None
+    """
+    try:
+        return parse(version_str)
+    except InvalidVersion:
+        return None
+
+
 def pip_detect(pkgs, exec_fn=None):
     """
     Given a list of package specifications, return the list of installed
@@ -95,6 +109,7 @@ def pip_detect(pkgs, exec_fn=None):
         exec_fn = read_stdout
         fallback_to_pip_show = True
     pkg_list = exec_fn(pip_cmd + ['freeze']).split('\n')
+    pkg_list = [p for p in pkg_list if len(p) > 0]
 
     ret_list = []
     version_list = []
@@ -102,18 +117,18 @@ def pip_detect(pkgs, exec_fn=None):
 
     for pkg in pkg_list:
         pkg_row = pkg.split('==')
-        
+
         # Account for some unusual instances of === instead of ==
         pkg_row[1] = pkg_row[1].strip('=')
 
-        version_list.append((pkg_row[0], Version(pkg_row[1])))
+        version_list.append((pkg_row[0], parse_version(pkg_row[1])))
 
     for pkg in pkgs:
         req_list.append(Requirement(pkg))
 
     for req in req_list:
         for pkg in [ver for ver in version_list if ver[0] == req.name]:
-            if pkg[1] in req.specifier:
+            if pkg[1] is None or pkg[1] in req.specifier:
                 ret_list.append(req.name)
 
     # Try to detect with the return code of `pip show`.
@@ -135,10 +150,10 @@ def pip_detect(pkgs, exec_fn=None):
                 # `pip show` detected it, check the version.
                 show_split = output.split('\n')
 
-                for line in [l for l in show_split if l.startswith('Version:')]:
-                    version = Version(line.strip().split()[1])
+                for line in [s for s in show_split if s.startswith('Version:')]:
+                    version = parse_version(line.strip().split()[1])
 
-                    if version in req.specifier:
+                    if version is None or version in req.specifier:
                         # version matches, add it to the list
                         ret_list.append(req.name)
 
@@ -161,6 +176,15 @@ class PipInstaller(PackageManagerInstaller):
             'setuptools {}'.format(setuptools_version),
         ]
         return version_strings
+
+    def get_packages_to_install(self, resolved, reinstall=False):
+        if reinstall:
+            return resolved
+        if not resolved:
+            return []
+        else:
+            detected = self.detect_fn(resolved)
+            return [x for x in resolved if Requirement(x).name not in detected]
 
     def get_install_command(self, resolved, interactive=True, reinstall=False, quiet=False):
         pip_cmd = get_pip_command()
