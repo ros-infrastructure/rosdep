@@ -76,18 +76,20 @@ CACHE_INDEX = 'index'
 SOURCE_PATH_ENV = 'ROSDEP_SOURCE_PATH'
 
 
-def get_sources_list_dirs(source_list_dir):
+def get_sources_list_dirs(source_list_dir, strip_missing_dirs=True):
     if SOURCE_PATH_ENV in os.environ:
         sdirs = os.environ[SOURCE_PATH_ENV].split(os.pathsep)
     else:
         sdirs = [source_list_dir]
+    if not strip_missing_dirs:
+        return sdirs
     for p in list(sdirs):
         if not os.path.exists(p):
             sdirs.remove(p)
     return sdirs
 
 
-def get_sources_list_dir():
+def get_sources_list_dir(strip_missing_dirs=True):
     # base of where we read config files from
     # TODO: windows
     if 0:
@@ -97,7 +99,7 @@ def get_sources_list_dir():
         etc_ros = '/etc/ros'
     # compute default system wide sources directory
     sys_sources_list_dir = os.path.join(etc_ros, 'rosdep', SOURCES_LIST_DIR)
-    sources_list_dirs = get_sources_list_dirs(sys_sources_list_dir)
+    sources_list_dirs = get_sources_list_dirs(sys_sources_list_dir, strip_missing_dirs)
     if sources_list_dirs:
         return sources_list_dirs[0]
     else:
