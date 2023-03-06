@@ -12,7 +12,7 @@ kwargs = {
     'install_requires': ['PyYAML >= 3.1', 'setuptools'],
     'extras_require': {
         'test': [
-            'flake8',
+            'flake8 < 6',
             'flake8-comprehensions',
             "mock; python_version < '3.3'",
             'pytest',
