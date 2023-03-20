@@ -6,7 +6,7 @@ kwargs = {
     # same version as in:
     # - src/rosdep2/__init__.py
     # - stdeb.cfg
-    'version': '0.22.1',
+    'version': '0.22.2',
     'packages': ['rosdep2', 'rosdep2.ament_packages', 'rosdep2.platforms'],
     'package_dir': {'': 'src'},
     'install_requires': ['PyYAML >= 3.1', 'setuptools'],
