@@ -57,8 +57,12 @@ def urlopen_gzip(url, **kwargs):
 
         # not sure if this is the best way. alternatively we could explicitly request
         # authentication by changing the scheme to https+github
-        if uri.hostname == 'raw.githubusercontent.com' and 'GHCR_PAT' in os.environ:
-            auth = base64.b64encode(f"{os.environ['GHCR_PAT']}:".encode('ascii')).decode('ascii')
+        # TODO: Remove GHCR_PAT in favor of API_TOKEN_GITHUB
+        if uri.hostname == 'raw.githubusercontent.com' and ('GHCR_PAT' in os.environ or 'API_TOKEN_GITHUB' in os.environ):
+            if (('GHCR_PAT' in os.environ):
+                print("Warning: GHCR_PAT is deprecated. Please use API_TOKEN_GITHUB instead.")
+            token = os.environ['GHCR_PAT'] if 'GHCR_PAT' in os.environ else os.environ['API_TOKEN_GITHUB']
+            auth = base64.b64encode(f"{token}:".encode('ascii')).decode('ascii')
             # force it into a header because urllib is old and doesn't make this easy
             url_request.headers['Authorization'] = f'Basic {auth}'
 
