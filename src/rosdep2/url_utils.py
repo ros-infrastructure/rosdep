@@ -59,7 +59,7 @@ def urlopen_gzip(url, **kwargs):
         # authentication by changing the scheme to https+github
         # TODO: Remove GHCR_PAT in favor of API_TOKEN_GITHUB
         if uri.hostname == 'raw.githubusercontent.com' and ('GHCR_PAT' in os.environ or 'API_TOKEN_GITHUB' in os.environ):
-            if (('GHCR_PAT' in os.environ):
+            if ('GHCR_PAT' in os.environ):
                 print("Warning: GHCR_PAT is deprecated. Please use API_TOKEN_GITHUB instead.")
             token = os.environ['GHCR_PAT'] if 'GHCR_PAT' in os.environ else os.environ['API_TOKEN_GITHUB']
             auth = base64.b64encode(f"{token}:".encode('ascii')).decode('ascii')
