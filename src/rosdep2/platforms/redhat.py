@@ -37,7 +37,8 @@ from rospkg.os_detect import (
     OS_FEDORA,
     OS_ORACLE,
     OS_RHEL,
-    OS_ROCKY
+    OS_ROCKY,
+    OS_OPENEULER
 )
 
 from .pip import PIP_INSTALLER
@@ -61,13 +62,21 @@ def register_installers(context):
 def register_platforms(context):
     register_fedora(context)
     register_rhel(context)
-
+    register_openeuler(context)
     # Aliases
     register_rhel_clone(context, OS_ALMALINUX)
     register_rhel_clone(context, OS_CENTOS)
     register_rhel_clone(context, OS_ORACLE)
     register_rhel_clone(context, OS_ROCKY)
 
+
+def register_openeuler(context):
+    context.add_os_installer_key(OS_OPENEULER, PIP_INSTALLER)
+    context.add_os_installer_key(OS_OPENEULER, DNF_INSTALLER)
+    context.add_os_installer_key(OS_OPENEULER, YUM_INSTALLER)
+    context.add_os_installer_key(OS_OPENEULER, SOURCE_INSTALLER)
+    context.set_default_os_installer_key(OS_OPENEULER, lambda self: DNF_INSTALLER)
+    context.set_os_version_type(OS_OPENEULER, lambda self: self.get_version())
 
 def register_fedora(context):
     context.add_os_installer_key(OS_FEDORA, PIP_INSTALLER)
