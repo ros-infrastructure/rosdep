@@ -404,6 +404,8 @@ class RosdepLookup(object):
         for resource_name in resources:
             try:
                 rosdep_keys = self.get_rosdeps(resource_name, implicit=implicit)
+                # Make key list unique
+                rosdep_keys = list(set(rosdep_keys))
                 if self.verbose:
                     print('resolve_all: resource [%s] requires rosdep keys [%s]' % (resource_name, ', '.join(rosdep_keys)), file=sys.stderr)
                 rosdep_keys = prune_catkin_packages(rosdep_keys, self.verbose)
