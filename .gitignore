@@ -13,3 +13,5 @@ dist
 src/rosdep.egg-info
 nose*
 _build
+install
+log
