@@ -364,7 +364,7 @@ class AptInstaller(PackageManagerInstaller):
         packages = self.get_packages_to_install(resolved, reinstall=reinstall)
         if not packages:
             return []
-        base_cmd = ["apt-get", "install"]
+        base_cmd = ["apt-get", "install", "--allow-downgrades"]
         if not interactive:
             base_cmd.append("-y")
         if quiet:
