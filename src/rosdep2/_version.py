@@ -1,4 +1,4 @@
 # same version as in:
 # - setup.py
 # - stdeb.cfg
-__version__ = '0.22.2'
+__version__ = '0.22.3'
