@@ -34,6 +34,7 @@ import subprocess
 import traceback
 
 from rospkg.os_detect import OsDetect
+from urllib.parse import urlparse
 
 from .core import rd_debug, RosdepInternalError, InstallFailed, print_bold, InvalidData
 
@@ -599,10 +600,20 @@ class RosdepInstaller(object):
                 if not continue_on_error:
                     raise InstallFailed(failures=failures)
 
+        def is_valid_url(url):
+            try:
+                out = urlparse(url)
+                return all([out.scheme, out.netloc])
+            except ValueError:
+                return False
+
         # test installation of each
         for r in resolved:
-            if not installer.is_installed(r):
-                failures.append((installer_key, 'Failed to detect successful installation of [%s]' % (r)))
+            if not is_valid_url(r):
+                if not installer.is_installed(r):
+                    failures.append((installer_key, 'Failed to detect successful installation of [%s]' % (r)))
+            else:
+                print('WARNING: package "%s" could not be checked, the installation was executed via the URL' % r)
         # finalize result
         if failures:
             raise InstallFailed(failures=failures)
