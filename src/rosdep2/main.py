@@ -603,11 +603,12 @@ def command_init(options):
         print(e, file=sys.stderr)
         return 4
     # reuse path variable for error message
-    path = get_sources_list_dir()
+    path = get_sources_list_dir(strip_missing_dirs=False)
     old_umask = os.umask(0o022)
     try:
         if not os.path.exists(path):
             os.makedirs(path)
+        # Here path goes from directory name to file for more specific error message
         path = get_default_sources_list_file()
         if os.path.exists(path):
             print('Default sources list file already exists:\n\t%s\nPlease delete if you wish to re-initialize' % (path), file=sys.stderr)
