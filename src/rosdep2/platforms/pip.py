@@ -29,8 +29,8 @@
 
 from __future__ import print_function
 
+import importlib.metadata
 import os
-import pkg_resources
 import subprocess
 import sys
 
@@ -130,8 +130,8 @@ class PipInstaller(PackageManagerInstaller):
         super(PipInstaller, self).__init__(pip_detect, supports_depends=True)
 
     def get_version_strings(self):
-        pip_version = pkg_resources.get_distribution('pip').version
-        setuptools_version = pkg_resources.get_distribution('setuptools').version
+        pip_version = importlib.metadata.version('pip')
+        setuptools_version = importlib.metadata.version('setuptools')
         version_strings = [
             'pip {}'.format(pip_version),
             'setuptools {}'.format(setuptools_version),
