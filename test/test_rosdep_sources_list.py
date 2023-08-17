@@ -434,7 +434,7 @@ def test_SourcesListLoader_create_default():
     loader = SourcesListLoader.create_default(matcher, sources_cache_dir=tempdir)
     assert loader.sources
     sources0 = loader.sources
-    assert not any([s for s in loader.sources if not matcher.matches(s)])
+    assert not any(s for s in loader.sources if not matcher.matches(s))
 
     loader = SourcesListLoader.create_default(matcher, sources_cache_dir=tempdir)
     assert sources0 == loader.sources
@@ -445,7 +445,7 @@ def test_SourcesListLoader_create_default():
     assert loader2.sources
     # - should have filtered down to python-only
     assert sources0 != loader2.sources
-    assert not any([s for s in loader2.sources if not matcher2.matches(s)])
+    assert not any(s for s in loader2.sources if not matcher2.matches(s))
 
     # test API
 
