@@ -135,6 +135,7 @@ class PipInstaller(PackageManagerInstaller):
 
     def get_version_strings(self):
         pip_version = importlib_metadata.version('pip')
+        # keeping the name "setuptools" for backward compatibility
         setuptools_version = importlib_metadata.version('setuptools')
         version_strings = [
             'pip {}'.format(pip_version),
