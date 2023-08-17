@@ -11,7 +11,6 @@ kwargs = {
     'package_dir': {'': 'src'},
     'install_requires': [
         'PyYAML >= 3.1',
-        'setuptools',
         'importlib_metadata; python_version<"3.8"'
     ],
     'extras_require': {
