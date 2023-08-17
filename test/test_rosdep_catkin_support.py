@@ -8,11 +8,11 @@ import pytest
 def test_workflow():
     try:
         installer = get_installer(APT_INSTALLER)
-        view = get_catkin_view('fuerte', 'ubuntu', 'lucid')
-        resolved = resolve_for_os('cmake', view, installer, 'ubuntu', 'lucid')
+        view = get_catkin_view('noetic', 'ubuntu', 'focal')
+        resolved = resolve_for_os('cmake', view, installer, 'ubuntu', 'focal')
         assert ['cmake'] == resolved
-        resolved = resolve_for_os('python', view, installer, 'ubuntu', 'lucid')
-        assert resolved == ['python-dev']
+        resolved = resolve_for_os('python3', view, installer, 'ubuntu', 'focal')
+        assert resolved == ['python3-dev']
     except ValidationFailed:
         # tests fail on the server because 'rosdep init' has not been run
         pass
