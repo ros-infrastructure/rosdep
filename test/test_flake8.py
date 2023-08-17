@@ -24,6 +24,9 @@ import pytest
 @pytest.mark.flake8
 @pytest.mark.linter
 def test_flake8():
+    # flake8 doesn't have a stable public API as of ver 6.1.0.
+    # See: https://flake8.pycqa.org/en/latest/user/python-api.html
+    # Calling through subprocess is the most stable way to run it.
     result = subprocess.run(
         ['flake8'],
         cwd=pathlib.Path(__file__).parent.parent,
