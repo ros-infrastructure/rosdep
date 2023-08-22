@@ -39,6 +39,11 @@ for initializing the database, call::
 
     sudo mkdir -p /usr/rosdep.sources
     sudo env ROSDEP_SOURCE_PATH=/usr/rosdep.sources rosdep init
+    
+Alternatively you can use `--preserve-env` to pass through current environment variable values.
+    export ROSDEP_SOURCE_PATH=/tmp/example-rosdep-sources
+    mkdir $ROSDEP_SOURCE_PATH
+    sudo --preserve-env=ROSDEP_SOURCE_PATH rosdep init
 
 Updating rosdep
 ---------------
