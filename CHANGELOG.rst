@@ -1,3 +1,12 @@
+0.22.2 (2023-03-20)
+-------------------
+- Enable rosdep init to work with non-extant ROSDEP_SOURCE_PATH
+  - https://github.com/ros-infrastructure/rosdep/pull/911
+- Require flake8 < 6 for linting
+  - https://github.com/ros-infrastructure/rosdep/pull/913
+- Fix a flake8 violation in tests
+  - https://github.com/ros-infrastructure/rosdep/pull/893
+
 0.22.1 (2022-06-24)
 -------------------
 - Drop ROS Python package dependencies in debs

@@ -31,11 +31,11 @@ def test_workflow():
         os.environ[CACHE_PATH_ENV] = get_cache_dir()
         os.environ[SOURCE_PATH_ENV] = get_source_list_dir()
         installer = get_installer(APT_INSTALLER)
-        view = get_catkin_view('fuerte', 'ubuntu', 'lucid')
-        resolved = resolve_for_os('cmake', view, installer, 'ubuntu', 'lucid')
+        view = get_catkin_view('noetic', 'ubuntu', 'focal')
+        resolved = resolve_for_os('cmake', view, installer, 'ubuntu', 'focal')
         assert ['cmake'] == resolved
-        resolved = resolve_for_os('python', view, installer, 'ubuntu', 'lucid')
-        assert resolved == ['python-dev']
+        resolved = resolve_for_os('python3', view, installer, 'ubuntu', 'focal')
+        assert resolved == ['python3-dev']
     except ValidationFailed:
         # tests fail on the server because 'rosdep init' has not been run
         pass
