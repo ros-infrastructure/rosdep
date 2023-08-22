@@ -58,6 +58,9 @@ also for this command.
 Default location of the local rosdep database is in ``$HOME/.ros/rosdep``.
 To change it, set environment variable ``ROSDEP_CACHE_PATH``, or pass
 command-line arguments ``--sources-cache-dir`` and ``--meta-cache-dir``.
+If both the environment variable and the command-line options are specified,
+the command-line options are used. Please note that usage of the command-line
+options is deprecated and usage of the environment variable is preferred.
 
 Installating rosdeps
 --------------------
@@ -114,8 +117,6 @@ dependencies::
 
     $ rosdep resolve eigen
     libeigen3-dev
-
-
 
 If you specified a custom ``ROSDEP_CACHE_PATH`` or used command-line arguments
 ``--sources-cache-dir`` and ``--meta-cache-dir``, you have to pass these to

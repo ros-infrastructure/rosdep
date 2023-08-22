@@ -443,7 +443,8 @@ def _rosdep_main(args):
     options.as_root = dict((k, str_to_bool(v)) for k, v in key_list_to_dict(options.as_root).items())
 
     if command not in ['init', 'update', 'fix-permissions']:
-        check_for_sources_list_init(options.sources_cache_dir)
+        sources_cache_dir = options.sources_cache_dir if options.sources_cache_dir else get_sources_cache_dir()
+        check_for_sources_list_init(sources_cache_dir)
         # _package_args_handler uses `ROS_DISTRO`, so environment variables must be set before
         setup_environment_variables(options.ros_distro, options.meta_cache_dir)
     elif command not in ['fix-permissions']:

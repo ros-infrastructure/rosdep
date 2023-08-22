@@ -72,6 +72,12 @@ def get_cache_dir():
     return p
 
 
+def get_empty_cache_dir():
+    p = os.path.join(get_test_dir(), 'empty_cache')
+    assert os.path.isdir(p)
+    return p
+
+
 @contextmanager
 def fakeout():
     realstdout = sys.stdout
@@ -308,3 +314,22 @@ class TestRosdepMain(unittest.TestCase):
             assert len(output) >= 2
             assert test_package_dir in output[-2]
             assert 'Package version ":{version}" does not follow version conventions' in output[-1]
+
+    def test_sources_cache_dir_cli(self):
+        # Try resolving a dependency from a env-var-defined cache
+        try:
+            with fakeout() as b:
+                rosdep_main(['resolve', 'testtinyxml'])
+                stdout, stderr = b
+                assert len(stdout.getvalue().strip()) > 0, stdout.getvalue()
+                assert len(stderr.getvalue().strip()) == 0, stderr.getvalue()
+        except SystemExit:
+            assert False, 'system exit occurred'
+
+        # Try resolving a dependency from a CLI-defined cache (should have priority over env var)
+        try:
+            with fakeout() as b:
+                rosdep_main(['resolve', 'testtinyxml', '--sources-cache-dir', get_empty_cache_dir()])
+            assert False, 'system exit should have occurred'
+        except SystemExit:
+            pass
