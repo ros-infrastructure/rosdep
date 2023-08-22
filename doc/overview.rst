@@ -29,6 +29,22 @@ rosdep gets its data from.
 ``rosdep update`` reads through this sources list to initialize your
 local database.
 
+You can override the location by setting environment variable
+``ROSDEP_SOURCE_PATH``. The custom path has to exist prior to calling
+``rosdep init``, otherwise the default one will be used.
+
+Please note that when using ``sudo``, environment
+variables from the user are not passed to the command. To specify the variable
+for initializing the database, call::
+
+    sudo mkdir -p /usr/rosdep.sources
+    sudo env ROSDEP_SOURCE_PATH=/usr/rosdep.sources rosdep init
+    
+Alternatively you can use `--preserve-env` to pass through current environment variable values.
+    export ROSDEP_SOURCE_PATH=/tmp/example-rosdep-sources
+    mkdir $ROSDEP_SOURCE_PATH
+    sudo --preserve-env=ROSDEP_SOURCE_PATH rosdep init
+
 Updating rosdep
 ---------------
 
@@ -36,6 +52,15 @@ You can update your rosdep database by running::
 
     rosdep update
 
+If you have specified a custom ``ROSDEP_SOURCE_PATH``, do not forget to set it
+also for this command.
+
+Default location of the local rosdep database is in ``$HOME/.ros/rosdep``.
+To change it, set environment variable ``ROSDEP_CACHE_PATH``, or pass
+command-line arguments ``--sources-cache-dir`` and ``--meta-cache-dir``.
+If both the environment variable and the command-line options are specified,
+the command-line options are used. Please note that usage of the command-line
+options is deprecated and usage of the environment variable is preferred.
 
 Installating rosdeps
 --------------------
@@ -93,7 +118,9 @@ dependencies::
     $ rosdep resolve eigen
     libeigen3-dev
 
-
+If you specified a custom ``ROSDEP_CACHE_PATH`` or used command-line arguments
+``--sources-cache-dir`` and ``--meta-cache-dir``, you have to pass these to
+all rosdep commands used afterwards, including ``rosdep install``.
 
 For more information, please see the :ref:`command reference <rosdep_usage>`.
 

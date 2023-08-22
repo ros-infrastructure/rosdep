@@ -38,6 +38,9 @@ except ImportError:
 import pytest
 import rospkg.distro
 import rosdep2.sources_list
+from rosdep2.sources_list import SOURCES_CACHE_DIR
+from rosdep2.cache_tools import CACHE_PATH_ENV
+from rosdep2.meta import META_CACHE_DIR
 
 GITHUB_BASE_URL = 'https://raw.githubusercontent.com/ros/rosdistro/master/rosdep/base.yaml'
 
@@ -214,13 +217,15 @@ def test_update_sources_list():
     tempdir = tempfile.mkdtemp()
     # use a subdirectory of test dir to make sure rosdep creates the necessary substructure
     tempdir = os.path.join(tempdir, 'newdir')
+    metadir = os.path.join(tempdir, 'meta')
 
     errors = []
 
     def error_handler(loc, e):
         errors.append((loc, e))
     retval = update_sources_list(sources_list_dir=sources_list_dir,
-                                 sources_cache_dir=tempdir, error_handler=error_handler)
+                                 sources_cache_dir=tempdir, error_handler=error_handler,
+                                 meta_cache_dir=metadir)
     assert retval
     assert len(retval) == 2, retval
     # one of our sources is intentionally bad, this should be a softfail
@@ -253,6 +258,7 @@ def test_update_sources_list():
 def test_load_cached_sources_list():
     from rosdep2.sources_list import load_cached_sources_list, update_sources_list
     tempdir = tempfile.mkdtemp()
+    metadir = tempfile.mkdtemp()
 
     # test behavior on empty cache
     assert [] == load_cached_sources_list(sources_cache_dir=tempdir)
@@ -260,7 +266,8 @@ def test_load_cached_sources_list():
     # pull in cache data
     sources_list_dir = get_test_dir()
     retval = update_sources_list(sources_list_dir=sources_list_dir,
-                                 sources_cache_dir=tempdir, error_handler=None)
+                                 sources_cache_dir=tempdir, error_handler=None,
+                                 meta_cache_dir=metadir)
     assert retval
 
     # now test with cached data
@@ -422,11 +429,13 @@ def test_SourcesListLoader_create_default():
     from rosdep2.sources_list import update_sources_list, SourcesListLoader, DataSourceMatcher
     # create temp dir for holding sources cache
     tempdir = tempfile.mkdtemp()
+    metadir = tempfile.mkdtemp()
 
     # pull in cache data
     sources_list_dir = get_test_dir()
     retval = update_sources_list(sources_list_dir=sources_list_dir,
-                                 sources_cache_dir=tempdir, error_handler=None)
+                                 sources_cache_dir=tempdir, error_handler=None,
+                                 meta_cache_dir=metadir)
     assert retval
 
     # now test with cached data
@@ -491,6 +500,83 @@ def test_SourcesListLoader_create_default():
 
     #  - coverage, repeat loader, should noop
     loader.load_view(GITHUB_URL, rosdep_db)
+
+
+@pytest.mark.online
+def test_SourcesListLoader_cache_dir_from_env_var():
+    from rosdep2.sources_list import update_sources_list, SourcesListLoader, DataSourceMatcher
+    # create temp dir for holding sources cache
+    tempdir = tempfile.mkdtemp()
+    old_cpe = os.getenv(CACHE_PATH_ENV, None)
+    os.environ[CACHE_PATH_ENV] = tempdir
+
+    try:
+        # pull in cache data
+        sources_list_dir = get_test_dir()
+        retval = update_sources_list(sources_list_dir=sources_list_dir, error_handler=None)
+        assert retval
+        sources_cache_dir = os.path.join(tempdir, SOURCES_CACHE_DIR)
+        assert os.path.exists(sources_cache_dir)
+        assert len(os.listdir(sources_cache_dir)) > 0
+        meta_cache_dir = os.path.join(tempdir, META_CACHE_DIR)
+        assert os.path.exists(meta_cache_dir)
+        assert len(os.listdir(meta_cache_dir)) > 0
+
+        # now test with cached data
+        matcher = rosdep2.sources_list.DataSourceMatcher(['ubuntu', 'lucid'])
+        loader = SourcesListLoader.create_default(matcher)
+        assert loader.sources
+        assert not any([s for s in loader.sources if not matcher.matches(s)])
+
+        # test API
+
+        # very simple, always raises RNF
+        try:
+            loader.get_rosdeps('foo')
+        except rospkg.ResourceNotFound:
+            pass
+        try:
+            loader.get_view_key('foo')
+        except rospkg.ResourceNotFound:
+            pass
+
+        assert [] == loader.get_loadable_resources()
+        all_sources = [x.url for x in loader.sources]
+        assert all_sources == loader.get_loadable_views()
+
+        # test get_source early to make sure model matches expected
+        try:
+            loader.get_source('foo')
+            assert False, 'should have raised'
+        except rospkg.ResourceNotFound:
+            pass
+        s = loader.get_source(GITHUB_URL)
+        assert s.url == GITHUB_URL
+
+        # get_view_dependencies
+        # - loader doesn't new view name, so assume everything
+        assert all_sources == loader.get_view_dependencies('foo')
+        # - actual views don't depend on anything
+        assert [] == loader.get_view_dependencies(GITHUB_URL)
+
+        # load_view
+        from rosdep2.model import RosdepDatabase
+        for verbose in [True, False]:
+            rosdep_db = RosdepDatabase()
+            loader.load_view(GITHUB_URL, rosdep_db, verbose=verbose)
+            assert rosdep_db.is_loaded(GITHUB_URL)
+            assert [] == rosdep_db.get_view_dependencies(GITHUB_URL)
+            entry = rosdep_db.get_view_data(GITHUB_URL)
+            assert 'cmake' in entry.rosdep_data
+            assert GITHUB_URL == entry.origin
+
+        #  - coverage, repeat loader, should noop
+        loader.load_view(GITHUB_URL, rosdep_db)
+    finally:
+        if old_cpe is None:
+            del os.environ[CACHE_PATH_ENV]
+        else:
+            os.environ[CACHE_PATH_ENV] = old_cpe
 
 
 def test_unpickle_same_results():
