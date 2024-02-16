@@ -12,9 +12,7 @@ jobs:
           os: [ubuntu-latest, macos-latest]
           python: ['3.7', '3.8', '3.9', '3.10']
           include:
-          - os: ubuntu-18.04
-            python: '2.7'
-          - os: ubuntu-18.04
+          - os: ubuntu-20.04
             python: '3.6'
       name: rosdep tests
       runs-on: ${{matrix.os}}
