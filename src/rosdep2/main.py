@@ -286,6 +286,12 @@ def setup_environment_variables(ros_distro):
                 del os.environ['ROS_PYTHON_VERSION']
         os.environ['ROS_DISTRO'] = ros_distro
 
+    if 'ROS_VERSION' not in os.environ and 'ROS_DISTRO' in os.environ:
+        # Set ROS version to version used by ROS distro
+        ros_versions = MetaDatabase().get('ROS_VERSION', default=[])
+        if os.environ['ROS_DISTRO'] in ros_versions:
+            os.environ['ROS_VERSION'] = str(ros_versions[os.environ['ROS_DISTRO']])
+
     if 'ROS_PYTHON_VERSION' not in os.environ and 'ROS_DISTRO' in os.environ:
         # Set python version to version used by ROS distro
         python_versions = MetaDatabase().get('ROS_PYTHON_VERSION', default=[])
