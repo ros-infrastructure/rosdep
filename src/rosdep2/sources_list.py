@@ -484,6 +484,12 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
     # Additional sources for ros distros
     # In compliance with REP137 and REP143
     python_versions = {}
+    ros_versions = {}
+
+    ros_version_map = {
+        'ros1': '1',
+        'ros2': '2',
+    }
 
     if not quiet:
         print('Query rosdistro index %s' % get_index_url())
@@ -508,9 +514,13 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
             print('Add distro "%s"' % dist_name)
         rds = RosDistroSource(dist_name)
         rosdep_data = get_gbprepo_as_rosdep_data(dist_name)
-        # Store Python version from REP153
+        # Store metadata from REP153
         if distribution.get('python_version'):
             python_versions[dist_name] = distribution.get('python_version')
+        if distribution.get('distribution_type'):
+            distribution_type = distribution.get('distribution_type')
+            if distribution_type in ros_version_map:
+                ros_versions[dist_name] = ros_version_map[distribution_type]
         # dist_files can either be a string (single filename) or a list (list of filenames)
         dist_files = distribution['distribution']
         key = _generate_key_from_urls(dist_files)
@@ -518,7 +528,9 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
         sources.append(rds)
 
     # cache metadata that isn't a source list
-    MetaDatabase().set('ROS_PYTHON_VERSION', python_versions)
+    meta_db = MetaDatabase()
+    meta_db.set('ROS_PYTHON_VERSION', python_versions)
+    meta_db.set('ROS_VERSION', ros_versions)
 
     # Create a combined index of *all* the sources.  We do all the
     # sources regardless of failures because a cache from a previous
