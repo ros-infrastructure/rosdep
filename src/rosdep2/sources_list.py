@@ -649,7 +649,7 @@ class SourcesListLoader(RosdepLoader):
         if view_name != SourcesListLoader.ALL_VIEW_KEY:
             # if the view_name matches one of our sources, return
             # empty list as none of our sources has deps.
-            if any([x for x in self.sources if view_name == x.url]):
+            if any(x for x in self.sources if view_name == x.url):
                 return []
 
         # not one of our views, so it depends on everything we provide
