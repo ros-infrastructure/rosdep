@@ -62,6 +62,7 @@ from .rosdistrohelper import get_index, get_index_url
 # default file to download with 'init' command in order to bootstrap
 # rosdep
 DEFAULT_SOURCES_LIST_URL = 'https://raw.githubusercontent.com/ros/rosdistro/master/rosdep/sources.list.d/20-default.list'
+MIRROR_SOURCES_LIST_URL  = 'https://mirrors.tuna.tsinghua.edu.cn/github-raw/ros/rosdistro/master/rosdep/sources.list.d/20-default.list'
 
 # seconds to wait before aborting download of rosdep data
 DOWNLOAD_TIMEOUT = 15.0
@@ -107,6 +108,9 @@ def get_sources_list_dir(strip_missing_dirs=True):
 
 
 def get_default_sources_list_file():
+    return os.path.join(get_sources_list_dir(), '20-default.list')
+
+def get_mirror_sources_list_file():
     return os.path.join(get_sources_list_dir(), '20-default.list')
 
 
@@ -342,6 +346,34 @@ def download_default_sources_list(url=DEFAULT_SOURCES_LIST_URL):
             ' The contents were:{{{%s}}} The error raised was: %s' % (url, data, e))
     return data
 
+def download_mirror_sources_list(url=MIRROR_SOURCES_LIST_URL):
+    """
+    Download (and validate) contents of mirror sources list.
+
+    :param url: override URL of mirror sources list file
+    :return: raw sources list data, ``str``
+    :raises: :exc:`DownloadFailure` If data cannot be
+            retrieved (e.g. 404, bad YAML format, server down).
+    :raises: :exc:`urllib2.URLError` If data cannot be
+        retrieved (e.g. 404, server down).
+    """
+    try:
+        f = urlopen(url, timeout=DOWNLOAD_TIMEOUT)
+    except (URLError, httplib.HTTPException) as e:
+        raise URLError(str(e) + ' (%s)' % url)
+    data = f.read().decode()
+    f.close()
+    if not data:
+        raise DownloadFailure('cannot download mirror file from %s : empty contents' % url)
+    # parse just for validation
+    try:
+        parse_sources_data(data)
+    except InvalidData as e:
+        raise DownloadFailure(
+            'The content downloaded from %s failed to pass validation.'
+            ' It is likely that the source is invalid unless the data was corrupted during the download.'
+            ' The contents were:{{{%s}}} The error raised was: %s' % (url, data, e))
+    return data
 
 def parse_sources_data(data, origin='<string>', model=None):
     """
