@@ -30,9 +30,13 @@
 from __future__ import print_function
 
 import os
-import pkg_resources
 import subprocess
 import sys
+
+try:
+    import importlib.metadata as importlib_metadata
+except ImportError:
+    import importlib_metadata
 
 from ..core import InstallFailed
 from ..installers import PackageManagerInstaller
@@ -130,8 +134,9 @@ class PipInstaller(PackageManagerInstaller):
         super(PipInstaller, self).__init__(pip_detect, supports_depends=True)
 
     def get_version_strings(self):
-        pip_version = pkg_resources.get_distribution('pip').version
-        setuptools_version = pkg_resources.get_distribution('setuptools').version
+        pip_version = importlib_metadata.version('pip')
+        # keeping the name "setuptools" for backward compatibility
+        setuptools_version = importlib_metadata.version('setuptools')
         version_strings = [
             'pip {}'.format(pip_version),
             'setuptools {}'.format(setuptools_version),
