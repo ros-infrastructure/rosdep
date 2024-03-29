@@ -1,14 +1,19 @@
+---
 testassimp:
   ubuntu:
     apt:
       packages: [assimp-dev]
   debian:
     source:
-      uri: 'https://kforge.ros.org/rosrelease/viewvc/sourcedeps/assimp/assimp-2.0.86-1.rdmanifest'
+      uri:
+        "https://kforge.ros.org/rosrelease/viewvc/sourcedeps/assimp/\
+        assimp-2.0.86-1.rdmanifest"
       md5sum: d5137302d8f00241ee10e623b97f9d22
   osx:
     source:
-      uri: 'https://kforge.ros.org/rosrelease/viewvc/sourcedeps/assimp/assimp-2.0.86-1.rdmanifest'
+      uri:
+        "https://kforge.ros.org/rosrelease/viewvc/sourcedeps/assimp/\
+        assimp-2.0.86-1.rdmanifest"
       md5sum: d5137302d8f00241ee10e623b97f9d22
 testeigen:
   ubuntu:
@@ -23,30 +28,38 @@ testeigen:
         packages: [libeigen3-dev=3.0.1-1+ros4~natty]
   debian:
     source:
-      uri: 'https://kforge.ros.org/rosrelease/viewvc/sourcedeps/eigen/eigen-3.0.1-1.rdmanifest'
+      uri:
+        "https://kforge.ros.org/rosrelease/viewvc/sourcedeps/eigen/\
+        eigen-3.0.1-1.rdmanifest"
       md5sum: 941db2fbb09d80c28426d335022fad95
   osx:
     source:
-      uri: 'https://kforge.ros.org/rosrelease/viewvc/sourcedeps/eigen/eigen-3.0.1-1.rdmanifest'
+      uri:
+        "https://kforge.ros.org/rosrelease/viewvc/sourcedeps/eigen/\
+        eigen-3.0.1-1.rdmanifest"
       md5sum: 941db2fbb09d80c28426d335022fad95
 testyaml-cpp:
-  ubuntu: 
-    apt: 
-      packages: [ yaml-cpp0.2.6-dev ]
+  ubuntu:
+    apt:
+      packages: [yaml-cpp0.2.6-dev]
   debian:
     source:
-      uri: 'https://kforge.ros.org/rosrelease/viewvc/sourcedeps/yaml-cpp/yaml-cpp-0.2.5.rdmanifest'
+      uri:
+        "https://kforge.ros.org/rosrelease/viewvc/sourcedeps/yaml-cpp/\
+        yaml-cpp-0.2.5.rdmanifest"
       md5sum: f7fb81fd4a2fbd5022daa7686e816359
   osx:
     source:
-      uri: 'https://kforge.ros.org/rosrelease/viewvc/sourcedeps/yaml-cpp/yaml-cpp-cmake-0.2.5.rdmanifest'
+      uri:
+        "https://kforge.ros.org/rosrelease/viewvc/sourcedeps/yaml-cpp/\
+        yaml-cpp-cmake-0.2.5.rdmanifest"
       md5sum: 863fb3b7e5b5f1e22ff1365de6e66b34
 testcheckinstall:
-  ubuntu: 
-    apt: 
+  ubuntu:
+    apt:
       packages: [checkinstall]
   debian:
-    apt: 
+    apt:
       packages: [checkinstall]
 testcurl:
   ubuntu: libcurl4-openssl-dev
@@ -66,7 +79,6 @@ testlibxml2:
   macports: libxml2
   gentoo: dev-libs/libxml2
   freebsd: libxml2
-  fedora: libxml2-devel
 testcppunit:
   ubuntu: libcppunit-dev
   debian: libcppunit-dev
