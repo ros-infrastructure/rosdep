@@ -62,6 +62,21 @@ def test_pip_detect():
     val = pip_detect(['paramiko', 'fakito', 'pycrypto'], exec_fn=m)
     assert val == ['paramiko', 'pycrypto'], val
 
+    val = pip_detect(['paramiko', 'Brlapi==0.5.4', 'pycrypto'], exec_fn=m)
+    assert val == ['paramiko', 'Brlapi', 'pycrypto'], val
+
+    val = pip_detect(['paramiko', 'Brlapi==0.5.5', 'pycrypto'], exec_fn=m)
+    assert val == ['paramiko', 'pycrypto'], val
+
+    val = pip_detect(['Brlapi>0.5.*'], exec_fn=m)
+    assert val == ['Brlapi'], val
+
+    val = pip_detect(['Brlapi>0.5.*,<0.6'], exec_fn=m)
+    assert val == ['Brlapi'], val
+
+    val = pip_detect(['Brlapi>0.5.*,<0.5.4'], exec_fn=m)
+    assert val == [], val
+
 
 def test_PipInstaller_get_depends():
     # make sure PipInstaller supports depends
