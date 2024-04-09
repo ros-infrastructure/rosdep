@@ -1,3 +1,4 @@
+---
 stack1_dep1:
   ubuntu: dep1-ubuntu
   debian: dep1-debian
