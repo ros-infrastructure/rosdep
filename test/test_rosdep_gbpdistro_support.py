@@ -52,7 +52,7 @@ def test_url_constants():
             assert False, 'URL [%s][%s] failed to download' % (url_name, url)
 
 
-@pytest.mark.online
+@pytest.mark.usefixtures('fake_rosdistro_index')
 def test_get_gbprepo_as_rosdep_data():
     from rosdep2.rosdistrohelper import get_index
     from rosdep2.gbpdistro_support import get_gbprepo_as_rosdep_data

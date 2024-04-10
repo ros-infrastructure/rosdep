@@ -1,0 +1,31 @@
+%YAML 1.1
+---
+release_platforms:
+  debian:
+    - buster
+  ubuntu:
+    - bionic
+repositories:
+  catkin:
+    release:
+      tags:
+        release: release/melodic/{package}/{version}
+      url: https://github.com/ros-gbp/catkin-release.git
+      version: 0.7.29-1
+    status: maintained
+  genmsg:
+    release:
+      tags:
+        release: release/melodic/{package}/{version}
+      url: https://github.com/ros-gbp/genmsg-release.git
+      version: 0.5.17-1
+    status: maintained
+  ros:
+    release:
+      tags:
+        release: release/melodic/{package}/{version}
+      url: https://github.com/ros-gbp/ros-release.git
+      version: 1.14.9-1
+    status: maintained
+type: distribution
+version: 2
