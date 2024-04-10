@@ -28,10 +28,10 @@ def test_flake8():
     # See: https://flake8.pycqa.org/en/latest/user/python-api.html
     # Calling through subprocess is the most stable way to run it.
     result = subprocess.run(
-        ['flake8'],
+        [sys.executable, '-m', 'flake8'],
         stdout=subprocess.PIPE,  # capture_output doesn't work on py3.6
         stderr=subprocess.PIPE,
-        cwd=pathlib.Path(__file__).parent.parent,
+        cwd=os.path.dirname(os.path.dirname(__file__)),
         check=False,
     )
     # pipe stdout to stdout, stderr to stderr
