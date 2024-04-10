@@ -10,6 +10,7 @@ jobs:
   pytest:
     uses: ros-infrastructure/ci/.github/workflows/pytest.yaml@main
     with:
+      codecov: true
       matrix-filter: del(.matrix.os[] | select(contains("windows")))
   yamllint:
     runs-on: ubuntu-latest
