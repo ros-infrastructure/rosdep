@@ -734,7 +734,7 @@ def command_check(lookup, packages, options):
                 print('ERROR[%s]: resource not found [%s]' % (package_name, ex.args[0]), file=sys.stderr)
             else:
                 print('ERROR[%s]: %s' % (package_name, ex), file=sys.stderr)
-    if uninstalled:
+    if uninstalled or errors:
         return 1
     else:
         return 0
