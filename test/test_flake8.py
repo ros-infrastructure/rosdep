@@ -14,7 +14,7 @@
 
 from __future__ import print_function
 
-import pathlib
+import os
 import subprocess
 import sys
 
@@ -27,14 +27,10 @@ def test_flake8():
     # flake8 doesn't have a stable public API as of ver 6.1.0.
     # See: https://flake8.pycqa.org/en/latest/user/python-api.html
     # Calling through subprocess is the most stable way to run it.
-    result = subprocess.run(
-        [sys.executable, '-m', 'flake8'],
-        stdout=subprocess.PIPE,  # capture_output doesn't work on py3.6
-        stderr=subprocess.PIPE,
+
+    # We still need to support Python 2.7, so we can't use run()
+    ret_code = subprocess.call(
+        [sys.executable, "-m", "flake8"],
         cwd=os.path.dirname(os.path.dirname(__file__)),
-        check=False,
     )
-    # pipe stdout to stdout, stderr to stderr
-    print(result.stdout.decode('utf-8'), end='')
-    print(result.stderr.decode('utf-8'), end='', file=sys.stderr)
-    assert 0 == result.returncode, "flake8 found violations"
+    assert 0 == ret_code, "flake8 found violations"
