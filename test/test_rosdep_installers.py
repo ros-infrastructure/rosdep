@@ -617,7 +617,6 @@ def test_RosdepInstaller_install_resolved(mock_geteuid):
                 raise
             return True
     stdout_lines = [x.strip() for x in stdout.getvalue().split('\n') if x.strip()]
-    assert len(stdout_lines) == 3
+    assert len(stdout_lines) == 2
     assert stdout_lines[0] == '#[apt] Installation commands:'
-    assert 'sudo -H apt-get install rosdep-fake1' in stdout_lines, 'stdout_lines: %s' % stdout_lines
-    assert 'sudo -H apt-get install rosdep-fake2' in stdout_lines, 'stdout_lines: %s' % stdout_lines
+    assert 'sudo -H apt-get install rosdep-fake1 rosdep-fake2' in stdout_lines, 'stdout_lines: %s' % stdout_lines
