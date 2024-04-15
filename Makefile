@@ -27,4 +27,4 @@ testsetup:
 	echo "running rosdep tests"
 
 test: testsetup
-	cd test && pytest
+	pytest
