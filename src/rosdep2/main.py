@@ -736,6 +736,8 @@ def command_check(lookup, packages, options):
                 print('ERROR[%s]: %s' % (package_name, ex), file=sys.stderr)
     if uninstalled:
         return 1
+    elif errors:
+        return 2
     else:
         return 0
 
