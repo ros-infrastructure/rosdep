@@ -1,3 +1,24 @@
+0.23.0 (2023-04-19)
+-------------------
+- Use setup.cfg to configure flake8, instead of in the ci code
+  - https://github.com/ros-infrastructure/rosdep/pull/930
+- Fix makefile target test (``make test``) failing due to "cd test"
+  - https://github.com/ros-infrastructure/rosdep/pull/951
+- Implement test fixture for faking the rosdistro repo
+  - https://github.com/ros-infrastructure/rosdep/pull/949
+- Return non-zero if ``rosdep check`` cannot locate dependent
+  - https://github.com/ros-infrastructure/rosdep/pull/948
+- Fix potential bug in test_rosdep_sources_list.py
+  - https://github.com/ros-infrastructure/rosdep/pull/952
+- Fix pkg_resources deprecated warning
+  - https://github.com/ros-infrastructure/rosdep/pull/926
+- Print exception if it's of type URLError
+  - https://github.com/ros-infrastructure/rosdep/pull/946
+- Teach rosdep to use ROS_VERSION when resolving conditionals
+  - https://github.com/ros-infrastructure/rosdep/pull/941
+- Resolve flake8-comprehensions violations
+  - https://github.com/ros-infrastructure/rosdep/pull/943
+
 0.22.2 (2023-03-20)
 -------------------
 - Enable rosdep init to work with non-extant ROSDEP_SOURCE_PATH
