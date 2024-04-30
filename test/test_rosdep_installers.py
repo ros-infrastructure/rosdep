@@ -32,6 +32,7 @@ try:
     from unittest.mock import Mock, patch
 except ImportError:
     from mock import Mock, patch
+from unittest import SkipTest
 import os
 import sys
 try:
@@ -615,7 +616,7 @@ def test_RosdepInstaller_install_resolved(mock_geteuid):
         except OSError as e:
             if str(e).count('[Errno 2] No such file or directory') == 0:
                 raise
-            return True
+            raise SkipTest('targets ubuntu systems only')
     stdout_lines = [x.strip() for x in stdout.getvalue().split('\n') if x.strip()]
     assert len(stdout_lines) == 3
     assert stdout_lines[0] == '#[apt] Installation commands:'
