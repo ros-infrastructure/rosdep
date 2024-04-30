@@ -27,7 +27,7 @@ def create_package_xml(path, version='0.1.0'):
 
   <maintainer email="foo@bar.com">Foo Bar</maintainer>
 </package>
-""".format(path.split('/')[-1], version)
+""".format(os.path.basename(path), version)
 
     with open(os.path.join(path, 'package.xml'), 'w+') as f:
         f.write(template)

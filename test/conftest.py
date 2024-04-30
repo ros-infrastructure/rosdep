@@ -59,7 +59,7 @@ def fake_rosdep_source(fake_sources_list_d, request):
         'ROSDEP_SOURCE_PATH': os.environ.get('ROSDEP_SOURCE_PATH'),
     }
     request.addfinalizer(functools.partial(_restore_env_vars, restore_env_vars))
-    rosdep_source = path_to_url(fake_sources_list_d)
+    rosdep_source = fake_sources_list_d
     os.environ['ROSDEP_SOURCE_PATH'] = rosdep_source
     return rosdep_source
 
