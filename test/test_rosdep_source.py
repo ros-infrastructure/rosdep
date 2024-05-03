@@ -31,6 +31,9 @@ import os
 import pytest
 import yaml
 
+from .conftest import path_to_url
+
+
 rep122_install_command = """#!/bin/bash
 set -o errexit
 mkdir -p build
@@ -195,7 +198,7 @@ def test_SourceInstaller_resolve():
     from rosdep2.platforms.source import SourceInstaller, InvalidData
     test_dir = get_test_dir()
 
-    url = 'file://%s' % os.path.join(test_dir, 'rep112-example.rdmanifest')
+    url = path_to_url(os.path.join(test_dir, 'rep112-example.rdmanifest'))
     md5sum_good = REP112_MD5SUM
     md5sum_bad = 'fake'
 
@@ -256,7 +259,7 @@ def test_fetch_file():
         expected = f.read()
 
     from rosdep2.platforms.source import fetch_file
-    url = 'file://%s' % os.path.join(test_dir, 'rep112-example.rdmanifest')
+    url = path_to_url(os.path.join(test_dir, 'rep112-example.rdmanifest'))
     contents, error = fetch_file(url, REP112_MD5SUM)
     assert not error
     assert contents == expected
@@ -276,7 +279,7 @@ def test_download_rdmanifest():
         expected = yaml.safe_load(f)
 
     from rosdep2.platforms.source import download_rdmanifest, DownloadFailed
-    url = 'file://%s' % os.path.join(test_dir, 'rep112-example.rdmanifest')
+    url = path_to_url(os.path.join(test_dir, 'rep112-example.rdmanifest'))
     contents, download_url = download_rdmanifest(url, REP112_MD5SUM)
     assert contents == expected
     assert download_url == url
