@@ -614,7 +614,10 @@ def test_RosdepInstaller_install_resolved(mock_geteuid):
         try:
             installer.install_resolved(APT_INSTALLER, ['rosdep-fake1', 'rosdep-fake2'], simulate=True, verbose=True)
         except OSError as e:
-            if str(e).count('[Errno 2] No such file or directory') == 0:
+            if not any(msg in str(e) for msg in (
+                '[Errno 2] No such file or directory',
+                '[WinError 2] The system cannot find the file specified',
+            )):
                 raise
             raise SkipTest('targets ubuntu systems only')
     stdout_lines = [x.strip() for x in stdout.getvalue().split('\n') if x.strip()]
