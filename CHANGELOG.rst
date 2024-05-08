@@ -1,3 +1,10 @@
+0.24.0 (2024-05-07)
+-------------------
+- Reapply "fix: pkg_resources deprecated warning"
+  - https://github.com/ros-infrastructure/rosdep/issues/968
+- Drop support for Python 2
+  - https://github.com/ros-infrastructure/rosdep/issues/968
+
 0.23.1 (2024-05-07)
 -------------------
 - Revert "fix: pkg_resources deprecated warning"
