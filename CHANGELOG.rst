@@ -1,4 +1,21 @@
-0.23.0 (2023-04-19)
+0.23.1 (2024-05-07)
+-------------------
+- Revert "fix: pkg_resources deprecated warning"
+  - https://github.com/ros-infrastructure/rosdep/issues/968
+- Add Windows-specific ENOENT error message to test
+  - https://github.com/ros-infrastructure/rosdep/pull/961
+- Skip a test rather than passing when not on Ubuntu
+  - https://github.com/ros-infrastructure/rosdep/pull/962
+- Fix some platform-specific path assumptions in tests
+  - https://github.com/ros-infrastructure/rosdep/pull/960
+- Fix shell-specific test assumptions
+  - https://github.com/ros-infrastructure/rosdep/pull/959
+- Prevent git from adding CR to certain test artifacts
+  - https://github.com/ros-infrastructure/rosdep/pull/958
+- Fix several tests which require os.geteuid
+  - https://github.com/ros-infrastructure/rosdep/pull/957
+
+0.23.0 (2024-04-19)
 -------------------
 - Use setup.cfg to configure flake8, instead of in the ci code
   - https://github.com/ros-infrastructure/rosdep/pull/930
