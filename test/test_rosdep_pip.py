@@ -114,6 +114,13 @@ def test_PipInstaller():
         raise
 
 
+def test_PipInstaller_get_version_strings():
+    from rosdep2.platforms.pip import PipInstaller
+
+    installer = PipInstaller()
+    assert installer.get_version_strings()
+
+
 def test_get_pip_command():
     from rosdep2.platforms.pip import get_pip_command
 

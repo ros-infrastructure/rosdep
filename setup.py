@@ -9,7 +9,10 @@ kwargs = {
     'version': '0.23.1',
     'packages': ['rosdep2', 'rosdep2.ament_packages', 'rosdep2.platforms'],
     'package_dir': {'': 'src'},
-    'install_requires': ['PyYAML >= 3.1', 'setuptools'],
+    'install_requires': [
+        'PyYAML >= 3.1',
+        'importlib_metadata; python_version<"3.8"',
+    ],
     'python_requires': '>=3.6',
     'extras_require': {
         'test': [
