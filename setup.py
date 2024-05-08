@@ -10,11 +10,11 @@ kwargs = {
     'packages': ['rosdep2', 'rosdep2.ament_packages', 'rosdep2.platforms'],
     'package_dir': {'': 'src'},
     'install_requires': ['PyYAML >= 3.1', 'setuptools'],
+    'python_requires': '>=3.6',
     'extras_require': {
         'test': [
             'flake8 < 6',
             'flake8-comprehensions',
-            "mock; python_version < '3.3'",
             'pytest',
         ],
     },

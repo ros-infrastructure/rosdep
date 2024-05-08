@@ -28,11 +28,8 @@
 from __future__ import print_function
 
 from contextlib import contextmanager
-try:
-    from unittest.mock import Mock, patch
-except ImportError:
-    from mock import Mock, patch
 from unittest import SkipTest
+from unittest.mock import Mock, patch
 import os
 import sys
 try:

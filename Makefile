@@ -1,7 +1,7 @@
 .PHONY: all setup clean_dist distro clean install testsetup test
 
 NAME='rosdep'
-VERSION=`python setup.py -V`
+VERSION=`python3 setup.py -V`
 
 all:
 	echo "noop for debbuild"

@@ -29,10 +29,7 @@
 
 import os
 import traceback
-try:
-    from unittest.mock import Mock, patch, call
-except ImportError:
-    from mock import Mock, patch, call
+from unittest.mock import Mock, patch, call
 
 
 def get_test_dir():

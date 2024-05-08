@@ -29,10 +29,7 @@
 
 import os
 import traceback
-try:
-    from unittest.mock import Mock, call, patch
-except ImportError:
-    from mock import Mock, call, patch
+from unittest.mock import Mock, call, patch
 
 import rospkg.os_detect
 
