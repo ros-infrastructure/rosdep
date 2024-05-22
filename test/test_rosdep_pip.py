@@ -30,10 +30,7 @@
 import os
 import sys
 import traceback
-try:
-    from unittest.mock import Mock, patch
-except ImportError:
-    from mock import Mock, patch
+from unittest.mock import Mock, patch
 
 
 def get_test_dir():
@@ -147,13 +144,23 @@ def test_PipInstaller():
         val = installer.get_install_command(['whatever'], interactive=True)
         assert val == expected, val
     try:
-        with patch('rosdep2.installers.os.geteuid', return_value=1):
-            test(['sudo', '-H'])
-        with patch('rosdep2.installers.os.geteuid', return_value=0):
+        if hasattr(os, 'geteuid'):
+            with patch('rosdep2.installers.os.geteuid', return_value=1):
+                test(['sudo', '-H'])
+            with patch('rosdep2.installers.os.geteuid', return_value=0):
+                test([])
+        else:
             test([])
     except AssertionError:
         traceback.print_exc()
         raise
+
+
+def test_PipInstaller_get_version_strings():
+    from rosdep2.platforms.pip import PipInstaller
+
+    installer = PipInstaller()
+    assert installer.get_version_strings()
 
 
 def test_get_pip_command():

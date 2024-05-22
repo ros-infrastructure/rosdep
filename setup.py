@@ -4,17 +4,20 @@ from setuptools import setup
 kwargs = {
     'name': 'rosdep',
     # same version as in:
-    # - src/rosdep2/__init__.py
+    # - src/rosdep2/_version.py
     # - stdeb.cfg
-    'version': '0.22.2',
+    'version': '0.24.0',
     'packages': ['rosdep2', 'rosdep2.ament_packages', 'rosdep2.platforms'],
     'package_dir': {'': 'src'},
-    'install_requires': ['PyYAML >= 3.1', 'setuptools'],
+    'install_requires': [
+        'PyYAML >= 3.1',
+        'importlib_metadata; python_version<"3.8"',
+    ],
+    'python_requires': '>=3.6',
     'extras_require': {
         'test': [
             'flake8 < 6',
             'flake8-comprehensions',
-            "mock; python_version < '3.3'",
             'pytest',
         ],
     },

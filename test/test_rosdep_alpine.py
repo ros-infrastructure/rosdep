@@ -29,10 +29,7 @@
 
 import os
 import traceback
-try:
-    from unittest.mock import Mock, call, patch
-except ImportError:
-    from mock import Mock, call, patch
+from unittest.mock import Mock, call, patch
 
 import rospkg.os_detect
 
@@ -117,9 +114,12 @@ def test_ApkInstaller():
         assert val == expected, 'Result was: %s' % val
 
     try:
-        with patch('rosdep2.installers.os.geteuid', return_value=1):
-            test(['sudo', '-H'])
-        with patch('rosdep2.installers.os.geteuid', return_value=0):
+        if hasattr(os, 'geteuid'):
+            with patch('rosdep2.installers.os.geteuid', return_value=1):
+                test(['sudo', '-H'])
+            with patch('rosdep2.installers.os.geteuid', return_value=0):
+                test([])
+        else:
             test([])
     except AssertionError:
         traceback.print_exc()

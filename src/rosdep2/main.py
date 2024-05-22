@@ -286,6 +286,12 @@ def setup_environment_variables(ros_distro):
                 del os.environ['ROS_PYTHON_VERSION']
         os.environ['ROS_DISTRO'] = ros_distro
 
+    if 'ROS_VERSION' not in os.environ and 'ROS_DISTRO' in os.environ:
+        # Set ROS version to version used by ROS distro
+        ros_versions = MetaDatabase().get('ROS_VERSION', default=[])
+        if os.environ['ROS_DISTRO'] in ros_versions:
+            os.environ['ROS_VERSION'] = str(ros_versions[os.environ['ROS_DISTRO']])
+
     if 'ROS_PYTHON_VERSION' not in os.environ and 'ROS_DISTRO' in os.environ:
         # Set python version to version used by ROS distro
         python_versions = MetaDatabase().get('ROS_PYTHON_VERSION', default=[])
@@ -597,6 +603,7 @@ def command_init(options):
         data = download_default_sources_list()
     except URLError as e:
         print('ERROR: cannot download default sources list from:\n%s\nWebsite may be down.' % (DEFAULT_SOURCES_LIST_URL), file=sys.stderr)
+        print(e, file=sys.stderr)
         return 4
     except DownloadFailure as e:
         print('ERROR: cannot download default sources list from:\n%s\nWebsite may be down.' % (DEFAULT_SOURCES_LIST_URL), file=sys.stderr)
@@ -729,6 +736,8 @@ def command_check(lookup, packages, options):
                 print('ERROR[%s]: %s' % (package_name, ex), file=sys.stderr)
     if uninstalled:
         return 1
+    elif errors:
+        return 2
     else:
         return 0
 

@@ -25,6 +25,8 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import sys
+
 
 def test_create_tempfile_from_string_and_execute():
     # not sure how to test this just yet, for now just a tripwire
@@ -36,4 +38,4 @@ def test_create_tempfile_from_string_and_execute():
 
 def test_read_stdout():
     from rosdep2.shell_utils import read_stdout
-    assert 'foo' in read_stdout(['echo', 'foo'])
+    assert 'foo' in read_stdout([sys.executable, '-c', "print('foo')"])

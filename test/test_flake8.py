@@ -15,49 +15,22 @@
 from __future__ import print_function
 
 import os
+import subprocess
 import sys
 
-from flake8.api.legacy import get_style_guide
 import pytest
 
 
 @pytest.mark.flake8
 @pytest.mark.linter
 def test_flake8():
-    style_guide = get_style_guide(
-        exclude=['conf.py'],
-        ignore=[
-            'C402',  # ignore presence of unnecessary generators
-            'C405',  # ignore presence of unnecessary literals
-            'C407',  # ignore presence of unnecessary comprehensions
-            'C408',  # ignore presence of unnecessary tuple/list/dict
-            'D',  # ignore documentation related warnings
-            'F401',  # ignore presence of unused imports
-            'F841',  # ignore presence of unused variables
-            'I',  # ignore import order related warnings
-            'N802',  # ignore presence of upper case in function names
-            'W504',  # ignore line breaks after binary operator (new rule added in 2018)
-        ],
-        max_line_length=200,
-        max_complexity=10,
-        show_source=True,
+    # flake8 doesn't have a stable public API as of ver 6.1.0.
+    # See: https://flake8.pycqa.org/en/latest/user/python-api.html
+    # Calling through subprocess is the most stable way to run it.
+
+    # We still need to support Python 2.7, so we can't use run()
+    ret_code = subprocess.call(
+        [sys.executable, "-m", "flake8"],
+        cwd=os.path.dirname(os.path.dirname(__file__)),
     )
-
-    stdout = sys.stdout
-    sys.stdout = sys.stderr
-    # implicitly calls report_errors()
-    report = style_guide.check_files([
-        os.path.dirname(os.path.dirname(__file__)),
-    ])
-    sys.stdout = stdout
-
-    if report.total_errors:
-        # output summary with per-category counts
-        print()
-        report._application.formatter.show_statistics(report._stats)
-        print(
-            'flake8 reported {report.total_errors} errors'
-            .format(**locals()), file=sys.stderr)
-
-    assert not report.total_errors, \
-        'flake8 reported {report.total_errors} errors'.format(**locals())
+    assert 0 == ret_code, "flake8 found violations"

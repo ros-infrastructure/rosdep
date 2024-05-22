@@ -1,3 +1,48 @@
+0.24.0 (2024-05-07)
+-------------------
+- Reapply "fix: pkg_resources deprecated warning"
+  - https://github.com/ros-infrastructure/rosdep/issues/968
+- Drop support for Python 2
+  - https://github.com/ros-infrastructure/rosdep/issues/968
+
+0.23.1 (2024-05-07)
+-------------------
+- Revert "fix: pkg_resources deprecated warning"
+  - https://github.com/ros-infrastructure/rosdep/issues/968
+- Add Windows-specific ENOENT error message to test
+  - https://github.com/ros-infrastructure/rosdep/pull/961
+- Skip a test rather than passing when not on Ubuntu
+  - https://github.com/ros-infrastructure/rosdep/pull/962
+- Fix some platform-specific path assumptions in tests
+  - https://github.com/ros-infrastructure/rosdep/pull/960
+- Fix shell-specific test assumptions
+  - https://github.com/ros-infrastructure/rosdep/pull/959
+- Prevent git from adding CR to certain test artifacts
+  - https://github.com/ros-infrastructure/rosdep/pull/958
+- Fix several tests which require os.geteuid
+  - https://github.com/ros-infrastructure/rosdep/pull/957
+
+0.23.0 (2024-04-19)
+-------------------
+- Use setup.cfg to configure flake8, instead of in the ci code
+  - https://github.com/ros-infrastructure/rosdep/pull/930
+- Fix makefile target test (``make test``) failing due to "cd test"
+  - https://github.com/ros-infrastructure/rosdep/pull/951
+- Implement test fixture for faking the rosdistro repo
+  - https://github.com/ros-infrastructure/rosdep/pull/949
+- Return non-zero if ``rosdep check`` cannot locate dependent
+  - https://github.com/ros-infrastructure/rosdep/pull/948
+- Fix potential bug in test_rosdep_sources_list.py
+  - https://github.com/ros-infrastructure/rosdep/pull/952
+- Fix pkg_resources deprecated warning
+  - https://github.com/ros-infrastructure/rosdep/pull/926
+- Print exception if it's of type URLError
+  - https://github.com/ros-infrastructure/rosdep/pull/946
+- Teach rosdep to use ROS_VERSION when resolving conditionals
+  - https://github.com/ros-infrastructure/rosdep/pull/941
+- Resolve flake8-comprehensions violations
+  - https://github.com/ros-infrastructure/rosdep/pull/943
+
 0.22.2 (2023-03-20)
 -------------------
 - Enable rosdep init to work with non-extant ROSDEP_SOURCE_PATH

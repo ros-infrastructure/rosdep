@@ -1,9 +1,12 @@
+---
 testtinyxml:
   ubuntu: libtinyxml-dev
   debian: libtinyxml-dev
   osx:
     source:
-      uri: 'http://kforge.ros.org/rosrelease/viewvc/sourcedeps/tinyxml/tinyxml-2.6.2-1.rdmanifest'
+      uri:
+        "http://kforge.ros.org/rosrelease/viewvc/sourcedeps/tinyxml/\
+        tinyxml-2.6.2-1.rdmanifest"
       md5sum: 13760e61e08c9004493c302a16966c42
 testpython:
   ubuntu: python3-dev
@@ -30,9 +33,10 @@ testpython-yaml:
       if [ ! -d /usr/lib/python2.5/site-packages/yaml/ ] ; then
         mkdir -p ~/ros/ros-deps
         cd ~/ros/ros-deps
-        wget --tries=10 http://pyyaml.org/download/pyyaml/PyYAML-3.09.tar.gz tar xzf PyYAML-3.09.tar.gz
+        wget --tries=10 http://pyyaml.org/download/pyyaml/PyYAML-3.09.tar.gz
+        tar xzf PyYAML-3.09.tar.gz
         cd PyYAML-3.09
-        python setup.py install 
+        python setup.py install
       fi
   freebsd: py27-yaml
 testpython-gtk2:
@@ -57,7 +61,7 @@ testpython-scipy:
 testbzip2:
   ubuntu: libbz2-dev
   debian: libbz2-dev
-  opensuse: libbz2-devel 
+  opensuse: libbz2-devel
   fedora: bzip2-devel
   rhel: bzip2-devel
   arch: bzip2
@@ -111,7 +115,7 @@ testboost:
 testzlib:
   ubuntu: zlib1g-dev
   debian: zlib1g-dev
-  opensuse: zlib-devel 
+  opensuse: zlib-devel
   fedora: zlib-devel
   rhel: zlib-devel
   arch: zlib
@@ -122,7 +126,7 @@ testzlib:
 testgraphviz:
   ubuntu: graphviz
   debian: graphviz
-  opensuse: graphviz 
+  opensuse: graphviz
   fedora: graphviz
   rhel: graphviz
   arch: graphviz
@@ -132,7 +136,7 @@ testgraphviz:
 testwxwidgets:
   ubuntu: libwxgtk2.8-dev
   debian: libwxgtk2.8-dev
-  opensuse: wxGTK-devel 
+  opensuse: wxGTK-devel
   fedora: wxGTK-devel
   rhel: wxGTK-devel
   macports: wxWidgets-python
@@ -142,7 +146,7 @@ testwxwidgets:
 testwxpython:
   ubuntu: python-wxgtk2.8
   arch: wxpython
-  opensuse: python-wxGTK 
+  opensuse: python-wxGTK
   fedora: wxPython-devel
   rhel: wxPython-devel
   centos: wxPython-devel
@@ -153,7 +157,7 @@ testwxpython:
 testgtk2:
   ubuntu: libgtk2.0-dev
   debian: libgtk2.0-dev
-  opensuse: gtk2-devel 
+  opensuse: gtk2-devel
   fedora: gtk2-devel
   rhel: gtk2-devel
   macports: gtk2
@@ -163,7 +167,7 @@ testgtk2:
 testpkg-config:
   ubuntu: pkg-config
   debian: pkg-config
-  opensuse: pkg-config 
+  opensuse: pkg-config
   fedora: pkgconfig
   rhel: pkgconfig
   arch: pkg-config
@@ -173,9 +177,9 @@ testpkg-config:
   freebsd: pkg-config
 testqt4:
   ubuntu: libqt4-dev qt4-dev-tools
-  debian: libqt4-dev qt4-dev-tools 
+  debian: libqt4-dev qt4-dev-tools
   arch: qt
-  opensuse: libqt4-devel 
+  opensuse: libqt4-devel
   fedora: qt-devel
   macports: qt4-mac
   gentoo: ">=x11-libs/qt-core-4"
@@ -183,11 +187,11 @@ testqt4:
 testlibstdc++5:
   ubuntu: libstdc++5
   debian: libstdc++5
-  opensuse: libstdc++33 
+  opensuse: libstdc++33
   freebsd: builtin
 testintltool:
   ubuntu: intltool
-  opensuse: intltool 
+  opensuse: intltool
   fedora: intltool
   gentoo: dev-util/intltool
   freebsd: intltool
@@ -195,7 +199,7 @@ testunzip:
   ubuntu: unzip
   debian: unzip
   arch: unzip
-  opensuse: unzip 
+  opensuse: unzip
   fedora: unzip
   rhel: unzip
   macports: unzip
@@ -204,7 +208,7 @@ testunzip:
 testfltk:
   ubuntu: libfltk1.1-dev
   debian: libfltk1.1-dev
-  opensuse: fltk-devel 
+  opensuse: fltk-devel
   fedora: fltk-devel
   arch: fltk
   macports: fltk
@@ -213,12 +217,12 @@ testfltk:
 testbazaar:
   ubuntu: bzr
   debian: bzr
-  opensuse: bzr 
+  opensuse: bzr
   fedora: bazaar
   macports: bazaar
   gentoo: dev-vcs/bzr
   freebsd: bazaar
-testgit: 
+testgit:
   ubuntu: git-core
   debian: git-core
   opensuse: git-core
@@ -237,7 +241,7 @@ testsubversion:
 testmercurial:
   ubuntu: mercurial
   debian: mercurial
-  opensuse: mercurial 
+  opensuse: mercurial
   fedora: mercurial
   macports: mercurial
   gentoo: dev-vcs/mercurial
@@ -245,7 +249,7 @@ testmercurial:
 testgtest:
   ubuntu: libgtest-dev
   debian: libgtest-dev
-  opensuse: gtest-devel 
+  opensuse: gtest-devel
   fedora: gtest-devel
   macports: google-test
   gentoo: dev-util/gtest
@@ -272,7 +276,7 @@ testautomake:
   freebsd: automake14 automake111
 testlibtool:
   ubuntu:
-    apt: 
+    apt:
       packages: [libtool, libltdl-dev]
   debian:
     squeeze: libtool libltdl-dev
