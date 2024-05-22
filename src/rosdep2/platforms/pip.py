@@ -204,6 +204,8 @@ class PipInstaller(PackageManagerInstaller):
         if not packages:
             return []
         cmd = pip_cmd + ['install']
+        if float(importlib_metadata.version('pip')) >= 24.0:
+            cmd += ["--break-system-packages"]
         if quiet:
             cmd.append('-q')
         if reinstall:
