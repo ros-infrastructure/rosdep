@@ -25,16 +25,23 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import base64
 from gzip import GzipFile
 from io import BytesIO
 try:
     from urllib.request import urlopen
     from urllib.error import URLError
+    from urllib.parse import splituser
+    from urllib.parse import urlparse
+    from urllib.parse import urlunparse
     import urllib.request as request
 except ImportError:
+    from urllib2 import splituser
     from urllib2 import urlopen
     from urllib2 import URLError
     import urllib2 as request
+    from urlparse import urlparse
+    from urlparse import urlunparse
 
 from ._version import __version__
 
@@ -43,10 +50,15 @@ def urlopen_gzip(url, **kwargs):
     # http/https URLs need custom requests to specify the user-agent, since some repositories reject
     # requests from the default user-agent.
     if url.startswith("http://") or url.startswith("https://"):
+        scheme, netloc, path, params, query, frag = urlparse(url)
+        auth, host = splituser(netloc)
+        url = urlunparse((scheme, host, path, params, query, frag))
         url_request = request.Request(url, headers={
             'Accept-Encoding': 'gzip',
             'User-Agent': 'rosdep/{version}'.format(version=__version__),
         })
+        if auth:
+            url_request.add_header('Authorization', b'Basic ' + base64.b64encode(auth.encode())[:-1])
         response = urlopen(url_request, **kwargs)
         if response.info().get('Content-Encoding') == 'gzip':
             buffer = BytesIO(response.read())
