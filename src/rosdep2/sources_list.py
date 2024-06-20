@@ -231,8 +231,8 @@ class CachedDataSource(object):
     def __repr__(self):
         return repr((self.type, self.url, self.tags, self.rosdep_data, self.origin))
 
-    @property
-    def type(self):
+    @property  # noqa: A003
+    def type(self):  # noqa: A003
         """
         :returns: data source type
         """

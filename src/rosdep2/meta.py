@@ -37,7 +37,7 @@ try:
 except NameError:
     # Python 2 compatibility
     # https://stackoverflow.com/questions/21367320/
-    FileNotFoundError = IOError
+    FileNotFoundError = IOError  # noqa: A001
 
 import rospkg
 
@@ -95,7 +95,7 @@ class MetaDatabase:
         self._cache_dir = cache_dir
         self._loaded = {}
 
-    def set(self, category, metadata):
+    def set(self, category, metadata):  # noqa: A003
         """Add or overwrite metadata in the cache."""
         wrapper = CacheWrapper(category, metadata)
         # print(category, metadata)

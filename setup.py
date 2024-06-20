@@ -17,6 +17,7 @@ kwargs = {
     'extras_require': {
         'test': [
             'flake8 < 6',
+            'flake8-builtins',
             'flake8-comprehensions',
             'pytest',
         ],
