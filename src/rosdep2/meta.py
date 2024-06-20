@@ -32,13 +32,6 @@ try:
 except ImportError:
     import pickle
 
-try:
-    FileNotFoundError
-except NameError:
-    # Python 2 compatibility
-    # https://stackoverflow.com/questions/21367320/
-    FileNotFoundError = IOError
-
 import rospkg
 
 from ._version import __version__

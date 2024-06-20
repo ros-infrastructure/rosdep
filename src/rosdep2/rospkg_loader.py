@@ -32,8 +32,6 @@ Library for loading rosdep files from the ROS package/stack
 filesystem.
 """
 
-from __future__ import print_function
-
 import os
 
 import catkin_pkg.package

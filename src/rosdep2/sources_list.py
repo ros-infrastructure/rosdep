@@ -27,8 +27,6 @@
 
 # Author Ken Conley/kwc@willowgarage.com
 
-from __future__ import print_function
-
 import os
 import sys
 import yaml
