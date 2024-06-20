@@ -323,7 +323,7 @@ class HomebrewInstaller(PackageManagerInstaller):
         if packages:
             options = []
             install_flags = []
-            if type(rosdep_args) == dict:
+            if type(rosdep_args) is dict:
                 options = coerce_to_list(rosdep_args.get('options', []))
                 install_flags = coerce_to_list(rosdep_args.get('install_flags', []))
 
