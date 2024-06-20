@@ -48,7 +48,7 @@ def register_platforms(context):
     context.add_os_installer_key(OS_ALPINE, PIP_INSTALLER)
     context.add_os_installer_key(OS_ALPINE, SOURCE_INSTALLER)
     context.set_default_os_installer_key(OS_ALPINE, lambda self: APK_INSTALLER)
-    context.set_os_version_type(OS_ALPINE, lambda self: ".".join(self.get_version().split('.')[:2]))
+    context.set_os_version_type(OS_ALPINE, lambda self: '.'.join(self.get_version().split('.')[:2]))
 
 
 def apk_detect(pkgs, exec_fn=read_stdout):

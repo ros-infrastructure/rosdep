@@ -380,7 +380,7 @@ def _rosdep_main(args):
                            'If specified end-of-life distros are being '
                            'fetched too.')
     parser.add_option('-t', '--dependency-types', dest='dependency_types',
-                      type="choice", choices=list(VALID_DEPENDENCY_TYPES),
+                      type='choice', choices=list(VALID_DEPENDENCY_TYPES),
                       default=[], action='append',
                       help='Dependency types to install, can be given multiple times. '
                            'Choose from {}. Default: all except doc.'.format(VALID_DEPENDENCY_TYPES))

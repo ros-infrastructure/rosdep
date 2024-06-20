@@ -18,6 +18,7 @@ kwargs = {
         'test': [
             'flake8 < 6',
             'flake8-comprehensions',
+            'flake8-quotes',
             'pytest',
         ],
     },

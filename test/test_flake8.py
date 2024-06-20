@@ -30,7 +30,7 @@ def test_flake8():
 
     # We still need to support Python 2.7, so we can't use run()
     ret_code = subprocess.call(
-        [sys.executable, "-m", "flake8"],
+        [sys.executable, '-m', 'flake8'],
         cwd=os.path.dirname(os.path.dirname(__file__)),
     )
-    assert 0 == ret_code, "flake8 found violations"
+    assert 0 == ret_code, 'flake8 found violations'
