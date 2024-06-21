@@ -74,9 +74,9 @@ def gbprepo_to_rosdep_data(gbpdistro_data, targets_data, url=''):
     # (e.g. doesn't separate gbpdistro vs. targets, nor provide
     # origin), but rushing this implementation a bit.
     try:
-        if not type(targets_data) == dict:
+        if not type(targets_data) is dict:
             raise InvalidData('targets data must be a dict')
-        if not type(gbpdistro_data) == dict:
+        if not type(gbpdistro_data) is dict:
             raise InvalidData('gbpdistro data must be a dictionary')
         if gbpdistro_data['type'] != 'gbp':
             raise InvalidData('gbpdistro must be of type "gbp"')
@@ -94,11 +94,11 @@ def gbprepo_to_rosdep_data(gbpdistro_data, targets_data, url=''):
         rosdep_data = {}
         gbp_repos = gbpdistro_data['repositories']
         # Ensure gbp_repos is a dict
-        if type(gbp_repos) != dict:
+        if type(gbp_repos) is not dict:
             raise InvalidData('invalid repo spec in gbpdistro data: ' + str(gbp_repos) +
                               '. Invalid repositories entry, must be dict.')
         for rosdep_key, repo in gbp_repos.items():
-            if type(repo) != dict:
+            if type(repo) is not dict:
                 raise InvalidData('invalid repo spec in gbpdistro data: ' +
                                   str(repo))
 

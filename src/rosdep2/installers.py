@@ -339,13 +339,13 @@ class PackageManagerInstaller(Installer):
         See :meth:`Installer.resolve()`
         """
         packages = None
-        if type(rosdep_args) == dict:
+        if type(rosdep_args) is dict:
             packages = rosdep_args.get('packages', [])
             if isinstance(packages, str):
                 packages = packages.split()
         elif isinstance(rosdep_args, str):
             packages = rosdep_args.split(' ')
-        elif type(rosdep_args) == list:
+        elif type(rosdep_args) is list:
             packages = rosdep_args
         else:
             raise InvalidData('Invalid rosdep args: %s' % (rosdep_args))
@@ -397,7 +397,7 @@ class PackageManagerInstaller(Installer):
           necessary if the package manager doesn't handle
           dependencies.
         """
-        if self.supports_depends and type(rosdep_args) == dict:
+        if self.supports_depends and type(rosdep_args) is dict:
             return rosdep_args.get('depends', [])
         return []  # Default return empty list
 

@@ -62,7 +62,7 @@ def download_targets_data(targets_url=None):
         targets_data = yaml.safe_load(text)
     except Exception as e:
         raise DownloadFailure('Failed to download target platform data for gbpdistro:\n\t%s' % (str(e)))
-    if type(targets_data) == list:
+    if type(targets_data) is list:
         # convert to dictionary
         new_targets_data = {}
         for t in targets_data:

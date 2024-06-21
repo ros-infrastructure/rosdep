@@ -63,9 +63,9 @@ from .installers import RosdepInstaller
 from .lookup import RosdepLookup, ResolutionError, prune_catkin_packages
 from .meta import MetaDatabase
 from .rospkg_loader import DEFAULT_VIEW_KEY
-from .sources_list import update_sources_list, get_sources_cache_dir,\
-    download_default_sources_list, SourcesListLoader, CACHE_INDEX,\
-    get_sources_list_dir, get_default_sources_list_file,\
+from .sources_list import update_sources_list, get_sources_cache_dir, \
+    download_default_sources_list, SourcesListLoader, CACHE_INDEX, \
+    get_sources_list_dir, get_default_sources_list_file, \
     DEFAULT_SOURCES_LIST_URL
 from .rosdistrohelper import PreRep137Warning
 
