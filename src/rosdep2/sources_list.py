@@ -27,8 +27,6 @@
 
 # Author Ken Conley/kwc@willowgarage.com
 
-from __future__ import print_function
-
 import os
 import sys
 import yaml
@@ -144,7 +142,7 @@ class DataSource(object):
         parsed = urlparse.urlparse(url)
         if not parsed.scheme or (parsed.scheme != 'file' and not parsed.netloc) or parsed.path in ('', '/'):
             raise ValueError('url must be a fully-specified URL with scheme, hostname, and path: %s' % (str(url)))
-        if not type(tags) == list:
+        if not type(tags) is list:
             raise ValueError('tags must be a list: %s' % (str(tags)))
 
         self.type = type_
@@ -304,7 +302,7 @@ def download_rosdep_data(url):
         text = f.read()
         f.close()
         data = yaml.safe_load(text)
-        if type(data) != dict:
+        if type(data) is not dict:
             raise DownloadFailure('rosdep data from [%s] is not a YAML dictionary' % (url))
         return data
     except (URLError, httplib.HTTPException) as e:
