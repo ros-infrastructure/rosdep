@@ -27,7 +27,6 @@
 
 # Author Tully Foote/tfoote@willowgarage.com
 
-from __future__ import print_function
 import subprocess
 import sys
 

@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import os
 import sys
 
@@ -33,7 +31,7 @@ def find_catkin_packages_in(path, verbose=False):
             print('found in cache.', file=sys.stderr)
         return _catkin_packages_cache[path]
     packages = find_packages(path)
-    if type(packages) == dict and packages != {}:
+    if type(packages) is dict and packages != {}:
         package_names = [package.name for package in packages.values()]
         if verbose:
             print('found ' + str(len(packages)) + ' packages.')

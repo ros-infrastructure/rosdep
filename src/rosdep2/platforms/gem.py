@@ -28,8 +28,6 @@
 
 # Author Ruben Smits/ruben.smits@intermodalics.eu
 
-from __future__ import print_function
-
 import subprocess
 
 from ..core import InstallFailed

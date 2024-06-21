@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import print_function
-
 import os
 import subprocess
 import sys
@@ -28,9 +26,9 @@ def test_flake8():
     # See: https://flake8.pycqa.org/en/latest/user/python-api.html
     # Calling through subprocess is the most stable way to run it.
 
-    # We still need to support Python 2.7, so we can't use run()
-    ret_code = subprocess.call(
+    result = subprocess.run(
         [sys.executable, '-m', 'flake8'],
         cwd=os.path.dirname(os.path.dirname(__file__)),
+        check=False,
     )
-    assert 0 == ret_code, 'flake8 found violations'
+    assert 0 == result.returncode, 'flake8 found violations'

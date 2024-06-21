@@ -25,29 +25,9 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from __future__ import print_function
-
 import os
 import sys
-
-try:
-    from tempfile import TemporaryDirectory
-except ImportError:
-    import tempfile
-    import shutil
-
-    class TemporaryDirectory(object):
-        """Python 2 compatible class."""
-
-        def __init__(self):
-            self.name = None
-
-        def __enter__(self):
-            self.name = tempfile.mkdtemp()
-            return self.name
-
-        def __exit__(self, t, v, tb):
-            shutil.rmtree(self.name)
+from tempfile import TemporaryDirectory
 
 from rosdep2.meta import MetaDatabase
 
