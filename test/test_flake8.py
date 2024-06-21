@@ -27,8 +27,8 @@ def test_flake8():
     # Calling through subprocess is the most stable way to run it.
 
     result = subprocess.run(
-        [sys.executable, "-m", "flake8"],
+        [sys.executable, '-m', 'flake8'],
         cwd=os.path.dirname(os.path.dirname(__file__)),
         check=False,
     )
-    assert 0 == result.returncode, "flake8 found violations"
+    assert 0 == result.returncode, 'flake8 found violations'

@@ -56,7 +56,7 @@ def opkg_detect(pkgs, exec_fn=None):
     :param exec_fn: function to execute Popen and read stdout (for testing)
     :return: list elements in *pkgs* that were found installed on the system
     """
-    raise NotImplementedError("opkg_detect is not implemented yet")
+    raise NotImplementedError('opkg_detect is not implemented yet')
 
 
 class OpkgInstaller(PackageManagerInstaller):

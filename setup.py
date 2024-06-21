@@ -19,6 +19,7 @@ kwargs = {
             'flake8',
             'flake8-builtins',
             'flake8-comprehensions',
+            'flake8-quotes',
             'pytest',
         ],
     },

@@ -42,7 +42,7 @@ from ._version import __version__
 def urlopen_gzip(url, **kwargs):
     # http/https URLs need custom requests to specify the user-agent, since some repositories reject
     # requests from the default user-agent.
-    if url.startswith("http://") or url.startswith("https://"):
+    if url.startswith('http://') or url.startswith('https://'):
         url_request = request.Request(url, headers={
             'Accept-Encoding': 'gzip',
             'User-Agent': 'rosdep/{version}'.format(version=__version__),
