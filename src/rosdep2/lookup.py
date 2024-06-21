@@ -27,8 +27,6 @@
 
 # Author Tully Foote/tfoote@willowgarage.com, Ken Conley/kwc@willowgarage.com
 
-from __future__ import print_function
-
 import sys
 import yaml
 

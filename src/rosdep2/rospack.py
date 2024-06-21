@@ -32,8 +32,6 @@ API provided for rospack to determine if a dependency
 is a ROSpackage or a system dependency
 """
 
-from __future__ import print_function
-
 import subprocess
 
 from .main import _get_default_RosdepLookup

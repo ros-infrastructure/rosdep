@@ -27,8 +27,6 @@
 
 # Tingfan Wu tingfan@gmail.com
 
-from __future__ import print_function
-
 from rospkg.os_detect import OS_CYGWIN
 
 from .source import SOURCE_INSTALLER
