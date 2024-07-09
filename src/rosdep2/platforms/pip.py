@@ -148,7 +148,10 @@ class PipInstaller(PackageManagerInstaller):
         packages = self.get_packages_to_install(resolved, reinstall=reinstall)
         if not packages:
             return []
-        cmd = pip_cmd + ['install', '-U']
+        if sys.version_info() >= (3, 11):
+            cmd = pip_cmd + ['install', '-U', '--break-system-packages']
+        else:
+            cmd = pip_cmd + ['install', '-U']
         if quiet:
             cmd.append('-q')
         if reinstall:
