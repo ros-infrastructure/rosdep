@@ -31,6 +31,9 @@ import os
 import subprocess
 import sys
 
+from configparser import ConfigParser
+from pathlib import Path
+
 try:
     import importlib.metadata as importlib_metadata
 except ImportError:
@@ -42,6 +45,15 @@ from ..shell_utils import read_stdout
 
 # pip package manager key
 PIP_INSTALLER = 'pip'
+
+EXTERNALLY_MANAGED_EXPLAINER = """
+rosdep installation of pip packages requires installing packages packages globally as root
+When using Python >= 3.11, PEP 668 compliance requires you to allow pip to install alongside
+externally managed packages using the 'break-system-packages' option.
+The recommeded way to set this option when using rosdep is to set the environment variable
+PIP_BREAK_SYSTEM_PACKAGES=1
+in your environment.
+"""
 
 
 def register_installers(context):
@@ -68,6 +80,35 @@ def get_pip_command():
     if is_cmd_available(cmd):
         return cmd
     return None
+
+
+def externally_managed_installable():
+    """
+    PEP 668 enacted in Python 3.11 blocks pip from working in "externally
+    managed" envrionments such operating systems with included package
+    managers. If we're on Python 3.11 or greater, we need to check that pip
+    is configured to allow installing system-wide packages with the
+    flagrantly named "break system packages" config option or environment
+    variable.
+    """
+    if sys.version_info[0] == 3 and sys.version_info[1] >= 11:
+        if "PIP_BREAK_SYSTEM_PACKAGES" in os.environ and os.environ[
+            "PIP_BREAK_SYSTEM_PACKAGES"
+        ].lower() in ["yes", "1", "true"]:
+            return True
+        if 'XDG_CONFIG_DIRS' in os.environ:
+            global_config = ConfigParser()
+            for dir in os.environ['XDG_CONFIG_DIRS'].split(":"):
+                global_config_file = Path(dir) / "pip" / "pip.conf"
+                global_config.read(global_config_file)
+                if global_config['install']['break-system-packages']:
+                    return True
+            fallback_config = Path('/etc/pip.conf')
+            global_config.read(fallback_config)
+            if global_config['install']['break-system-packages']:
+                return True
+        return False
+    return True
 
 
 def is_cmd_available(cmd):
@@ -145,6 +186,8 @@ class PipInstaller(PackageManagerInstaller):
         pip_cmd = get_pip_command()
         if not pip_cmd:
             raise InstallFailed((PIP_INSTALLER, 'pip is not installed'))
+        if not externally_managed_installable():
+            raise InstallFailed((PIP_INSTALLER, EXTERNALLY_MANAGED_EXPLAINER))
         packages = self.get_packages_to_install(resolved, reinstall=reinstall)
         if not packages:
             return []
