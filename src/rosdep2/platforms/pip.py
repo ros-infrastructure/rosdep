@@ -47,7 +47,7 @@ from ..shell_utils import read_stdout
 PIP_INSTALLER = 'pip'
 
 EXTERNALLY_MANAGED_EXPLAINER = """
-rosdep installation of pip packages requires installing packages packages globally as root
+rosdep installation of pip packages requires installing packages globally as root.
 When using Python >= 3.11, PEP 668 compliance requires you to allow pip to install alongside
 externally managed packages using the 'break-system-packages' option.
 The recommeded way to set this option when using rosdep is to set the environment variable
