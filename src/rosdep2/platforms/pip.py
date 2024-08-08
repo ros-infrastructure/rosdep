@@ -94,7 +94,7 @@ def externally_managed_installable():
     if sys.version_info[0] == 3 and sys.version_info[1] >= 11:
         if "PIP_BREAK_SYSTEM_PACKAGES" in os.environ and os.environ[
             "PIP_BREAK_SYSTEM_PACKAGES"
-        ].lower() in ["yes", "1", "true"]:
+        ].lower() in ("yes", "1", "true"):
             return True
         if 'XDG_CONFIG_DIRS' in os.environ:
             global_config = ConfigParser()
