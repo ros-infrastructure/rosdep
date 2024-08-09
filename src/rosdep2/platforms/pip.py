@@ -172,6 +172,10 @@ class PipInstaller(PackageManagerInstaller):
     def __init__(self):
         super(PipInstaller, self).__init__(pip_detect, supports_depends=True)
 
+        # Pass necessary environment for pip functionality via sudo
+        if self.as_root and self.sudo_command != '':
+            self.sudo_command += ' --preserve-env=PIP_BREAK_SYSTEM_PACKAGES'
+
     def get_version_strings(self):
         pip_version = importlib_metadata.version('pip')
         # keeping the name "setuptools" for backward compatibility
