@@ -92,14 +92,14 @@ def externally_managed_installable():
     variable.
     """
     if sys.version_info >= (3, 11):
-        if "PIP_BREAK_SYSTEM_PACKAGES" in os.environ and os.environ[
-            "PIP_BREAK_SYSTEM_PACKAGES"
-        ].lower() in ("yes", "1", "true"):
+        if 'PIP_BREAK_SYSTEM_PACKAGES' in os.environ and os.environ[
+            'PIP_BREAK_SYSTEM_PACKAGES'
+        ].lower() in ('yes', '1', 'true'):
             return True
         if 'XDG_CONFIG_DIRS' in os.environ:
             global_config = ConfigParser()
-            for dir in os.environ['XDG_CONFIG_DIRS'].split(":"):
-                global_config_file = Path(dir) / "pip" / "pip.conf"
+            for xdg_dir in os.environ['XDG_CONFIG_DIRS'].split(':'):
+                global_config_file = Path(xdg_dir) / 'pip' / 'pip.conf'
                 global_config.read(global_config_file)
                 if global_config['install']['break-system-packages']:
                     return True
