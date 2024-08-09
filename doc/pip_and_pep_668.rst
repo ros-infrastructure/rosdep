@@ -27,7 +27,7 @@ If your system's sudo configuration prohibits the passing of environment variabl
 Configure using pip.conf
 ------------------------
 
-`Pip configuration files <pip-configuration>`_ can be used to set the desired behavior 
+`Pip configuration files <pip-configuration>`_ can be used to set the desired behavior.
 Pip checks for global configuration files in ``XDG_CONFIG_DIRS``, as well as ``/etc/pip.conf``
 For details on ``XDG_CONFIG_DIRS`` refer to the `XDG base directories specification <xdg-base-dirs>`_.
 If you're unsure which configuration file is in use by your system, ``/etc/pip.conf`` seems like the most generic.
