@@ -87,7 +87,7 @@ def get_pip_command():
 def externally_managed_installable():
     """
     PEP 668 enacted in Python 3.11 blocks pip from working in "externally
-    managed" envrionments such operating systems with included package
+    managed" environments such as operating systems with included package
     managers. If we're on Python 3.11 or greater, we need to check that pip
     is configured to allow installing system-wide packages with the
     flagrantly named "break system packages" config option or environment
