@@ -53,6 +53,8 @@ externally managed packages using the 'break-system-packages' option.
 The recommeded way to set this option when using rosdep is to set the environment variable
 PIP_BREAK_SYSTEM_PACKAGES=1
 in your environment.
+
+For more information refer to http://docs.ros.org/en/independent/api/rosdep/html/pip_and_pep_668.html
 """
 
 
