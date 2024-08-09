@@ -67,6 +67,7 @@ def test_PipInstaller_get_depends():
     assert ['foo'] == installer.get_depends(dict(depends=['foo']))
 
 
+@patch.dict(os.environ, {'PIP_BREAK_SYSTEM_PACKAGES': '1'})
 def test_PipInstaller():
     from rosdep2 import InstallFailed
     from rosdep2.platforms.pip import PipInstaller
