@@ -98,19 +98,25 @@ def externally_managed_installable():
             'PIP_BREAK_SYSTEM_PACKAGES'
         ].lower() in ('yes', '1', 'true'):
             return True
+        # Check the same configuration directories as pip does per
+        # https://pip.pypa.io/en/stable/topics/configuration/
+        pip_config = ConfigParser()
         if 'XDG_CONFIG_DIRS' in os.environ:
-            global_config = ConfigParser()
             for xdg_dir in os.environ['XDG_CONFIG_DIRS'].split(':'):
-                global_config_file = Path(xdg_dir) / 'pip' / 'pip.conf'
-                global_config.read(global_config_file)
-                if global_config['install']['break-system-packages']:
+                pip_config_file = Path(xdg_dir) / 'pip' / 'pip.conf'
+                pip_config.read(pip_config_file)
+                if pip_config['install']['break-system-packages']:
                     return True
-            fallback_config = Path('/etc/pip.conf')
-            global_config.read(fallback_config)
-            if global_config['install']['break-system-packages']:
-                return True
+
+        fallback_config = Path('/etc/pip.conf')
+        pip_config.read(fallback_config)
+        if pip_config['install']['break-system-packages']:
+            return True
+        # On Python 3.11 and later, when no explicit configuration is present,
+        # global pip installation will not work.
         return False
-    return True
+    else:
+        return True
 
 
 def is_cmd_available(cmd):
