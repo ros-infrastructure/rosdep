@@ -104,7 +104,7 @@ def test_PipInstaller():
     try:
         if hasattr(os, 'geteuid'):
             with patch('rosdep2.installers.os.geteuid', return_value=1):
-                test(['sudo', '-H'])
+                test(['sudo', '-H', '--preserve-env=PIP_BREAK_SYSTEM_PACKAGES'])
             with patch('rosdep2.installers.os.geteuid', return_value=0):
                 test([])
         else:
