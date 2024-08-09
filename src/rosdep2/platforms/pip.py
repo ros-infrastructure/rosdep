@@ -93,7 +93,8 @@ def externally_managed_installable():
     flagrantly named "break system packages" config option or environment
     variable.
     """
-    if sys.version_info >= (3, 11):
+    if sys.version_info < (3, 11):
+        return True
         if 'PIP_BREAK_SYSTEM_PACKAGES' in os.environ and os.environ[
             'PIP_BREAK_SYSTEM_PACKAGES'
         ].lower() in ('yes', '1', 'true'):
