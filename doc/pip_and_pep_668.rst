@@ -18,6 +18,9 @@ Setting environment variables in your login profile, ``PIP_BREAK_SYSTEM_PACKAGES
 The value of the environment variable can be any of ``1``, ``yes``, or ``true``.
 The string values are not case sensitive.
 
+``rosdep`` is designed to use ``sudo`` in order to gain root privileges for installation when not run as root.
+If your system's sudo configuration prohibits the passing of environment variables
+
 
 Configure using pip.conf
 ------------------------
