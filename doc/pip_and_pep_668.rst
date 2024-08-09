@@ -3,7 +3,7 @@ Pip installation after PEP 668
 
 `PEP-668`_ introduced `externally managed environments <externally-managed-environments>`_ to Python packaging.
 
-Rosdep is designed to use pip as an alternative system package manager, rosdep installation of pip packages requires installing packages globally as root.
+``rosdep`` is designed to use pip as an alternative system package manager, rosdep installation of pip packages requires installing packages globally as root.
 Starting with Python 3.11, `PEP-668`_ compliance requires you to allow pip to install alongside externally managed packages using the ``break-system-packages`` option.
 
 There are multiple ways to configure pip so that rosdep will succeed.
