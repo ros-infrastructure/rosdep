@@ -95,9 +95,10 @@ def externally_managed_installable():
     """
     if sys.version_info < (3, 11):
         return True
-        if 'PIP_BREAK_SYSTEM_PACKAGES' in os.environ and os.environ[
-            'PIP_BREAK_SYSTEM_PACKAGES'
-        ].lower() in ('yes', '1', 'true'):
+        if (
+                'PIP_BREAK_SYSTEM_PACKAGES' in os.environ and
+                os.environ['PIP_BREAK_SYSTEM_PACKAGES'].lower() in ('yes', '1', 'true')
+        ):
             return True
         # Check the same configuration directories as pip does per
         # https://pip.pypa.io/en/stable/topics/configuration/
