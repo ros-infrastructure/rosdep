@@ -67,6 +67,22 @@ def test_PipInstaller_get_depends():
     assert ['foo'] == installer.get_depends(dict(depends=['foo']))
 
 
+@patch('rosdep2.platforms.pip.externally_managed_installable')
+def test_PipInstaller_handles_externally_managed_environment(externally_managed_installable):
+    from rosdep2 import InstallFailed
+    from rosdep2.platforms.pip import EXTERNALLY_MANAGED_EXPLAINER, PipInstaller
+
+    externally_managed_installable.return_value = False
+    installer = PipInstaller()
+    try:
+        installer.get_install_command(['whatever'])
+        assert False, 'should have raised'
+    except InstallFailed as e:
+        assert e.failures == [('pip', EXTERNALLY_MANAGED_EXPLAINER)]
+    externally_managed_installable.return_value = True
+    assert installer.get_install_command(['whatever'], interactive=False)
+
+
 @patch.dict(os.environ, {'PIP_BREAK_SYSTEM_PACKAGES': '1'})
 def test_PipInstaller():
     from rosdep2 import InstallFailed
