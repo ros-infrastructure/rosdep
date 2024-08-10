@@ -4,12 +4,36 @@ Overview
 Installing rosdep
 -----------------
 
-rosdep2 is available using pip or easy_install::
+.. admonition:: Note
 
+    If you want to use rosdep with ROS1/2, you should install rosdep
+    following their installation instructions:
+
+    * `ROS1 installation instructions
+      <http://wiki.ros.org/ROS/Installation>`_
+    * `ROS2 installation instructions
+      <http://docs.ros.org/en/iron/Installation.html>`_
+      [#rosdep_in_dev_tools]_
+
+    .. [#rosdep_in_dev_tools] In ROS2 Foxy and beyond, rosdep is included in the ros-dev-tools package.
+
+It is recommended to use the system package manager to install rosdep.
+
+rosdep2 is a system package under Ubuntu and Debian::
+
+    # Ubuntu >= 20.04 (Focal)
+    sudo apt-get install python3-rosdep
+    # Debian >=11 (Bullseye)
+    sudo apt-get install python3-rosdep2
+
+If rosdep doesn't exist in your package manager, you can install it
+using pip or easy_install::
+
+    # Python 2
     sudo pip install -U rosdep
-
-or::
-
+    # Python 3
+    sudo pip3 install -U rosdep
+    # easy_install
     sudo easy_install -U rosdep rospkg
 
 
