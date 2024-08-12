@@ -111,12 +111,12 @@ def externally_managed_installable():
         for xdg_dir in os.environ['XDG_CONFIG_DIRS'].split(':'):
             pip_config_file = Path(xdg_dir) / 'pip' / 'pip.conf'
             pip_config.read(pip_config_file)
-            if pip_config['install']['break-system-packages']:
+            if pip_config.getboolean('install', 'break-system-packages', fallback=False):
                 return True
 
     fallback_config = Path('/etc/pip.conf')
     pip_config.read(fallback_config)
-    if pip_config['install']['break-system-packages']:
+    if pip_config.getboolean('install', 'break-system-packages', fallback=False):
         return True
     # On Python 3.11 and later, when no explicit configuration is present,
     # global pip installation will not work.
