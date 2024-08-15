@@ -11,3 +11,4 @@ Contents
    sources_list
    developers_guide
    rosdep2_api
+   pip_and_pep_668
