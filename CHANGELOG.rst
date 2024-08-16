@@ -1,3 +1,21 @@
+0.25.0 (2024-08-16)
+-------------------
+- Remove Python 2 release configuration.
+  - https://github.com/ros-infrastructure/rosdep/issues/970
+- Remove Python 2 compatibility imports.
+  - https://github.com/ros-infrastructure/rosdep/issues/973
+- Unpin flake8 version and resolve new violations.
+  - https://github.com/ros-infrastructure/rosdep/issues/975
+- Updates to pass flake8-builtins.
+  - https://github.com/ros-infrastructure/rosdep/issues/974
+- Updates to pass flake8-quotes.
+  - https://github.com/ros-infrastructure/rosdep/issues/972
+- Update documentation to recommend installing rosdep via sysem packages.
+  - https://github.com/ros-infrastructure/rosdep/issues/954
+- Check for pip configuration before installing into externally managed environment.
+  - https://github.com/ros-infrastructure/rosdep/issues/979
+  - See http://docs.ros.org/en/independent/api/rosdep/html/pip_and_pep_668.html for additional details.
+
 0.24.0 (2024-05-07)
 -------------------
 - Reapply "fix: pkg_resources deprecated warning"
