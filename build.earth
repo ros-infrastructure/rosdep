@@ -1,0 +1,35 @@
+VERSION 0.8
+
+build:
+  FROM docker.io/library/python:3.12
+  RUN mkdir -p /src || true
+  COPY --dir doc src test \
+    CHANGELOG.rst \
+    Makefile \
+    README.md \
+    rosdoc.yaml \
+    setup.cfg \
+    setup.py \
+    stdeb.cfg \
+    /src/rosdep
+  WORKDIR /src/rosdep
+  RUN pip install -e .
+
+testdeps:
+  FROM +build
+  RUN pip install .[test]
+
+test:
+  # TODO tests aren't passing in context.
+  FROM +testdeps
+  RUN pytest test
+
+docdeps:
+  FROM +build
+  RUN pip install .[doc]
+
+doc:
+  FROM +docdeps
+  WORKDIR /src/rosdep/doc
+  RUN make html
+  SAVE ARTIFACT _build/html AS LOCAL doc/_build/html
