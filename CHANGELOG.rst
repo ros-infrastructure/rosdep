@@ -1,3 +1,9 @@
+0.25.1 (2024-08-22)
+-------------------
+- Update release environment to avoid using pkg_resources on later platforms.
+  - No source changes from 0.25.0.
+  - https://github.com/ros-infrastructure/rosdep/issues/982
+
 0.25.0 (2024-08-16)
 -------------------
 - Remove Python 2 release configuration.
