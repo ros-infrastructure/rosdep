@@ -10,6 +10,7 @@ target
 build
 deb_dist
 dist
-src/rosdep.egg-info
+rosdep.egg-info/
+rosdep_modules.egg-info/
 nose*
 _build
