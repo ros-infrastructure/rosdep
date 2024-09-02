@@ -61,9 +61,6 @@ from .rosdistrohelper import get_index, get_index_url
 # rosdep
 DEFAULT_SOURCES_LIST_URL = 'https://raw.githubusercontent.com/ros/rosdistro/master/rosdep/sources.list.d/20-default.list'
 
-# seconds to wait before aborting download of rosdep data
-DOWNLOAD_TIMEOUT = 15.0
-
 SOURCES_LIST_DIR = 'sources.list.d'
 SOURCES_CACHE_DIR = 'sources.cache'
 
@@ -292,13 +289,13 @@ class DataSourceMatcher(object):
         return DataSourceMatcher(tags)
 
 
-def download_rosdep_data(url):
+def download_rosdep_data(url, timeout):
     """
     :raises: :exc:`DownloadFailure` If data cannot be
         retrieved (e.g. 404, bad YAML format, server down).
     """
     try:
-        f = urlopen_gzip(url, timeout=DOWNLOAD_TIMEOUT)
+        f = urlopen_gzip(url, timeout=timeout)
         text = f.read()
         f.close()
         data = yaml.safe_load(text)
@@ -311,10 +308,11 @@ def download_rosdep_data(url):
         raise DownloadFailure(str(e))
 
 
-def download_default_sources_list(url=DEFAULT_SOURCES_LIST_URL):
+def download_default_sources_list(timeout, url=DEFAULT_SOURCES_LIST_URL):
     """
     Download (and validate) contents of default sources list.
 
+    :param timeout: download timeout in seconds
     :param url: override URL of default sources list file
     :return: raw sources list data, ``str``
     :raises: :exc:`DownloadFailure` If data cannot be
@@ -323,7 +321,7 @@ def download_default_sources_list(url=DEFAULT_SOURCES_LIST_URL):
         retrieved (e.g. 404, server down).
     """
     try:
-        f = urlopen_gzip(url, timeout=DOWNLOAD_TIMEOUT)
+        f = urlopen_gzip(url, timeout=timeout)
     except (URLError, httplib.HTTPException) as e:
         raise URLError(str(e) + ' (%s)' % url)
     data = f.read().decode()
@@ -435,6 +433,7 @@ def _generate_key_from_urls(urls):
 def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
                         success_handler=None, error_handler=None,
                         skip_eol_distros=False, ros_distro=None,
+                        download_timeout=15.0,
                         quiet=False):
     """
     Re-downloaded data from remote sources and store in cache.  Also
@@ -449,6 +448,7 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
         if a particular source fails.  This hook is mainly for
         printing errors to console.
     :param skip_eol_distros: skip downloading sources for EOL distros
+    :param timeout: download timeout in seconds, default to 15.0
 
     :returns: list of (`DataSource`, cache_file_path) pairs for cache
         files that were updated, ``[str]``
@@ -464,14 +464,14 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
     for source in list(sources):
         try:
             if source.type == TYPE_YAML:
-                rosdep_data = download_rosdep_data(source.url)
+                rosdep_data = download_rosdep_data(source.url, download_timeout)
             elif source.type == TYPE_GBPDISTRO:  # DEPRECATED, do not use this file. See REP137
                 if not source.tags[0] in ['electric', 'fuerte']:
                     if not quiet:
                         print('Ignore legacy gbpdistro "%s"' % source.tags[0])
                     sources.remove(source)
                     continue  # do not store this entry in the cache
-                rosdep_data = download_gbpdistro_as_rosdep_data(source.url)
+                rosdep_data = download_gbpdistro_as_rosdep_data(source.url, download_timeout)
             retval.append((source, write_cache_file(sources_cache_dir, source.url, rosdep_data)))
             if success_handler is not None:
                 success_handler(source)

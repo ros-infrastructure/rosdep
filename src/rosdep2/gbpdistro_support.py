@@ -34,9 +34,6 @@ except NameError:
 FUERTE_GBPDISTRO_URL = 'https://raw.githubusercontent.com/ros/rosdistro/' \
     'master/releases/fuerte.yaml'
 
-# seconds to wait before aborting download of gbpdistro data
-DOWNLOAD_TIMEOUT = 15.0
-
 
 def get_owner_name(url):
     """
@@ -181,7 +178,7 @@ def get_gbprepo_as_rosdep_data(gbpdistro):
     return rosdep_data
 
 
-def download_gbpdistro_as_rosdep_data(gbpdistro_url, targets_url=None):
+def download_gbpdistro_as_rosdep_data(gbpdistro_url, timeout, targets_url=None):
     """
     Download gbpdistro file from web and convert format to rosdep distro data.
 
@@ -197,9 +194,9 @@ def download_gbpdistro_as_rosdep_data(gbpdistro_url, targets_url=None):
     # we can convert a gbpdistro file into rosdep data by following a
     # couple rules
     # will output a warning
-    targets_data = download_targets_data(targets_url=targets_url)
+    targets_data = download_targets_data(targets_url=targets_url, timeout=timeout)
     try:
-        f = urlopen_gzip(gbpdistro_url, timeout=DOWNLOAD_TIMEOUT)
+        f = urlopen_gzip(gbpdistro_url, timeout=timeout)
         text = f.read()
         f.close()
         gbpdistro_data = yaml.safe_load(text)

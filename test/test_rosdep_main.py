@@ -192,6 +192,7 @@ class TestRosdepMain(unittest.TestCase):
                     'install', '-s', '-i',
                     '--os', 'ubuntu:lucid',
                     '--rosdistro', 'fuerte',
+                    '--download-timeout', '15.0',
                     '--from-paths', catkin_tree
                 ] + cmd_extras)
                 stdout, stderr = b
