@@ -1,0 +1,33 @@
+---
+name: Doc build
+on:
+  push:
+    branches: ['main', 'docdeps']
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: earthly/actions-setup@v1
+      - name: Build documentation
+        run: |
+          earthly --ci --output +doc
+      - name: Upload build for GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: doc/_build/html
+  deploy:
+    permissions:
+      contents: read
+      id-token: write
+      pages: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    needs: build
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

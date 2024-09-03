@@ -1,0 +1,19 @@
+# https://docs.docker.com/build/concepts/context/#dockerignore-files
+# Unlike .gitignore files directories are not ignored at all layers by default.
+# The **/ prefix will make a pattern behave like a .gitignore pattern and apply
+# in any directory, including the root.
+**/*.pyc
+**/.direnv/
+**/.envrc
+**/.git/
+**/.github/
+**/.pytest_cache/
+**/.ruff_cache/
+**/__pycache__/
+**/_build/
+**/build/
+**/deb_dist/
+**/dist/
+**/rosdep.egg-info/
+**/rosdep_modules.egg-info/
+**/target/
