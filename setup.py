@@ -22,6 +22,10 @@ kwargs = {
             'flake8-quotes',
             'pytest',
         ],
+        'doc': [
+            'catkin_sphinx',
+            'sphinx'
+        ],
     },
     'author': 'Tully Foote, Ken Conley',
     'author_email': 'tfoote@osrfoundation.org',
