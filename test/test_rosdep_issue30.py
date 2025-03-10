@@ -8,8 +8,8 @@ from rosdep2 import main as rdmain
 
 class Issue30TestCase(unittest.TestCase):
 
+    @unittest.skip('Issue is not resolved, see ros-infrastructure/rosdep#37')
     def testIssue30(self):
-        return True
         d = make_temp_dir()
         try:
             cd(d)
