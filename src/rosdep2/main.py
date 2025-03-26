@@ -941,8 +941,9 @@ def command_search(args, options):
                 print('Skipping non-cached source %s' % view_name)
             continue
         for key in view.rosdep_data:
-            if all(regex.search(key) for regex in regexes):
-                close_keys.append(key)
+            results = [regex.search(key) for regex in regexes]
+            if all(results):
+                close_keys.append({'key': key, 'error': sum([sum(r.fuzzy_counts) for r in results])})
                 continue
             # If key is no match, check if any of the packages are a match
             item = view.rosdep_data[key]
@@ -952,24 +953,44 @@ def command_search(args, options):
                 # and checking their package name would not add much value
                 if isinstance(pkgs, list):
                     for pkg in pkgs:
-                        if all(regex.search(pkg) for regex in regexes):
-                            close_pkgs.append({'key': key, 'pkg': pkg, 'os': os_entry})
+                        results = [regex.search(pkg) for regex in regexes]
+                        if all(results):
+                            error = sum([sum(r.fuzzy_counts) for r in results])
+                            close_pkgs.append({'key': key, 'pkg': pkg, 'os': os_entry, 'error': error})
                             break
     
-    # Total fuzzy count, used for sorting results
-    def fuzzy_count(item):
-        return sum([sum(regex.search(item).fuzzy_counts) for regex in regexes])
-    
+    has_exact_match = False
     if len(close_keys) > 0:
         print('Closest keys:')
-        for key in sorted(close_keys, key=fuzzy_count):
-            print('  %s' % key)
+        sorted_keys = sorted(close_keys, key=lambda x: x['error'])
+        if sorted_keys[0]['error'] == 0:
+            has_exact_match = True
+            # Remove non-exact matches
+            sorted_keys = filter(lambda x: x['error'] == 0, sorted_keys)
+        if not has_exact_match and len(sorted_keys) > 10:
+            sorted_keys = sorted_keys[:10]
+        for entry in sorted_keys:
+            print('  %s' % entry['key'])
+        if not has_exact_match and len(close_keys) > 10:
+            print('  [and %d more]' % (len(close_keys) - 10))
         print('')
-    if len(close_pkgs) > 0:
+    
+    sorted_pkgs = sorted(close_pkgs, key=lambda x: x['error'])
+    if len(sorted_pkgs) > 0:
+        if has_exact_match or sorted_pkgs[0]['error'] == 0:
+            # Remove non-exact matches
+            sorted_pkgs = list(filter(lambda x: x['error'] == 0, sorted_pkgs))
+            has_exact_match = True
+    if len(sorted_pkgs) > 0:
         print('Closest packages:')
-        for pkg in sorted(close_pkgs, key=lambda x: fuzzy_count(x['pkg'])):
+        if not has_exact_match and len(sorted_pkgs) > 10:
+            sorted_pkgs = sorted_pkgs[:10]
+        for pkg in sorted_pkgs:
             print('  %s: %s [%s]' % (pkg['key'], pkg['pkg'], pkg['os']))
+        if not has_exact_match and len(close_keys) > 10:
+            print('  [and %d more]' % (len(close_keys) - 10))
         print('')
+    
     if len(close_keys) == 0 and len(close_pkgs) == 0:
         print('No matches found')
         return 1  # error exit code
