@@ -27,7 +27,7 @@
 
 # Author William Woodall/wjwwood@gmail.com
 
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 
 
 class Resolution(dict):
@@ -130,7 +130,14 @@ class DependencyGraph(defaultdict):
                 squashed_result.append((installer_key, []))
                 previous_installer_key = installer_key
             squashed_result[-1][1].extend(resolved)
-        return squashed_result
+        # Remove duplicate keys
+        deduplicated_result = []
+        for installer_key, install_keys in squashed_result:
+            deduplicated_result.append((
+                installer_key,
+                list(OrderedDict.fromkeys(install_keys))
+            ))
+        return deduplicated_result
 
     def __get_ordered_uninstalled(self, key):
         uninstalled = []
