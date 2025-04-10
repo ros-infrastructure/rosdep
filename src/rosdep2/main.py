@@ -33,6 +33,7 @@ Command-line interface to rosdep library
 
 import errno
 import os
+import regex
 import sys
 import traceback
 try:
@@ -66,7 +67,7 @@ from .rospkg_loader import DEFAULT_VIEW_KEY
 from .sources_list import update_sources_list, get_sources_cache_dir, \
     download_default_sources_list, SourcesListLoader, CACHE_INDEX, \
     get_sources_list_dir, get_default_sources_list_file, \
-    DEFAULT_SOURCES_LIST_URL
+    DEFAULT_SOURCES_LIST_URL, CachedDataSource
 from .rosdistrohelper import PreRep137Warning
 
 from .ament_packages import AMENT_PREFIX_PATH_ENV_VAR
@@ -104,6 +105,9 @@ rosdep keys <stacks-and-packages>...
 
 rosdep resolve <rosdeps>
   resolve <rosdeps> to system dependencies
+
+rosdep search <searchstrings>...
+  search for a key in the rosdep database. E.g. using the system package name.
 
 rosdep update
   update the local rosdep database based on the rosdep sources.
@@ -918,6 +922,80 @@ def command_resolve(args, options, lookup=None):
         return 1  # error exit code
 
 
+def command_search(args, options):
+    os_override = convert_os_override_option(options.os_override)
+    sources_loader = SourcesListLoader.create_default(sources_cache_dir=options.sources_cache_dir,
+                                                      os_override=os_override,
+                                                      verbose=options.verbose)
+    # Turn search args into regexes to allow for fuzzy search with 1 mistake
+    regexes = ["(?:%s){e<=1}" % regex.escape(arg) for arg in args]
+    if options.verbose:
+        print("Searching using the following regexes: %s" %regexes)
+    regexes = [regex.compile(r, regex.BESTMATCH | regex.IGNORECASE) for r in regexes]
+    close_keys = []
+    close_pkgs = []
+    for view_name in sources_loader.get_loadable_views():
+        view = sources_loader.get_source(view_name=view_name)
+        if not isinstance(view, CachedDataSource):
+            if options.verbose:
+                print('Skipping non-cached source %s' % view_name)
+            continue
+        for key in view.rosdep_data:
+            results = [regex.search(key) for regex in regexes]
+            if all(results):
+                close_keys.append({'key': key, 'error': sum([sum(r.fuzzy_counts) for r in results])})
+                continue
+            # If key is no match, check if any of the packages are a match
+            item = view.rosdep_data[key]
+            for os_entry in item:
+                pkgs = item[os_entry]
+                # ROS packages are stored as dict but they are usually identifyable by the key
+                # and checking their package name would not add much value
+                if isinstance(pkgs, list):
+                    for pkg in pkgs:
+                        results = [regex.search(pkg) for regex in regexes]
+                        if all(results):
+                            error = sum([sum(r.fuzzy_counts) for r in results])
+                            close_pkgs.append({'key': key, 'pkg': pkg, 'os': os_entry, 'error': error})
+                            break
+    
+    has_exact_match = False
+    if len(close_keys) > 0:
+        print('Closest keys:')
+        sorted_keys = sorted(close_keys, key=lambda x: x['error'])
+        if sorted_keys[0]['error'] == 0:
+            has_exact_match = True
+            # Remove non-exact matches
+            sorted_keys = filter(lambda x: x['error'] == 0, sorted_keys)
+        if not has_exact_match and len(sorted_keys) > 10:
+            sorted_keys = sorted_keys[:10]
+        for entry in sorted_keys:
+            print('  %s' % entry['key'])
+        if not has_exact_match and len(close_keys) > 10:
+            print('  [and %d more]' % (len(close_keys) - 10))
+        print('')
+    
+    sorted_pkgs = sorted(close_pkgs, key=lambda x: x['error'])
+    if len(sorted_pkgs) > 0:
+        if has_exact_match or sorted_pkgs[0]['error'] == 0:
+            # Remove non-exact matches
+            sorted_pkgs = list(filter(lambda x: x['error'] == 0, sorted_pkgs))
+            has_exact_match = True
+    if len(sorted_pkgs) > 0:
+        print('Closest packages:')
+        if not has_exact_match and len(sorted_pkgs) > 10:
+            sorted_pkgs = sorted_pkgs[:10]
+        for pkg in sorted_pkgs:
+            print('  %s: %s [%s]' % (pkg['key'], pkg['pkg'], pkg['os']))
+        if not has_exact_match and len(close_pkgs) > 10:
+            print('  [and %d more]' % (len(close_pkgs) - 10))
+        print('')
+    
+    if len(close_keys) == 0 and len(close_pkgs) == 0:
+        print('No matches found')
+        return 1  # error exit code
+
+
 def command_fix_permissions(options):
     import os
     import pwd
@@ -973,6 +1051,7 @@ command_handlers = {
     'init': command_init,
     'update': command_update,
     'fix-permissions': command_fix_permissions,
+    'search': command_search,
 
     # backwards compat
     'what_needs': command_what_needs,
@@ -981,7 +1060,7 @@ command_handlers = {
 }
 
 # commands that accept rosdep names as args
-_command_rosdep_args = ['what-needs', 'what_needs', 'where-defined', 'where_defined', 'resolve']
+_command_rosdep_args = ['what-needs', 'what_needs', 'where-defined', 'where_defined', 'resolve', 'search']
 # commands that take no args
 _command_no_args = ['update', 'init', 'db', 'fix-permissions']
 
