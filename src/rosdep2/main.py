@@ -987,8 +987,8 @@ def command_search(args, options):
             sorted_pkgs = sorted_pkgs[:10]
         for pkg in sorted_pkgs:
             print('  %s: %s [%s]' % (pkg['key'], pkg['pkg'], pkg['os']))
-        if not has_exact_match and len(close_keys) > 10:
-            print('  [and %d more]' % (len(close_keys) - 10))
+        if not has_exact_match and len(close_pkgs) > 10:
+            print('  [and %d more]' % (len(close_pkgs) - 10))
         print('')
     
     if len(close_keys) == 0 and len(close_pkgs) == 0:
