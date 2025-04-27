@@ -728,13 +728,11 @@ def get_keys(lookup, packages, recursive):
 
 
 def command_check(lookup, packages, options):
-    verbose = options.verbose
-
-    installer_context = create_default_installer_context(verbose=verbose)
+    installer_context = create_default_installer_context(verbose=options.verbose)
     configure_installer_context(installer_context, options)
     installer = RosdepInstaller(installer_context, lookup)
 
-    uninstalled, errors = installer.get_uninstalled(packages, implicit=options.recursive, verbose=verbose)
+    uninstalled, errors = installer.get_uninstalled(packages, implicit=options.recursive, verbose=options.verbose)
 
     # pretty print the result
     if [v for k, v in uninstalled if v]:
