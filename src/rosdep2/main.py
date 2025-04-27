@@ -727,7 +727,8 @@ def get_keys(lookup, packages, recursive):
     return list(rosdep_keys)
 
 
-def command_check(lookup, packages, options):
+def _resolve_dependencies(lookup, packages, options):
+    # setup installer
     installer_context = create_default_installer_context(verbose=options.verbose)
     configure_installer_context(installer_context, options)
     installer = RosdepInstaller(installer_context)
@@ -735,13 +736,24 @@ def command_check(lookup, packages, options):
     # resolutions have been unique()d
     if options.verbose:
         print('resolving for resources [%s]' % (', '.join(packages)))
-    resolutions, errors = lookup.resolve_all(packages, installer_context, implicit=options.recursive)
+    try:
+        resolutions, errors = lookup.resolve_all(packages, installer_context, implicit=options.recursive)
+    except InvalidData as e:
+        print('ERROR: unable to process all dependencies:\n\t%s' % (e), file=sys.stderr)
+        raise
+
     if options.reinstall:
         if options.verbose:
             print('reinstall is true, treating all dependencies as uninstalled')
         uninstalled = resolutions
     else:
         uninstalled = installer.get_uninstalled(resolutions, verbose=options.verbose)
+
+    return uninstalled, errors, installer
+
+
+def command_check(lookup, packages, options):
+    uninstalled, errors, _ = _resolve_dependencies(lookup, packages, options)
 
     # pretty print the result
     if any(v for k, v in uninstalled):
@@ -776,25 +788,10 @@ def error_to_human_readable(error):
 
 
 def command_install(lookup, packages, options):
-    # setup installer
-    installer_context = create_default_installer_context(verbose=options.verbose)
-    configure_installer_context(installer_context, options)
-    installer = RosdepInstaller(installer_context)
-
-    if options.verbose:
-        print('resolving for resources [%s]' % (', '.join(packages)))
     try:
-        resolutions, errors = lookup.resolve_all(packages, installer_context, implicit=options.recursive)
-    except InvalidData as e:
-        print('ERROR: unable to process all dependencies:\n\t%s' % (e), file=sys.stderr)
+        uninstalled, errors, installer = _resolve_dependencies(lookup, packages, options)
+    except InvalidData:
         return 1
-
-    if options.reinstall:
-        if options.verbose:
-            print('reinstall is true, treating all dependencies as uninstalled')
-        uninstalled = resolutions
-    else:
-        uninstalled = installer.get_uninstalled(resolutions, verbose=options.verbose)
 
     if options.verbose:
         uninstalled_dependencies = normalize_uninstalled_to_list(uninstalled)
