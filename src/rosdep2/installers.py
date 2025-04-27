@@ -419,6 +419,13 @@ class RosdepInstaller(object):
         self.installer_context = installer_context
         self.lookup = lookup
 
+    def get_all(self, resources, implicit=False, verbose=False):
+        # resolutions have been unique()d
+        if verbose:
+            print('resolving for resources [%s]' % (', '.join(resources)))
+        resolutions, errors = self.lookup.resolve_all(resources, self.installer_context, implicit=implicit)
+        return resolutions, errors
+
     def get_uninstalled(self, resources, implicit=False, verbose=False):
         """
         Get list of system dependencies that have not been installed
@@ -435,10 +442,7 @@ class RosdepInstaller(object):
         :raises: :exc:`RosdepInternalError`
         """
 
-        # resolutions have been unique()d
-        if verbose:
-            print('resolving for resources [%s]' % (', '.join(resources)))
-        resolutions, errors = self.lookup.resolve_all(resources, self.installer_context, implicit=implicit)
+        resolutions, errors = self.get_all(resources, implicit=implicit, verbase=verbose)
 
         # for each installer, figure out what is left to install
         uninstalled = []
