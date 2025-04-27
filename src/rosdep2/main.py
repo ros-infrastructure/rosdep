@@ -776,11 +776,6 @@ def error_to_human_readable(error):
 
 
 def command_install(lookup, packages, options):
-    # map options
-    install_options = dict(interactive=not options.default_yes, verbose=options.verbose,
-                           reinstall=options.reinstall,
-                           continue_on_error=options.robust, simulate=options.simulate, quiet=options.quiet)
-
     # setup installer
     installer_context = create_default_installer_context(verbose=options.verbose)
     configure_installer_context(installer_context, options)
@@ -822,6 +817,11 @@ def command_install(lookup, packages, options):
             print('Continuing to install resolvable dependencies...', file=sys.stderr)
         else:
             return 1
+
+    # map options
+    install_options = dict(interactive=not options.default_yes, verbose=options.verbose,
+                           reinstall=options.reinstall,
+                           continue_on_error=options.robust, simulate=options.simulate, quiet=options.quiet)
     try:
         installer.install(uninstalled, **install_options)
         if not options.simulate:
