@@ -765,11 +765,8 @@ def command_check(lookup, packages, options):
     else:
         print('All system dependencies have been satisfied')
     if errors:
-        for package_name, ex in errors.items():
-            if isinstance(ex, rospkg.ResourceNotFound):
-                print('ERROR[%s]: resource not found [%s]' % (package_name, ex.args[0]), file=sys.stderr)
-            else:
-                print('ERROR[%s]: %s' % (package_name, ex), file=sys.stderr)
+        for rosdep_key, error in errors.items():
+            print('%s: %s' % (rosdep_key, error_to_human_readable(error)), file=sys.stderr)
     if uninstalled:
         return 1
     elif errors:
