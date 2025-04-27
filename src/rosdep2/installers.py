@@ -435,12 +435,10 @@ class RosdepInstaller(object):
         :raises: :exc:`RosdepInternalError`
         """
 
-        installer_context = self.installer_context
-
         # resolutions have been unique()d
         if verbose:
             print('resolving for resources [%s]' % (', '.join(resources)))
-        resolutions, errors = self.lookup.resolve_all(resources, installer_context, implicit=implicit)
+        resolutions, errors = self.lookup.resolve_all(resources, self.installer_context, implicit=implicit)
 
         # for each installer, figure out what is left to install
         uninstalled = []
@@ -450,7 +448,7 @@ class RosdepInstaller(object):
             if verbose:
                 print('resolution: %s [%s]' % (installer_key, ', '.join([str(r) for r in resolved])))
             try:
-                installer = installer_context.get_installer(installer_key)
+                installer = self.installer_context.get_installer(installer_key)
             except KeyError as e:  # lookup has to be buggy to cause this
                 raise RosdepInternalError(e)
             try:
