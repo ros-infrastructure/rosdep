@@ -415,18 +415,19 @@ def normalize_uninstalled_to_list(uninstalled):
 
 class RosdepInstaller(object):
 
-    def __init__(self, installer_context, lookup):
+    def __init__(self, installer_context):
         self.installer_context = installer_context
-        self.lookup = lookup
 
-    def get_uninstalled(self, resources, implicit=False, verbose=False):
+    def get_uninstalled(self, resolutions, verbose=False):
         """
         Get list of system dependencies that have not been installed
         as well as a list of errors from performing the resolution.
         This is a bulk API in order to provide performance
         optimizations in checking install state.
 
-        :param resources: List of resource names (e.g. ROS package names), ``[str]]``
+        :param resolutions: ``[(str, [str])]``.  List of resolution tuples.
+          A resolution tuple's first element is the installer key (e.g.: apt or homebrew)
+          and the second element is a list of installer specific resolution values.
         :param implicit: Install implicit (recursive) dependencies of
             resources.  Default ``False``.
 
@@ -434,11 +435,6 @@ class RosdepInstaller(object):
           Uninstalled is a dictionary with the installer_key as the key.
         :raises: :exc:`RosdepInternalError`
         """
-
-        # resolutions have been unique()d
-        if verbose:
-            print('resolving for resources [%s]' % (', '.join(resources)))
-        resolutions, errors = self.lookup.resolve_all(resources, self.installer_context, implicit=implicit)
 
         # for each installer, figure out what is left to install
         uninstalled = []
@@ -461,7 +457,7 @@ class RosdepInstaller(object):
             if verbose:
                 print('uninstalled: [%s]' % (', '.join([str(p) for p in packages_to_install])))
 
-        return uninstalled, errors
+        return uninstalled
 
     def install(self, uninstalled, interactive=True, simulate=False,
                 continue_on_error=False, reinstall=False, verbose=False, quiet=False):
