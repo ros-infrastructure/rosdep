@@ -781,18 +781,19 @@ def command_install(lookup, packages, options):
     configure_installer_context(installer_context, options)
     installer = RosdepInstaller(installer_context)
 
-    if options.reinstall:
-        if options.verbose:
+    if options.verbose:
+        if options.reinstall:
             print('reinstall is true, resolving all dependencies')
-        try:
-            uninstalled, errors = lookup.resolve_all(packages, installer_context, implicit=options.recursive)
-        except InvalidData as e:
-            print('ERROR: unable to process all dependencies:\n\t%s' % (e), file=sys.stderr)
-            return 1
-    else:
-        if options.verbose:
-            print('resolving for resources [%s]' % (', '.join(packages)))
+        print('resolving for resources [%s]' % (', '.join(packages)))
+    try:
         resolutions, errors = lookup.resolve_all(packages, installer_context, implicit=options.recursive)
+    except InvalidData as e:
+        print('ERROR: unable to process all dependencies:\n\t%s' % (e), file=sys.stderr)
+        return 1
+
+    if options.reinstall:
+        uninstalled = resolutions
+    else:
         uninstalled = installer.get_uninstalled(resolutions, verbose=options.verbose)
 
     if options.verbose:
