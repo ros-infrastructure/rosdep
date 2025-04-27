@@ -781,7 +781,7 @@ def command_install(lookup, packages, options):
         if options.verbose:
             print('reinstall is true, resolving all dependencies')
         try:
-            uninstalled, errors = lookup.resolve_all(packages, installer_context, implicit=options.recursive)
+            uninstalled, errors = installer.get_all(packages, implicit=options.recursive, verbose=options.verbose)
         except InvalidData as e:
             print('ERROR: unable to process all dependencies:\n\t%s' % (e), file=sys.stderr)
             return 1
