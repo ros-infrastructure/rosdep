@@ -730,9 +730,13 @@ def get_keys(lookup, packages, recursive):
 def command_check(lookup, packages, options):
     installer_context = create_default_installer_context(verbose=options.verbose)
     configure_installer_context(installer_context, options)
-    installer = RosdepInstaller(installer_context, lookup)
+    installer = RosdepInstaller(installer_context)
 
-    uninstalled, errors = installer.get_uninstalled(packages, implicit=options.recursive, verbose=options.verbose)
+    # resolutions have been unique()d
+    if options.verbose:
+        print('resolving for resources [%s]' % (', '.join(packages)))
+    resolutions, errors = lookup.resolve_all(packages, installer_context, implicit=options.recursive)
+    uninstalled = installer.get_uninstalled(resolutions, verbose=options.verbose)
 
     # pretty print the result
     if [v for k, v in uninstalled if v]:
@@ -775,7 +779,7 @@ def command_install(lookup, packages, options):
     # setup installer
     installer_context = create_default_installer_context(verbose=options.verbose)
     configure_installer_context(installer_context, options)
-    installer = RosdepInstaller(installer_context, lookup)
+    installer = RosdepInstaller(installer_context)
 
     if options.reinstall:
         if options.verbose:
@@ -786,7 +790,10 @@ def command_install(lookup, packages, options):
             print('ERROR: unable to process all dependencies:\n\t%s' % (e), file=sys.stderr)
             return 1
     else:
-        uninstalled, errors = installer.get_uninstalled(packages, implicit=options.recursive, verbose=options.verbose)
+        if options.verbose:
+            print('resolving for resources [%s]' % (', '.join(packages)))
+        resolutions, errors = lookup.resolve_all(packages, installer_context, implicit=options.recursive)
+        uninstalled = installer.get_uninstalled(resolutions, verbose=options.verbose)
 
     if options.verbose:
         uninstalled_dependencies = normalize_uninstalled_to_list(uninstalled)
