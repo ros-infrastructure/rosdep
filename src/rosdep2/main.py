@@ -782,8 +782,6 @@ def command_install(lookup, packages, options):
     installer = RosdepInstaller(installer_context)
 
     if options.verbose:
-        if options.reinstall:
-            print('reinstall is true, resolving all dependencies')
         print('resolving for resources [%s]' % (', '.join(packages)))
     try:
         resolutions, errors = lookup.resolve_all(packages, installer_context, implicit=options.recursive)
@@ -792,6 +790,8 @@ def command_install(lookup, packages, options):
         return 1
 
     if options.reinstall:
+        if options.verbose:
+            print('reinstall is true, treating all dependencies as uninstalled')
         uninstalled = resolutions
     else:
         uninstalled = installer.get_uninstalled(resolutions, verbose=options.verbose)
