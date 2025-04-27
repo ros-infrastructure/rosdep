@@ -736,7 +736,12 @@ def command_check(lookup, packages, options):
     if options.verbose:
         print('resolving for resources [%s]' % (', '.join(packages)))
     resolutions, errors = lookup.resolve_all(packages, installer_context, implicit=options.recursive)
-    uninstalled = installer.get_uninstalled(resolutions, verbose=options.verbose)
+    if options.reinstall:
+        if options.verbose:
+            print('reinstall is true, treating all dependencies as uninstalled')
+        uninstalled = resolutions
+    else:
+        uninstalled = installer.get_uninstalled(resolutions, verbose=options.verbose)
 
     # pretty print the result
     if any(v for k, v in uninstalled):
