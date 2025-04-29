@@ -33,7 +33,15 @@ Command-line interface to rosdep library
 
 import errno
 import os
-import regex
+try:
+    # regex is a drop-in replacement for re, but allows for fuzzy matching
+    # which we use in the search command
+    import regex as re
+    FALL_BACK_TO_RE = False
+except ImportError:
+    import re
+    FALL_BACK_TO_RE = True
+
 import sys
 import traceback
 try:
@@ -927,11 +935,17 @@ def command_search(args, options):
     sources_loader = SourcesListLoader.create_default(sources_cache_dir=options.sources_cache_dir,
                                                       os_override=os_override,
                                                       verbose=options.verbose)
-    # Turn search args into regexes to allow for fuzzy search with 1 mistake
-    regexes = ["(?:%s){e<=1}" % regex.escape(arg) for arg in args]
+    if FALL_BACK_TO_RE:
+        print("python3-regex module not available, falling back to re module without fuzzy search.")
+        regexes = args
+        regex_flags = re.IGNORECASE
+    else:
+        # Turn search args into regexes to allow for fuzzy search with 2 mistake
+        regexes = ["(?:%s){e<=%s}" % (re.escape(arg), 2 if len(arg) >= 7 else 1) for arg in args]
+        regex_flags = re.BESTMATCH | re.IGNORECASE
     if options.verbose:
         print("Searching using the following regexes: %s" %regexes)
-    regexes = [regex.compile(r, regex.BESTMATCH | regex.IGNORECASE) for r in regexes]
+    regexes = [re.compile(r, regex_flags) for r in regexes]
     close_keys = []
     close_pkgs = []
     for view_name in sources_loader.get_loadable_views():
@@ -943,7 +957,8 @@ def command_search(args, options):
         for key in view.rosdep_data:
             results = [regex.search(key) for regex in regexes]
             if all(results):
-                close_keys.append({'key': key, 'error': sum([sum(r.fuzzy_counts) for r in results])})
+                error = 0 if FALL_BACK_TO_RE else sum([sum(r.fuzzy_counts) for r in results])
+                close_keys.append({'key': key, 'error': error})
                 continue
             # If key is no match, check if any of the packages are a match
             item = view.rosdep_data[key]
@@ -955,7 +970,7 @@ def command_search(args, options):
                     for pkg in pkgs:
                         results = [regex.search(pkg) for regex in regexes]
                         if all(results):
-                            error = sum([sum(r.fuzzy_counts) for r in results])
+                            error = 0 if FALL_BACK_TO_RE else sum([sum(r.fuzzy_counts) for r in results])
                             close_pkgs.append({'key': key, 'pkg': pkg, 'os': os_entry, 'error': error})
                             break
     
