@@ -115,7 +115,12 @@ rosdep resolve <rosdeps>
   resolve <rosdeps> to system dependencies
 
 rosdep search <searchstrings>...
-  search for a key in the rosdep database. E.g. using the system package name.
+  Search for a key in the rosdep database.
+  Searches rosdep keys and system or ros package names.
+  The search is case-insensitive and all search strings have to match.
+  Supports fuzzy-search if the python module regex is installed.
+  Example: rosdep search pcl dev
+  Output: Closest keys: libpcl-all-dev
 
 rosdep update
   update the local rosdep database based on the rosdep sources.
