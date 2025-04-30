@@ -940,7 +940,7 @@ def command_search(args, options):
         regexes = args
         regex_flags = re.IGNORECASE
     else:
-        # Turn search args into regexes to allow for fuzzy search with 2 mistake
+        # Turn search args into regexes to allow for fuzzy search with 2 mistakes
         regexes = ["(?:%s){e<=%s}" % (re.escape(arg), 2 if len(arg) >= 7 else 1) for arg in args]
         regex_flags = re.BESTMATCH | re.IGNORECASE
     if options.verbose:
