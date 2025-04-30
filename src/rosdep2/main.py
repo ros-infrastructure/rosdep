@@ -973,7 +973,6 @@ def command_search(args, options):
                             error = 0 if FALL_BACK_TO_RE else sum([sum(r.fuzzy_counts) for r in results])
                             close_pkgs.append({'key': key, 'pkg': pkg, 'os': os_entry, 'error': error})
                             break
-    
     has_exact_match = False
     if len(close_keys) > 0:
         print('Closest keys:')
