@@ -935,22 +935,78 @@ def command_resolve(args, options, lookup=None):
         return 1  # error exit code
 
 
+def search_cached_data_source(view, regexes):
+    def count_errors(results):
+        if FALL_BACK_TO_RE:
+            return 0
+        return sum([sum(r.fuzzy_counts) for r in results])
+
+    close_keys = []
+    close_pkgs = []
+    for key in view.rosdep_data:
+        results = [regex.search(key) for regex in regexes]
+        if all(results):
+            error = count_errors(results)
+            close_keys.append({'key': key, 'error': error})
+            continue
+        # If key is no match, check if any of the packages are a match
+        item = view.rosdep_data[key]
+        for os_entry in item:
+            os_items = item[os_entry]
+
+            def check_pkgs(items):
+                for pkg in items:
+                    results = [regex.search(pkg) for regex in regexes]
+                    if all(results):
+                        error = count_errors(results)
+                        close_pkgs.append({'key': key, 'pkg': pkg, 'os': os_entry, 'error': error})
+                        return True
+                return False
+
+            # ROS packages are stored as dict but they are usually identifyable by the key
+            # and checking their package name would not add much value
+            if isinstance(os_items, str):
+                if check_pkgs([os_items]):
+                    break
+            elif isinstance(os_items, list):
+                if check_pkgs(os_items):
+                    break
+            elif isinstance(os_items, dict):
+                found = False
+                for item_key in os_items.keys():
+                    subitems = os_items[item_key]
+                    if isinstance(subitems, str):
+                        found = check_pkgs([subitems])
+                    elif isinstance(subitems, list):
+                        found = check_pkgs(subitems)
+                    elif isinstance(subitems, dict):
+                        if 'packages' in subitems:
+                            found = check_pkgs(subitems['packages'])
+                    if found:
+                        break
+                if found:
+                    break
+    return close_keys, close_pkgs
+
+
 def command_search(args, options):
+    MAX_SEARCH_RESULTS = 10
     os_override = convert_os_override_option(options.os_override)
     sources_loader = SourcesListLoader.create_default(sources_cache_dir=options.sources_cache_dir,
                                                       os_override=os_override,
                                                       verbose=options.verbose)
     if FALL_BACK_TO_RE:
-        print("python3-regex module not available, falling back to re module without fuzzy search.")
+        print('python3-regex module not available, falling back to re module without fuzzy search.')
         regexes = args
         regex_flags = re.IGNORECASE
     else:
         # Turn search args into regexes to allow for fuzzy search with 2 mistakes
-        regexes = ["(?:%s){e<=%s}" % (re.escape(arg), 2 if len(arg) >= 7 else 1) for arg in args]
+        regexes = ['(?:%s){e<=%s}' % (re.escape(arg), 2 if len(arg) >= 7 else 1) for arg in args]
         regex_flags = re.BESTMATCH | re.IGNORECASE
     if options.verbose:
-        print("Searching using the following regexes: %s" %regexes)
+        print('Searching using the following regexes: %s' % regexes)
     regexes = [re.compile(r, regex_flags) for r in regexes]
+
     close_keys = []
     close_pkgs = []
     for view_name in sources_loader.get_loadable_views():
@@ -959,25 +1015,10 @@ def command_search(args, options):
             if options.verbose:
                 print('Skipping non-cached source %s' % view_name)
             continue
-        for key in view.rosdep_data:
-            results = [regex.search(key) for regex in regexes]
-            if all(results):
-                error = 0 if FALL_BACK_TO_RE else sum([sum(r.fuzzy_counts) for r in results])
-                close_keys.append({'key': key, 'error': error})
-                continue
-            # If key is no match, check if any of the packages are a match
-            item = view.rosdep_data[key]
-            for os_entry in item:
-                pkgs = item[os_entry]
-                # ROS packages are stored as dict but they are usually identifyable by the key
-                # and checking their package name would not add much value
-                if isinstance(pkgs, list):
-                    for pkg in pkgs:
-                        results = [regex.search(pkg) for regex in regexes]
-                        if all(results):
-                            error = 0 if FALL_BACK_TO_RE else sum([sum(r.fuzzy_counts) for r in results])
-                            close_pkgs.append({'key': key, 'pkg': pkg, 'os': os_entry, 'error': error})
-                            break
+        search_result = search_cached_data_source(view, regexes)
+        close_keys.extend(search_result[0])
+        close_pkgs.extend(search_result[1])
+
     has_exact_match = False
     if len(close_keys) > 0:
         print('Closest keys:')
@@ -986,14 +1027,14 @@ def command_search(args, options):
             has_exact_match = True
             # Remove non-exact matches
             sorted_keys = filter(lambda x: x['error'] == 0, sorted_keys)
-        if not has_exact_match and len(sorted_keys) > 10:
-            sorted_keys = sorted_keys[:10]
+        if not has_exact_match and len(sorted_keys) > MAX_SEARCH_RESULTS:
+            sorted_keys = sorted_keys[:MAX_SEARCH_RESULTS]
         for entry in sorted_keys:
             print('  %s' % entry['key'])
-        if not has_exact_match and len(close_keys) > 10:
-            print('  [and %d more]' % (len(close_keys) - 10))
-        print('')
-    
+        if not has_exact_match and len(close_keys) > MAX_SEARCH_RESULTS:
+            print('  [and %d more]' % (len(close_keys) - MAX_SEARCH_RESULTS))
+        print()
+
     sorted_pkgs = sorted(close_pkgs, key=lambda x: x['error'])
     if len(sorted_pkgs) > 0:
         if has_exact_match or sorted_pkgs[0]['error'] == 0:
@@ -1002,14 +1043,14 @@ def command_search(args, options):
             has_exact_match = True
     if len(sorted_pkgs) > 0:
         print('Closest packages:')
-        if not has_exact_match and len(sorted_pkgs) > 10:
-            sorted_pkgs = sorted_pkgs[:10]
+        if not has_exact_match and len(sorted_pkgs) > MAX_SEARCH_RESULTS:
+            sorted_pkgs = sorted_pkgs[:MAX_SEARCH_RESULTS]
         for pkg in sorted_pkgs:
             print('  %s: %s [%s]' % (pkg['key'], pkg['pkg'], pkg['os']))
-        if not has_exact_match and len(close_pkgs) > 10:
-            print('  [and %d more]' % (len(close_pkgs) - 10))
-        print('')
-    
+        if not has_exact_match and len(close_pkgs) > MAX_SEARCH_RESULTS:
+            print('  [and %d more]' % (len(close_pkgs) - MAX_SEARCH_RESULTS))
+        print()
+
     if len(close_keys) == 0 and len(close_pkgs) == 0:
         print('No matches found')
         return 1  # error exit code
