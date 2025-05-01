@@ -117,7 +117,11 @@ dependencies::
     $ rosdep resolve eigen
     libeigen3-dev
 
+If you are uncertain the name of a key or package, use ``rosdep search <searchstring>`` which uses fuzzy-search if Python module regex is installed.::
 
+    $ rosdep search pcl dev
+    Closest keys:
+        libpcl-all-dev
 
 For more information, please see the :ref:`command reference <rosdep_usage>`.
 
