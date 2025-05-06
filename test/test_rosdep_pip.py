@@ -99,6 +99,7 @@ def test_externally_managed_installable():
 
     from configparser import ConfigParser
     from pathlib import Path
+
     @patch.object(ConfigParser, 'read')
     @patch.object(ConfigParser, 'getboolean')
     @patch.dict(os.environ, {'XDG_CONFIG_DIRS': '/xdg'})
