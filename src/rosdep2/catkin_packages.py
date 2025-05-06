@@ -19,7 +19,6 @@ def find_catkin_packages_in(path, verbose=False):
     :returns: a list of packages in a given directory
     :raises: OSError if the path doesn't exist
     """
-    global _catkin_packages_cache
     if not os.path.exists(path):
         raise OSError("given path '{0}' does not exist".format(path))
     if verbose:
@@ -51,5 +50,4 @@ def set_workspace_packages(packages):
 
 
 def get_workspace_packages():
-    global _catkin_workspace_packages
     return _catkin_workspace_packages
