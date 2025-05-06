@@ -296,10 +296,9 @@ class TestRosdepMain(unittest.TestCase):
                 rosdep_main(['search', 'libeigen3-dev'] + cmd_extras)
                 stdout, stderr = b
                 assert 'Closest keys' not in stdout.getvalue(), stdout.getvalue()
-                assert 'eigen:' in stdout.getvalue(), stdout.getvalue()
                 assert 'Closest packages' in stdout.getvalue(), stdout.getvalue()
+                assert 'eigen:' in stdout.getvalue(), stdout.getvalue()
                 assert not stderr.getvalue(), stderr.getvalue()
-
         except SystemExit:
             assert False, 'system exit occurred'
         try:

@@ -116,9 +116,9 @@ rosdep resolve <rosdeps>
 
 rosdep search <searchstrings>...
   Search for a key in the rosdep database.
-  Searches rosdep keys and system or ros package names.
+  Searches rosdep keys and system or ROS package names.
   The search is case-insensitive and all search strings have to match.
-  Supports fuzzy-search if the python module regex is installed.
+  Supports fuzzy-search if the Python module regex is installed.
   Example: rosdep search pcl dev
   Output: Closest keys: libpcl-all-dev
 
@@ -1015,9 +1015,9 @@ def command_search(args, options):
             if options.verbose:
                 print('Skipping non-cached source %s' % view_name)
             continue
-        search_result = search_cached_data_source(view, regexes)
-        close_keys.extend(search_result[0])
-        close_pkgs.extend(search_result[1])
+        results_keys, results_pkgs = search_cached_data_source(view, regexes)
+        close_keys.extend(results_keys)
+        close_pkgs.extend(results_pkgs)
 
     has_exact_match = False
     if len(close_keys) > 0:
