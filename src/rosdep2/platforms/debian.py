@@ -265,16 +265,13 @@ def dpkg_detect(pkgs, exec_fn=None):
 
 
 def _iterate_packages(packages, reinstall):
-    for entry in _read_apt_cache_showpkg(packages):
-        p, is_virtual, providers = entry
+    for p, is_virtual, providers in _read_apt_cache_showpkg(packages):
         if is_virtual:
-            installed = []
             if reinstall:
                 installed = dpkg_detect(providers)
                 if len(installed) > 0:
-                    for i in installed:
-                        yield i
-                    continue  # don't ouput providers
+                    yield from installed
+                    continue
             yield providers
         else:
             yield p
