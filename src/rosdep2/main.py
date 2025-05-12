@@ -119,6 +119,8 @@ rosdep search <searchstrings>...
   Searches rosdep keys and system or ROS package names.
   The search is case-insensitive and all search strings have to match.
   Supports fuzzy-search if the Python module regex is installed.
+  Uses the os name from the current system to filter the package results.
+  You can override the os name with the --os option.
   Example: rosdep search pcl dev
   Output: Closest keys: libpcl-all-dev
 
@@ -935,7 +937,7 @@ def command_resolve(args, options, lookup=None):
         return 1  # error exit code
 
 
-def search_cached_data_source(view, regexes):
+def search_cached_data_source(view, regexes, os_name):
     def count_errors(results):
         if FALL_BACK_TO_RE:
             return 0
@@ -952,6 +954,8 @@ def search_cached_data_source(view, regexes):
         # If key is no match, check if any of the packages are a match
         item = view.rosdep_data[key]
         for os_entry in item:
+            if os_entry != os_name:
+                continue
             os_items = item[os_entry]
 
             def check_pkgs(items):
@@ -1007,6 +1011,9 @@ def command_search(args, options):
         print('Searching using the following regexes: %s' % regexes)
     regexes = [re.compile(r, regex_flags) for r in regexes]
 
+    installer_context = create_default_installer_context(verbose=options.verbose)
+    configure_installer_context(installer_context, options)
+    os_name, _ = installer_context.get_os_name_and_version()
     close_keys = []
     close_pkgs = []
     for view_name in sources_loader.get_loadable_views():
@@ -1015,7 +1022,7 @@ def command_search(args, options):
             if options.verbose:
                 print('Skipping non-cached source %s' % view_name)
             continue
-        results_keys, results_pkgs = search_cached_data_source(view, regexes)
+        results_keys, results_pkgs = search_cached_data_source(view, regexes, os_name)
         close_keys.extend(results_keys)
         close_pkgs.extend(results_pkgs)
 
@@ -1042,11 +1049,11 @@ def command_search(args, options):
             sorted_pkgs = list(filter(lambda x: x['error'] == 0, sorted_pkgs))
             has_exact_match = True
     if len(sorted_pkgs) > 0:
-        print('Closest packages:')
+        print('Closest packages [rosdep_key: package_name]:')
         if not has_exact_match and len(sorted_pkgs) > MAX_SEARCH_RESULTS:
             sorted_pkgs = sorted_pkgs[:MAX_SEARCH_RESULTS]
         for pkg in sorted_pkgs:
-            print('  %s: %s [%s]' % (pkg['key'], pkg['pkg'], pkg['os']))
+            print('  %s: %s' % (pkg['key'], pkg['pkg']))
         if not has_exact_match and len(close_pkgs) > MAX_SEARCH_RESULTS:
             print('  [and %d more]' % (len(close_pkgs) - MAX_SEARCH_RESULTS))
         print()
