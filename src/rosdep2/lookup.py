@@ -406,24 +406,18 @@ class RosdepLookup(object):
                     print('resolve_all: resource [%s] requires rosdep keys [%s]' % (resource_name, ', '.join(rosdep_keys)), file=sys.stderr)
                 rosdep_keys = prune_catkin_packages(rosdep_keys, self.verbose)
                 rosdep_keys = prune_skipped_packages(rosdep_keys, self.skipped_keys, self.verbose)
-                for rosdep_key in rosdep_keys:
+                while rosdep_keys:
+                    rosdep_key = rosdep_keys.pop()
+                    # prevent infinite loop
+                    if rosdep_key in depend_graph:
+                        continue
                     try:
                         installer_key, resolution, dependencies = \
                             self.resolve(rosdep_key, resource_name, installer_context)
+                        rosdep_keys.extend(dependencies)
                         depend_graph[rosdep_key]['installer_key'] = installer_key
                         depend_graph[rosdep_key]['install_keys'] = list(resolution)
                         depend_graph[rosdep_key]['dependencies'] = list(dependencies)
-                        while dependencies:
-                            depend_rosdep_key = dependencies.pop()
-                            # prevent infinite loop
-                            if depend_rosdep_key in depend_graph:
-                                continue
-                            installer_key, resolution, more_dependencies = \
-                                self.resolve(depend_rosdep_key, resource_name, installer_context)
-                            dependencies.extend(more_dependencies)
-                            depend_graph[depend_rosdep_key]['installer_key'] = installer_key
-                            depend_graph[depend_rosdep_key]['install_keys'] = list(resolution)
-                            depend_graph[depend_rosdep_key]['dependencies'] = list(more_dependencies)
 
                     except ResolutionError as e:
                         errors[resource_name] = e
