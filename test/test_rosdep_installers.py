@@ -420,10 +420,8 @@ def test_RosdepInstaller_ctor():
     from rosdep2 import create_default_installer_context
     from rosdep2.lookup import RosdepLookup
     from rosdep2.installers import RosdepInstaller
-    lookup = RosdepLookup.create_from_rospkg()
     context = create_default_installer_context()
-    installer = RosdepInstaller(context, lookup)
-    assert lookup == installer.lookup
+    installer = RosdepInstaller(context)
     assert context == installer.installer_context
 
 
@@ -443,7 +441,7 @@ def test_RosdepInstaller_get_uninstalled():
     lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack, sources_loader=sources_loader)
     context = create_default_installer_context()
     context.set_os_override('ubuntu', 'lucid')
-    installer = RosdepInstaller(context, lookup)
+    installer = RosdepInstaller(context)
 
     # in this first test, detect_fn detects everything as installed
     fake_apt = get_fake_apt(lambda x: x)
@@ -455,7 +453,8 @@ def test_RosdepInstaller_get_uninstalled():
                  ['roscpp_fake', 'rospack_fake'],
                  ]
         for test in tests:
-            uninstalled, errors = installer.get_uninstalled(test, verbose)
+            resolutions, errors = lookup.resolve_all(test, context)
+            uninstalled = installer.get_uninstalled(resolutions, verbose)
             assert not uninstalled, uninstalled
             assert not errors, errors
 
@@ -464,12 +463,14 @@ def test_RosdepInstaller_get_uninstalled():
     context.set_installer(APT_INSTALLER, fake_apt)
 
     for verbose in [True, False]:
-        uninstalled, errors = installer.get_uninstalled(['empty'], verbose)
+        resolutions, errors = lookup.resolve_all(['empty'], context)
+        uninstalled = installer.get_uninstalled(resolutions, verbose)
         assert not uninstalled, uninstalled
         assert not errors
 
         expected = set(['libltdl-dev', 'libboost1.40-all-dev', 'libtool'])
-        uninstalled, errors = installer.get_uninstalled(['roscpp_fake'], verbose)
+        resolutions, errors = lookup.resolve_all(['roscpp_fake'], context)
+        uninstalled = installer.get_uninstalled(resolutions, verbose)
         keys, values = zip(*uninstalled)
         apt_uninstalled = []
         for k, v in uninstalled:
@@ -480,7 +481,8 @@ def test_RosdepInstaller_get_uninstalled():
         assert not errors
 
         expected = ['libtinyxml-dev']
-        uninstalled, errors = installer.get_uninstalled(['rospack_fake'], verbose)
+        resolutions, errors = lookup.resolve_all(['rospack_fake'], context)
+        uninstalled = installer.get_uninstalled(resolutions, verbose)
         keys, values = zip(*uninstalled)
         apt_uninstalled = []
         for k, v in uninstalled:
@@ -521,21 +523,24 @@ def test_RosdepInstaller_get_uninstalled_unconfigured():
     lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack, sources_loader=sources_loader)
     context = create_default_installer_context()
     context.set_os_override('ubuntu', 'lucid')
-    installer = RosdepInstaller(context, lookup)
+    installer = RosdepInstaller(context)
     # - delete the apt installer
     context.set_installer(APT_INSTALLER, None)
 
     for verbose in [True, False]:
-        uninstalled, errors = installer.get_uninstalled(['empty'], verbose)
+        resolutions, errors = lookup.resolve_all(['empty'], context)
+        uninstalled = installer.get_uninstalled(resolutions, verbose)
         assert not uninstalled, uninstalled
         assert not errors
 
         # make sure there is an error when we lookup something that resolves to an apt depend
-        uninstalled, errors = installer.get_uninstalled(['roscpp_fake'], verbose)
+        resolutions, errors = lookup.resolve_all(['roscpp_fake'], context)
+        uninstalled = installer.get_uninstalled(resolutions, verbose)
         assert not uninstalled, uninstalled
         assert list(errors.keys()) == ['roscpp_fake']
 
-        uninstalled, errors = installer.get_uninstalled(['roscpp_fake', 'stack1_p1'], verbose)
+        resolutions, errors = lookup.resolve_all(['roscpp_fake', 'stack1_p1'], context)
+        uninstalled = installer.get_uninstalled(resolutions, verbose)
         assert not uninstalled, uninstalled
         assert set(errors.keys()) == set(['roscpp_fake', 'stack1_p1'])
         print(errors)
@@ -551,7 +556,8 @@ def test_RosdepInstaller_get_uninstalled_unconfigured():
             raise Exception('deadbeef')
     context.set_installer(APT_INSTALLER, BadInstaller())
     try:
-        installer.get_uninstalled(['roscpp_fake'])
+        resolutions, errors = lookup.resolve_all(['roscpp_fake'], context)
+        installer.get_uninstalled(resolutions)
         assert False, 'should have raised'
     except RosdepInternalError as e:
         assert 'apt' in str(e)
@@ -560,9 +566,10 @@ def test_RosdepInstaller_get_uninstalled_unconfigured():
     lookup = Mock(spec=RosdepLookup)
     lookup.resolve_all.return_value = ([('bad-key', ['stuff'])], [])
 
-    installer = RosdepInstaller(context, lookup)
+    installer = RosdepInstaller(context)
     try:
-        installer.get_uninstalled(['roscpp_fake'])
+        resolutions, errors = lookup.resolve_all(['roscpp_fake'], context)
+        installer.get_uninstalled(resolutions)
         assert False, 'should have raised'
     except RosdepInternalError:
         pass
@@ -598,7 +605,7 @@ def test_RosdepInstaller_install_resolved(mock_geteuid):
     lookup = RosdepLookup.create_from_rospkg(rospack=rospack, rosstack=rosstack, sources_loader=sources_loader)
     context = create_default_installer_context()
     context.set_os_override('ubuntu', 'lucid')
-    installer = RosdepInstaller(context, lookup)
+    installer = RosdepInstaller(context)
 
     with fakeout() as (stdout, stderr):
         installer.install_resolved(APT_INSTALLER, [], simulate=True, verbose=False)
