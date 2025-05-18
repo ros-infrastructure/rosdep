@@ -84,6 +84,10 @@ def get_pip_command():
     return None
 
 
+def in_virtual_environment():
+    return sys.prefix != sys.base_prefix
+
+
 def externally_managed_installable():
     """
     PEP 668 enacted in Python 3.11 blocks pip from working in "externally
@@ -96,6 +100,10 @@ def externally_managed_installable():
 
     # This doesn't affect Python versions before 3.11
     if sys.version_info < (3, 11):
+        return True
+
+    # This doesn't affect Python virtual environments
+    if in_virtual_environment():
         return True
 
     if (
