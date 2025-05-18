@@ -83,6 +83,46 @@ def test_PipInstaller_handles_externally_managed_environment(externally_managed_
     assert installer.get_install_command(['whatever'], interactive=False)
 
 
+@patch('sys.version_info', new=(3, 11))
+@patch.dict(os.environ, {'PIP_BREAK_SYSTEM_PACKAGES': '0'})
+def test_externally_managed_installable():
+    from rosdep2.platforms.pip import externally_managed_installable
+    assert externally_managed_installable() is False
+
+    @patch('sys.version_info', new=(3, 10))
+    def test_last_exempt_version():
+        assert externally_managed_installable()
+
+    @patch.dict(os.environ, {'PIP_BREAK_SYSTEM_PACKAGES': '1'})
+    def test_break_system_packages_env_var():
+        assert externally_managed_installable()
+
+    from configparser import ConfigParser
+    from pathlib import Path
+
+    @patch.object(ConfigParser, 'read')
+    @patch.object(ConfigParser, 'getboolean')
+    @patch.dict(os.environ, {'XDG_CONFIG_DIRS': '/xdg'})
+    def test_xdg_pip_dot_conf(getboolean, read):
+        getboolean.return_value = True
+        assert externally_managed_installable()
+        read.assert_called_once_with(Path('/xdg/pip/pip.conf'))
+        getboolean.assert_called_once_with('install', 'break-system-packages', fallback=False)
+
+    @patch.object(ConfigParser, 'read')
+    @patch.object(ConfigParser, 'getboolean')
+    def test_pip_dot_conf(getboolean, read):
+        getboolean.return_value = True
+        assert externally_managed_installable()
+        read.assert_called_once_with(Path('/etc/pip.conf'))
+        getboolean.assert_called_once_with('install', 'break-system-packages', fallback=False)
+
+    test_last_exempt_version()
+    test_break_system_packages_env_var()
+    test_xdg_pip_dot_conf()
+    test_pip_dot_conf()
+
+
 @patch.dict(os.environ, {'PIP_BREAK_SYSTEM_PACKAGES': '1'})
 def test_PipInstaller():
     from rosdep2 import InstallFailed
