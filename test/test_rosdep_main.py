@@ -286,14 +286,14 @@ class TestRosdepMain(unittest.TestCase):
 
         try:
             with fakeout() as b:
-                rosdep_main(['search', 'curl'] + cmd_extras)
+                rosdep_main(['search', 'curl', '--os=debian:squeeze'] + cmd_extras)
                 stdout, stderr = b
                 assert 'Closest keys' in stdout.getvalue(), stdout.getvalue()
                 assert 'curl' in stdout.getvalue(), stdout.getvalue()
                 assert 'Closest packages' not in stdout.getvalue(), stdout.getvalue()
                 assert not stderr.getvalue(), stderr.getvalue()
             with fakeout() as b:
-                rosdep_main(['search', 'libeigen3-dev'] + cmd_extras)
+                rosdep_main(['search', 'libeigen3-dev', '--os=ubuntu:noble'] + cmd_extras)
                 stdout, stderr = b
                 assert 'Closest keys' not in stdout.getvalue(), stdout.getvalue()
                 assert 'Closest packages' in stdout.getvalue(), stdout.getvalue()
@@ -301,6 +301,11 @@ class TestRosdepMain(unittest.TestCase):
                 assert not stderr.getvalue(), stderr.getvalue()
         except SystemExit:
             assert False, 'system exit occurred'
+        try:
+            rosdep_main(['search', 'libeigen3-dev', '--os=debian:squeeze'] + cmd_extras)
+            assert False, 'system exit should have occurred'
+        except SystemExit:
+            pass
         try:
             rosdep_main(['search', 'nonexistent'] + cmd_extras + ['-i'])
             assert False, 'system exit should have occurred'
