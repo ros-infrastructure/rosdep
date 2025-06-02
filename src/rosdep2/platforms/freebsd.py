@@ -49,7 +49,7 @@ def register_platforms(context):
 
 
 def pkg_detect_single(p, exec_fn):
-    if p == "builtin":
+    if p == 'builtin':
         return True
 
     cmd = ['/usr/sbin/pkg', 'query', '%n', p]

@@ -27,21 +27,37 @@
 
 # Author Tully Foote/tfoote@willowgarage.com
 
-from __future__ import print_function
-
 import os
-import pkg_resources
 import subprocess
 import sys
 
 from packaging.requirements import Requirement
 from packaging.version import InvalidVersion, parse
+from configparser import ConfigParser
+from pathlib import Path
+
+try:
+    import importlib.metadata as importlib_metadata
+except ImportError:
+    import importlib_metadata
+
 from ..core import InstallFailed
 from ..installers import PackageManagerInstaller
 from ..shell_utils import read_stdout
 
 # pip package manager key
 PIP_INSTALLER = 'pip'
+
+EXTERNALLY_MANAGED_EXPLAINER = """
+rosdep installation of pip packages requires installing packages globally as root.
+When using Python >= 3.11, PEP 668 compliance requires you to allow pip to install alongside
+externally managed packages using the 'break-system-packages' option.
+The recommeded way to set this option when using rosdep is to set the environment variable
+PIP_BREAK_SYSTEM_PACKAGES=1
+in your environment.
+
+For more information refer to http://docs.ros.org/en/independent/api/rosdep/html/pip_and_pep_668.html
+"""
 
 
 def register_installers(context):
@@ -68,6 +84,45 @@ def get_pip_command():
     if is_cmd_available(cmd):
         return cmd
     return None
+
+
+def externally_managed_installable():
+    """
+    PEP 668 enacted in Python 3.11 blocks pip from working in "externally
+    managed" environments such as operating systems with included package
+    managers. If we're on Python 3.11 or greater, we need to check that pip
+    is configured to allow installing system-wide packages with the
+    flagrantly named "break system packages" config option or environment
+    variable.
+    """
+
+    # This doesn't affect Python versions before 3.11
+    if sys.version_info < (3, 11):
+        return True
+
+    if (
+            'PIP_BREAK_SYSTEM_PACKAGES' in os.environ and
+            os.environ['PIP_BREAK_SYSTEM_PACKAGES'].lower() in ('yes', '1', 'true')
+    ):
+        return True
+
+    # Check the same configuration directories as pip does per
+    # https://pip.pypa.io/en/stable/topics/configuration/
+    pip_config = ConfigParser()
+    if 'XDG_CONFIG_DIRS' in os.environ:
+        for xdg_dir in os.environ['XDG_CONFIG_DIRS'].split(':'):
+            pip_config_file = Path(xdg_dir) / 'pip' / 'pip.conf'
+            pip_config.read(pip_config_file)
+            if pip_config.getboolean('install', 'break-system-packages', fallback=False):
+                return True
+
+    fallback_config = Path('/etc/pip.conf')
+    pip_config.read(fallback_config)
+    if pip_config.getboolean('install', 'break-system-packages', fallback=False):
+        return True
+    # On Python 3.11 and later, when no explicit configuration is present,
+    # global pip installation will not work.
+    return False
 
 
 def is_cmd_available(cmd):
@@ -168,9 +223,14 @@ class PipInstaller(PackageManagerInstaller):
     def __init__(self):
         super(PipInstaller, self).__init__(pip_detect, supports_depends=True)
 
+        # Pass necessary environment for pip functionality via sudo
+        if self.as_root and self.sudo_command != '':
+            self.sudo_command += ' --preserve-env=PIP_BREAK_SYSTEM_PACKAGES'
+
     def get_version_strings(self):
-        pip_version = pkg_resources.get_distribution('pip').version
-        setuptools_version = pkg_resources.get_distribution('setuptools').version
+        pip_version = importlib_metadata.version('pip')
+        # keeping the name "setuptools" for backward compatibility
+        setuptools_version = importlib_metadata.version('setuptools')
         version_strings = [
             'pip {}'.format(pip_version),
             'setuptools {}'.format(setuptools_version),
@@ -190,6 +250,8 @@ class PipInstaller(PackageManagerInstaller):
         pip_cmd = get_pip_command()
         if not pip_cmd:
             raise InstallFailed((PIP_INSTALLER, 'pip is not installed'))
+        if not externally_managed_installable():
+            raise InstallFailed((PIP_INSTALLER, EXTERNALLY_MANAGED_EXPLAINER))
         packages = self.get_packages_to_install(resolved, reinstall=reinstall)
         if not packages:
             return []

@@ -30,10 +30,7 @@
 import os
 import sys
 import traceback
-try:
-    from unittest.mock import Mock, patch
-except ImportError:
-    from mock import Mock, patch
+from unittest.mock import Mock, patch
 
 
 def get_test_dir():
@@ -85,6 +82,23 @@ def test_PipInstaller_get_depends():
     assert ['foo'] == installer.get_depends(dict(depends=['foo']))
 
 
+@patch('rosdep2.platforms.pip.externally_managed_installable')
+def test_PipInstaller_handles_externally_managed_environment(externally_managed_installable):
+    from rosdep2 import InstallFailed
+    from rosdep2.platforms.pip import EXTERNALLY_MANAGED_EXPLAINER, PipInstaller
+
+    externally_managed_installable.return_value = False
+    installer = PipInstaller()
+    try:
+        installer.get_install_command(['whatever'])
+        assert False, 'should have raised'
+    except InstallFailed as e:
+        assert e.failures == [('pip', EXTERNALLY_MANAGED_EXPLAINER)]
+    externally_managed_installable.return_value = True
+    assert installer.get_install_command(['whatever'], interactive=False)
+
+
+@patch.dict(os.environ, {'PIP_BREAK_SYSTEM_PACKAGES': '1'})
 def test_PipInstaller():
     from rosdep2 import InstallFailed
     from rosdep2.platforms.pip import PipInstaller
@@ -120,13 +134,23 @@ def test_PipInstaller():
         val = installer.get_install_command(['whatever'], interactive=True)
         assert val == expected, val
     try:
-        with patch('rosdep2.installers.os.geteuid', return_value=1):
-            test(['sudo', '-H'])
-        with patch('rosdep2.installers.os.geteuid', return_value=0):
+        if hasattr(os, 'geteuid'):
+            with patch('rosdep2.installers.os.geteuid', return_value=1):
+                test(['sudo', '-H', '--preserve-env=PIP_BREAK_SYSTEM_PACKAGES'])
+            with patch('rosdep2.installers.os.geteuid', return_value=0):
+                test([])
+        else:
             test([])
     except AssertionError:
         traceback.print_exc()
         raise
+
+
+def test_PipInstaller_get_version_strings():
+    from rosdep2.platforms.pip import PipInstaller
+
+    installer = PipInstaller()
+    assert installer.get_version_strings()
 
 
 def test_get_pip_command():

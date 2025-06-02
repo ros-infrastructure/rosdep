@@ -27,7 +27,6 @@
 
 # Author Tully Foote, Ken Conley
 
-from __future__ import print_function
 import subprocess
 import sys
 
@@ -109,8 +108,8 @@ def register_mx(context):
         print('rosdep detected OS: [%s] aliasing it to: [%s]' %
               (OS_MX, OS_DEBIAN), file=sys.stderr)
         release_info = read_os_release()
-        version = read_os_release()["VERSION"]
-        context.set_os_override(OS_DEBIAN, version[version.find("(") + 1:version.find(")")])
+        version = read_os_release()['VERSION']
+        context.set_os_override(OS_DEBIAN, version[version.find('(') + 1:version.find(')')])
 
 
 def register_pop(context):
@@ -240,13 +239,13 @@ def dpkg_detect(pkgs, exec_fn=None):
             version_lock_map[p.split('=')[0]] = p
         else:
             version_lock_map[p] = p
-    cmd = ['dpkg-query', '-W', '-f=\'${Package} ${Status}\n\'']
+    cmd = ['dpkg-query', '-W', "-f='${Package} ${Status}\n'"]
     cmd.extend(version_lock_map.keys())
 
     if exec_fn is None:
         exec_fn = read_stdout
     std_out, std_err = exec_fn(cmd, True)
-    std_out = std_out.replace('\'', '')
+    std_out = std_out.replace("'", '')
     pkg_list = std_out.split('\n')
     for pkg in pkg_list:
         pkg_row = pkg.split()

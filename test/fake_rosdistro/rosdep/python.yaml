@@ -1,0 +1,5 @@
+---
+python:
+  ubuntu: [python-dev]
+python-mock:
+  ubuntu: [python-mock]

@@ -30,10 +30,7 @@
 
 import os
 import traceback
-try:
-    from unittest.mock import patch, Mock
-except ImportError:
-    from mock import patch, Mock
+from unittest.mock import patch, Mock
 
 
 def get_test_dir():
@@ -72,9 +69,12 @@ def test_PkgInstaller():
         val = installer.get_install_command(['whatever'], interactive=True)
         assert val == expected, val
     try:
-        with patch('rosdep2.installers.os.geteuid', return_value=1):
-            test(['sudo', '-H'])
-        with patch('rosdep2.installers.os.geteuid', return_value=0):
+        if hasattr(os, 'geteuid'):
+            with patch('rosdep2.installers.os.geteuid', return_value=1):
+                test(['sudo', '-H'])
+            with patch('rosdep2.installers.os.geteuid', return_value=0):
+                test([])
+        else:
             test([])
     except AssertionError:
         traceback.print_exc()

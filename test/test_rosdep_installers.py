@@ -25,13 +25,9 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from __future__ import print_function
-
 from contextlib import contextmanager
-try:
-    from unittest.mock import Mock, patch
-except ImportError:
-    from mock import Mock, patch
+from unittest import SkipTest
+from unittest.mock import Mock, patch
 import os
 import sys
 try:
@@ -613,9 +609,12 @@ def test_RosdepInstaller_install_resolved(mock_geteuid):
         try:
             installer.install_resolved(APT_INSTALLER, ['rosdep-fake1', 'rosdep-fake2'], simulate=True, verbose=True)
         except OSError as e:
-            if str(e).count('[Errno 2] No such file or directory') == 0:
+            if not any(msg in str(e) for msg in (
+                '[Errno 2] No such file or directory',
+                '[WinError 2] The system cannot find the file specified',
+            )):
                 raise
-            return True
+            raise SkipTest('targets ubuntu systems only')
     stdout_lines = [x.strip() for x in stdout.getvalue().split('\n') if x.strip()]
     assert len(stdout_lines) == 3
     assert stdout_lines[0] == '#[apt] Installation commands:'

@@ -27,7 +27,6 @@
 
 # Author Tully Foote/tfoote@willowgarage.com
 
-from __future__ import print_function
 import subprocess
 import sys
 
@@ -141,7 +140,7 @@ def rpm_expand_py(macro):
     if '%' not in macro:
         return macro
     expanded = rpm.expandMacro(macro)
-    rd_debug('Expanded rpm macro in \'%s\' to \'%s\'' % (macro, expanded))
+    rd_debug("Expanded rpm macro in '%s' to '%s'" % (macro, expanded))
     return expanded
 
 
@@ -154,7 +153,7 @@ def rpm_expand_cmd(macro, exec_fn=None):
         exec_fn = read_stdout
 
     expanded = exec_fn(cmd).strip()
-    rd_debug('Expanded rpm macro in \'%s\' to \'%s\'' % (macro, expanded))
+    rd_debug("Expanded rpm macro in '%s' to '%s'" % (macro, expanded))
     return expanded
 
 

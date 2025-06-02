@@ -34,15 +34,11 @@ except ImportError:
     from io import StringIO
 
 import rospkg
-import rospkg.os_detect
 
 import unittest
+from unittest.mock import DEFAULT, patch
 
-try:
-    from unittest.mock import DEFAULT, patch
-except ImportError:
-    from mock import DEFAULT, patch
-
+from rosdep2 import create_default_installer_context
 from rosdep2 import main
 from rosdep2.ament_packages import AMENT_PREFIX_PATH_ENV_VAR
 from rosdep2.main import rosdep_main
@@ -136,8 +132,8 @@ class TestRosdepMain(unittest.TestCase):
             stdout, stderr = b
             assert stdout.getvalue().strip() == 'All system dependencies have been satisfied', stdout.getvalue()
         try:
-            osd = rospkg.os_detect.OsDetect()
-            override = '%s:%s' % (osd.get_name(), osd.get_codename())
+            context = create_default_installer_context()
+            override = '%s:%s' % context.get_os_name_and_version()
             with fakeout() as b:
                 rosdep_main(['check', 'python_dep', '--os', override] + cmd_extras)
                 stdout, stderr = b
@@ -172,9 +168,9 @@ class TestRosdepMain(unittest.TestCase):
                 result = ''
             elif cmd[0] == 'dpkg-query':
                 if cmd[-1] == 'python3-dev':
-                    result = '\'python3-dev install ok installed\n\''
+                    result = "'python3-dev install ok installed\n'"
                 else:
-                    result = '\n'.join(["dpkg-query: no packages found matching %s" % f for f in cmd[3:]])
+                    result = '\n'.join(['dpkg-query: no packages found matching %s' % f for f in cmd[3:]])
 
             if capture_stderr:
                 return result, ''

@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import os
 import sys
 
@@ -21,7 +19,6 @@ def find_catkin_packages_in(path, verbose=False):
     :returns: a list of packages in a given directory
     :raises: OSError if the path doesn't exist
     """
-    global _catkin_packages_cache
     if not os.path.exists(path):
         raise OSError("given path '{0}' does not exist".format(path))
     if verbose:
@@ -33,7 +30,7 @@ def find_catkin_packages_in(path, verbose=False):
             print('found in cache.', file=sys.stderr)
         return _catkin_packages_cache[path]
     packages = find_packages(path)
-    if type(packages) == dict and packages != {}:
+    if type(packages) is dict and packages != {}:
         package_names = [package.name for package in packages.values()]
         if verbose:
             print('found ' + str(len(packages)) + ' packages.')
@@ -53,5 +50,4 @@ def set_workspace_packages(packages):
 
 
 def get_workspace_packages():
-    global _catkin_workspace_packages
     return _catkin_workspace_packages

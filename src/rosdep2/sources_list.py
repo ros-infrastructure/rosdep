@@ -27,8 +27,6 @@
 
 # Author Ken Conley/kwc@willowgarage.com
 
-from __future__ import print_function
-
 import os
 import sys
 import yaml
@@ -76,18 +74,20 @@ CACHE_INDEX = 'index'
 SOURCE_PATH_ENV = 'ROSDEP_SOURCE_PATH'
 
 
-def get_sources_list_dirs(source_list_dir):
+def get_sources_list_dirs(source_list_dir, strip_missing_dirs=True):
     if SOURCE_PATH_ENV in os.environ:
         sdirs = os.environ[SOURCE_PATH_ENV].split(os.pathsep)
     else:
         sdirs = [source_list_dir]
+    if not strip_missing_dirs:
+        return sdirs
     for p in list(sdirs):
         if not os.path.exists(p):
             sdirs.remove(p)
     return sdirs
 
 
-def get_sources_list_dir():
+def get_sources_list_dir(strip_missing_dirs=True):
     # base of where we read config files from
     # TODO: windows
     if 0:
@@ -97,7 +97,7 @@ def get_sources_list_dir():
         etc_ros = '/etc/ros'
     # compute default system wide sources directory
     sys_sources_list_dir = os.path.join(etc_ros, 'rosdep', SOURCES_LIST_DIR)
-    sources_list_dirs = get_sources_list_dirs(sys_sources_list_dir)
+    sources_list_dirs = get_sources_list_dirs(sys_sources_list_dir, strip_missing_dirs)
     if sources_list_dirs:
         return sources_list_dirs[0]
     else:
@@ -142,7 +142,7 @@ class DataSource(object):
         parsed = urlparse.urlparse(url)
         if not parsed.scheme or (parsed.scheme != 'file' and not parsed.netloc) or parsed.path in ('', '/'):
             raise ValueError('url must be a fully-specified URL with scheme, hostname, and path: %s' % (str(url)))
-        if not type(tags) == list:
+        if not type(tags) is list:
             raise ValueError('tags must be a list: %s' % (str(tags)))
 
         self.type = type_
@@ -229,8 +229,8 @@ class CachedDataSource(object):
     def __repr__(self):
         return repr((self.type, self.url, self.tags, self.rosdep_data, self.origin))
 
-    @property
-    def type(self):
+    @property  # noqa: A003
+    def type(self):  # noqa: A003
         """
         :returns: data source type
         """
@@ -302,7 +302,7 @@ def download_rosdep_data(url):
         text = f.read()
         f.close()
         data = yaml.safe_load(text)
-        if type(data) != dict:
+        if type(data) is not dict:
             raise DownloadFailure('rosdep data from [%s] is not a YAML dictionary' % (url))
         return data
     except (URLError, httplib.HTTPException) as e:
@@ -482,6 +482,12 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
     # Additional sources for ros distros
     # In compliance with REP137 and REP143
     python_versions = {}
+    ros_versions = {}
+
+    ros_version_map = {
+        'ros1': '1',
+        'ros2': '2',
+    }
 
     if not quiet:
         print('Query rosdistro index %s' % get_index_url())
@@ -506,9 +512,13 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
             print('Add distro "%s"' % dist_name)
         rds = RosDistroSource(dist_name)
         rosdep_data = get_gbprepo_as_rosdep_data(dist_name)
-        # Store Python version from REP153
+        # Store metadata from REP153
         if distribution.get('python_version'):
             python_versions[dist_name] = distribution.get('python_version')
+        if distribution.get('distribution_type'):
+            distribution_type = distribution.get('distribution_type')
+            if distribution_type in ros_version_map:
+                ros_versions[dist_name] = ros_version_map[distribution_type]
         # dist_files can either be a string (single filename) or a list (list of filenames)
         dist_files = distribution['distribution']
         key = _generate_key_from_urls(dist_files)
@@ -516,7 +526,9 @@ def update_sources_list(sources_list_dir=None, sources_cache_dir=None,
         sources.append(rds)
 
     # cache metadata that isn't a source list
-    MetaDatabase().set('ROS_PYTHON_VERSION', python_versions)
+    meta_db = MetaDatabase()
+    meta_db.set('ROS_PYTHON_VERSION', python_versions)
+    meta_db.set('ROS_VERSION', ros_versions)
 
     # Create a combined index of *all* the sources.  We do all the
     # sources regardless of failures because a cache from a previous
@@ -635,7 +647,7 @@ class SourcesListLoader(RosdepLoader):
         if view_name != SourcesListLoader.ALL_VIEW_KEY:
             # if the view_name matches one of our sources, return
             # empty list as none of our sources has deps.
-            if any([x for x in self.sources if view_name == x.url]):
+            if any(x for x in self.sources if view_name == x.url):
                 return []
 
         # not one of our views, so it depends on everything we provide

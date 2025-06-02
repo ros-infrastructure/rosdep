@@ -31,10 +31,7 @@
 
 import os
 import traceback
-try:
-    from unittest.mock import Mock, patch
-except ImportError:
-    from mock import Mock, patch
+from unittest.mock import Mock, patch
 
 
 def get_test_dir():
@@ -91,7 +88,7 @@ def test_NpmInstaller():
 
     @patch('rosdep2.platforms.npm.is_npm_installed')
     @patch.object(NpmInstaller, 'get_packages_to_install')
-    def test(mock_method, mock_is_npm_installed):
+    def test(expected_prefix, mock_method, mock_is_npm_installed):
         mock_is_npm_installed.return_value = True
         installer = NpmInstaller()
         mock_method.return_value = []
@@ -99,12 +96,12 @@ def test_NpmInstaller():
 
         # no interactive option with NPM
         mock_method.return_value = ['a', 'b']
-        expected = [['sudo', '-H', 'npm', 'install', '-g', 'a'],
-                    ['sudo', '-H', 'npm', 'install', '-g', 'b']]
+        expected = [expected_prefix + ['npm', 'install', '-g', 'a'],
+                    expected_prefix + ['npm', 'install', '-g', 'b']]
         val = installer.get_install_command(['whatever'], interactive=False)
         assert val == expected, val
-        expected = [['sudo', '-H', 'npm', 'install', '-g', 'a'],
-                    ['sudo', '-H', 'npm', 'install', '-g', 'b']]
+        expected = [expected_prefix + ['npm', 'install', '-g', 'a'],
+                    expected_prefix + ['npm', 'install', '-g', 'b']]
         val = installer.get_install_command(['whatever'], interactive=True)
         assert val == expected, val
 
@@ -119,7 +116,13 @@ def test_NpmInstaller():
         val = installer.get_install_command(['whatever'], interactive=True)
         assert val == expected, val
     try:
-        test()
+        if hasattr(os, 'geteuid'):
+            with patch('rosdep2.installers.os.geteuid', return_value=1):
+                test(['sudo', '-H'])
+            with patch('rosdep2.installers.os.geteuid', return_value=0):
+                test([])
+        else:
+            test([])
     except AssertionError:
         traceback.print_exc()
         raise

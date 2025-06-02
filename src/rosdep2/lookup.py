@@ -27,8 +27,6 @@
 
 # Author Tully Foote/tfoote@willowgarage.com, Ken Conley/kwc@willowgarage.com
 
-from __future__ import print_function
-
 import sys
 import yaml
 
@@ -102,12 +100,12 @@ class RosdepDefinition(object):
         queried_os = os_name
         queried_ver = os_version
 
-        if type(data) != dict:
+        if type(data) is not dict:
             raise InvalidData('rosdep value for [%s] must be a dictionary' % (self.rosdep_key), origin=self.origin)
         if os_name not in data:
             if '*' not in data:
                 raise ResolutionError(rosdep_key, data, queried_os, queried_ver, 'No definition of [%s] for OS [%s]' % (rosdep_key, os_name))
-            elif type(data['*']) != dict:
+            elif type(data['*']) is not dict:
                 raise InvalidData('rosdep value under OS wildcard for [%s] must specify a package manager' % (rosdep_key))
             os_name = '*'
         data = data[os_name]
@@ -116,7 +114,7 @@ class RosdepDefinition(object):
         # REP 111: rosdep first interprets the key as a
         # PACKAGE_MANAGER. If this test fails, it will be interpreted
         # as an OS_VERSION_CODENAME.
-        if type(data) == dict:
+        if type(data) is dict:
             for installer_key in installer_keys:
                 if installer_key in data:
                     data = data[installer_key]
@@ -124,7 +122,7 @@ class RosdepDefinition(object):
                     break
             else:
                 # data must be a dictionary, string, or list
-                if type(data) == dict:
+                if type(data) is dict:
                     # check for
                     #   hardy:
                     #     apt:
@@ -143,7 +141,7 @@ class RosdepDefinition(object):
                     if os_version not in data:
                         os_version = '*'
                     data = data[os_version]
-                    if type(data) == dict:
+                    if type(data) is dict:
                         for installer_key in installer_keys:
                             if installer_key in data:
                                 data = data[installer_key]

@@ -31,8 +31,6 @@
 Command-line interface to rosdep library
 """
 
-from __future__ import print_function
-
 import errno
 import os
 import sys
@@ -65,9 +63,9 @@ from .installers import RosdepInstaller
 from .lookup import RosdepLookup, ResolutionError, prune_catkin_packages
 from .meta import MetaDatabase
 from .rospkg_loader import DEFAULT_VIEW_KEY
-from .sources_list import update_sources_list, get_sources_cache_dir,\
-    download_default_sources_list, SourcesListLoader, CACHE_INDEX,\
-    get_sources_list_dir, get_default_sources_list_file,\
+from .sources_list import update_sources_list, get_sources_cache_dir, \
+    download_default_sources_list, SourcesListLoader, CACHE_INDEX, \
+    get_sources_list_dir, get_default_sources_list_file, \
     DEFAULT_SOURCES_LIST_URL
 from .rosdistrohelper import PreRep137Warning
 
@@ -286,6 +284,12 @@ def setup_environment_variables(ros_distro):
                 del os.environ['ROS_PYTHON_VERSION']
         os.environ['ROS_DISTRO'] = ros_distro
 
+    if 'ROS_VERSION' not in os.environ and 'ROS_DISTRO' in os.environ:
+        # Set ROS version to version used by ROS distro
+        ros_versions = MetaDatabase().get('ROS_VERSION', default=[])
+        if os.environ['ROS_DISTRO'] in ros_versions:
+            os.environ['ROS_VERSION'] = str(ros_versions[os.environ['ROS_DISTRO']])
+
     if 'ROS_PYTHON_VERSION' not in os.environ and 'ROS_DISTRO' in os.environ:
         # Set python version to version used by ROS distro
         python_versions = MetaDatabase().get('ROS_PYTHON_VERSION', default=[])
@@ -374,7 +378,7 @@ def _rosdep_main(args):
                            'If specified end-of-life distros are being '
                            'fetched too.')
     parser.add_option('-t', '--dependency-types', dest='dependency_types',
-                      type="choice", choices=list(VALID_DEPENDENCY_TYPES),
+                      type='choice', choices=list(VALID_DEPENDENCY_TYPES),
                       default=[], action='append',
                       help='Dependency types to install, can be given multiple times. '
                            'Choose from {}. Default: all except doc.'.format(VALID_DEPENDENCY_TYPES))
@@ -597,17 +601,19 @@ def command_init(options):
         data = download_default_sources_list()
     except URLError as e:
         print('ERROR: cannot download default sources list from:\n%s\nWebsite may be down.' % (DEFAULT_SOURCES_LIST_URL), file=sys.stderr)
+        print(e, file=sys.stderr)
         return 4
     except DownloadFailure as e:
         print('ERROR: cannot download default sources list from:\n%s\nWebsite may be down.' % (DEFAULT_SOURCES_LIST_URL), file=sys.stderr)
         print(e, file=sys.stderr)
         return 4
     # reuse path variable for error message
-    path = get_sources_list_dir()
+    path = get_sources_list_dir(strip_missing_dirs=False)
     old_umask = os.umask(0o022)
     try:
         if not os.path.exists(path):
             os.makedirs(path)
+        # Here path goes from directory name to file for more specific error message
         path = get_default_sources_list_file()
         if os.path.exists(path):
             print('ERROR: default sources list file already exists:\n\t%s\nPlease delete if you wish to re-initialize' % (path), file=sys.stderr)
@@ -728,6 +734,8 @@ def command_check(lookup, packages, options):
                 print('ERROR[%s]: %s' % (package_name, ex), file=sys.stderr)
     if uninstalled:
         return 1
+    elif errors:
+        return 2
     else:
         return 0
 
