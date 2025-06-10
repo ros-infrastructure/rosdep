@@ -83,13 +83,13 @@ def test_PipInstaller_handles_externally_managed_environment(externally_managed_
     assert installer.get_install_command(['whatever'], interactive=False)
 
 
-@patch('sys.version_info', new=(3, 11))
+@patch('rosdep2.platforms.pip.sys.version_info', new=(3, 11))
 @patch.dict(os.environ, {'PIP_BREAK_SYSTEM_PACKAGES': '0'})
 def test_externally_managed_installable():
     from rosdep2.platforms.pip import externally_managed_installable
     assert externally_managed_installable() is False
 
-    @patch('sys.version_info', new=(3, 10))
+    @patch('rosdep2.platforms.pip.sys.version_info', new=(3, 10))
     def test_last_exempt_version():
         assert externally_managed_installable()
 
