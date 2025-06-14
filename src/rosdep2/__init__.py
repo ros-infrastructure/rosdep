@@ -66,11 +66,12 @@ def create_default_installer_context(verbose=False):
     from .platforms import npm
     from .platforms import gem
     from .platforms import redhat
+    from .platforms import conda
     from .platforms import freebsd
     from .platforms import slackware
     from .platforms import source
 
-    platform_mods = [alpine, arch, cygwin, debian, gentoo, nix, openembedded, opensuse, osx, redhat, slackware, freebsd]
+    platform_mods = [alpine, arch, cygwin, debian, gentoo, nix, openembedded, opensuse, osx, redhat, conda, slackware, freebsd]
     installer_mods = [source, pip, gem, npm] + platform_mods
 
     context = InstallerContext()
