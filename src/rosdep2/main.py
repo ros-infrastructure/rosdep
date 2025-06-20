@@ -96,11 +96,21 @@ _usage = """usage: rosdep [options] <command> <args>
 
 Commands:
 
+rosdep check <folders>... --from-paths
+  ROS 1 or 2 usage. Check for unmet dependencies of the catkin packages
+  located in the given <folders>.
+
 rosdep check <stacks-and-packages>...
-  check if the dependencies of package(s) have been met.
+  ROS 1 usage. Check if the dependencies of package(s) have been met.
+  Searches workspace for manifest.xml and stack.xml files.
+
+rosdep install <folders>... --from-paths
+  ROS 1 or 2 usage. Download and install the unmet dependencies of the catkin
+  packages located in the given <folders>.
 
 rosdep install <stacks-and-packages>...
-  download and install the dependencies of a given package or packages.
+  ROS 1 usage. Download and install the dependencies of a given package 
+  or packages.
 
 rosdep db
   generate the dependency database and print it to the console.
@@ -108,8 +118,12 @@ rosdep db
 rosdep init
   initialize rosdep sources in /etc/ros/rosdep.  May require sudo.
 
+rosdep keys <folders>... --from-paths
+  ROS 1 or 2 usage. List the dependencies of the catkin packages located in 
+  the given <folders>.
+
 rosdep keys <stacks-and-packages>...
-  list the rosdep keys that the packages depend on.
+  ROS 1 usage. List the rosdep keys that the packages depend on.
 
 rosdep resolve <rosdeps>
   resolve <rosdeps> to system dependencies
@@ -353,10 +367,10 @@ def _rosdep_main(args):
     parser.add_option('--ignore-packages-from-source', '--ignore-src', '-i',
                       dest='ignore_src', default=False, action='store_true',
                       help="Affects the 'check', 'install', and 'keys' verbs. "
-                           'If specified then rosdep will ignore keys that '
-                           'are found to be catkin or ament packages anywhere in the '
-                           'ROS_PACKAGE_PATH, AMENT_PREFIX_PATH or in any of the directories '
-                           'given by the --from-paths option.')
+                           'Causes rosdep to fulfill dependencies not only via installed '
+                           'packages (as normal), but also via the workspace packages '
+                           '(i.e., the catkin and ament packages located in the '
+                           'ROS_PACKAGE_PATH or AMENT_PREFIX_PATH or --from-paths folders).')
     parser.add_option('--skip-keys',
                       dest='skip_keys', action='append', default=[],
                       help="Affects the 'check' and 'install' verbs. The "
@@ -537,7 +551,7 @@ def _package_args_handler(command, parser, options, args):
     # Handle the --ignore-src option
     if command in ['install', 'check', 'keys'] and options.ignore_src:
         if options.verbose:
-            print('Searching ROS_PACKAGE_PATH for '
+            print('--ignore-src: Searching ROS_PACKAGE_PATH for '
                   'sources: ' + str(os.environ['ROS_PACKAGE_PATH'].split(os.pathsep)))
         ws_pkgs = get_workspace_packages()
         for path in os.environ['ROS_PACKAGE_PATH'].split(os.pathsep):
@@ -553,10 +567,13 @@ def _package_args_handler(command, parser, options, args):
         if AMENT_PREFIX_PATH_ENV_VAR in os.environ:
             if options.verbose:
                 print(
-                    'Searching ' + AMENT_PREFIX_PATH_ENV_VAR + ' for '
+                    '--ignore-src: Searching ' + AMENT_PREFIX_PATH_ENV_VAR + ' for '
                     'sources: ' + str(os.environ[AMENT_PREFIX_PATH_ENV_VAR].split(':')))
             ws_pkgs = get_workspace_packages()
             pkgs = get_packages_with_prefixes().keys()
+            if options.verbose:
+                for package in pkgs:
+                    print('    {0}'.format(package))
             ws_pkgs.extend(pkgs)
             # Make packages list unique
             ws_pkgs = list(set(ws_pkgs))

@@ -22,12 +22,12 @@ def find_catkin_packages_in(path, verbose=False):
     if not os.path.exists(path):
         raise OSError("given path '{0}' does not exist".format(path))
     if verbose:
-        print("Looking for packages in '{0}'... ".format(path),
-              end='', file=sys.stderr)
+        print("Looking for catkin packages in '{0}'... ".format(path),
+              end='')
     path = os.path.abspath(path)
     if path in _catkin_packages_cache:
         if verbose:
-            print('found in cache.', file=sys.stderr)
+            print('found in cache.')
         return _catkin_packages_cache[path]
     packages = find_packages(path)
     if type(packages) is dict and packages != {}:
@@ -40,7 +40,7 @@ def find_catkin_packages_in(path, verbose=False):
         return package_names
     else:
         if verbose:
-            print('failed to find packages.', file=sys.stderr)
+            print('failed to find packages.')
         return []
 
 
