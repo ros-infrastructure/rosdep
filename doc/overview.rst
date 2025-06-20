@@ -71,10 +71,10 @@ Common installation workflow::
 
     $ rosdep check ros_comm
     All system dependencies have been satisfied
-    $ rosdep install geometry
+    $ rosdep install geometry --rosdistro=rolling
 
 If you're worried about ``rosdep install`` bringing in system
-dependencies you don't want, you can run ``rosdep install -s <args>``
+dependencies you don't want, you can run ``rosdep install --rosdistro=<version>-s <args>``
 instead to "simulate" the installation.  You will be able to see the
 commands that rosdep would have run.
 
