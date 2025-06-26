@@ -1,3 +1,18 @@
+0.26.0 (2025-06-26)
+-------------------
+- Add search command for rosdep keys.
+  - https://github.com/ros-infrastructure/rosdep/issues/997
+- Remove unecessary global declarations.
+  - https://github.com/ros-infrastructure/rosdep/issues/1004
+- Update overview.rst to include search option.
+  - https://github.com/ros-infrastructure/rosdep/issues/1002
+- Use rosdep's reported platform for testing OS override.
+  - https://github.com/ros-infrastructure/rosdep/issues/996
+- Switch to supported mechanism to skip an unwanted test.
+  - https://github.com/ros-infrastructure/rosdep/issues/995
+- Ignore egg-info directories wherever they are found.
+  - https://github.com/ros-infrastructure/rosdep/issues/985
+
 0.25.1 (2024-08-22)
 -------------------
 - Update release environment to avoid using pkg_resources on later platforms.
