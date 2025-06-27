@@ -204,7 +204,11 @@ def brew_detect(resolved, exec_fn=None):
             pkg_info = pkg_info[0]
             linked_version = pkg_info['linked_keg']
             if not linked_version:
-                return False
+                keg_only = pkg_info['keg_only']
+                if keg_only:
+                    return True
+                else:
+                    return False
             for spec in pkg_info['installed']:
                 if spec['version'] == linked_version:
                     installed_options = spec['used_options']
