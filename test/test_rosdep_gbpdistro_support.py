@@ -77,7 +77,7 @@ def test_download_gbpdistro_as_rosdep_data():
     from rosdep2.gbpdistro_support import FUERTE_GBPDISTRO_URL
     from rosdep2.rep3 import REP3_TARGETS_URL
     from rosdep2 import DownloadFailure
-    data = download_gbpdistro_as_rosdep_data(FUERTE_GBPDISTRO_URL)
+    data = download_gbpdistro_as_rosdep_data(FUERTE_GBPDISTRO_URL, 15.0)
     # don't go beyond this, this test is just making sure the download
     # plumbing is correct, not the loader.
     for k in ['ros', 'catkin', 'genmsg']:
@@ -89,13 +89,14 @@ def test_download_gbpdistro_as_rosdep_data():
         # override targets URL with bad URL
         download_gbpdistro_as_rosdep_data(
             FUERTE_GBPDISTRO_URL,
+            15.0,
             targets_url='http://bad.ros.org/foo.yaml')
         assert False, 'should have raised'
     except DownloadFailure:
         pass
     try:
         # use targets URL, which should have a bad format
-        download_gbpdistro_as_rosdep_data(REP3_TARGETS_URL)
+        download_gbpdistro_as_rosdep_data(REP3_TARGETS_URL, 15.0)
         assert False, 'should have raised'
     except DownloadFailure:
         pass
