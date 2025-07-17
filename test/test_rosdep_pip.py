@@ -212,6 +212,7 @@ def test_get_pip_command():
             return False
         return True
 
+    @patch('rosdep2.platforms.pip.sys.executable', 'python3')
     @patch('rosdep2.platforms.pip.is_cmd_available', new=fake_is_cmd_available)
     def test_python2_or_python3():
 
