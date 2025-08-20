@@ -84,6 +84,7 @@ def test_PipInstaller_handles_externally_managed_environment(externally_managed_
 
 
 @patch('rosdep2.platforms.pip.sys.version_info', new=(3, 11))
+@patch('rosdep2.platforms.pip.sys.prefix', sys.base_prefix)
 @patch.dict(os.environ, {'PIP_BREAK_SYSTEM_PACKAGES': '0'})
 def test_externally_managed_installable():
     from rosdep2.platforms.pip import externally_managed_installable
@@ -91,6 +92,10 @@ def test_externally_managed_installable():
 
     @patch('rosdep2.platforms.pip.sys.version_info', new=(3, 10))
     def test_last_exempt_version():
+        assert externally_managed_installable()
+
+    @patch('rosdep2.platforms.pip.sys.base_prefix', new='/some/other/path')
+    def test_virtual_environment():
         assert externally_managed_installable()
 
     @patch.dict(os.environ, {'PIP_BREAK_SYSTEM_PACKAGES': '1'})
@@ -118,6 +123,7 @@ def test_externally_managed_installable():
         getboolean.assert_called_once_with('install', 'break-system-packages', fallback=False)
 
     test_last_exempt_version()
+    test_virtual_environment()
     test_break_system_packages_env_var()
     test_xdg_pip_dot_conf()
     test_pip_dot_conf()
