@@ -161,8 +161,16 @@ def test_iterate_packages():
         assert len(results) == len(pkgs), results
 
         with patch('rosdep2.platforms.debian.dpkg_detect') as mock_dpkg_detect:
-            mock_dpkg_detect.return_value = ['libcurl4-openssl-dev', 'libcurl4-nss-dev']  # these libcurl-dev providers are installed
-            assert tuple(_iterate_packages(pkgs, True)) == ('curl', 'wget', '_not_existing', 'libcurl4-openssl-dev', 'libcurl4-nss-dev', 'ros-kinetic-rc-genicam-api')
             assert tuple(_iterate_packages(pkgs, False)) == ('curl', 'wget', '_not_existing',
                                                              ['libcurl4-openssl-dev', 'libcurl4-nss-dev', 'libcurl4-gnutls-dev', 'libcurl4-openssl-dev', 'libcurl4-nss-dev', 'libcurl4-gnutls-dev'],
                                                              'ros-kinetic-rc-genicam-api')
+
+            # reinstall only the virtual packages already installed
+            mock_dpkg_detect.return_value = ['libcurl4-openssl-dev', 'libcurl4-nss-dev']  # these libcurl-dev providers are installed
+            assert tuple(_iterate_packages(pkgs, True)) == ('curl', 'wget', '_not_existing', 'libcurl4-openssl-dev', 'libcurl4-nss-dev', 'ros-kinetic-rc-genicam-api')
+
+            # reinstall all the virtual packages if none are installed
+            mock_dpkg_detect.return_value = []  # these libcurl-dev providers are installed
+            assert tuple(_iterate_packages(pkgs, True)) == ('curl', 'wget', '_not_existing',
+                                                            ['libcurl4-openssl-dev', 'libcurl4-nss-dev', 'libcurl4-gnutls-dev', 'libcurl4-openssl-dev', 'libcurl4-nss-dev', 'libcurl4-gnutls-dev'],
+                                                            'ros-kinetic-rc-genicam-api')
