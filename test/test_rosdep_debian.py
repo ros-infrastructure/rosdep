@@ -141,3 +141,28 @@ def test_AptInstaller():
     except AssertionError:
         traceback.print_exc()
         raise
+
+
+def test_iterate_packages():
+    from rosdep2.platforms.debian import _read_apt_cache_showpkg
+    from rosdep2.platforms.debian import _iterate_packages
+
+    with patch('rosdep2.platforms.debian._read_apt_cache_showpkg') as mock_read_apt_cache_showpkg:
+        m = Mock()
+        with open(os.path.join(get_test_dir(), 'showpkg-curl-wget-libcurl-dev'), 'r') as f:
+            m.return_value = f.read()
+        pkgs = ['curl', 'wget', '_not_existing', 'libcurl-dev', 'ros-kinetic-rc-genicam-api']
+
+        def proxy_read_apt_cache_showpkg(packages):
+            return _read_apt_cache_showpkg(packages, exec_fn=m)
+        mock_read_apt_cache_showpkg.side_effect = proxy_read_apt_cache_showpkg
+
+        results = [*proxy_read_apt_cache_showpkg(pkgs)]
+        assert len(results) == len(pkgs), results
+
+        with patch('rosdep2.platforms.debian.dpkg_detect') as mock_dpkg_detect:
+            mock_dpkg_detect.return_value = ['libcurl4-openssl-dev', 'libcurl4-nss-dev']  # these libcurl-dev providers are installed
+            assert tuple(_iterate_packages(pkgs, True)) == ('curl', 'wget', '_not_existing', 'libcurl4-openssl-dev', 'libcurl4-nss-dev', 'ros-kinetic-rc-genicam-api')
+            assert tuple(_iterate_packages(pkgs, False)) == ('curl', 'wget', '_not_existing',
+                                                             ['libcurl4-openssl-dev', 'libcurl4-nss-dev', 'libcurl4-gnutls-dev', 'libcurl4-openssl-dev', 'libcurl4-nss-dev', 'libcurl4-gnutls-dev'],
+                                                             'ros-kinetic-rc-genicam-api')
