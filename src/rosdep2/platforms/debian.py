@@ -213,7 +213,10 @@ def _read_apt_cache_showpkg(packages, exec_fn=None):
         except StopIteration:
             pass
 
-        pr = [line.split(' ', 2)[0] for line in lines]
+        # Same packages may appear multiple times with different versions.
+        # Because we are discarding the version, we deduplicate the package names
+        # We use a dict to preserve insertion order
+        pr = list({line.split(' ', 2)[0]: None for line in lines})
         if pr:
             yield p, True, pr
         else:
