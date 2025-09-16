@@ -102,7 +102,7 @@ class RosdepDefinition(object):
 
         if type(data) is not dict:
             raise InvalidData('rosdep value for [%s] must be a dictionary' % (self.rosdep_key), origin=self.origin)
-        if os_name not in data:
+        if os_name not in data or (os_version not in data[os_name] and '*' not in data[os_name]):
             if '*' not in data:
                 raise ResolutionError(rosdep_key, data, queried_os, queried_ver, 'No definition of [%s] for OS [%s]' % (rosdep_key, os_name))
             elif type(data['*']) is not dict:
