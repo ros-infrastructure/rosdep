@@ -434,7 +434,7 @@ def test_SourcesListLoader_create_default():
     loader = SourcesListLoader.create_default(matcher, sources_cache_dir=tempdir)
     assert loader.sources
     sources0 = loader.sources
-    assert not any([s for s in loader.sources if not matcher.matches(s)])
+    assert not any(s for s in loader.sources if not matcher.matches(s))
 
     loader = SourcesListLoader.create_default(matcher, sources_cache_dir=tempdir)
     assert sources0 == loader.sources
@@ -445,7 +445,7 @@ def test_SourcesListLoader_create_default():
     assert loader2.sources
     # - should have filtered down to python-only
     assert sources0 != loader2.sources
-    assert not any([s for s in loader2.sources if not matcher2.matches(s)])
+    assert not any(s for s in loader2.sources if not matcher2.matches(s))
 
     # test API
 
@@ -498,8 +498,9 @@ def test_unpickle_same_results():
         import cPickle as pickle
     except ImportError:
         import pickle
-    with open(os.path.join('test', 'fixtures', 'python2cache.pickle'), 'rb') as py2_cache:
+    fixture_dir = os.path.join(os.path.dirname(__file__), 'fixtures')
+    with open(os.path.join(fixture_dir, 'python2cache.pickle'), 'rb') as py2_cache:
         py2_result = pickle.loads(py2_cache.read())
-    with open(os.path.join('test', 'fixtures', 'python3cache.pickle'), 'rb') as py3_cache:
+    with open(os.path.join(fixture_dir, 'python3cache.pickle'), 'rb') as py3_cache:
         py3_result = pickle.loads(py3_cache.read())
     assert py2_result == py3_result

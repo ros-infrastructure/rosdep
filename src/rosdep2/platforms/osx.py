@@ -303,7 +303,7 @@ class HomebrewInstaller(PackageManagerInstaller):
 
             # make sure options is a list of list of strings
             try:
-                valid = all([isinstance(x, _basestring) for option in options for x in option])
+                valid = all(isinstance(x, _basestring) for option in options for x in option)
             except Exception as e:
                 raise InvalidData("Invalid list of options '%s', error: %s" % (options, e))
             else:
@@ -323,7 +323,7 @@ class HomebrewInstaller(PackageManagerInstaller):
         if packages:
             options = []
             install_flags = []
-            if type(rosdep_args) == dict:
+            if type(rosdep_args) is dict:
                 options = coerce_to_list(rosdep_args.get('options', []))
                 install_flags = coerce_to_list(rosdep_args.get('install_flags', []))
 
