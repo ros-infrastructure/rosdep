@@ -5,12 +5,14 @@ except ImportError:
     import urllib.parse as urlparse  # py3k
 import os
 
+from rospkg.os_detect import OS_CONDA
 from rospkg.os_detect import OS_DEBIAN
 from rospkg.os_detect import OS_FEDORA
 from rospkg.os_detect import OS_OSX
 from rospkg.os_detect import OS_UBUNTU
 
 from .core import InvalidData, DownloadFailure
+from .platforms.conda import CONDA_INSTALLER
 from .platforms.debian import APT_INSTALLER
 from .platforms.osx import BREW_INSTALLER
 from .platforms.redhat import YUM_INSTALLER
@@ -161,6 +163,14 @@ def get_gbprepo_as_rosdep_data(gbpdistro):
             homebrew_name = '%s/%s/%s' % (tap, release_name, rosdep_key)
             rosdep_data[pkg][OS_OSX] = {
                 BREW_INSTALLER: {'packages': [homebrew_name]}
+            }
+
+            # Do generation for conda entries
+            # conda package naming follows debian convention: ros-{release}-{package}
+            conda_package_name = 'ros-%s-%s' % (release_name, pkg)
+            conda_package_name = conda_package_name.replace('_', '-')
+            rosdep_data[pkg][OS_CONDA] = {
+                CONDA_INSTALLER: {'packages': [conda_package_name]}
             }
 
             # - package name: underscores must be dashes

@@ -55,6 +55,7 @@ except ImportError:
 def create_default_installer_context(verbose=False):
     from .platforms import alpine
     from .platforms import arch
+    from .platforms import conda
     from .platforms import cygwin
     from .platforms import debian
     from .platforms import gentoo
@@ -70,7 +71,7 @@ def create_default_installer_context(verbose=False):
     from .platforms import slackware
     from .platforms import source
 
-    platform_mods = [alpine, arch, cygwin, debian, gentoo, nix, openembedded, opensuse, osx, redhat, slackware, freebsd]
+    platform_mods = [alpine, arch, conda, cygwin, debian, gentoo, nix, openembedded, opensuse, osx, redhat, slackware, freebsd]
     installer_mods = [source, pip, gem, npm] + platform_mods
 
     context = InstallerContext()
