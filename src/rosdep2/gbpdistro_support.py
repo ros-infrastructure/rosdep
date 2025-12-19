@@ -9,10 +9,12 @@ from rospkg.os_detect import OS_DEBIAN
 from rospkg.os_detect import OS_FEDORA
 from rospkg.os_detect import OS_OSX
 from rospkg.os_detect import OS_UBUNTU
+from rospkg.os_detect import OS_CONDA
 
 from .core import InvalidData, DownloadFailure
 from .platforms.debian import APT_INSTALLER
 from .platforms.osx import BREW_INSTALLER
+from .platforms.conda import CONDA_INSTALLER
 from .platforms.redhat import YUM_INSTALLER
 from .rosdistrohelper import get_targets, get_release_file, PreRep137Warning
 
@@ -166,6 +168,10 @@ def get_gbprepo_as_rosdep_data(gbpdistro):
             # - package name: underscores must be dashes
             package_name = 'ros-%s-%s' % (release_name, pkg)
             package_name = package_name.replace('_', '-')
+
+            rosdep_data[pkg][OS_CONDA] = {
+                CONDA_INSTALLER: {'packages': [package_name]}
+            }
 
             for os_name in distro_file.platforms:
                 if os_name not in rosdep_data[pkg]:
