@@ -64,7 +64,6 @@ def test_dpkg_detect():
         val = dpkg_detect(['apt', 'tinyxml-dev', 'python'])
         assert val == ['apt', 'python'], val
         assert mock_read_stdout.call_count == 2
-        print(mock_read_stdout.call_args_list[0])
         assert mock_read_stdout.call_args_list[1] == call(['apt-cache', 'showpkg', 'tinyxml-dev'])
 
     # test version lock code (should be filtered out w/o validation)
@@ -126,7 +125,6 @@ def test_AptInstaller():
         expected = [expected_prefix + ['apt-get', 'install', '-y', 'a'],
                     expected_prefix + ['apt-get', 'install', '-y', 'b']]
         val = installer.get_install_command(['whatever'], interactive=False)
-        print('VAL', val)
         assert val == expected, val
         expected = [expected_prefix + ['apt-get', 'install', 'a'],
                     expected_prefix + ['apt-get', 'install', 'b']]
@@ -143,3 +141,33 @@ def test_AptInstaller():
     except AssertionError:
         traceback.print_exc()
         raise
+
+
+def test_iterate_packages():
+    from rosdep2.platforms.debian import _read_apt_cache_showpkg
+    from rosdep2.platforms.debian import _iterate_packages
+
+    with patch('rosdep2.platforms.debian._read_apt_cache_showpkg') as mock_read_apt_cache_showpkg:
+        with open(os.path.join(get_test_dir(), 'showpkg-curl-wget-libcurl-dev'), 'r') as f:
+            m = Mock(return_value=f.read())
+
+        mock_read_apt_cache_showpkg.side_effect = lambda pkgs: _read_apt_cache_showpkg(pkgs, exec_fn=m)
+
+        pkgs = ['curl', 'wget', '_not_existing', 'libcurl-dev', 'ros-kinetic-rc-genicam-api']
+        results = [*mock_read_apt_cache_showpkg(pkgs)]
+        assert len(results) == len(pkgs), results
+
+        with patch('rosdep2.platforms.debian.dpkg_detect') as mock_dpkg_detect:
+            assert tuple(_iterate_packages(pkgs, False)) == ('curl', 'wget', '_not_existing',
+                                                             ['libcurl4-openssl-dev', 'libcurl4-nss-dev', 'libcurl4-gnutls-dev'],
+                                                             'ros-kinetic-rc-genicam-api')
+
+            # reinstall only the virtual packages already installed
+            mock_dpkg_detect.return_value = ['libcurl4-openssl-dev', 'libcurl4-nss-dev']  # these libcurl-dev providers are installed
+            assert tuple(_iterate_packages(pkgs, True)) == ('curl', 'wget', '_not_existing', 'libcurl4-openssl-dev', 'libcurl4-nss-dev', 'ros-kinetic-rc-genicam-api')
+
+            # reinstall all the virtual packages if none are installed
+            mock_dpkg_detect.return_value = []  # these libcurl-dev providers are installed
+            assert tuple(_iterate_packages(pkgs, True)) == ('curl', 'wget', '_not_existing',
+                                                            ['libcurl4-openssl-dev', 'libcurl4-nss-dev', 'libcurl4-gnutls-dev'],
+                                                            'ros-kinetic-rc-genicam-api')
