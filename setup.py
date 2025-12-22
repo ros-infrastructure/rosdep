@@ -55,6 +55,6 @@ elif 'SKIP_PYTHON_SCRIPTS' in os.environ:
     kwargs['name'] += '_modules'
     kwargs['entry_points'] = {}
 else:
-    kwargs['install_requires'] += ['catkin_pkg >= 0.4.0', 'rospkg >= 1.4.0', 'rosdistro >= 0.7.5']
+    kwargs['install_requires'] += ['catkin_pkg >= 0.4.0', 'rospkg >= 1.4.0', 'rosdistro >= 0.7.5', 'packaging']
 
 setup(**kwargs)
