@@ -212,11 +212,16 @@ def test_get_pip_command():
             return False
         return True
 
+    @patch('rosdep2.platforms.pip.sys.executable', 'python3')
     @patch('rosdep2.platforms.pip.is_cmd_available', new=fake_is_cmd_available)
-    def test_python2_or_python3(mock_is_cmd_available):
+    def test_python2_or_python3():
 
         with patch.dict(os.environ, {'ROS_PYTHON_VERSION': '2'}):
             assert ['python2', '-m', 'pip'] == get_pip_command()
 
         with patch.dict(os.environ, {'ROS_PYTHON_VERSION': '3'}):
             assert ['python3', '-m', 'pip'] == get_pip_command()
+
+    test_pip2_or_pip3()
+    test_sys_executable()
+    test_python2_or_python3()
