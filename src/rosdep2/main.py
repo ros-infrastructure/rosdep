@@ -401,6 +401,9 @@ def _rosdep_main(args):
                       default=[], action='append',
                       help='Dependency types to install, can be given multiple times. '
                            'Choose from {}. Default: all except doc.'.format(VALID_DEPENDENCY_TYPES))
+    parser.add_option('--supress-warning-sudo', dest='supress_warning_sudo', default=False,
+                      action='store_true', help='Suppress warning about sudo usage. '
+                      'This is useful if you are using rosdep in a docker container.')
 
     options, args = parser.parse_args(args)
     if options.print_version or options.print_all_versions:
@@ -680,7 +683,7 @@ def command_update(options):
             print('reading in sources list data from %s' % (sources_list_dir))
         sources_cache_dir = get_sources_cache_dir()
         try:
-            if os.geteuid() == 0:
+            if os.geteuid() == 0 and not options.supress_warning_sudo:
                 print("Warning: running 'rosdep update' as root is not recommended.", file=sys.stderr)
                 print("  You should run 'sudo rosdep fix-permissions' and invoke 'rosdep update' again without sudo.", file=sys.stderr)
         except AttributeError:
