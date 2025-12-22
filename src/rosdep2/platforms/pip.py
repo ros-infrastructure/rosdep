@@ -171,7 +171,7 @@ def pip_detect(pkgs, exec_fn=None):
         for pkg in [p for p in pkgs if p not in ret_list]:
             # does not see retcode but stdout for old pip to check if installed
             proc = subprocess.Popen(
-                pip_cmd + ['show', pkg],
+                pip_cmd + ['show', pkg.split('@')[0].strip()],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT
             )
