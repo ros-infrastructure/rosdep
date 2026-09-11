@@ -1,3 +1,18 @@
+0.27.0 (2026-09-11)
+-------------------
+- Add openEuler support
+  - https://github.com/ros-infrastructure/rosdep/issues/1021
+- Add conda (formerly: RoboStack) platform
+  - https://github.com/ros-infrastructure/rosdep/issues/1018
+- Drop more over-aggressive asserts from test_rosdep_main
+  - https://github.com/ros-infrastructure/rosdep/issues/1020
+- Don't consider venv as externally managed
+  - https://github.com/ros-infrastructure/rosdep/issues/999
+- Use modern intersphinx_mapping syntax
+  - https://github.com/ros-infrastructure/rosdep/issues/1012
+- Add test for externally_managed_installable
+  - https://github.com/ros-infrastructure/rosdep/issues/1000
+
 0.26.0 (2025-06-26)
 -------------------
 - Add search command for rosdep keys.

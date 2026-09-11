@@ -6,7 +6,7 @@ kwargs = {
     # same version as in:
     # - src/rosdep2/_version.py
     # - stdeb.cfg
-    'version': '0.26.0',
+    'version': '0.27.0',
     'packages': ['rosdep2', 'rosdep2.ament_packages', 'rosdep2.platforms'],
     'package_dir': {'': 'src'},
     'install_requires': [
@@ -55,6 +55,6 @@ elif 'SKIP_PYTHON_SCRIPTS' in os.environ:
     kwargs['name'] += '_modules'
     kwargs['entry_points'] = {}
 else:
-    kwargs['install_requires'] += ['catkin_pkg >= 0.4.0', 'rospkg >= 1.4.0', 'rosdistro >= 0.7.5']
+    kwargs['install_requires'] += ['catkin_pkg >= 0.4.0', 'rospkg >= 1.6.1', 'rosdistro >= 0.7.5']
 
 setup(**kwargs)
