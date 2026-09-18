@@ -213,7 +213,10 @@ def _read_apt_cache_showpkg(packages, exec_fn=None):
         except StopIteration:
             pass
 
-        pr = [line.split(' ', 2)[0] for line in lines]
+        # Same packages may appear multiple times with different versions.
+        # Because we are discarding the version, we deduplicate the package names
+        # We use a dict to preserve insertion order
+        pr = list({line.split(' ', 2)[0]: None for line in lines})
         if pr:
             yield p, True, pr
         else:
@@ -262,16 +265,13 @@ def dpkg_detect(pkgs, exec_fn=None):
 
 
 def _iterate_packages(packages, reinstall):
-    for entry in _read_apt_cache_showpkg(packages):
-        p, is_virtual, providers = entry
+    for p, is_virtual, providers in _read_apt_cache_showpkg(packages):
         if is_virtual:
-            installed = []
             if reinstall:
                 installed = dpkg_detect(providers)
                 if len(installed) > 0:
-                    for i in installed:
-                        yield i
-                    continue  # don't ouput providers
+                    yield from installed
+                    continue
             yield providers
         else:
             yield p
