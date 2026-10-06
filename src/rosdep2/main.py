@@ -727,17 +727,36 @@ def get_keys(lookup, packages, recursive):
     return list(rosdep_keys)
 
 
-def command_check(lookup, packages, options):
-    verbose = options.verbose
-
-    installer_context = create_default_installer_context(verbose=verbose)
+def _resolve_dependencies(lookup, packages, options):
+    # setup installer
+    installer_context = create_default_installer_context(verbose=options.verbose)
     configure_installer_context(installer_context, options)
-    installer = RosdepInstaller(installer_context, lookup)
+    installer = RosdepInstaller(installer_context)
 
-    uninstalled, errors = installer.get_uninstalled(packages, implicit=options.recursive, verbose=verbose)
+    # resolutions have been unique()d
+    if options.verbose:
+        print('resolving for resources [%s]' % (', '.join(packages)))
+    try:
+        resolutions, errors = lookup.resolve_all(packages, installer_context, implicit=options.recursive)
+    except InvalidData as e:
+        print('ERROR: unable to process all dependencies:\n\t%s' % (e), file=sys.stderr)
+        raise
+
+    if options.reinstall:
+        if options.verbose:
+            print('reinstall is true, treating all dependencies as uninstalled')
+        uninstalled = resolutions
+    else:
+        uninstalled = installer.get_uninstalled(resolutions, verbose=options.verbose)
+
+    return uninstalled, errors, installer
+
+
+def command_check(lookup, packages, options):
+    uninstalled, errors, _ = _resolve_dependencies(lookup, packages, options)
 
     # pretty print the result
-    if [v for k, v in uninstalled if v]:
+    if any(v for k, v in uninstalled):
         print('System dependencies have not been satisfied:')
         for installer_key, resolved in uninstalled:
             if resolved:
@@ -746,11 +765,8 @@ def command_check(lookup, packages, options):
     else:
         print('All system dependencies have been satisfied')
     if errors:
-        for package_name, ex in errors.items():
-            if isinstance(ex, rospkg.ResourceNotFound):
-                print('ERROR[%s]: resource not found [%s]' % (package_name, ex.args[0]), file=sys.stderr)
-            else:
-                print('ERROR[%s]: %s' % (package_name, ex), file=sys.stderr)
+        for rosdep_key, error in errors.items():
+            print('%s: %s' % (rosdep_key, error_to_human_readable(error)), file=sys.stderr)
     if uninstalled:
         return 1
     elif errors:
@@ -769,26 +785,10 @@ def error_to_human_readable(error):
 
 
 def command_install(lookup, packages, options):
-    # map options
-    install_options = dict(interactive=not options.default_yes, verbose=options.verbose,
-                           reinstall=options.reinstall,
-                           continue_on_error=options.robust, simulate=options.simulate, quiet=options.quiet)
-
-    # setup installer
-    installer_context = create_default_installer_context(verbose=options.verbose)
-    configure_installer_context(installer_context, options)
-    installer = RosdepInstaller(installer_context, lookup)
-
-    if options.reinstall:
-        if options.verbose:
-            print('reinstall is true, resolving all dependencies')
-        try:
-            uninstalled, errors = lookup.resolve_all(packages, installer_context, implicit=options.recursive)
-        except InvalidData as e:
-            print('ERROR: unable to process all dependencies:\n\t%s' % (e), file=sys.stderr)
-            return 1
-    else:
-        uninstalled, errors = installer.get_uninstalled(packages, implicit=options.recursive, verbose=options.verbose)
+    try:
+        uninstalled, errors, installer = _resolve_dependencies(lookup, packages, options)
+    except InvalidData:
+        return 1
 
     if options.verbose:
         uninstalled_dependencies = normalize_uninstalled_to_list(uninstalled)
@@ -811,6 +811,11 @@ def command_install(lookup, packages, options):
             print('Continuing to install resolvable dependencies...', file=sys.stderr)
         else:
             return 1
+
+    # map options
+    install_options = dict(interactive=not options.default_yes, verbose=options.verbose,
+                           reinstall=options.reinstall,
+                           continue_on_error=options.robust, simulate=options.simulate, quiet=options.quiet)
     try:
         installer.install(uninstalled, **install_options)
         if not options.simulate:
