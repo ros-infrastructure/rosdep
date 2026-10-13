@@ -69,10 +69,16 @@ def test_url_constants():
 @pytest.mark.online
 def test_download_default_sources_list():
     from rosdep2.sources_list import download_default_sources_list
-    data = download_default_sources_list()
+    data = download_default_sources_list(15.0)
     assert 'http' in data, data  # sanity check, all sources files have urls
     try:
-        download_default_sources_list(url='http://bad.ros.org/foo.yaml')
+        download_default_sources_list(15.0, url='http://bad.ros.org/foo.yaml')
+        assert False, 'should not have succeeded/valdiated'
+    except URLError:
+        pass
+
+    try:
+        download_default_sources_list(0.0001, url='http://bad.ros.org/foo.yaml')
         assert False, 'should not have succeeded/valdiated'
     except URLError:
         pass
@@ -248,6 +254,16 @@ def test_update_sources_list():
                'yaml %s ubuntu' % (GITHUB_URL, GITHUB_PYTHON_URL, BADHOSTNAME_URL)
     assert expected == index, '\n[%s]\nvs\n[%s]' % (expected, index)
 
+    # test timeout
+    errors = []
+
+    def error_handler(loc, e):
+        errors.append((loc, e))
+    retval = update_sources_list(sources_list_dir=sources_list_dir,
+                                 sources_cache_dir=tempdir, error_handler=error_handler, download_timeout=0.0001)
+    print(retval)
+    print(errors)
+
 
 @pytest.mark.online
 def test_load_cached_sources_list():
@@ -306,22 +322,31 @@ def test_download_rosdep_data():
     from rosdep2.sources_list import download_rosdep_data
     from rosdep2 import DownloadFailure
     url = GITHUB_BASE_URL
-    data = download_rosdep_data(url)
+    data = download_rosdep_data(url, 15.0)
     assert 'boost' in data  # sanity check
 
     # try with a bad URL
     try:
-        data = download_rosdep_data('http://badhost.willowgarage.com/rosdep.yaml')
+        data = download_rosdep_data('http://badhost.willowgarage.com/rosdep.yaml', 15.0)
         assert False, 'should have raised'
     except DownloadFailure as e:
         pass
+
+    # test timeout
+    url = GITHUB_BASE_URL
+    try:
+        data = download_rosdep_data(url, 0.0001)
+        assert False, 'should have raised'
+    except DownloadFailure as e:
+        pass
+
     # try to trigger both non-dict clause and YAMLError clause
     for url in [
         'https://code.ros.org/svn/release/trunk/distros/',
         'https://code.ros.org/svn/release/trunk/distros/manifest.xml',
     ]:
         try:
-            data = download_rosdep_data(url)
+            data = download_rosdep_data(url, 15.0)
             assert False, 'should have raised'
         except DownloadFailure as e:
             pass

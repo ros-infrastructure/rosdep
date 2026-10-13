@@ -67,3 +67,10 @@ def test_download_targets_data():
         assert False, 'should have raised'
     except DownloadFailure:
         pass
+
+    # try timeout
+    try:
+        download_targets_data(targets_url=REP3_TARGETS_URL, timeout=0.0001)
+        assert False, 'should have raised'
+    except DownloadFailure:
+        pass

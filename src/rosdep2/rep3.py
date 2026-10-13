@@ -35,11 +35,8 @@ from .url_utils import urlopen_gzip
 # location of targets file for processing gbpdistro files
 REP3_TARGETS_URL = 'https://raw.githubusercontent.com/ros/rosdistro/master/releases/targets.yaml'
 
-# seconds to wait before aborting download of gbpdistro data
-DOWNLOAD_TIMEOUT = 15.0
 
-
-def download_targets_data(targets_url=None):
+def download_targets_data(targets_url=None, timeout=15.0):
     """
     Download REP 3 targets file and unmarshal from YAML.
     DEPRECATED: this function is deprecated. List of targets should be obtained
@@ -56,7 +53,7 @@ def download_targets_data(targets_url=None):
     if targets_url is None:
         targets_url = REP3_TARGETS_URL
     try:
-        f = urlopen_gzip(targets_url, timeout=DOWNLOAD_TIMEOUT)
+        f = urlopen_gzip(targets_url, timeout=timeout)
         text = f.read()
         f.close()
         targets_data = yaml.safe_load(text)

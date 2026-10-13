@@ -401,6 +401,11 @@ def _rosdep_main(args):
                       default=[], action='append',
                       help='Dependency types to install, can be given multiple times. '
                            'Choose from {}. Default: all except doc.'.format(VALID_DEPENDENCY_TYPES))
+    parser.add_option("--download-timeout", dest="download_timeout",
+                      type=float, default=15.0,
+                      help="Affects the 'update' verb. "
+                           "Timeout in seconds for pull source list data. "
+                           "Default to 15.0 seconds.")
 
     options, args = parser.parse_args(args)
     if options.print_version or options.print_all_versions:
@@ -617,7 +622,7 @@ def configure_installer_context(installer_context, options):
 
 def command_init(options):
     try:
-        data = download_default_sources_list()
+        data = download_default_sources_list(options.download_timeout)
     except URLError as e:
         print('ERROR: cannot download default sources list from:\n%s\nWebsite may be down.' % (DEFAULT_SOURCES_LIST_URL), file=sys.stderr)
         print(e, file=sys.stderr)
@@ -690,6 +695,7 @@ def command_update(options):
                             error_handler=update_error_handler,
                             skip_eol_distros=not options.include_eol_distros,
                             ros_distro=options.ros_distro,
+                            download_timeout=options.download_timeout,
                             quiet=options.quiet)
         if not options.quiet:
             print('updated cache in %s' % (sources_cache_dir))
