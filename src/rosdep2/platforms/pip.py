@@ -63,7 +63,14 @@ def register_installers(context):
 
 
 def get_pip_command():
-    # First try pip2 or pip3
+    # First try user specified pip cmd
+    if 'ROSDEP_PIP_CMD' in os.environ:
+        cmd = os.environ['ROSDEP_PIP_CMD'].split()
+        if is_cmd_available(cmd + ['--help']):
+            return cmd
+        return None
+
+    # next try pip2 or pip3
     cmd = ['pip' + os.environ['ROS_PYTHON_VERSION']]
     if is_cmd_available(cmd):
         return cmd

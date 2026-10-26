@@ -220,3 +220,14 @@ def test_get_pip_command():
 
         with patch.dict(os.environ, {'ROS_PYTHON_VERSION': '3'}):
             assert ['python3', '-m', 'pip'] == get_pip_command()
+
+    def fake_is_uv_available(cmd):
+        assert cmd == ['uv', 'pip', '--help']
+        return cmd[0] in ['uv']
+
+    @patch('rosdep2.platforms.pip.is_cmd_available', new=fake_is_uv_available)
+    def test_uv():
+        with patch.dict(os.environ, {'ROSDEP_PIP_CMD': 'uv pip'}):
+            assert ['uv', 'pip'] == get_pip_command()
+
+    test_uv()
