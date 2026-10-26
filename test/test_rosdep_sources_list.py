@@ -271,7 +271,7 @@ def test_load_cached_sources_list():
     source2 = retval[2]
 
     # this should be the 'default' source
-    assert 'python' in source1.rosdep_data
+    assert 'python3' in source1.rosdep_data
     assert not source0.tags
 
     # this should be the 'non-existent' source
