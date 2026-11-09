@@ -1001,7 +1001,7 @@ def command_search(args, options):
                                                       verbose=options.verbose)
     if FALL_BACK_TO_RE:
         print('python3-regex module not available, falling back to re module without fuzzy search.')
-        regexes = args
+        regexes = [re.escape(arg) for arg in args]
         regex_flags = re.IGNORECASE
     else:
         # Turn search args into regexes to allow for fuzzy search with 2 mistakes

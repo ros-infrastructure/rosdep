@@ -27,6 +27,7 @@
 
 from contextlib import contextmanager
 import os
+import re
 import sys
 try:
     from cStringIO import StringIO
@@ -34,6 +35,7 @@ except ImportError:
     from io import StringIO
 
 import rospkg
+import pytest
 
 import unittest
 from unittest.mock import DEFAULT, patch
@@ -43,10 +45,46 @@ from rosdep2 import main
 from rosdep2.ament_packages import AMENT_PREFIX_PATH_ENV_VAR
 from rosdep2.main import rosdep_main
 from rosdep2.main import setup_proxy_opener
+from rosdep2.sources_list import CachedDataSource, SourcesListLoader
 
 
 GITHUB_BASE_URL = 'https://github.com/ros/rosdistro/raw/master/rosdep/base.yaml'
 GITHUB_PYTHON_URL = 'https://github.com/ros/rosdistro/raw/master/rosdep/python.yaml'
+
+
+@pytest.mark.parametrize('terms, expected', [
+    (['libc++'], ['libc++-dev']),
+    (['libfoo1.2'], ['versioned-library: libfoo1.2-dev']),
+    (['LIBFOO1.2', 'DEV'], ['versioned-library: libfoo1.2-dev']),
+    (['+'], ['libc++-dev']),
+    (['['], []),
+    (['('], []),
+    (['libc|curl'], []),
+])
+def test_search_without_regex_uses_literal_terms(terms, expected, monkeypatch, capsys):
+    source = CachedDataSource('yaml', GITHUB_BASE_URL, [], {
+        'libc++-dev': {'ubuntu': ['libc++-dev']},
+        'libcc-dev': {'ubuntu': ['libcc-dev']},
+        'versioned-library': {'ubuntu': ['libfoo1.2-dev']},
+        'other-library': {'ubuntu': ['libfoo1x2-dev']},
+        'curl': {'ubuntu': ['curl']},
+    })
+    monkeypatch.setenv('ROS_PYTHON_VERSION', '3')
+    monkeypatch.setattr(main, 're', re)
+    monkeypatch.setattr(main, 'FALL_BACK_TO_RE', True)
+    with patch.object(SourcesListLoader, 'create_default', return_value=SourcesListLoader([source])):
+        args = ['search', '--os=ubuntu:noble', '-c', get_cache_dir()] + terms
+        if expected:
+            rosdep_main(args)
+        else:
+            with pytest.raises(SystemExit) as exc:
+                rosdep_main(args)
+            assert exc.value.code == 1
+    stdout, stderr = capsys.readouterr()
+    assert [line.strip() for line in stdout.splitlines() if line.startswith('  ')] == expected
+    if not expected:
+        assert 'No matches found' in stdout
+    assert not stderr
 
 
 def get_test_dir():
