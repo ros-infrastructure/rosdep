@@ -27,6 +27,42 @@
 
 # Author William Woodall/wjwwood@gmail.com
 
+from itertools import permutations
+
+import pytest
+
+
+@pytest.mark.parametrize('keys', list(permutations(['apt_key', 'pip_key'])))
+def test_DependencyGraph_stable_independent_order(keys):
+    from rosdep2.dependency_graph import DependencyGraph
+
+    dg = DependencyGraph()
+    for key in keys:
+        dg[key]['installer_key'] = 'apt' if key == 'apt_key' else 'pip'
+        dg[key]['install_keys'] = [key]
+
+    assert dg.get_ordered_dependency_list() == [('apt', ['apt_key']), ('pip', ['pip_key'])]
+
+
+@pytest.mark.parametrize('keys', list(permutations(['a_root', 'b_root', 'z_dependency'])))
+def test_DependencyGraph_stable_order_with_shared_dependency(keys):
+    from rosdep2.dependency_graph import DependencyGraph
+
+    dg = DependencyGraph()
+    for key in keys:
+        dg[key]['install_keys'] = [key]
+        if key == 'z_dependency':
+            dg[key]['installer_key'] = 'apt'
+        else:
+            dg[key]['installer_key'] = 'pip'
+            dg[key]['dependencies'] = ['z_dependency']
+
+    # Dependencies precede their consumers, even when they sort after them.
+    # The shared dependency is emitted once and adjacent pip entries are merged.
+    assert dg.get_ordered_dependency_list() == [
+        ('apt', ['z_dependency']), ('pip', ['a_root', 'b_root']),
+    ]
+
 
 def test_DependencyGraph_Linear():
     from rosdep2.dependency_graph import DependencyGraph
