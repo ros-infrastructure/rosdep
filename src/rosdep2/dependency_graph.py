@@ -114,7 +114,8 @@ class DependencyGraph(defaultdict):
         self.validate()
         # Generate the dependency list
         dep_list = []
-        for rosdep_key in self:
+        # Root insertion order can vary when dependencies originate from sets.
+        for rosdep_key in sorted(self):
             if self[rosdep_key]['is_root']:
                 dep_list.extend(self.__get_ordered_uninstalled(rosdep_key))
         # Make the list unique and remove empty entries
