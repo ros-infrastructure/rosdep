@@ -959,6 +959,10 @@ def search_cached_data_source(view, regexes, os_name):
             os_items = item[os_entry]
 
             def check_pkgs(items):
+                if isinstance(items, dict):
+                    if 'packages' in items:
+                        return check_pkgs(items['packages'])
+                    return any(check_pkgs(rule) for rule in items.values() if isinstance(rule, dict))
                 for pkg in items:
                     results = [regex.search(pkg) for regex in regexes]
                     if all(results):
@@ -984,8 +988,7 @@ def search_cached_data_source(view, regexes, os_name):
                     elif isinstance(subitems, list):
                         found = check_pkgs(subitems)
                     elif isinstance(subitems, dict):
-                        if 'packages' in subitems:
-                            found = check_pkgs(subitems['packages'])
+                        found = check_pkgs(subitems)
                     if found:
                         break
                 if found:
