@@ -158,8 +158,8 @@ def parse_version(version_str):
 
 def pip_detect(pkgs, exec_fn=None):
     """
-    Given a list of package specifications, return the list of installed
-    packages which meet the specifications.
+    Given a list of package specifications, return the specifications
+    which the installed packages meet.
 
     :param exec_fn: function to execute Popen and read stdout (for testing)
     """
@@ -187,12 +187,12 @@ def pip_detect(pkgs, exec_fn=None):
         version_list.append((pkg_row[0], parse_version(pkg_row[1])))
 
     for pkg in pkgs:
-        req_list.append(Requirement(pkg))
+        req_list.append((pkg, Requirement(pkg)))
 
-    for req in req_list:
+    for spec, req in req_list:
         for pkg in [ver for ver in version_list if ver[0] == req.name]:
-            if pkg[1] is None or pkg[1] in req.specifier:
-                ret_list.append(req.name)
+            if pkg[1] is None or req.specifier.contains(pkg[1], prereleases=True):
+                ret_list.append(spec)
 
     # Try to detect with the return code of `pip show`.
     # This can show the existance of things like `argparse` which
@@ -200,12 +200,13 @@ def pip_detect(pkgs, exec_fn=None):
     # See:
     #   https://github.com/pypa/pip/issues/1570#issuecomment-71111030
     if fallback_to_pip_show:
-        for req in [r for r in req_list if r.name not in ret_list]:
+        for spec, req in [r for r in req_list if r[0] not in ret_list]:
             # does not see retcode but stdout for old pip to check if installed
             proc = subprocess.Popen(
                 pip_cmd + ['show', req.name],
                 stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT
+                stderr=subprocess.STDOUT,
+                universal_newlines=True
             )
             output, _ = proc.communicate()
             output = output.strip()
@@ -216,9 +217,9 @@ def pip_detect(pkgs, exec_fn=None):
                 for line in [s for s in show_split if s.startswith('Version:')]:
                     version = parse_version(line.strip().split()[1])
 
-                    if version is None or version in req.specifier:
+                    if version is None or req.specifier.contains(version, prereleases=True):
                         # version matches, add it to the list
-                        ret_list.append(req.name)
+                        ret_list.append(spec)
 
     return ret_list
 
@@ -244,15 +245,6 @@ class PipInstaller(PackageManagerInstaller):
             'setuptools {}'.format(setuptools_version),
         ]
         return version_strings
-
-    def get_packages_to_install(self, resolved, reinstall=False):
-        if reinstall:
-            return resolved
-        if not resolved:
-            return []
-        else:
-            detected = self.detect_fn(resolved)
-            return [x for x in resolved if Requirement(x).name not in detected]
 
     def get_install_command(self, resolved, interactive=True, reinstall=False, quiet=False):
         pip_cmd = get_pip_command()
