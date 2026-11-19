@@ -31,6 +31,8 @@ import os
 import subprocess
 import sys
 
+from packaging.requirements import Requirement
+from packaging.version import InvalidVersion, parse
 from configparser import ConfigParser
 from pathlib import Path
 
@@ -140,9 +142,24 @@ def is_cmd_available(cmd):
         return False
 
 
+def parse_version(version_str):
+    """
+    Given a textual representation of a Python package version, return its parsed representation.
+
+    :param version_str: The textual representation of the version.
+    :return: The parsed representation of None if the version cannot be parsed.
+    :rtype: packaging.version.Version or packaging.version.LegacyVersion or None
+    """
+    try:
+        return parse(version_str)
+    except InvalidVersion:
+        return None
+
+
 def pip_detect(pkgs, exec_fn=None):
     """
-    Given a list of package, return the list of installed packages.
+    Given a list of package specifications, return the list of installed
+    packages which meet the specifications.
 
     :param exec_fn: function to execute Popen and read stdout (for testing)
     """
@@ -154,13 +171,28 @@ def pip_detect(pkgs, exec_fn=None):
     if exec_fn is None:
         exec_fn = read_stdout
         fallback_to_pip_show = True
-    pkg_list = exec_fn(pip_cmd + ['freeze']).split('\n')
+    pkg_list = exec_fn(pip_cmd + ['list', '--format', 'freeze']).split('\n')
+    pkg_list = [p for p in pkg_list if len(p) > 0]
 
     ret_list = []
+    version_list = []
+    req_list = []
+
     for pkg in pkg_list:
         pkg_row = pkg.split('==')
-        if pkg_row[0] in pkgs:
-            ret_list.append(pkg_row[0])
+
+        # Account for some unusual instances of === instead of ==
+        pkg_row[1] = pkg_row[1].strip('=')
+
+        version_list.append((pkg_row[0], parse_version(pkg_row[1])))
+
+    for pkg in pkgs:
+        req_list.append(Requirement(pkg))
+
+    for req in req_list:
+        for pkg in [ver for ver in version_list if ver[0] == req.name]:
+            if pkg[1] is None or pkg[1] in req.specifier:
+                ret_list.append(req.name)
 
     # Try to detect with the return code of `pip show`.
     # This can show the existance of things like `argparse` which
@@ -168,18 +200,25 @@ def pip_detect(pkgs, exec_fn=None):
     # See:
     #   https://github.com/pypa/pip/issues/1570#issuecomment-71111030
     if fallback_to_pip_show:
-        for pkg in [p for p in pkgs if p not in ret_list]:
+        for req in [r for r in req_list if r.name not in ret_list]:
             # does not see retcode but stdout for old pip to check if installed
             proc = subprocess.Popen(
-                pip_cmd + ['show', pkg],
+                pip_cmd + ['show', req.name],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT
             )
             output, _ = proc.communicate()
             output = output.strip()
             if proc.returncode == 0 and output:
-                # `pip show` detected it, add it to the list.
-                ret_list.append(pkg)
+                # `pip show` detected it, check the version.
+                show_split = output.split('\n')
+
+                for line in [s for s in show_split if s.startswith('Version:')]:
+                    version = parse_version(line.strip().split()[1])
+
+                    if version is None or version in req.specifier:
+                        # version matches, add it to the list
+                        ret_list.append(req.name)
 
     return ret_list
 
@@ -205,6 +244,15 @@ class PipInstaller(PackageManagerInstaller):
             'setuptools {}'.format(setuptools_version),
         ]
         return version_strings
+
+    def get_packages_to_install(self, resolved, reinstall=False):
+        if reinstall:
+            return resolved
+        if not resolved:
+            return []
+        else:
+            detected = self.detect_fn(resolved)
+            return [x for x in resolved if Requirement(x).name not in detected]
 
     def get_install_command(self, resolved, interactive=True, reinstall=False, quiet=False):
         pip_cmd = get_pip_command()
